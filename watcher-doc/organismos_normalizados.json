@@ -1,0 +1,301 @@
+{
+  "mapping": {
+    "101 - Dependencia Inmediata Del Poder Ejecutivo": "101 - DEPENDENCIA INMEDIATA DEL PODER EJECUTIVO",
+    "109 - Ministerio De Ambiente Y Economía Circular": "109 - MINISTERIO DE AMBIENTE Y ECONOMÍA CIRCULAR",
+    "110 - Ministerio De Gobierno": "110 - MINISTERIO DE GOBIERNO",
+    "113 - Ministerio De Vinculación Comunitaria": "113 - MINISTERIO DE VINCULACIÓN COMUNITARIA",
+    "115 - Ministerio De Economía Y Gestión Pública": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+    "125 - Ministerio De Bioagroindustria": "125 - MINISTERIO DE BIOAGROINDUSTRIA",
+    "135 - Ministerio De Educación": "135 - MINISTERIO DE EDUCACIÓN",
+    "140 - Ministerio De Justicia Y Trabajo": "140 - MINISTERIO DE JUSTICIA Y TRABAJO",
+    "145 - Ministerio De Salud": "145 - MINISTERIO DE SALUD",
+    "155 - Ministerio De Infraestructura Y Servicios Públicos": "155 - MINISTERIO DE INFRAESTRUCTURA Y SERVICIOS PÚBLICOS",
+    "160 - Ministerio De Desarrollo Humano": "160 - MINISTERIO DE DESARROLLO HUMANO",
+    "165 - Ministerio De Desarrollo Social Y Promoción Del Empleo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+    "170 - Gastos Generales De La Administración": "170 - GASTOS GENERALES DE LA ADMINISTRACIONINISTRACIÓN",
+    "175 - Ministerio De Seguridad": "175 - MINISTERIO DE SEGURIDAD",
+    "185 - Ministerio De Producción, Ciencia E Innovación Tecnológica": "185 - MINISTERIO DE PRODUCCIÓN CIENCIA E INNOVACIÓN TECNOLÓGICA",
+    "190 - Ministerio De Cooperativas Y Mutuales": "190 - MINISTERIO DE COOPERATIVAS Y MUTUALES",
+    "200 - Poder Legislativo": "200 - PODER LEGISLATIVO",
+    "300 - Poder Judicial": "300 - PODER JUDICIAL",
+    "400 - Defensoría Del Pueblo": "400 - DEFENSORÍA DEL PUEBLO",
+    "450 - Defensoría De Los Derechos De Niñas, Niños Y Adolescentes": "450 - DEFENSORÍA DE LOS DERECHOS DE NIÑAS NIÑOS Y ADOLESCENTES",
+    "500 - Tribunal De Cuentas": "500 - TRIBUNAL DE CUENTAS",
+    "605 - Agencia Córdoba De Inversión Y Financiamiento S.E.M.": "605 - AGENCIA CÓRDOBA DE INVERSIÓN Y FINANCIAMIENTO SEM",
+    "610 - Agencia Conectividad Córdoba S.E. ": "610 - AGENCIA CONECTIVIDAD CÓRDOBA SE",
+    "615 - Agencia Córdoba Deportes - S.E.M.": "615 - AGENCIA CÓRDOBA DEPORTES - SEM",
+    "620 - Agencia Córdoba Joven": "620 - AGENCIA CÓRDOBA JOVEN",
+    "625 - Agencia Córdoba Cultura S.E.": "625 - AGENCIA CÓRDOBA CULTURA SE",
+    "630 - Agencia Córdoba Turismo S.E.M.": "630 - AGENCIA CÓRDOBA TURISMO SEM",
+    "635 - Agencia Procórdoba S.E.M.": "635 - AGENCIA PROCÓRDOBA SEM",
+    "640 - Agencia Para La Competitividad De Córdoba S.E.M.": "640 - AGENCIA PARA LA COMPETITIVIDAD DE CÓRDOBA SEM",
+    "645 - Ente Regulador De Servicios Públicos": "645 - ENTE REGULADOR DE SERVICIOS PÚBLICOS",
+    "705 - Caja De Jubilaciones, Pensiones Y Retiros De Córdoba": "705 - CAJA DE JUBILACIONES PENSIONES Y RETIROS DE CÓRDOBA",
+    "710 - Administración Provincial Del Seguro De Salud": "710 - ADMINISTRACIONINISTRACIÓN PROVINCIALINCIAL DEL SEGURO DE SALUD",
+    "715 - Fideicomiso Para El Desarrollo Agropecuario (Fda)": "715 - FIDEICOMISO PARA EL DESARROLLO AGROPECUARIO FDA",
+    "730 - Unidad Ejecutora Biprovincial, Acueducto Interprovincial Santa Fe- Córdoba": "730 - UNIDAD EJECUTORA BIPROVINCIALINCIAL ACUEDUCTO INTERPROVINCIALINCIAL SANTA FE- CÓRDOBA",
+    "805 - Empresa Provincial De Energía De Córdoba (Epec)": "805 - EMPRESA PROVINCIALINCIAL DE ENERGÍA DE CÓRDOBA EPEC",
+    "810 - Lotería De La Provincia De Córdoba S.E.": "810 - LOTERÍA DE LA PROVINCIALINCIA DE CÓRDOBA SE",
+    "820 - Agencia Córdoba Innovar Y Emprender S.E.M": "820 - AGENCIA CÓRDOBA INNOVAR Y EMPRENDER SEM",
+    "845 - Archivo Provincial De La Memoria": "845 - ARCHIVO PROVINCIALINCIAL DE LA MEMORIA",
+    "855 - Caminos De Las Sierras S.A. (Casisa)": "855 - CAMINOS DE LAS SIERRAS SA CASISA",
+    "860 - Consejo Para La Planificación Estratégica De La Pcia De Cba (Copec)": "860 - CONSEJO PARA LA PLANIFICACIÓN ESTRATÉGICA DE LA PCIA DE CBA COPEC",
+    "865 - Centro De Excelencia En Productos Y Procesos": "865 - CENTRO DE EXCELENCIA EN PRODUCTOS Y PROCESOS",
+    "866 - Universidad Provincial De Córdoba": "866 - UNIVERSIDAD PROVINCIALINCIAL DE CÓRDOBA",
+    "867 - Terminal De Ómnibus Córdoba S.A.U": "867 - TERMINAL DE ÓMNIBUS CÓRDOBA SAU",
+    "875 - Administración Provincial De Recursos Hídricos (Aprhi) Ley 9867": "875 - ADMINISTRACIONINISTRACIÓN PROVINCIALINCIAL DE RECURSOS HÍDRICOS APRHI LEY 9867"
+  },
+  "keywords_por_organismo": {
+    "400 - Defensoría Del Pueblo": [
+      "PUEBLO",
+      "DEFENSORÍA"
+    ],
+    "125 - Ministerio De Bioagroindustria": [
+      "BIOAGROINDUSTRIA"
+    ],
+    "155 - Ministerio De Infraestructura Y Servicios Públicos": [
+      "PÚBLICOS",
+      "INFRAESTRUCTURA",
+      "SERVICIOS"
+    ],
+    "630 - Agencia Córdoba Turismo S.E.M.": [
+      "CÓRDOBA",
+      "TURISMO",
+      "AGENCIA"
+    ],
+    "625 - Agencia Córdoba Cultura S.E.": [
+      "CÓRDOBA",
+      "CULTURA",
+      "AGENCIA"
+    ],
+    "140 - Ministerio De Justicia Y Trabajo": [
+      "JUSTICIA",
+      "justicia",
+      "legal",
+      "TRABAJO",
+      "judicial",
+      "tribunal"
+    ],
+    "135 - Ministerio De Educación": [
+      "EDUCACIÓN"
+    ],
+    "855 - Caminos De Las Sierras S.A. (Casisa)": [
+      "CASISA",
+      "SIERRAS",
+      "CAMINOS"
+    ],
+    "615 - Agencia Córdoba Deportes - S.E.M.": [
+      "CÓRDOBA",
+      "DEPORTES",
+      "AGENCIA"
+    ],
+    "101 - Dependencia Inmediata Del Poder Ejecutivo": [
+      "DEPENDENCIA",
+      "EJECUTIVO",
+      "PODER",
+      "INMEDIATA"
+    ],
+    "820 - Agencia Córdoba Innovar Y Emprender S.E.M": [
+      "CÓRDOBA",
+      "INNOVAR",
+      "EMPRENDER",
+      "AGENCIA"
+    ],
+    "605 - Agencia Córdoba De Inversión Y Financiamiento S.E.M.": [
+      "FINANCIAMIENTO",
+      "INVERSIÓN",
+      "CÓRDOBA",
+      "AGENCIA"
+    ],
+    "866 - Universidad Provincial De Córdoba": [
+      "PROVINCIALINCIAL",
+      "CÓRDOBA",
+      "UNIVERSIDAD"
+    ],
+    "170 - Gastos Generales De La Administración": [
+      "ADMINISTRACIONINISTRACIÓN",
+      "GENERALES",
+      "GASTOS"
+    ],
+    "635 - Agencia Procórdoba S.E.M.": [
+      "PROCÓRDOBA",
+      "AGENCIA"
+    ],
+    "715 - Fideicomiso Para El Desarrollo Agropecuario (Fda)": [
+      "AGROPECUARIO",
+      "FIDEICOMISO",
+      "subsidio",
+      "DESARROLLO",
+      "comunidad",
+      "asistencia",
+      "social"
+    ],
+    "190 - Ministerio De Cooperativas Y Mutuales": [
+      "MUTUALES",
+      "COOPERATIVAS"
+    ],
+    "805 - Empresa Provincial De Energía De Córdoba (Epec)": [
+      "PROVINCIALINCIAL",
+      "EMPRESA",
+      "CÓRDOBA",
+      "ENERGÍA"
+    ],
+    "730 - Unidad Ejecutora Biprovincial, Acueducto Interprovincial Santa Fe- Córdoba": [
+      "SANTA",
+      "INTERPROVINCIALINCIAL",
+      "CÓRDOBA",
+      "EJECUTORA",
+      "BIPROVINCIALINCIAL",
+      "UNIDAD",
+      "ACUEDUCTO"
+    ],
+    "500 - Tribunal De Cuentas": [
+      "TRIBUNAL",
+      "CUENTAS"
+    ],
+    "645 - Ente Regulador De Servicios Públicos": [
+      "PÚBLICOS",
+      "SERVICIOS",
+      "REGULADOR"
+    ],
+    "610 - Agencia Conectividad Córdoba S.E. ": [
+      "CÓRDOBA",
+      "CONECTIVIDAD",
+      "AGENCIA"
+    ],
+    "175 - Ministerio De Seguridad": [
+      "prevención",
+      "seguridad",
+      "policía",
+      "SEGURIDAD",
+      "emergencia"
+    ],
+    "640 - Agencia Para La Competitividad De Córdoba S.E.M.": [
+      "CÓRDOBA",
+      "COMPETITIVIDAD",
+      "AGENCIA"
+    ],
+    "705 - Caja De Jubilaciones, Pensiones Y Retiros De Córdoba": [
+      "JUBILACIONES",
+      "CÓRDOBA",
+      "RETIROS",
+      "PENSIONES"
+    ],
+    "710 - Administración Provincial Del Seguro De Salud": [
+      "médico",
+      "PROVINCIALINCIAL",
+      "tratamiento",
+      "SALUD",
+      "vacuna",
+      "ADMINISTRACIONINISTRACIÓN",
+      "paciente",
+      "medicina",
+      "hospital",
+      "SEGURO"
+    ],
+    "185 - Ministerio De Producción, Ciencia E Innovación Tecnológica": [
+      "INNOVACIÓN",
+      "CIENCIA",
+      "PRODUCCIÓN",
+      "TECNOLÓGICA"
+    ],
+    "875 - Administración Provincial De Recursos Hídricos (Aprhi) Ley 9867": [
+      "PROVINCIALINCIAL",
+      "RECURSOS",
+      "HÍDRICOS",
+      "APRHI",
+      "ADMINISTRACIONINISTRACIÓN"
+    ],
+    "160 - Ministerio De Desarrollo Humano": [
+      "subsidio",
+      "DESARROLLO",
+      "comunidad",
+      "asistencia",
+      "social",
+      "HUMANO"
+    ],
+    "115 - Ministerio De Economía Y Gestión Pública": [
+      "ECONOMÍA",
+      "GESTIÓN",
+      "PÚBLICA"
+    ],
+    "867 - Terminal De Ómnibus Córdoba S.A.U": [
+      "TERMINAL",
+      "CÓRDOBA",
+      "ÓMNIBUS"
+    ],
+    "810 - Lotería De La Provincia De Córdoba S.E.": [
+      "PROVINCIALINCIA",
+      "LOTERÍA",
+      "CÓRDOBA"
+    ],
+    "620 - Agencia Córdoba Joven": [
+      "CÓRDOBA",
+      "JOVEN",
+      "AGENCIA"
+    ],
+    "865 - Centro De Excelencia En Productos Y Procesos": [
+      "EXCELENCIA",
+      "PRODUCTOS",
+      "PROCESOS",
+      "CENTRO"
+    ],
+    "145 - Ministerio De Salud": [
+      "médico",
+      "tratamiento",
+      "SALUD",
+      "vacuna",
+      "paciente",
+      "medicina",
+      "hospital"
+    ],
+    "113 - Ministerio De Vinculación Comunitaria": [
+      "COMUNITARIA",
+      "VINCULACIÓN"
+    ],
+    "165 - Ministerio De Desarrollo Social Y Promoción Del Empleo": [
+      "EMPLEO",
+      "subsidio",
+      "DESARROLLO",
+      "comunidad",
+      "SOCIAL",
+      "asistencia",
+      "social",
+      "PROMOCIÓN"
+    ],
+    "110 - Ministerio De Gobierno": [
+      "GOBIERNO"
+    ],
+    "200 - Poder Legislativo": [
+      "PODER",
+      "LEGISLATIVO"
+    ],
+    "300 - Poder Judicial": [
+      "JUDICIAL",
+      "PODER"
+    ],
+    "845 - Archivo Provincial De La Memoria": [
+      "ARCHIVO",
+      "PROVINCIALINCIAL",
+      "MEMORIA"
+    ],
+    "109 - Ministerio De Ambiente Y Economía Circular": [
+      "ECONOMÍA",
+      "AMBIENTE",
+      "CIRCULAR"
+    ],
+    "450 - Defensoría De Los Derechos De Niñas, Niños Y Adolescentes": [
+      "ADOLESCENTES",
+      "DERECHOS",
+      "NIÑAS",
+      "DEFENSORÍA",
+      "NIÑOS"
+    ],
+    "860 - Consejo Para La Planificación Estratégica De La Pcia De Cba (Copec)": [
+      "CONSEJO",
+      "ESTRATÉGICA",
+      "COPEC",
+      "PLANIFICACIÓN"
+    ]
+  }
+}

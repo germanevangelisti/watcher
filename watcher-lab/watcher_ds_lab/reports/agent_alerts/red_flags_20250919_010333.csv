@@ -1,0 +1,103 @@
+timestamp,document_id,flag_type,severity,confidence,description,transparency_score,recommendation
+2025-09-19 01:03:33.636711,20250801_5_Secc.pdf,ANOMALIA_ML,MEDIO,0.75,Documento marcado como anómalo por algoritmo ML,50,Revisión de patrones inusuales en el documento
+2025-09-19 01:03:33.639676,20250801_1_Secc.pdf,TRANSPARENCIA_CRITICA,ALTO,0.7,Score de transparencia crítico: 22.0/100,22,Auditoría manual inmediata requerida
+2025-09-19 01:03:33.639948,20250801_4_Secc.pdf,INCONSISTENCIA_CLASIFICACION,INFORMATIVO,0.7,Posible inconsistencia en clasificación de riesgo,75,REVISAR: Posible falso positivo - validación manual recomendada
+2025-09-19 01:03:33.639996,20250804_1_Secc.pdf,ANOMALIA_ML,MEDIO,0.75,Documento marcado como anómalo por algoritmo ML,37,Revisión de patrones inusuales en el documento
+2025-09-19 01:03:33.640133,20250804_4_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (19) y baja transparencia,32,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.640382,20250804_5_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (12) y baja transparencia,47,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.640512,20250801_3_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (234) y baja transparencia,34,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.640642,20250801_2_Secc.pdf,TRANSPARENCIA_CRITICA,CRITICO,0.9,Score de transparencia crítico: 16.0/100,16,Auditoría manual inmediata requerida
+2025-09-19 01:03:33.640648,20250801_2_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (220) y baja transparencia,16,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.640735,20250801_2_Secc.pdf,PATRON_ENTIDADES_OPACO,ALTO,0.8,Múltiples entidades con transparencia muy baja,16,Auditar relaciones entre entidades mencionadas
+2025-09-19 01:03:33.640778,20250804_3_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (226) y baja transparencia,42,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.640991,20250805_5_Secc.pdf,INCONSISTENCIA_CLASIFICACION,INFORMATIVO,0.7,Posible inconsistencia en clasificación de riesgo,62,REVISAR: Posible falso positivo - validación manual recomendada
+2025-09-19 01:03:33.641032,20250805_4_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (22) y baja transparencia,32,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.641375,20250804_2_Secc.pdf,TRANSPARENCIA_CRITICA,ALTO,0.7,Score de transparencia crítico: 24.0/100,24,Auditoría manual inmediata requerida
+2025-09-19 01:03:33.641384,20250804_2_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (301) y baja transparencia,24,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.641489,20250804_2_Secc.pdf,PATRON_ENTIDADES_OPACO,ALTO,0.8,Múltiples entidades con transparencia muy baja,24,Auditar relaciones entre entidades mencionadas
+2025-09-19 01:03:33.641546,20250806_4_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (21) y baja transparencia,32,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.642636,20250806_5_Secc.pdf,INCONSISTENCIA_CLASIFICACION,INFORMATIVO,0.7,Posible inconsistencia en clasificación de riesgo,62,REVISAR: Posible falso positivo - validación manual recomendada
+2025-09-19 01:03:33.643529,20250805_3_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (181) y baja transparencia,39,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.643711,20250806_3_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (174) y baja transparencia,34,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.643955,20250805_2_Secc.pdf,TRANSPARENCIA_CRITICA,ALTO,0.7,Score de transparencia crítico: 24.0/100,24,Auditoría manual inmediata requerida
+2025-09-19 01:03:33.643961,20250805_2_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (300) y baja transparencia,24,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.644055,20250805_2_Secc.pdf,PATRON_ENTIDADES_OPACO,ALTO,0.8,Múltiples entidades con transparencia muy baja,24,Auditar relaciones entre entidades mencionadas
+2025-09-19 01:03:33.644193,20250807_4_Secc.pdf,INCONSISTENCIA_CLASIFICACION,INFORMATIVO,0.7,Posible inconsistencia en clasificación de riesgo,75,REVISAR: Posible falso positivo - validación manual recomendada
+2025-09-19 01:03:33.644441,20250808_1_Secc.pdf,PATRON_ENTIDADES_OPACO,ALTO,0.8,Múltiples entidades con transparencia muy baja,29,Auditar relaciones entre entidades mencionadas
+2025-09-19 01:03:33.644484,20250806_2_Secc.pdf,TRANSPARENCIA_CRITICA,ALTO,0.7,Score de transparencia crítico: 24.0/100,24,Auditoría manual inmediata requerida
+2025-09-19 01:03:33.644490,20250806_2_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (301) y baja transparencia,24,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.644577,20250806_2_Secc.pdf,PATRON_ENTIDADES_OPACO,ALTO,0.8,Múltiples entidades con transparencia muy baja,24,Auditar relaciones entre entidades mencionadas
+2025-09-19 01:03:33.644907,20250808_4_Secc.pdf,INCONSISTENCIA_CLASIFICACION,INFORMATIVO,0.7,Posible inconsistencia en clasificación de riesgo,75,REVISAR: Posible falso positivo - validación manual recomendada
+2025-09-19 01:03:33.644946,20250807_3_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (171) y baja transparencia,39,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.645066,20250807_2_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (244) y baja transparencia,39,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.645279,20250811_4_Secc.pdf,INCONSISTENCIA_CLASIFICACION,INFORMATIVO,0.7,Posible inconsistencia en clasificación de riesgo,75,REVISAR: Posible falso positivo - validación manual recomendada
+2025-09-19 01:03:33.645320,20250808_3_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (386) y baja transparencia,47,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.645325,20250808_3_Secc.pdf,ANOMALIA_ML,MEDIO,0.75,Documento marcado como anómalo por algoritmo ML,47,Revisión de patrones inusuales en el documento
+2025-09-19 01:03:33.645451,20250811_5_Secc.pdf,TRANSPARENCIA_CRITICA,CRITICO,0.9,Score de transparencia crítico: 16.0/100,16,Auditoría manual inmediata requerida
+2025-09-19 01:03:33.645457,20250811_5_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (31) y baja transparencia,16,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.645541,20250811_5_Secc.pdf,PATRON_SECCION_INUSUAL,MEDIO,0.6,Sección 5 (Notificaciones) con clasificación de riesgo alto inusual,16,Verificar si la clasificación es correcta
+2025-09-19 01:03:33.645688,20250808_2_Secc.pdf,TRANSPARENCIA_CRITICA,CRITICO,0.9,Score de transparencia crítico: 16.0/100,16,Auditoría manual inmediata requerida
+2025-09-19 01:03:33.645694,20250808_2_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (354) y baja transparencia,16,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.645698,20250808_2_Secc.pdf,ANOMALIA_ML,MEDIO,0.75,Documento marcado como anómalo por algoritmo ML,16,Revisión de patrones inusuales en el documento
+2025-09-19 01:03:33.645780,20250808_2_Secc.pdf,PATRON_ENTIDADES_OPACO,ALTO,0.8,Múltiples entidades con transparencia muy baja,16,Auditar relaciones entre entidades mencionadas
+2025-09-19 01:03:33.645819,20250812_5_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (33) y baja transparencia,26,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.645905,20250812_5_Secc.pdf,PATRON_SECCION_INUSUAL,MEDIO,0.6,Sección 5 (Notificaciones) con clasificación de riesgo alto inusual,26,Verificar si la clasificación es correcta
+2025-09-19 01:03:33.645944,20250811_3_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (206) y baja transparencia,39,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.646151,20250812_4_Secc.pdf,INCONSISTENCIA_CLASIFICACION,INFORMATIVO,0.7,Posible inconsistencia en clasificación de riesgo,75,REVISAR: Posible falso positivo - validación manual recomendada
+2025-09-19 01:03:33.646188,20250811_2_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (260) y baja transparencia,39,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.646307,20250812_3_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (177) y baja transparencia,39,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.646510,20250813_4_Secc.pdf,INCONSISTENCIA_CLASIFICACION,INFORMATIVO,0.7,Posible inconsistencia en clasificación de riesgo,67,REVISAR: Posible falso positivo - validación manual recomendada
+2025-09-19 01:03:33.646549,20250814_1_Secc.pdf,TRANSPARENCIA_CRITICA,CRITICO,0.9,Score de transparencia crítico: 17.0/100,17,Auditoría manual inmediata requerida
+2025-09-19 01:03:33.646630,20250814_1_Secc.pdf,PATRON_ENTIDADES_OPACO,ALTO,0.8,Múltiples entidades con transparencia muy baja,17,Auditar relaciones entre entidades mencionadas
+2025-09-19 01:03:33.646669,20250813_5_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (36) y baja transparencia,36,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.646791,20250812_2_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (178) y baja transparencia,39,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.646912,20250813_3_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (152) y baja transparencia,39,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.647365,20250813_2_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (220) y baja transparencia,39,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.647572,20250818_5_Secc.pdf,INCONSISTENCIA_CLASIFICACION,INFORMATIVO,0.7,Posible inconsistencia en clasificación de riesgo,60,REVISAR: Posible falso positivo - validación manual recomendada
+2025-09-19 01:03:33.647847,20250814_3_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (244) y baja transparencia,42,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.647971,20250814_2_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (279) y baja transparencia,31,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.648099,20250818_3_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (255) y baja transparencia,39,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.648219,20250820_1_Secc.pdf,ANOMALIA_ML,MEDIO,0.75,Documento marcado como anómalo por algoritmo ML,40,Revisión de patrones inusuales en el documento
+2025-09-19 01:03:33.648409,20250819_5_Secc.pdf,INCONSISTENCIA_CLASIFICACION,INFORMATIVO,0.8999999999999999,Posible inconsistencia en clasificación de riesgo,80,RECLASIFICAR: Alto falso positivo - revisar algoritmo
+2025-09-19 01:03:33.648558,20250818_2_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (306) y baja transparencia,39,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.648562,20250818_2_Secc.pdf,ANOMALIA_ML,MEDIO,0.75,Documento marcado como anómalo por algoritmo ML,39,Revisión de patrones inusuales en el documento
+2025-09-19 01:03:33.648996,20250819_3_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (262) y baja transparencia,36,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.649116,20250819_2_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (285) y baja transparencia,39,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.649232,20250820_3_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (270) y baja transparencia,39,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.649348,20250821_5_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (19) y baja transparencia,39,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.649649,20250820_2_Secc.pdf,INCONSISTENCIA_CLASIFICACION,INFORMATIVO,0.7,Posible inconsistencia en clasificación de riesgo,54,REVISAR: Posible falso positivo - validación manual recomendada
+2025-09-19 01:03:33.649689,20250822_1_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (12) y baja transparencia,47,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.649912,20250821_3_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (210) y baja transparencia,39,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.650245,20250821_2_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (238) y baja transparencia,39,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.650362,20250822_3_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (198) y baja transparencia,39,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.650657,20250825_4_Secc.pdf,INCONSISTENCIA_CLASIFICACION,INFORMATIVO,0.7,Posible inconsistencia en clasificación de riesgo,60,REVISAR: Posible falso positivo - validación manual recomendada
+2025-09-19 01:03:33.650694,20250822_2_Secc.pdf,TRANSPARENCIA_CRITICA,CRITICO,0.9,Score de transparencia crítico: 16.0/100,16,Auditoría manual inmediata requerida
+2025-09-19 01:03:33.650699,20250822_2_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (230) y baja transparencia,16,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.651296,20250822_2_Secc.pdf,PATRON_ENTIDADES_OPACO,ALTO,0.8,Múltiples entidades con transparencia muy baja,16,Auditar relaciones entre entidades mencionadas
+2025-09-19 01:03:33.651452,20250825_3_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (213) y baja transparencia,39,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.651572,20250826_5_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (29) y baja transparencia,29,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.651660,20250826_5_Secc.pdf,PATRON_SECCION_INUSUAL,MEDIO,0.6,Sección 5 (Notificaciones) con clasificación de riesgo alto inusual,29,Verificar si la clasificación es correcta
+2025-09-19 01:03:33.651698,20250826_4_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (69) y baja transparencia,29,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.651788,20250826_4_Secc.pdf,PATRON_ENTIDADES_OPACO,ALTO,0.8,Múltiples entidades con transparencia muy baja,29,Auditar relaciones entre entidades mencionadas
+2025-09-19 01:03:33.651829,20250827_1_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (26) y baja transparencia,42,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.652024,20250826_3_Secc.pdf,INCONSISTENCIA_CLASIFICACION,INFORMATIVO,0.7,Posible inconsistencia en clasificación de riesgo,52,REVISAR: Posible falso positivo - validación manual recomendada
+2025-09-19 01:03:33.652180,20250827_4_Secc.pdf,INCONSISTENCIA_CLASIFICACION,INFORMATIVO,0.7,Posible inconsistencia en clasificación de riesgo,52,REVISAR: Posible falso positivo - validación manual recomendada
+2025-09-19 01:03:33.652420,20250827_5_Secc.pdf,INCONSISTENCIA_CLASIFICACION,INFORMATIVO,0.8999999999999999,Posible inconsistencia en clasificación de riesgo,72,RECLASIFICAR: Alto falso positivo - revisar algoritmo
+2025-09-19 01:03:33.652462,20250825_2_Secc.pdf,ANOMALIA_ML,MEDIO,0.75,Documento marcado como anómalo por algoritmo ML,54,Revisión de patrones inusuales en el documento
+2025-09-19 01:03:33.652549,20250825_2_Secc.pdf,INCONSISTENCIA_CLASIFICACION,INFORMATIVO,0.7,Posible inconsistencia en clasificación de riesgo,54,REVISAR: Posible falso positivo - validación manual recomendada
+2025-09-19 01:03:33.652590,20250827_3_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (201) y baja transparencia,34,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.652795,20250828_5_Secc.pdf,INCONSISTENCIA_CLASIFICACION,INFORMATIVO,0.7,Posible inconsistencia en clasificación de riesgo,75,REVISAR: Posible falso positivo - validación manual recomendada
+2025-09-19 01:03:33.652914,20250828_4_Secc.pdf,INCONSISTENCIA_CLASIFICACION,INFORMATIVO,0.7,Posible inconsistencia en clasificación de riesgo,75,REVISAR: Posible falso positivo - validación manual recomendada
+2025-09-19 01:03:33.652953,20250826_2_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (344) y baja transparencia,39,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.652958,20250826_2_Secc.pdf,ANOMALIA_ML,MEDIO,0.75,Documento marcado como anómalo por algoritmo ML,39,Revisión de patrones inusuales en el documento
+2025-09-19 01:03:33.653190,20250827_2_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (263) y baja transparencia,39,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.653195,20250827_2_Secc.pdf,ANOMALIA_ML,MEDIO,0.75,Documento marcado como anómalo por algoritmo ML,39,Revisión de patrones inusuales en el documento
+2025-09-19 01:03:33.653316,20250828_3_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (259) y baja transparencia,34,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.653520,20250829_4_Secc.pdf,INCONSISTENCIA_CLASIFICACION,INFORMATIVO,0.7,Posible inconsistencia en clasificación de riesgo,75,REVISAR: Posible falso positivo - validación manual recomendada
+2025-09-19 01:03:33.653558,20250829_5_Secc.pdf,TRANSPARENCIA_CRITICA,ALTO,0.7,Score de transparencia crítico: 21.0/100,21,Auditoría manual inmediata requerida
+2025-09-19 01:03:33.653564,20250829_5_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (15) y baja transparencia,21,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.653647,20250829_5_Secc.pdf,PATRON_SECCION_INUSUAL,MEDIO,0.6,Sección 5 (Notificaciones) con clasificación de riesgo alto inusual,21,Verificar si la clasificación es correcta
+2025-09-19 01:03:33.653686,20250829_3_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (268) y baja transparencia,34,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.653805,20250828_2_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (241) y baja transparencia,39,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.653926,20250829_2_Secc.pdf,MONTO_SOSPECHOSO,ALTO,0.8,Documento con montos (301) y baja transparencia,39,Verificar justificación de montos y proceso de adjudicación
+2025-09-19 01:03:33.653931,20250829_2_Secc.pdf,ANOMALIA_ML,MEDIO,0.75,Documento marcado como anómalo por algoritmo ML,39,Revisión de patrones inusuales en el documento

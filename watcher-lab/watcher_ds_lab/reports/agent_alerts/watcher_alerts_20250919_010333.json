@@ -1,0 +1,2539 @@
+{
+  "timestamp": "2025-09-19T01:03:33.656793",
+  "agent_status": {
+    "is_active": false,
+    "last_analysis": "2025-09-19 01:03:33.654016",
+    "documents_processed": 99,
+    "red_flags_detected": 102,
+    "false_positive_rate": 0.0,
+    "average_confidence": 0.772549019607843,
+    "system_health": "OPERATIONAL",
+    "performance_metrics": {}
+  },
+  "summary": {
+    "total_flags": 102,
+    "documents_analyzed": 99,
+    "flag_rate": 1.0303030303030303,
+    "avg_confidence": 0.772549019607843
+  },
+  "severity_breakdown": {
+    "CRITICO": {
+      "count": 5,
+      "avg_confidence": 0.9,
+      "documents": [
+        "20250801_2_Secc.pdf",
+        "20250811_5_Secc.pdf",
+        "20250808_2_Secc.pdf",
+        "20250814_1_Secc.pdf",
+        "20250822_2_Secc.pdf"
+      ]
+    },
+    "ALTO": {
+      "count": 64,
+      "avg_confidence": 0.7921874999999999,
+      "documents": [
+        "20250801_1_Secc.pdf",
+        "20250804_4_Secc.pdf",
+        "20250804_5_Secc.pdf",
+        "20250801_3_Secc.pdf",
+        "20250801_2_Secc.pdf",
+        "20250801_2_Secc.pdf",
+        "20250804_3_Secc.pdf",
+        "20250805_4_Secc.pdf",
+        "20250804_2_Secc.pdf",
+        "20250804_2_Secc.pdf",
+        "20250804_2_Secc.pdf",
+        "20250806_4_Secc.pdf",
+        "20250805_3_Secc.pdf",
+        "20250806_3_Secc.pdf",
+        "20250805_2_Secc.pdf",
+        "20250805_2_Secc.pdf",
+        "20250805_2_Secc.pdf",
+        "20250808_1_Secc.pdf",
+        "20250806_2_Secc.pdf",
+        "20250806_2_Secc.pdf",
+        "20250806_2_Secc.pdf",
+        "20250807_3_Secc.pdf",
+        "20250807_2_Secc.pdf",
+        "20250808_3_Secc.pdf",
+        "20250811_5_Secc.pdf",
+        "20250808_2_Secc.pdf",
+        "20250808_2_Secc.pdf",
+        "20250812_5_Secc.pdf",
+        "20250811_3_Secc.pdf",
+        "20250811_2_Secc.pdf",
+        "20250812_3_Secc.pdf",
+        "20250814_1_Secc.pdf",
+        "20250813_5_Secc.pdf",
+        "20250812_2_Secc.pdf",
+        "20250813_3_Secc.pdf",
+        "20250813_2_Secc.pdf",
+        "20250814_3_Secc.pdf",
+        "20250814_2_Secc.pdf",
+        "20250818_3_Secc.pdf",
+        "20250818_2_Secc.pdf",
+        "20250819_3_Secc.pdf",
+        "20250819_2_Secc.pdf",
+        "20250820_3_Secc.pdf",
+        "20250821_5_Secc.pdf",
+        "20250822_1_Secc.pdf",
+        "20250821_3_Secc.pdf",
+        "20250821_2_Secc.pdf",
+        "20250822_3_Secc.pdf",
+        "20250822_2_Secc.pdf",
+        "20250822_2_Secc.pdf",
+        "20250825_3_Secc.pdf",
+        "20250826_5_Secc.pdf",
+        "20250826_4_Secc.pdf",
+        "20250826_4_Secc.pdf",
+        "20250827_1_Secc.pdf",
+        "20250827_3_Secc.pdf",
+        "20250826_2_Secc.pdf",
+        "20250827_2_Secc.pdf",
+        "20250828_3_Secc.pdf",
+        "20250829_5_Secc.pdf",
+        "20250829_5_Secc.pdf",
+        "20250829_3_Secc.pdf",
+        "20250828_2_Secc.pdf",
+        "20250829_2_Secc.pdf"
+      ]
+    },
+    "MEDIO": {
+      "count": 14,
+      "avg_confidence": 0.7071428571428572,
+      "documents": [
+        "20250801_5_Secc.pdf",
+        "20250804_1_Secc.pdf",
+        "20250808_3_Secc.pdf",
+        "20250811_5_Secc.pdf",
+        "20250808_2_Secc.pdf",
+        "20250812_5_Secc.pdf",
+        "20250820_1_Secc.pdf",
+        "20250818_2_Secc.pdf",
+        "20250826_5_Secc.pdf",
+        "20250825_2_Secc.pdf",
+        "20250826_2_Secc.pdf",
+        "20250827_2_Secc.pdf",
+        "20250829_5_Secc.pdf",
+        "20250829_2_Secc.pdf"
+      ]
+    },
+    "INFORMATIVO": {
+      "count": 19,
+      "avg_confidence": 0.7210526315789473,
+      "documents": [
+        "20250801_4_Secc.pdf",
+        "20250805_5_Secc.pdf",
+        "20250806_5_Secc.pdf",
+        "20250807_4_Secc.pdf",
+        "20250808_4_Secc.pdf",
+        "20250811_4_Secc.pdf",
+        "20250812_4_Secc.pdf",
+        "20250813_4_Secc.pdf",
+        "20250818_5_Secc.pdf",
+        "20250819_5_Secc.pdf",
+        "20250820_2_Secc.pdf",
+        "20250825_4_Secc.pdf",
+        "20250826_3_Secc.pdf",
+        "20250827_4_Secc.pdf",
+        "20250827_5_Secc.pdf",
+        "20250825_2_Secc.pdf",
+        "20250828_5_Secc.pdf",
+        "20250828_4_Secc.pdf",
+        "20250829_4_Secc.pdf"
+      ]
+    }
+  },
+  "flag_types": {
+    "ANOMALIA_ML": 10,
+    "TRANSPARENCIA_CRITICA": 10,
+    "INCONSISTENCIA_CLASIFICACION": 19,
+    "MONTO_SOSPECHOSO": 50,
+    "PATRON_ENTIDADES_OPACO": 9,
+    "PATRON_SECCION_INUSUAL": 4
+  },
+  "top_problematic_documents": [
+    {
+      "document": "20250808_2_Secc.pdf",
+      "flag_count": 4,
+      "severities": [
+        "CRITICO",
+        "ALTO",
+        "MEDIO",
+        "ALTO"
+      ]
+    },
+    {
+      "document": "20250801_2_Secc.pdf",
+      "flag_count": 3,
+      "severities": [
+        "CRITICO",
+        "ALTO",
+        "ALTO"
+      ]
+    },
+    {
+      "document": "20250804_2_Secc.pdf",
+      "flag_count": 3,
+      "severities": [
+        "ALTO",
+        "ALTO",
+        "ALTO"
+      ]
+    },
+    {
+      "document": "20250805_2_Secc.pdf",
+      "flag_count": 3,
+      "severities": [
+        "ALTO",
+        "ALTO",
+        "ALTO"
+      ]
+    },
+    {
+      "document": "20250806_2_Secc.pdf",
+      "flag_count": 3,
+      "severities": [
+        "ALTO",
+        "ALTO",
+        "ALTO"
+      ]
+    }
+  ],
+  "priority_actions": [
+    {
+      "priority": 1,
+      "action": "AUDITORIA INMEDIATA",
+      "documents": [
+        "20250801_2_Secc.pdf",
+        "20250811_5_Secc.pdf",
+        "20250808_2_Secc.pdf",
+        "20250814_1_Secc.pdf",
+        "20250822_2_Secc.pdf"
+      ],
+      "reason": "Red flags críticas detectadas"
+    },
+    {
+      "priority": 2,
+      "action": "REVISION_URGENTE",
+      "documents": [
+        "20250801_1_Secc.pdf",
+        "20250804_4_Secc.pdf",
+        "20250804_5_Secc.pdf"
+      ],
+      "reason": "Múltiples red flags de alta severidad"
+    }
+  ],
+  "detailed_flags": [
+    {
+      "id": "ANOM_20250801_5_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.636711",
+      "document_id": "20250801_5_Secc.pdf",
+      "flag_type": "ANOMALIA_ML",
+      "severity": "MEDIO",
+      "confidence": 0.75,
+      "description": "Documento marcado como anómalo por algoritmo ML",
+      "evidence": [
+        "Detectado por Isolation Forest",
+        "Score transparencia: 50.0",
+        "Sección: 5"
+      ],
+      "recommendation": "Revisión de patrones inusuales en el documento",
+      "transparency_score": 50,
+      "risk_factors": {
+        "is_anomaly": true
+      },
+      "metadata": {
+        "detector": "ml_anomaly"
+      }
+    },
+    {
+      "id": "TRANSP_20250801_1_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.639676",
+      "document_id": "20250801_1_Secc.pdf",
+      "flag_type": "TRANSPARENCIA_CRITICA",
+      "severity": "ALTO",
+      "confidence": 0.7,
+      "description": "Score de transparencia crítico: 22.0/100",
+      "evidence": [
+        "Score transparencia: 22.0",
+        "Riesgo clasificado: ALTO",
+        "Keywords de riesgo: 0"
+      ],
+      "recommendation": "Auditoría manual inmediata requerida",
+      "transparency_score": 22,
+      "risk_factors": {
+        "transparency_score": 22,
+        "risk_level": "ALTO",
+        "section": 1
+      },
+      "metadata": {
+        "analysis_version": "2.0",
+        "detector": "transparency_monitor"
+      }
+    },
+    {
+      "id": "INCONS_20250801_4_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.639948",
+      "document_id": "20250801_4_Secc.pdf",
+      "flag_type": "INCONSISTENCIA_CLASIFICACION",
+      "severity": "INFORMATIVO",
+      "confidence": 0.7,
+      "description": "Posible inconsistencia en clasificación de riesgo",
+      "evidence": [
+        "Transparencia alta (75.0/100)",
+        "Keywords transparencia detectadas (2)"
+      ],
+      "recommendation": "REVISAR: Posible falso positivo - validación manual recomendada",
+      "transparency_score": 75,
+      "risk_factors": {
+        "fp_confidence": 0.7
+      },
+      "metadata": {
+        "detector": "false_positive_monitor"
+      }
+    },
+    {
+      "id": "ANOM_20250804_1_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.639996",
+      "document_id": "20250804_1_Secc.pdf",
+      "flag_type": "ANOMALIA_ML",
+      "severity": "MEDIO",
+      "confidence": 0.75,
+      "description": "Documento marcado como anómalo por algoritmo ML",
+      "evidence": [
+        "Detectado por Isolation Forest",
+        "Score transparencia: 37.0",
+        "Sección: 1"
+      ],
+      "recommendation": "Revisión de patrones inusuales en el documento",
+      "transparency_score": 37,
+      "risk_factors": {
+        "is_anomaly": true
+      },
+      "metadata": {
+        "detector": "ml_anomaly"
+      }
+    },
+    {
+      "id": "AMOUNT_20250804_4_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.640133",
+      "document_id": "20250804_4_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (19) y baja transparencia",
+      "evidence": [
+        "Número de montos: 19",
+        "Transparencia: 32.0/100",
+        "Tipo de acto: CONTRATACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 32,
+      "risk_factors": {
+        "num_amounts": 19,
+        "act_type": "CONTRATACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250804_5_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.640382",
+      "document_id": "20250804_5_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (12) y baja transparencia",
+      "evidence": [
+        "Número de montos: 12",
+        "Transparencia: 47.0/100",
+        "Tipo de acto: CONTRATACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 47,
+      "risk_factors": {
+        "num_amounts": 12,
+        "act_type": "CONTRATACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250801_3_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.640512",
+      "document_id": "20250801_3_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (234) y baja transparencia",
+      "evidence": [
+        "Número de montos: 234",
+        "Transparencia: 34.0/100",
+        "Tipo de acto: CONTRATACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 34,
+      "risk_factors": {
+        "num_amounts": 234,
+        "act_type": "CONTRATACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "TRANSP_20250801_2_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.640642",
+      "document_id": "20250801_2_Secc.pdf",
+      "flag_type": "TRANSPARENCIA_CRITICA",
+      "severity": "CRITICO",
+      "confidence": 0.9,
+      "description": "Score de transparencia crítico: 16.0/100",
+      "evidence": [
+        "Score transparencia: 16.0",
+        "Riesgo clasificado: ALTO",
+        "Keywords de riesgo: 0"
+      ],
+      "recommendation": "Auditoría manual inmediata requerida",
+      "transparency_score": 16,
+      "risk_factors": {
+        "transparency_score": 16,
+        "risk_level": "ALTO",
+        "section": 2
+      },
+      "metadata": {
+        "analysis_version": "2.0",
+        "detector": "transparency_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250801_2_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.640648",
+      "document_id": "20250801_2_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (220) y baja transparencia",
+      "evidence": [
+        "Número de montos: 220",
+        "Transparencia: 16.0/100",
+        "Tipo de acto: DESIGNACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 16,
+      "risk_factors": {
+        "num_amounts": 220,
+        "act_type": "DESIGNACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "PATT_20250801_2_Secc.pdf_ENTITIES",
+      "timestamp": "2025-09-19 01:03:33.640735",
+      "document_id": "20250801_2_Secc.pdf",
+      "flag_type": "PATRON_ENTIDADES_OPACO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Múltiples entidades con transparencia muy baja",
+      "evidence": [
+        "Entidades detectadas: 169",
+        "Score transparencia: 16.0"
+      ],
+      "recommendation": "Auditar relaciones entre entidades mencionadas",
+      "transparency_score": 16,
+      "risk_factors": {
+        "multi_entity_opacity": true
+      },
+      "metadata": {
+        "detector": "entity_pattern_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250804_3_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.640778",
+      "document_id": "20250804_3_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (226) y baja transparencia",
+      "evidence": [
+        "Número de montos: 226",
+        "Transparencia: 42.0/100",
+        "Tipo de acto: DESIGNACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 42,
+      "risk_factors": {
+        "num_amounts": 226,
+        "act_type": "DESIGNACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "INCONS_20250805_5_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.640991",
+      "document_id": "20250805_5_Secc.pdf",
+      "flag_type": "INCONSISTENCIA_CLASIFICACION",
+      "severity": "INFORMATIVO",
+      "confidence": 0.7,
+      "description": "Posible inconsistencia en clasificación de riesgo",
+      "evidence": [
+        "Transparencia alta (62.0/100)",
+        "Keywords transparencia detectadas (2)"
+      ],
+      "recommendation": "REVISAR: Posible falso positivo - validación manual recomendada",
+      "transparency_score": 62,
+      "risk_factors": {
+        "fp_confidence": 0.7
+      },
+      "metadata": {
+        "detector": "false_positive_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250805_4_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.641032",
+      "document_id": "20250805_4_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (22) y baja transparencia",
+      "evidence": [
+        "Número de montos: 22",
+        "Transparencia: 32.0/100",
+        "Tipo de acto: CONTRATACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 32,
+      "risk_factors": {
+        "num_amounts": 22,
+        "act_type": "CONTRATACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "TRANSP_20250804_2_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.641375",
+      "document_id": "20250804_2_Secc.pdf",
+      "flag_type": "TRANSPARENCIA_CRITICA",
+      "severity": "ALTO",
+      "confidence": 0.7,
+      "description": "Score de transparencia crítico: 24.0/100",
+      "evidence": [
+        "Score transparencia: 24.0",
+        "Riesgo clasificado: ALTO",
+        "Keywords de riesgo: 0"
+      ],
+      "recommendation": "Auditoría manual inmediata requerida",
+      "transparency_score": 24,
+      "risk_factors": {
+        "transparency_score": 24,
+        "risk_level": "ALTO",
+        "section": 2
+      },
+      "metadata": {
+        "analysis_version": "2.0",
+        "detector": "transparency_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250804_2_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.641384",
+      "document_id": "20250804_2_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (301) y baja transparencia",
+      "evidence": [
+        "Número de montos: 301",
+        "Transparencia: 24.0/100",
+        "Tipo de acto: DESIGNACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 24,
+      "risk_factors": {
+        "num_amounts": 301,
+        "act_type": "DESIGNACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "PATT_20250804_2_Secc.pdf_ENTITIES",
+      "timestamp": "2025-09-19 01:03:33.641489",
+      "document_id": "20250804_2_Secc.pdf",
+      "flag_type": "PATRON_ENTIDADES_OPACO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Múltiples entidades con transparencia muy baja",
+      "evidence": [
+        "Entidades detectadas: 213",
+        "Score transparencia: 24.0"
+      ],
+      "recommendation": "Auditar relaciones entre entidades mencionadas",
+      "transparency_score": 24,
+      "risk_factors": {
+        "multi_entity_opacity": true
+      },
+      "metadata": {
+        "detector": "entity_pattern_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250806_4_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.641546",
+      "document_id": "20250806_4_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (21) y baja transparencia",
+      "evidence": [
+        "Número de montos: 21",
+        "Transparencia: 32.0/100",
+        "Tipo de acto: CONTRATACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 32,
+      "risk_factors": {
+        "num_amounts": 21,
+        "act_type": "CONTRATACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "INCONS_20250806_5_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.642636",
+      "document_id": "20250806_5_Secc.pdf",
+      "flag_type": "INCONSISTENCIA_CLASIFICACION",
+      "severity": "INFORMATIVO",
+      "confidence": 0.7,
+      "description": "Posible inconsistencia en clasificación de riesgo",
+      "evidence": [
+        "Transparencia alta (62.0/100)",
+        "Keywords transparencia detectadas (2)"
+      ],
+      "recommendation": "REVISAR: Posible falso positivo - validación manual recomendada",
+      "transparency_score": 62,
+      "risk_factors": {
+        "fp_confidence": 0.7
+      },
+      "metadata": {
+        "detector": "false_positive_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250805_3_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.643529",
+      "document_id": "20250805_3_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (181) y baja transparencia",
+      "evidence": [
+        "Número de montos: 181",
+        "Transparencia: 39.0/100",
+        "Tipo de acto: DESIGNACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 39,
+      "risk_factors": {
+        "num_amounts": 181,
+        "act_type": "DESIGNACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250806_3_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.643711",
+      "document_id": "20250806_3_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (174) y baja transparencia",
+      "evidence": [
+        "Número de montos: 174",
+        "Transparencia: 34.0/100",
+        "Tipo de acto: DESIGNACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 34,
+      "risk_factors": {
+        "num_amounts": 174,
+        "act_type": "DESIGNACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "TRANSP_20250805_2_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.643955",
+      "document_id": "20250805_2_Secc.pdf",
+      "flag_type": "TRANSPARENCIA_CRITICA",
+      "severity": "ALTO",
+      "confidence": 0.7,
+      "description": "Score de transparencia crítico: 24.0/100",
+      "evidence": [
+        "Score transparencia: 24.0",
+        "Riesgo clasificado: ALTO",
+        "Keywords de riesgo: 0"
+      ],
+      "recommendation": "Auditoría manual inmediata requerida",
+      "transparency_score": 24,
+      "risk_factors": {
+        "transparency_score": 24,
+        "risk_level": "ALTO",
+        "section": 2
+      },
+      "metadata": {
+        "analysis_version": "2.0",
+        "detector": "transparency_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250805_2_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.643961",
+      "document_id": "20250805_2_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (300) y baja transparencia",
+      "evidence": [
+        "Número de montos: 300",
+        "Transparencia: 24.0/100",
+        "Tipo de acto: DESIGNACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 24,
+      "risk_factors": {
+        "num_amounts": 300,
+        "act_type": "DESIGNACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "PATT_20250805_2_Secc.pdf_ENTITIES",
+      "timestamp": "2025-09-19 01:03:33.644055",
+      "document_id": "20250805_2_Secc.pdf",
+      "flag_type": "PATRON_ENTIDADES_OPACO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Múltiples entidades con transparencia muy baja",
+      "evidence": [
+        "Entidades detectadas: 199",
+        "Score transparencia: 24.0"
+      ],
+      "recommendation": "Auditar relaciones entre entidades mencionadas",
+      "transparency_score": 24,
+      "risk_factors": {
+        "multi_entity_opacity": true
+      },
+      "metadata": {
+        "detector": "entity_pattern_monitor"
+      }
+    },
+    {
+      "id": "INCONS_20250807_4_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.644193",
+      "document_id": "20250807_4_Secc.pdf",
+      "flag_type": "INCONSISTENCIA_CLASIFICACION",
+      "severity": "INFORMATIVO",
+      "confidence": 0.7,
+      "description": "Posible inconsistencia en clasificación de riesgo",
+      "evidence": [
+        "Transparencia alta (75.0/100)",
+        "Keywords transparencia detectadas (2)"
+      ],
+      "recommendation": "REVISAR: Posible falso positivo - validación manual recomendada",
+      "transparency_score": 75,
+      "risk_factors": {
+        "fp_confidence": 0.7
+      },
+      "metadata": {
+        "detector": "false_positive_monitor"
+      }
+    },
+    {
+      "id": "PATT_20250808_1_Secc.pdf_ENTITIES",
+      "timestamp": "2025-09-19 01:03:33.644441",
+      "document_id": "20250808_1_Secc.pdf",
+      "flag_type": "PATRON_ENTIDADES_OPACO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Múltiples entidades con transparencia muy baja",
+      "evidence": [
+        "Entidades detectadas: 64",
+        "Score transparencia: 29.0"
+      ],
+      "recommendation": "Auditar relaciones entre entidades mencionadas",
+      "transparency_score": 29,
+      "risk_factors": {
+        "multi_entity_opacity": true
+      },
+      "metadata": {
+        "detector": "entity_pattern_monitor"
+      }
+    },
+    {
+      "id": "TRANSP_20250806_2_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.644484",
+      "document_id": "20250806_2_Secc.pdf",
+      "flag_type": "TRANSPARENCIA_CRITICA",
+      "severity": "ALTO",
+      "confidence": 0.7,
+      "description": "Score de transparencia crítico: 24.0/100",
+      "evidence": [
+        "Score transparencia: 24.0",
+        "Riesgo clasificado: ALTO",
+        "Keywords de riesgo: 0"
+      ],
+      "recommendation": "Auditoría manual inmediata requerida",
+      "transparency_score": 24,
+      "risk_factors": {
+        "transparency_score": 24,
+        "risk_level": "ALTO",
+        "section": 2
+      },
+      "metadata": {
+        "analysis_version": "2.0",
+        "detector": "transparency_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250806_2_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.644490",
+      "document_id": "20250806_2_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (301) y baja transparencia",
+      "evidence": [
+        "Número de montos: 301",
+        "Transparencia: 24.0/100",
+        "Tipo de acto: DESIGNACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 24,
+      "risk_factors": {
+        "num_amounts": 301,
+        "act_type": "DESIGNACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "PATT_20250806_2_Secc.pdf_ENTITIES",
+      "timestamp": "2025-09-19 01:03:33.644577",
+      "document_id": "20250806_2_Secc.pdf",
+      "flag_type": "PATRON_ENTIDADES_OPACO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Múltiples entidades con transparencia muy baja",
+      "evidence": [
+        "Entidades detectadas: 190",
+        "Score transparencia: 24.0"
+      ],
+      "recommendation": "Auditar relaciones entre entidades mencionadas",
+      "transparency_score": 24,
+      "risk_factors": {
+        "multi_entity_opacity": true
+      },
+      "metadata": {
+        "detector": "entity_pattern_monitor"
+      }
+    },
+    {
+      "id": "INCONS_20250808_4_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.644907",
+      "document_id": "20250808_4_Secc.pdf",
+      "flag_type": "INCONSISTENCIA_CLASIFICACION",
+      "severity": "INFORMATIVO",
+      "confidence": 0.7,
+      "description": "Posible inconsistencia en clasificación de riesgo",
+      "evidence": [
+        "Transparencia alta (75.0/100)",
+        "Keywords transparencia detectadas (2)"
+      ],
+      "recommendation": "REVISAR: Posible falso positivo - validación manual recomendada",
+      "transparency_score": 75,
+      "risk_factors": {
+        "fp_confidence": 0.7
+      },
+      "metadata": {
+        "detector": "false_positive_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250807_3_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.644946",
+      "document_id": "20250807_3_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (171) y baja transparencia",
+      "evidence": [
+        "Número de montos: 171",
+        "Transparencia: 39.0/100",
+        "Tipo de acto: CONTRATACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 39,
+      "risk_factors": {
+        "num_amounts": 171,
+        "act_type": "CONTRATACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250807_2_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.645066",
+      "document_id": "20250807_2_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (244) y baja transparencia",
+      "evidence": [
+        "Número de montos: 244",
+        "Transparencia: 39.0/100",
+        "Tipo de acto: DESIGNACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 39,
+      "risk_factors": {
+        "num_amounts": 244,
+        "act_type": "DESIGNACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "INCONS_20250811_4_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.645279",
+      "document_id": "20250811_4_Secc.pdf",
+      "flag_type": "INCONSISTENCIA_CLASIFICACION",
+      "severity": "INFORMATIVO",
+      "confidence": 0.7,
+      "description": "Posible inconsistencia en clasificación de riesgo",
+      "evidence": [
+        "Transparencia alta (75.0/100)",
+        "Keywords transparencia detectadas (2)"
+      ],
+      "recommendation": "REVISAR: Posible falso positivo - validación manual recomendada",
+      "transparency_score": 75,
+      "risk_factors": {
+        "fp_confidence": 0.7
+      },
+      "metadata": {
+        "detector": "false_positive_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250808_3_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.645320",
+      "document_id": "20250808_3_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (386) y baja transparencia",
+      "evidence": [
+        "Número de montos: 386",
+        "Transparencia: 47.0/100",
+        "Tipo de acto: DESIGNACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 47,
+      "risk_factors": {
+        "num_amounts": 386,
+        "act_type": "DESIGNACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "ANOM_20250808_3_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.645325",
+      "document_id": "20250808_3_Secc.pdf",
+      "flag_type": "ANOMALIA_ML",
+      "severity": "MEDIO",
+      "confidence": 0.75,
+      "description": "Documento marcado como anómalo por algoritmo ML",
+      "evidence": [
+        "Detectado por Isolation Forest",
+        "Score transparencia: 47.0",
+        "Sección: 3"
+      ],
+      "recommendation": "Revisión de patrones inusuales en el documento",
+      "transparency_score": 47,
+      "risk_factors": {
+        "is_anomaly": true
+      },
+      "metadata": {
+        "detector": "ml_anomaly"
+      }
+    },
+    {
+      "id": "TRANSP_20250811_5_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.645451",
+      "document_id": "20250811_5_Secc.pdf",
+      "flag_type": "TRANSPARENCIA_CRITICA",
+      "severity": "CRITICO",
+      "confidence": 0.9,
+      "description": "Score de transparencia crítico: 16.0/100",
+      "evidence": [
+        "Score transparencia: 16.0",
+        "Riesgo clasificado: ALTO",
+        "Keywords de riesgo: 0"
+      ],
+      "recommendation": "Auditoría manual inmediata requerida",
+      "transparency_score": 16,
+      "risk_factors": {
+        "transparency_score": 16,
+        "risk_level": "ALTO",
+        "section": 5
+      },
+      "metadata": {
+        "analysis_version": "2.0",
+        "detector": "transparency_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250811_5_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.645457",
+      "document_id": "20250811_5_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (31) y baja transparencia",
+      "evidence": [
+        "Número de montos: 31",
+        "Transparencia: 16.0/100",
+        "Tipo de acto: CONTRATACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 16,
+      "risk_factors": {
+        "num_amounts": 31,
+        "act_type": "CONTRATACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "PATT_20250811_5_Secc.pdf_SECC5",
+      "timestamp": "2025-09-19 01:03:33.645541",
+      "document_id": "20250811_5_Secc.pdf",
+      "flag_type": "PATRON_SECCION_INUSUAL",
+      "severity": "MEDIO",
+      "confidence": 0.6,
+      "description": "Sección 5 (Notificaciones) con clasificación de riesgo alto inusual",
+      "evidence": [
+        "Sección 5 típicamente es bajo riesgo",
+        "Clasificado como: ALTO"
+      ],
+      "recommendation": "Verificar si la clasificación es correcta",
+      "transparency_score": 16,
+      "risk_factors": {
+        "unusual_section_risk": true
+      },
+      "metadata": {
+        "detector": "pattern_monitor"
+      }
+    },
+    {
+      "id": "TRANSP_20250808_2_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.645688",
+      "document_id": "20250808_2_Secc.pdf",
+      "flag_type": "TRANSPARENCIA_CRITICA",
+      "severity": "CRITICO",
+      "confidence": 0.9,
+      "description": "Score de transparencia crítico: 16.0/100",
+      "evidence": [
+        "Score transparencia: 16.0",
+        "Riesgo clasificado: ALTO",
+        "Keywords de riesgo: 0"
+      ],
+      "recommendation": "Auditoría manual inmediata requerida",
+      "transparency_score": 16,
+      "risk_factors": {
+        "transparency_score": 16,
+        "risk_level": "ALTO",
+        "section": 2
+      },
+      "metadata": {
+        "analysis_version": "2.0",
+        "detector": "transparency_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250808_2_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.645694",
+      "document_id": "20250808_2_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (354) y baja transparencia",
+      "evidence": [
+        "Número de montos: 354",
+        "Transparencia: 16.0/100",
+        "Tipo de acto: DESIGNACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 16,
+      "risk_factors": {
+        "num_amounts": 354,
+        "act_type": "DESIGNACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "ANOM_20250808_2_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.645698",
+      "document_id": "20250808_2_Secc.pdf",
+      "flag_type": "ANOMALIA_ML",
+      "severity": "MEDIO",
+      "confidence": 0.75,
+      "description": "Documento marcado como anómalo por algoritmo ML",
+      "evidence": [
+        "Detectado por Isolation Forest",
+        "Score transparencia: 16.0",
+        "Sección: 2"
+      ],
+      "recommendation": "Revisión de patrones inusuales en el documento",
+      "transparency_score": 16,
+      "risk_factors": {
+        "is_anomaly": true
+      },
+      "metadata": {
+        "detector": "ml_anomaly"
+      }
+    },
+    {
+      "id": "PATT_20250808_2_Secc.pdf_ENTITIES",
+      "timestamp": "2025-09-19 01:03:33.645780",
+      "document_id": "20250808_2_Secc.pdf",
+      "flag_type": "PATRON_ENTIDADES_OPACO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Múltiples entidades con transparencia muy baja",
+      "evidence": [
+        "Entidades detectadas: 149",
+        "Score transparencia: 16.0"
+      ],
+      "recommendation": "Auditar relaciones entre entidades mencionadas",
+      "transparency_score": 16,
+      "risk_factors": {
+        "multi_entity_opacity": true
+      },
+      "metadata": {
+        "detector": "entity_pattern_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250812_5_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.645819",
+      "document_id": "20250812_5_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (33) y baja transparencia",
+      "evidence": [
+        "Número de montos: 33",
+        "Transparencia: 26.0/100",
+        "Tipo de acto: DESIGNACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 26,
+      "risk_factors": {
+        "num_amounts": 33,
+        "act_type": "DESIGNACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "PATT_20250812_5_Secc.pdf_SECC5",
+      "timestamp": "2025-09-19 01:03:33.645905",
+      "document_id": "20250812_5_Secc.pdf",
+      "flag_type": "PATRON_SECCION_INUSUAL",
+      "severity": "MEDIO",
+      "confidence": 0.6,
+      "description": "Sección 5 (Notificaciones) con clasificación de riesgo alto inusual",
+      "evidence": [
+        "Sección 5 típicamente es bajo riesgo",
+        "Clasificado como: ALTO"
+      ],
+      "recommendation": "Verificar si la clasificación es correcta",
+      "transparency_score": 26,
+      "risk_factors": {
+        "unusual_section_risk": true
+      },
+      "metadata": {
+        "detector": "pattern_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250811_3_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.645944",
+      "document_id": "20250811_3_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (206) y baja transparencia",
+      "evidence": [
+        "Número de montos: 206",
+        "Transparencia: 39.0/100",
+        "Tipo de acto: DESIGNACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 39,
+      "risk_factors": {
+        "num_amounts": 206,
+        "act_type": "DESIGNACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "INCONS_20250812_4_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.646151",
+      "document_id": "20250812_4_Secc.pdf",
+      "flag_type": "INCONSISTENCIA_CLASIFICACION",
+      "severity": "INFORMATIVO",
+      "confidence": 0.7,
+      "description": "Posible inconsistencia en clasificación de riesgo",
+      "evidence": [
+        "Transparencia alta (75.0/100)",
+        "Keywords transparencia detectadas (2)"
+      ],
+      "recommendation": "REVISAR: Posible falso positivo - validación manual recomendada",
+      "transparency_score": 75,
+      "risk_factors": {
+        "fp_confidence": 0.7
+      },
+      "metadata": {
+        "detector": "false_positive_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250811_2_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.646188",
+      "document_id": "20250811_2_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (260) y baja transparencia",
+      "evidence": [
+        "Número de montos: 260",
+        "Transparencia: 39.0/100",
+        "Tipo de acto: CONTRATACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 39,
+      "risk_factors": {
+        "num_amounts": 260,
+        "act_type": "CONTRATACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250812_3_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.646307",
+      "document_id": "20250812_3_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (177) y baja transparencia",
+      "evidence": [
+        "Número de montos: 177",
+        "Transparencia: 39.0/100",
+        "Tipo de acto: CONTRATACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 39,
+      "risk_factors": {
+        "num_amounts": 177,
+        "act_type": "CONTRATACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "INCONS_20250813_4_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.646510",
+      "document_id": "20250813_4_Secc.pdf",
+      "flag_type": "INCONSISTENCIA_CLASIFICACION",
+      "severity": "INFORMATIVO",
+      "confidence": 0.7,
+      "description": "Posible inconsistencia en clasificación de riesgo",
+      "evidence": [
+        "Transparencia alta (67.0/100)",
+        "Keywords transparencia detectadas (2)"
+      ],
+      "recommendation": "REVISAR: Posible falso positivo - validación manual recomendada",
+      "transparency_score": 67,
+      "risk_factors": {
+        "fp_confidence": 0.7
+      },
+      "metadata": {
+        "detector": "false_positive_monitor"
+      }
+    },
+    {
+      "id": "TRANSP_20250814_1_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.646549",
+      "document_id": "20250814_1_Secc.pdf",
+      "flag_type": "TRANSPARENCIA_CRITICA",
+      "severity": "CRITICO",
+      "confidence": 0.9,
+      "description": "Score de transparencia crítico: 17.0/100",
+      "evidence": [
+        "Score transparencia: 17.0",
+        "Riesgo clasificado: ALTO",
+        "Keywords de riesgo: 0"
+      ],
+      "recommendation": "Auditoría manual inmediata requerida",
+      "transparency_score": 17,
+      "risk_factors": {
+        "transparency_score": 17,
+        "risk_level": "ALTO",
+        "section": 1
+      },
+      "metadata": {
+        "analysis_version": "2.0",
+        "detector": "transparency_monitor"
+      }
+    },
+    {
+      "id": "PATT_20250814_1_Secc.pdf_ENTITIES",
+      "timestamp": "2025-09-19 01:03:33.646630",
+      "document_id": "20250814_1_Secc.pdf",
+      "flag_type": "PATRON_ENTIDADES_OPACO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Múltiples entidades con transparencia muy baja",
+      "evidence": [
+        "Entidades detectadas: 11",
+        "Score transparencia: 17.0"
+      ],
+      "recommendation": "Auditar relaciones entre entidades mencionadas",
+      "transparency_score": 17,
+      "risk_factors": {
+        "multi_entity_opacity": true
+      },
+      "metadata": {
+        "detector": "entity_pattern_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250813_5_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.646669",
+      "document_id": "20250813_5_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (36) y baja transparencia",
+      "evidence": [
+        "Número de montos: 36",
+        "Transparencia: 36.0/100",
+        "Tipo de acto: CONTRATACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 36,
+      "risk_factors": {
+        "num_amounts": 36,
+        "act_type": "CONTRATACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250812_2_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.646791",
+      "document_id": "20250812_2_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (178) y baja transparencia",
+      "evidence": [
+        "Número de montos: 178",
+        "Transparencia: 39.0/100",
+        "Tipo de acto: DESIGNACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 39,
+      "risk_factors": {
+        "num_amounts": 178,
+        "act_type": "DESIGNACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250813_3_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.646912",
+      "document_id": "20250813_3_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (152) y baja transparencia",
+      "evidence": [
+        "Número de montos: 152",
+        "Transparencia: 39.0/100",
+        "Tipo de acto: CONTRATACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 39,
+      "risk_factors": {
+        "num_amounts": 152,
+        "act_type": "CONTRATACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250813_2_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.647365",
+      "document_id": "20250813_2_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (220) y baja transparencia",
+      "evidence": [
+        "Número de montos: 220",
+        "Transparencia: 39.0/100",
+        "Tipo de acto: DESIGNACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 39,
+      "risk_factors": {
+        "num_amounts": 220,
+        "act_type": "DESIGNACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "INCONS_20250818_5_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.647572",
+      "document_id": "20250818_5_Secc.pdf",
+      "flag_type": "INCONSISTENCIA_CLASIFICACION",
+      "severity": "INFORMATIVO",
+      "confidence": 0.7,
+      "description": "Posible inconsistencia en clasificación de riesgo",
+      "evidence": [
+        "Transparencia alta (60.0/100)",
+        "Keywords transparencia detectadas (2)"
+      ],
+      "recommendation": "REVISAR: Posible falso positivo - validación manual recomendada",
+      "transparency_score": 60,
+      "risk_factors": {
+        "fp_confidence": 0.7
+      },
+      "metadata": {
+        "detector": "false_positive_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250814_3_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.647847",
+      "document_id": "20250814_3_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (244) y baja transparencia",
+      "evidence": [
+        "Número de montos: 244",
+        "Transparencia: 42.0/100",
+        "Tipo de acto: CONTRATACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 42,
+      "risk_factors": {
+        "num_amounts": 244,
+        "act_type": "CONTRATACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250814_2_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.647971",
+      "document_id": "20250814_2_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (279) y baja transparencia",
+      "evidence": [
+        "Número de montos: 279",
+        "Transparencia: 31.0/100",
+        "Tipo de acto: DESIGNACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 31,
+      "risk_factors": {
+        "num_amounts": 279,
+        "act_type": "DESIGNACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250818_3_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.648099",
+      "document_id": "20250818_3_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (255) y baja transparencia",
+      "evidence": [
+        "Número de montos: 255",
+        "Transparencia: 39.0/100",
+        "Tipo de acto: CONTRATACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 39,
+      "risk_factors": {
+        "num_amounts": 255,
+        "act_type": "CONTRATACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "ANOM_20250820_1_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.648219",
+      "document_id": "20250820_1_Secc.pdf",
+      "flag_type": "ANOMALIA_ML",
+      "severity": "MEDIO",
+      "confidence": 0.75,
+      "description": "Documento marcado como anómalo por algoritmo ML",
+      "evidence": [
+        "Detectado por Isolation Forest",
+        "Score transparencia: 40.0",
+        "Sección: 1"
+      ],
+      "recommendation": "Revisión de patrones inusuales en el documento",
+      "transparency_score": 40,
+      "risk_factors": {
+        "is_anomaly": true
+      },
+      "metadata": {
+        "detector": "ml_anomaly"
+      }
+    },
+    {
+      "id": "INCONS_20250819_5_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.648409",
+      "document_id": "20250819_5_Secc.pdf",
+      "flag_type": "INCONSISTENCIA_CLASIFICACION",
+      "severity": "INFORMATIVO",
+      "confidence": 0.8999999999999999,
+      "description": "Posible inconsistencia en clasificación de riesgo",
+      "evidence": [
+        "Transparencia alta (80.0/100)",
+        "Keywords transparencia detectadas (4)",
+        "Riesgo aparenta estar justificado"
+      ],
+      "recommendation": "RECLASIFICAR: Alto falso positivo - revisar algoritmo",
+      "transparency_score": 80,
+      "risk_factors": {
+        "fp_confidence": 0.8999999999999999
+      },
+      "metadata": {
+        "detector": "false_positive_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250818_2_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.648558",
+      "document_id": "20250818_2_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (306) y baja transparencia",
+      "evidence": [
+        "Número de montos: 306",
+        "Transparencia: 39.0/100",
+        "Tipo de acto: DESIGNACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 39,
+      "risk_factors": {
+        "num_amounts": 306,
+        "act_type": "DESIGNACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "ANOM_20250818_2_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.648562",
+      "document_id": "20250818_2_Secc.pdf",
+      "flag_type": "ANOMALIA_ML",
+      "severity": "MEDIO",
+      "confidence": 0.75,
+      "description": "Documento marcado como anómalo por algoritmo ML",
+      "evidence": [
+        "Detectado por Isolation Forest",
+        "Score transparencia: 39.0",
+        "Sección: 2"
+      ],
+      "recommendation": "Revisión de patrones inusuales en el documento",
+      "transparency_score": 39,
+      "risk_factors": {
+        "is_anomaly": true
+      },
+      "metadata": {
+        "detector": "ml_anomaly"
+      }
+    },
+    {
+      "id": "AMOUNT_20250819_3_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.648996",
+      "document_id": "20250819_3_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (262) y baja transparencia",
+      "evidence": [
+        "Número de montos: 262",
+        "Transparencia: 36.0/100",
+        "Tipo de acto: CONTRATACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 36,
+      "risk_factors": {
+        "num_amounts": 262,
+        "act_type": "CONTRATACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250819_2_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.649116",
+      "document_id": "20250819_2_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (285) y baja transparencia",
+      "evidence": [
+        "Número de montos: 285",
+        "Transparencia: 39.0/100",
+        "Tipo de acto: DESIGNACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 39,
+      "risk_factors": {
+        "num_amounts": 285,
+        "act_type": "DESIGNACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250820_3_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.649232",
+      "document_id": "20250820_3_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (270) y baja transparencia",
+      "evidence": [
+        "Número de montos: 270",
+        "Transparencia: 39.0/100",
+        "Tipo de acto: CONTRATACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 39,
+      "risk_factors": {
+        "num_amounts": 270,
+        "act_type": "CONTRATACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250821_5_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.649348",
+      "document_id": "20250821_5_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (19) y baja transparencia",
+      "evidence": [
+        "Número de montos: 19",
+        "Transparencia: 39.0/100",
+        "Tipo de acto: DESIGNACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 39,
+      "risk_factors": {
+        "num_amounts": 19,
+        "act_type": "DESIGNACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "INCONS_20250820_2_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.649649",
+      "document_id": "20250820_2_Secc.pdf",
+      "flag_type": "INCONSISTENCIA_CLASIFICACION",
+      "severity": "INFORMATIVO",
+      "confidence": 0.7,
+      "description": "Posible inconsistencia en clasificación de riesgo",
+      "evidence": [
+        "Transparencia alta (54.0/100)",
+        "Keywords transparencia detectadas (2)"
+      ],
+      "recommendation": "REVISAR: Posible falso positivo - validación manual recomendada",
+      "transparency_score": 54,
+      "risk_factors": {
+        "fp_confidence": 0.7
+      },
+      "metadata": {
+        "detector": "false_positive_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250822_1_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.649689",
+      "document_id": "20250822_1_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (12) y baja transparencia",
+      "evidence": [
+        "Número de montos: 12",
+        "Transparencia: 47.0/100",
+        "Tipo de acto: DESIGNACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 47,
+      "risk_factors": {
+        "num_amounts": 12,
+        "act_type": "DESIGNACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250821_3_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.649912",
+      "document_id": "20250821_3_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (210) y baja transparencia",
+      "evidence": [
+        "Número de montos: 210",
+        "Transparencia: 39.0/100",
+        "Tipo de acto: CONTRATACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 39,
+      "risk_factors": {
+        "num_amounts": 210,
+        "act_type": "CONTRATACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250821_2_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.650245",
+      "document_id": "20250821_2_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (238) y baja transparencia",
+      "evidence": [
+        "Número de montos: 238",
+        "Transparencia: 39.0/100",
+        "Tipo de acto: DESIGNACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 39,
+      "risk_factors": {
+        "num_amounts": 238,
+        "act_type": "DESIGNACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250822_3_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.650362",
+      "document_id": "20250822_3_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (198) y baja transparencia",
+      "evidence": [
+        "Número de montos: 198",
+        "Transparencia: 39.0/100",
+        "Tipo de acto: DESIGNACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 39,
+      "risk_factors": {
+        "num_amounts": 198,
+        "act_type": "DESIGNACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "INCONS_20250825_4_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.650657",
+      "document_id": "20250825_4_Secc.pdf",
+      "flag_type": "INCONSISTENCIA_CLASIFICACION",
+      "severity": "INFORMATIVO",
+      "confidence": 0.7,
+      "description": "Posible inconsistencia en clasificación de riesgo",
+      "evidence": [
+        "Transparencia alta (60.0/100)",
+        "Keywords transparencia detectadas (2)"
+      ],
+      "recommendation": "REVISAR: Posible falso positivo - validación manual recomendada",
+      "transparency_score": 60,
+      "risk_factors": {
+        "fp_confidence": 0.7
+      },
+      "metadata": {
+        "detector": "false_positive_monitor"
+      }
+    },
+    {
+      "id": "TRANSP_20250822_2_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.650694",
+      "document_id": "20250822_2_Secc.pdf",
+      "flag_type": "TRANSPARENCIA_CRITICA",
+      "severity": "CRITICO",
+      "confidence": 0.9,
+      "description": "Score de transparencia crítico: 16.0/100",
+      "evidence": [
+        "Score transparencia: 16.0",
+        "Riesgo clasificado: ALTO",
+        "Keywords de riesgo: 0"
+      ],
+      "recommendation": "Auditoría manual inmediata requerida",
+      "transparency_score": 16,
+      "risk_factors": {
+        "transparency_score": 16,
+        "risk_level": "ALTO",
+        "section": 2
+      },
+      "metadata": {
+        "analysis_version": "2.0",
+        "detector": "transparency_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250822_2_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.650699",
+      "document_id": "20250822_2_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (230) y baja transparencia",
+      "evidence": [
+        "Número de montos: 230",
+        "Transparencia: 16.0/100",
+        "Tipo de acto: DESIGNACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 16,
+      "risk_factors": {
+        "num_amounts": 230,
+        "act_type": "DESIGNACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "PATT_20250822_2_Secc.pdf_ENTITIES",
+      "timestamp": "2025-09-19 01:03:33.651296",
+      "document_id": "20250822_2_Secc.pdf",
+      "flag_type": "PATRON_ENTIDADES_OPACO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Múltiples entidades con transparencia muy baja",
+      "evidence": [
+        "Entidades detectadas: 162",
+        "Score transparencia: 16.0"
+      ],
+      "recommendation": "Auditar relaciones entre entidades mencionadas",
+      "transparency_score": 16,
+      "risk_factors": {
+        "multi_entity_opacity": true
+      },
+      "metadata": {
+        "detector": "entity_pattern_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250825_3_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.651452",
+      "document_id": "20250825_3_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (213) y baja transparencia",
+      "evidence": [
+        "Número de montos: 213",
+        "Transparencia: 39.0/100",
+        "Tipo de acto: CONTRATACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 39,
+      "risk_factors": {
+        "num_amounts": 213,
+        "act_type": "CONTRATACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250826_5_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.651572",
+      "document_id": "20250826_5_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (29) y baja transparencia",
+      "evidence": [
+        "Número de montos: 29",
+        "Transparencia: 29.0/100",
+        "Tipo de acto: CONTRATACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 29,
+      "risk_factors": {
+        "num_amounts": 29,
+        "act_type": "CONTRATACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "PATT_20250826_5_Secc.pdf_SECC5",
+      "timestamp": "2025-09-19 01:03:33.651660",
+      "document_id": "20250826_5_Secc.pdf",
+      "flag_type": "PATRON_SECCION_INUSUAL",
+      "severity": "MEDIO",
+      "confidence": 0.6,
+      "description": "Sección 5 (Notificaciones) con clasificación de riesgo alto inusual",
+      "evidence": [
+        "Sección 5 típicamente es bajo riesgo",
+        "Clasificado como: ALTO"
+      ],
+      "recommendation": "Verificar si la clasificación es correcta",
+      "transparency_score": 29,
+      "risk_factors": {
+        "unusual_section_risk": true
+      },
+      "metadata": {
+        "detector": "pattern_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250826_4_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.651698",
+      "document_id": "20250826_4_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (69) y baja transparencia",
+      "evidence": [
+        "Número de montos: 69",
+        "Transparencia: 29.0/100",
+        "Tipo de acto: CONTRATACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 29,
+      "risk_factors": {
+        "num_amounts": 69,
+        "act_type": "CONTRATACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "PATT_20250826_4_Secc.pdf_ENTITIES",
+      "timestamp": "2025-09-19 01:03:33.651788",
+      "document_id": "20250826_4_Secc.pdf",
+      "flag_type": "PATRON_ENTIDADES_OPACO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Múltiples entidades con transparencia muy baja",
+      "evidence": [
+        "Entidades detectadas: 16",
+        "Score transparencia: 29.0"
+      ],
+      "recommendation": "Auditar relaciones entre entidades mencionadas",
+      "transparency_score": 29,
+      "risk_factors": {
+        "multi_entity_opacity": true
+      },
+      "metadata": {
+        "detector": "entity_pattern_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250827_1_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.651829",
+      "document_id": "20250827_1_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (26) y baja transparencia",
+      "evidence": [
+        "Número de montos: 26",
+        "Transparencia: 42.0/100",
+        "Tipo de acto: DESIGNACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 42,
+      "risk_factors": {
+        "num_amounts": 26,
+        "act_type": "DESIGNACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "INCONS_20250826_3_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.652024",
+      "document_id": "20250826_3_Secc.pdf",
+      "flag_type": "INCONSISTENCIA_CLASIFICACION",
+      "severity": "INFORMATIVO",
+      "confidence": 0.7,
+      "description": "Posible inconsistencia en clasificación de riesgo",
+      "evidence": [
+        "Transparencia alta (52.0/100)",
+        "Keywords transparencia detectadas (2)"
+      ],
+      "recommendation": "REVISAR: Posible falso positivo - validación manual recomendada",
+      "transparency_score": 52,
+      "risk_factors": {
+        "fp_confidence": 0.7
+      },
+      "metadata": {
+        "detector": "false_positive_monitor"
+      }
+    },
+    {
+      "id": "INCONS_20250827_4_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.652180",
+      "document_id": "20250827_4_Secc.pdf",
+      "flag_type": "INCONSISTENCIA_CLASIFICACION",
+      "severity": "INFORMATIVO",
+      "confidence": 0.7,
+      "description": "Posible inconsistencia en clasificación de riesgo",
+      "evidence": [
+        "Transparencia alta (52.0/100)",
+        "Keywords transparencia detectadas (2)"
+      ],
+      "recommendation": "REVISAR: Posible falso positivo - validación manual recomendada",
+      "transparency_score": 52,
+      "risk_factors": {
+        "fp_confidence": 0.7
+      },
+      "metadata": {
+        "detector": "false_positive_monitor"
+      }
+    },
+    {
+      "id": "INCONS_20250827_5_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.652420",
+      "document_id": "20250827_5_Secc.pdf",
+      "flag_type": "INCONSISTENCIA_CLASIFICACION",
+      "severity": "INFORMATIVO",
+      "confidence": 0.8999999999999999,
+      "description": "Posible inconsistencia en clasificación de riesgo",
+      "evidence": [
+        "Transparencia alta (72.0/100)",
+        "Keywords transparencia detectadas (4)",
+        "Riesgo aparenta estar justificado"
+      ],
+      "recommendation": "RECLASIFICAR: Alto falso positivo - revisar algoritmo",
+      "transparency_score": 72,
+      "risk_factors": {
+        "fp_confidence": 0.8999999999999999
+      },
+      "metadata": {
+        "detector": "false_positive_monitor"
+      }
+    },
+    {
+      "id": "ANOM_20250825_2_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.652462",
+      "document_id": "20250825_2_Secc.pdf",
+      "flag_type": "ANOMALIA_ML",
+      "severity": "MEDIO",
+      "confidence": 0.75,
+      "description": "Documento marcado como anómalo por algoritmo ML",
+      "evidence": [
+        "Detectado por Isolation Forest",
+        "Score transparencia: 54.0",
+        "Sección: 2"
+      ],
+      "recommendation": "Revisión de patrones inusuales en el documento",
+      "transparency_score": 54,
+      "risk_factors": {
+        "is_anomaly": true
+      },
+      "metadata": {
+        "detector": "ml_anomaly"
+      }
+    },
+    {
+      "id": "INCONS_20250825_2_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.652549",
+      "document_id": "20250825_2_Secc.pdf",
+      "flag_type": "INCONSISTENCIA_CLASIFICACION",
+      "severity": "INFORMATIVO",
+      "confidence": 0.7,
+      "description": "Posible inconsistencia en clasificación de riesgo",
+      "evidence": [
+        "Transparencia alta (54.0/100)",
+        "Keywords transparencia detectadas (2)"
+      ],
+      "recommendation": "REVISAR: Posible falso positivo - validación manual recomendada",
+      "transparency_score": 54,
+      "risk_factors": {
+        "fp_confidence": 0.7
+      },
+      "metadata": {
+        "detector": "false_positive_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250827_3_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.652590",
+      "document_id": "20250827_3_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (201) y baja transparencia",
+      "evidence": [
+        "Número de montos: 201",
+        "Transparencia: 34.0/100",
+        "Tipo de acto: DESIGNACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 34,
+      "risk_factors": {
+        "num_amounts": 201,
+        "act_type": "DESIGNACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "INCONS_20250828_5_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.652795",
+      "document_id": "20250828_5_Secc.pdf",
+      "flag_type": "INCONSISTENCIA_CLASIFICACION",
+      "severity": "INFORMATIVO",
+      "confidence": 0.7,
+      "description": "Posible inconsistencia en clasificación de riesgo",
+      "evidence": [
+        "Transparencia alta (75.0/100)",
+        "Keywords transparencia detectadas (2)"
+      ],
+      "recommendation": "REVISAR: Posible falso positivo - validación manual recomendada",
+      "transparency_score": 75,
+      "risk_factors": {
+        "fp_confidence": 0.7
+      },
+      "metadata": {
+        "detector": "false_positive_monitor"
+      }
+    },
+    {
+      "id": "INCONS_20250828_4_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.652914",
+      "document_id": "20250828_4_Secc.pdf",
+      "flag_type": "INCONSISTENCIA_CLASIFICACION",
+      "severity": "INFORMATIVO",
+      "confidence": 0.7,
+      "description": "Posible inconsistencia en clasificación de riesgo",
+      "evidence": [
+        "Transparencia alta (75.0/100)",
+        "Keywords transparencia detectadas (2)"
+      ],
+      "recommendation": "REVISAR: Posible falso positivo - validación manual recomendada",
+      "transparency_score": 75,
+      "risk_factors": {
+        "fp_confidence": 0.7
+      },
+      "metadata": {
+        "detector": "false_positive_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250826_2_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.652953",
+      "document_id": "20250826_2_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (344) y baja transparencia",
+      "evidence": [
+        "Número de montos: 344",
+        "Transparencia: 39.0/100",
+        "Tipo de acto: DESIGNACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 39,
+      "risk_factors": {
+        "num_amounts": 344,
+        "act_type": "DESIGNACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "ANOM_20250826_2_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.652958",
+      "document_id": "20250826_2_Secc.pdf",
+      "flag_type": "ANOMALIA_ML",
+      "severity": "MEDIO",
+      "confidence": 0.75,
+      "description": "Documento marcado como anómalo por algoritmo ML",
+      "evidence": [
+        "Detectado por Isolation Forest",
+        "Score transparencia: 39.0",
+        "Sección: 2"
+      ],
+      "recommendation": "Revisión de patrones inusuales en el documento",
+      "transparency_score": 39,
+      "risk_factors": {
+        "is_anomaly": true
+      },
+      "metadata": {
+        "detector": "ml_anomaly"
+      }
+    },
+    {
+      "id": "AMOUNT_20250827_2_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.653190",
+      "document_id": "20250827_2_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (263) y baja transparencia",
+      "evidence": [
+        "Número de montos: 263",
+        "Transparencia: 39.0/100",
+        "Tipo de acto: CONTRATACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 39,
+      "risk_factors": {
+        "num_amounts": 263,
+        "act_type": "CONTRATACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "ANOM_20250827_2_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.653195",
+      "document_id": "20250827_2_Secc.pdf",
+      "flag_type": "ANOMALIA_ML",
+      "severity": "MEDIO",
+      "confidence": 0.75,
+      "description": "Documento marcado como anómalo por algoritmo ML",
+      "evidence": [
+        "Detectado por Isolation Forest",
+        "Score transparencia: 39.0",
+        "Sección: 2"
+      ],
+      "recommendation": "Revisión de patrones inusuales en el documento",
+      "transparency_score": 39,
+      "risk_factors": {
+        "is_anomaly": true
+      },
+      "metadata": {
+        "detector": "ml_anomaly"
+      }
+    },
+    {
+      "id": "AMOUNT_20250828_3_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.653316",
+      "document_id": "20250828_3_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (259) y baja transparencia",
+      "evidence": [
+        "Número de montos: 259",
+        "Transparencia: 34.0/100",
+        "Tipo de acto: DESIGNACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 34,
+      "risk_factors": {
+        "num_amounts": 259,
+        "act_type": "DESIGNACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "INCONS_20250829_4_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.653520",
+      "document_id": "20250829_4_Secc.pdf",
+      "flag_type": "INCONSISTENCIA_CLASIFICACION",
+      "severity": "INFORMATIVO",
+      "confidence": 0.7,
+      "description": "Posible inconsistencia en clasificación de riesgo",
+      "evidence": [
+        "Transparencia alta (75.0/100)",
+        "Keywords transparencia detectadas (2)"
+      ],
+      "recommendation": "REVISAR: Posible falso positivo - validación manual recomendada",
+      "transparency_score": 75,
+      "risk_factors": {
+        "fp_confidence": 0.7
+      },
+      "metadata": {
+        "detector": "false_positive_monitor"
+      }
+    },
+    {
+      "id": "TRANSP_20250829_5_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.653558",
+      "document_id": "20250829_5_Secc.pdf",
+      "flag_type": "TRANSPARENCIA_CRITICA",
+      "severity": "ALTO",
+      "confidence": 0.7,
+      "description": "Score de transparencia crítico: 21.0/100",
+      "evidence": [
+        "Score transparencia: 21.0",
+        "Riesgo clasificado: ALTO",
+        "Keywords de riesgo: 0"
+      ],
+      "recommendation": "Auditoría manual inmediata requerida",
+      "transparency_score": 21,
+      "risk_factors": {
+        "transparency_score": 21,
+        "risk_level": "ALTO",
+        "section": 5
+      },
+      "metadata": {
+        "analysis_version": "2.0",
+        "detector": "transparency_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250829_5_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.653564",
+      "document_id": "20250829_5_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (15) y baja transparencia",
+      "evidence": [
+        "Número de montos: 15",
+        "Transparencia: 21.0/100",
+        "Tipo de acto: CONTRATACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 21,
+      "risk_factors": {
+        "num_amounts": 15,
+        "act_type": "CONTRATACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "PATT_20250829_5_Secc.pdf_SECC5",
+      "timestamp": "2025-09-19 01:03:33.653647",
+      "document_id": "20250829_5_Secc.pdf",
+      "flag_type": "PATRON_SECCION_INUSUAL",
+      "severity": "MEDIO",
+      "confidence": 0.6,
+      "description": "Sección 5 (Notificaciones) con clasificación de riesgo alto inusual",
+      "evidence": [
+        "Sección 5 típicamente es bajo riesgo",
+        "Clasificado como: ALTO"
+      ],
+      "recommendation": "Verificar si la clasificación es correcta",
+      "transparency_score": 21,
+      "risk_factors": {
+        "unusual_section_risk": true
+      },
+      "metadata": {
+        "detector": "pattern_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250829_3_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.653686",
+      "document_id": "20250829_3_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (268) y baja transparencia",
+      "evidence": [
+        "Número de montos: 268",
+        "Transparencia: 34.0/100",
+        "Tipo de acto: DESIGNACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 34,
+      "risk_factors": {
+        "num_amounts": 268,
+        "act_type": "DESIGNACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250828_2_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.653805",
+      "document_id": "20250828_2_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (241) y baja transparencia",
+      "evidence": [
+        "Número de montos: 241",
+        "Transparencia: 39.0/100",
+        "Tipo de acto: DESIGNACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 39,
+      "risk_factors": {
+        "num_amounts": 241,
+        "act_type": "DESIGNACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "AMOUNT_20250829_2_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.653926",
+      "document_id": "20250829_2_Secc.pdf",
+      "flag_type": "MONTO_SOSPECHOSO",
+      "severity": "ALTO",
+      "confidence": 0.8,
+      "description": "Documento con montos (301) y baja transparencia",
+      "evidence": [
+        "Número de montos: 301",
+        "Transparencia: 39.0/100",
+        "Tipo de acto: DESIGNACION"
+      ],
+      "recommendation": "Verificar justificación de montos y proceso de adjudicación",
+      "transparency_score": 39,
+      "risk_factors": {
+        "num_amounts": 301,
+        "act_type": "DESIGNACION"
+      },
+      "metadata": {
+        "detector": "amount_monitor"
+      }
+    },
+    {
+      "id": "ANOM_20250829_2_Secc.pdf_20250919_010333",
+      "timestamp": "2025-09-19 01:03:33.653931",
+      "document_id": "20250829_2_Secc.pdf",
+      "flag_type": "ANOMALIA_ML",
+      "severity": "MEDIO",
+      "confidence": 0.75,
+      "description": "Documento marcado como anómalo por algoritmo ML",
+      "evidence": [
+        "Detectado por Isolation Forest",
+        "Score transparencia: 39.0",
+        "Sección: 2"
+      ],
+      "recommendation": "Revisión de patrones inusuales en el documento",
+      "transparency_score": 39,
+      "risk_factors": {
+        "is_anomaly": true
+      },
+      "metadata": {
+        "detector": "ml_anomaly"
+      }
+    }
+  ],
+  "recommendations": [
+    {
+      "type": "SYSTEM_TUNING",
+      "priority": "HIGH",
+      "issue": "Muchos casos de transparencia crítica (10)",
+      "action": "Revisar algoritmo de scoring de transparencia",
+      "expected_impact": "Reducir alertas falsas de transparencia"
+    },
+    {
+      "type": "PATTERN_ANALYSIS",
+      "priority": "MEDIUM",
+      "issue": "Patrones sospechosos detectados (13)",
+      "action": "Análisis profundo de patrones específicos",
+      "expected_impact": "Mejorar detección de irregularidades sistemáticas"
+    }
+  ]
+}

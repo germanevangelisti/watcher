@@ -1,0 +1,41 @@
+[
+  {
+    "fecha": "2025-08-05",
+    "archivo": "20250805_1_Secc.pdf",
+    "categoria": "gasto excesivo",
+    "entidad_beneficiaria": "Ministerio de Infraestructura",
+    "monto_estimado": "$2.739.182.211,78",
+    "descripcion": "Asignaci\u00f3n presupuestaria para la construcci\u00f3n de 5 centros deportivos y sociales, sin desglose t\u00e9cnico.",
+    "riesgo": "ALTO",
+    "tipo_curro": "Obra p\u00fablica sin trazabilidad de costos",
+    "pagina": 1,
+    "fragmento_original": "Apru\u00e9base la inversi\u00f3n de $2.739.182.211,78 para el desarrollo de cinco centros deportivos y sociales en el interior provincial.",
+    "accion_sugerida": "Solicitar desagregado t\u00e9cnico del proyecto, valores de referencia y beneficiarios."
+  },
+  {
+    "fecha": "2025-08-14",
+    "archivo": "20250814_1_Secc.pdf",
+    "categoria": "contrataciones masivas",
+    "entidad_beneficiaria": "Ministerio de Desarrollo Social",
+    "monto_estimado": null,
+    "descripcion": "Designaci\u00f3n de 87 agentes bajo contrato con retroactividad, sin concurso ni detalle de tareas.",
+    "riesgo": "ALTO",
+    "tipo_curro": "Aumento de planta estatal sin justificaci\u00f3n funcional",
+    "pagina": 3,
+    "fragmento_original": "Des\u00edgnase a 87 agentes bajo contrato administrativo, con fecha retroactiva al 1\u00b0 de julio.",
+    "accion_sugerida": "Auditar funciones asignadas y verificar si existen superposiciones con personal existente."
+  },
+  {
+    "fecha": "2025-08-12",
+    "archivo": "20250812_2_Secc.pdf",
+    "categoria": "subsidios poco claros",
+    "entidad_beneficiaria": "Asociaci\u00f3n Cultural Renacer",
+    "monto_estimado": "$12.000.000",
+    "descripcion": "Otorgamiento de subsidio sin justificar destino espec\u00edfico, sin rendici\u00f3n previa de subsidios anteriores.",
+    "riesgo": "MEDIO",
+    "tipo_curro": "Subsidio repetido a misma entidad sin trazabilidad",
+    "pagina": 2,
+    "fragmento_original": "Ot\u00f3rgase subsidio de $12.000.000 a la Asociaci\u00f3n Cultural Renacer para apoyo de actividades culturales.",
+    "accion_sugerida": "Requerir rendici\u00f3n de subsidios anteriores y justificar plan de uso del nuevo monto."
+  }
+]

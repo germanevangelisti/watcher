@@ -1,0 +1,11 @@
+filename,fecha,seccion,transparency_score,num_amounts,num_entities,act_type,is_false_positive,fp_confidence,reasons,corrected_risk,transparency_evidence,recommendation
+20250826_5_Secc.pdf,2025-08-26,5,29,29,5,CONTRATACION,False,0.5,"['Keywords transparencia detectadas (3)', 'Riesgo aparenta estar justificado']",ALTO,"['licitación pública', 'concurso', 'marco legal']",MONITOREAR: Algunos indicadores de falso positivo
+20250812_5_Secc.pdf,2025-08-12,5,26,33,0,DESIGNACION,False,0.3,['Keywords transparencia detectadas (2)'],ALTO,"['concurso', 'transparencia']",MONITOREAR: Algunos indicadores de falso positivo
+20250822_2_Secc.pdf,2025-08-22,2,16,230,162,DESIGNACION,False,0.3,['Keywords transparencia detectadas (2)'],ALTO,"['concurso', 'registro público']",MONITOREAR: Algunos indicadores de falso positivo
+20250826_4_Secc.pdf,2025-08-26,4,29,69,16,CONTRATACION,False,0.3,['Keywords transparencia detectadas (2)'],ALTO,"['licitación pública', 'concurso']",MONITOREAR: Algunos indicadores de falso positivo
+20250829_5_Secc.pdf,2025-08-29,5,21,15,4,CONTRATACION,False,0.3,['Keywords transparencia detectadas (2)'],ALTO,"['licitación pública', 'concurso']",MONITOREAR: Algunos indicadores de falso positivo
+20250801_1_Secc.pdf,2025-08-01,1,22,0,2,DESIGNACION,False,0.0,[],ALTO,['transparencia'],MANTENER: Clasificación parece correcta
+20250804_4_Secc.pdf,2025-08-04,4,32,19,7,CONTRATACION,False,0.0,[],ALTO,['licitación pública'],MANTENER: Clasificación parece correcta
+20250801_2_Secc.pdf,2025-08-01,2,16,220,169,DESIGNACION,False,0.0,[],ALTO,['concurso'],MANTENER: Clasificación parece correcta
+20250805_4_Secc.pdf,2025-08-05,4,32,22,4,CONTRATACION,False,0.0,[],ALTO,['licitación pública'],MANTENER: Clasificación parece correcta
+20250804_2_Secc.pdf,2025-08-04,2,24,301,213,DESIGNACION,False,0.0,[],ALTO,['concurso'],MANTENER: Clasificación parece correcta

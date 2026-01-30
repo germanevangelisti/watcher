@@ -1,0 +1,166 @@
+{
+  "new_features_count": 16,
+  "risk_correlations": {
+    "monto_total_estimado": 0.008373858522004285,
+    "monto_maximo": 0.008373858522004285,
+    "cantidad_montos": 0.20453661011352242,
+    "cantidad_entidades": 0.20399969039206303,
+    "num_keywords_riesgo_total": 0.21697750200991053,
+    "densidad_keywords_riesgo": NaN,
+    "density_alto": NaN,
+    "density_medio": NaN,
+    "density_bajo": NaN,
+    "total_menciones_legales": NaN,
+    "menciones_licitacion": NaN,
+    "menciones_decretos": NaN,
+    "menciones_resoluciones": NaN,
+    "menciones_leyes": NaN,
+    "menciones_artículos": NaN,
+    "menciones_incisos": NaN
+  },
+  "transparency_correlations": {
+    "monto_total_estimado": -0.03499581583224895,
+    "monto_maximo": -0.03499581583224895,
+    "cantidad_montos": -0.36410805342814956,
+    "cantidad_entidades": -0.39463762514403017,
+    "num_keywords_riesgo_total": -0.31747295758666394,
+    "densidad_keywords_riesgo": NaN,
+    "density_alto": NaN,
+    "density_medio": NaN,
+    "density_bajo": NaN,
+    "total_menciones_legales": NaN,
+    "menciones_licitacion": NaN,
+    "menciones_decretos": NaN,
+    "menciones_resoluciones": NaN,
+    "menciones_leyes": NaN,
+    "menciones_artículos": NaN,
+    "menciones_incisos": NaN
+  },
+  "feature_statistics": {
+    "monto_total_estimado": {
+      "mean": 2.325469574557881e+69,
+      "std": 2.313813012058768e+70,
+      "min": 0.0,
+      "max": 2.3022148788123024e+71,
+      "non_zero_count": "83"
+    },
+    "monto_maximo": {
+      "mean": 2.325469574557881e+69,
+      "std": 2.313813012058768e+70,
+      "min": 0.0,
+      "max": 2.3022148788123024e+71,
+      "non_zero_count": "83"
+    },
+    "cantidad_montos": {
+      "mean": 7868.50505050505,
+      "std": 8199.511864980366,
+      "min": "2",
+      "max": "29360",
+      "non_zero_count": "99"
+    },
+    "cantidad_entidades": {
+      "mean": 69.93939393939394,
+      "std": 78.55646846953121,
+      "min": "0",
+      "max": "312",
+      "non_zero_count": "91"
+    },
+    "num_keywords_riesgo_total": {
+      "mean": 4.171717171717172,
+      "std": 2.523523629972316,
+      "min": "0",
+      "max": "10",
+      "non_zero_count": "92"
+    },
+    "densidad_keywords_riesgo": {
+      "mean": 0.0,
+      "std": 0.0,
+      "min": "0",
+      "max": "0",
+      "non_zero_count": "0"
+    },
+    "density_alto": {
+      "mean": 0.0,
+      "std": 0.0,
+      "min": "0",
+      "max": "0",
+      "non_zero_count": "0"
+    },
+    "density_medio": {
+      "mean": 0.0,
+      "std": 0.0,
+      "min": "0",
+      "max": "0",
+      "non_zero_count": "0"
+    },
+    "density_bajo": {
+      "mean": 0.0,
+      "std": 0.0,
+      "min": "0",
+      "max": "0",
+      "non_zero_count": "0"
+    },
+    "total_menciones_legales": {
+      "mean": 0.0,
+      "std": 0.0,
+      "min": "0",
+      "max": "0",
+      "non_zero_count": "0"
+    },
+    "menciones_licitacion": {
+      "mean": 0.0,
+      "std": 0.0,
+      "min": "0",
+      "max": "0",
+      "non_zero_count": "0"
+    },
+    "menciones_decretos": {
+      "mean": 0.0,
+      "std": 0.0,
+      "min": "0",
+      "max": "0",
+      "non_zero_count": "0"
+    },
+    "menciones_resoluciones": {
+      "mean": 0.0,
+      "std": 0.0,
+      "min": "0",
+      "max": "0",
+      "non_zero_count": "0"
+    },
+    "menciones_leyes": {
+      "mean": 0.0,
+      "std": 0.0,
+      "min": "0",
+      "max": "0",
+      "non_zero_count": "0"
+    },
+    "menciones_artículos": {
+      "mean": 0.0,
+      "std": 0.0,
+      "min": "0",
+      "max": "0",
+      "non_zero_count": "0"
+    },
+    "menciones_incisos": {
+      "mean": 0.0,
+      "std": 0.0,
+      "min": "0",
+      "max": "0",
+      "non_zero_count": "0"
+    }
+  },
+  "promising_features": [],
+  "recommendations": [
+    {
+      "type": "low_variance",
+      "message": "Features con baja variabilidad: ['densidad_keywords_riesgo', 'density_alto', 'density_medio', 'density_bajo', 'total_menciones_legales', 'menciones_licitacion', 'menciones_decretos', 'menciones_resoluciones', 'menciones_leyes', 'menciones_artículos', 'menciones_incisos']",
+      "action": "Considerar remover o redefinir estas features"
+    },
+    {
+      "type": "need_more_features",
+      "message": "Pocas features con correlación significativa",
+      "action": "Explorar features adicionales basadas en texto original"
+    }
+  ]
+}

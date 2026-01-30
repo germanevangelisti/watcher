@@ -1,0 +1,464 @@
+{
+  "keywords_ley": [
+    {
+      "word": "PESOS",
+      "count": 74
+    },
+    {
+      "word": "MILLONES",
+      "count": 72
+    },
+    {
+      "word": "EJERCICIO",
+      "count": 68
+    },
+    {
+      "word": "FÍJASE",
+      "count": 51
+    },
+    {
+      "word": "CÓRDOBA",
+      "count": 48
+    },
+    {
+      "word": "PROVINCIAL",
+      "count": 45
+    },
+    {
+      "word": "RECURSOS",
+      "count": 45
+    },
+    {
+      "word": "IMPORTE",
+      "count": 43
+    },
+    {
+      "word": "CORRESPONDIENTE",
+      "count": 43
+    },
+    {
+      "word": "PRESENTE",
+      "count": 40
+    },
+    {
+      "word": "ACUERDO",
+      "count": 38
+    },
+    {
+      "word": "DETALLE",
+      "count": 36
+    },
+    {
+      "word": "PRESUPUESTO",
+      "count": 33
+    },
+    {
+      "word": "ECONOMÍA",
+      "count": 32
+    },
+    {
+      "word": "EROGACIONES",
+      "count": 31
+    },
+    {
+      "word": "FINANCIERAS",
+      "count": 31
+    },
+    {
+      "word": "DOSCIENTOS",
+      "count": 28
+    },
+    {
+      "word": "ASIMISMO",
+      "count": 27
+    },
+    {
+      "word": "AGENCIA",
+      "count": 27
+    },
+    {
+      "word": "SOCIEDAD",
+      "count": 27
+    },
+    {
+      "word": "OCHENTA",
+      "count": 26
+    },
+    {
+      "word": "SERVICIOS",
+      "count": 26
+    },
+    {
+      "word": "MINISTERIO",
+      "count": 25
+    },
+    {
+      "word": "ESTÍMASE",
+      "count": 24
+    },
+    {
+      "word": "CARGOS",
+      "count": 24
+    },
+    {
+      "word": "PERSONAL",
+      "count": 24
+    },
+    {
+      "word": "CÁLCULO",
+      "count": 24
+    },
+    {
+      "word": "CUARENTA",
+      "count": 23
+    },
+    {
+      "word": "CIENTO",
+      "count": 23
+    },
+    {
+      "word": "ESTIMÁNDOSE",
+      "count": 23
+    },
+    {
+      "word": "DESTINADO",
+      "count": 23
+    },
+    {
+      "word": "FINANCIARLO",
+      "count": 23
+    },
+    {
+      "word": "ANEXOS",
+      "count": 23
+    },
+    {
+      "word": "PLANTA",
+      "count": 22
+    },
+    {
+      "word": "NÚMERO",
+      "count": 22
+    },
+    {
+      "word": "PERMANENTE",
+      "count": 21
+    },
+    {
+      "word": "PROVINCIA",
+      "count": 20
+    },
+    {
+      "word": "ESTADO",
+      "count": 20
+    },
+    {
+      "word": "TRESCIENTOS",
+      "count": 19
+    },
+    {
+      "word": "SESENTA",
+      "count": 19
+    },
+    {
+      "word": "SETECIENTOS",
+      "count": 19
+    },
+    {
+      "word": "EJECUTIVO",
+      "count": 19
+    },
+    {
+      "word": "AUTORÍZASE",
+      "count": 19
+    },
+    {
+      "word": "TOTAL",
+      "count": 18
+    },
+    {
+      "word": "CUATRO",
+      "count": 18
+    },
+    {
+      "word": "CINCO",
+      "count": 17
+    },
+    {
+      "word": "CRÉDITO",
+      "count": 17
+    },
+    {
+      "word": "NOVENTA",
+      "count": 17
+    },
+    {
+      "word": "NUEVE",
+      "count": 16
+    },
+    {
+      "word": "OCHOCIENTOS",
+      "count": 16
+    }
+  ],
+  "keywords_mensaje": [
+    {
+      "word": "MILLONES",
+      "count": 86
+    },
+    {
+      "word": "INGRESOS",
+      "count": 49
+    },
+    {
+      "word": "CÓRDOBA",
+      "count": 42
+    },
+    {
+      "word": "PRESUPUESTO",
+      "count": 41
+    },
+    {
+      "word": "ADMINISTRACIÓN",
+      "count": 39
+    },
+    {
+      "word": "GRÁFICO",
+      "count": 38
+    },
+    {
+      "word": "GASTOS",
+      "count": 37
+    },
+    {
+      "word": "PROVINCIA",
+      "count": 37
+    },
+    {
+      "word": "PÚBLICA",
+      "count": 35
+    },
+    {
+      "word": "GASTO",
+      "count": 32
+    },
+    {
+      "word": "FUENTE",
+      "count": 30
+    },
+    {
+      "word": "CORRIENTES",
+      "count": 30
+    },
+    {
+      "word": "ECONOMÍA",
+      "count": 29
+    },
+    {
+      "word": "ANEXO",
+      "count": 29
+    },
+    {
+      "word": "TÉRMINOS",
+      "count": 24
+    },
+    {
+      "word": "GESTIÓN",
+      "count": 24
+    },
+    {
+      "word": "TOTAL",
+      "count": 23
+    },
+    {
+      "word": "SOCIAL",
+      "count": 21
+    },
+    {
+      "word": "INFLACIÓN",
+      "count": 21
+    },
+    {
+      "word": "PROVINCIAL",
+      "count": 21
+    },
+    {
+      "word": "TABLA",
+      "count": 21
+    },
+    {
+      "word": "PREVISIONAL",
+      "count": 20
+    },
+    {
+      "word": "INVERSIÓN",
+      "count": 20
+    },
+    {
+      "word": "POLÍTICAS",
+      "count": 19
+    },
+    {
+      "word": "DESARROLLO",
+      "count": 19
+    },
+    {
+      "word": "GENERAL",
+      "count": 19
+    },
+    {
+      "word": "SECTOR",
+      "count": 18
+    },
+    {
+      "word": "TOTALES",
+      "count": 18
+    },
+    {
+      "word": "CAPITAL",
+      "count": 18
+    },
+    {
+      "word": "FISCAL",
+      "count": 17
+    },
+    {
+      "word": "TRANSFERENCIAS",
+      "count": 17
+    },
+    {
+      "word": "MARCO",
+      "count": 16
+    },
+    {
+      "word": "FINANCIERA",
+      "count": 16
+    },
+    {
+      "word": "PÚBLICO",
+      "count": 16
+    },
+    {
+      "word": "RESPECTO",
+      "count": 16
+    },
+    {
+      "word": "INCREMENTO",
+      "count": 16
+    },
+    {
+      "word": "MINISTERIO",
+      "count": 16
+    },
+    {
+      "word": "EMPRESAS",
+      "count": 16
+    },
+    {
+      "word": "POLÍTICA",
+      "count": 15
+    },
+    {
+      "word": "PRODUCTIVO",
+      "count": 15
+    },
+    {
+      "word": "INTERANUAL",
+      "count": 15
+    },
+    {
+      "word": "CIERRE",
+      "count": 15
+    },
+    {
+      "word": "EMPLEO",
+      "count": 15
+    },
+    {
+      "word": "ESTIMA",
+      "count": 15
+    },
+    {
+      "word": "TRIBUTARIOS",
+      "count": 15
+    },
+    {
+      "word": "NACIONAL",
+      "count": 14
+    },
+    {
+      "word": "FINANCIAMIENTO",
+      "count": 14
+    },
+    {
+      "word": "CRECIMIENTO",
+      "count": 14
+    },
+    {
+      "word": "PARTICIPACIÓN",
+      "count": 14
+    },
+    {
+      "word": "EJERCICIO",
+      "count": 14
+    }
+  ],
+  "topics": {
+    "salud": [
+      "hospital (3)",
+      "salud (2)"
+    ],
+    "educacion": [
+      "escuela (3)",
+      "docente (1)",
+      "alumno (1)",
+      "educativo (1)",
+      "universidad (1)",
+      "educación (4)"
+    ],
+    "infraestructura": [
+      "obra (11)",
+      "construcción (2)",
+      "vial (3)",
+      "ruta (1)",
+      "camino (1)",
+      "infraestructura (6)",
+      "edificio (3)"
+    ],
+    "seguridad": [
+      "seguridad (10)",
+      "protección (2)"
+    ],
+    "desarrollo_social": [
+      "social (25)",
+      "comunidad (1)",
+      "subsidio (1)",
+      "pobreza (6)",
+      "inclusión (1)"
+    ],
+    "economia": [
+      "económico (8)",
+      "financiero (7)",
+      "presupuesto (44)",
+      "fiscal (27)",
+      "tributario (17)",
+      "impuesto (14)",
+      "recaudación (5)"
+    ],
+    "ambiente": [
+      "ambiente (2)",
+      "ambiental (7)",
+      "residuo (3)",
+      "agua (2)",
+      "energía (5)",
+      "sostenible (4)",
+      "sustentable (1)"
+    ],
+    "produccion": [
+      "producción (3)",
+      "industria (2)",
+      "comercio (1)",
+      "tecnología (2)"
+    ]
+  }
+}

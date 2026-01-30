@@ -1,0 +1,17 @@
+filename,seccion,transparency_score,num_amounts,num_entities,is_anomaly
+20250801_2_Secc.pdf,2,16,220,169,False
+20250811_5_Secc.pdf,5,16,31,0,False
+20250808_2_Secc.pdf,2,16,354,149,True
+20250822_2_Secc.pdf,2,16,230,162,False
+20250814_1_Secc.pdf,1,17,0,11,False
+20250829_5_Secc.pdf,5,21,15,4,False
+20250801_1_Secc.pdf,1,22,0,2,False
+20250804_2_Secc.pdf,2,24,301,213,False
+20250805_2_Secc.pdf,2,24,300,199,False
+20250806_2_Secc.pdf,2,24,301,190,False
+20250812_5_Secc.pdf,5,26,33,0,False
+20250826_5_Secc.pdf,5,29,29,5,False
+20250826_4_Secc.pdf,4,29,69,16,False
+20250804_4_Secc.pdf,4,32,19,7,False
+20250805_4_Secc.pdf,4,32,22,4,False
+20250806_4_Secc.pdf,4,32,21,4,False

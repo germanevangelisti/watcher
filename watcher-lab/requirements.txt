@@ -1,0 +1,30 @@
+# 📋 DEPENDENCIAS WATCHER-LAB
+# Análisis de Boletines Oficiales - Provincia de Córdoba
+
+# Core Data Science
+pandas>=2.0.0
+numpy>=1.24.0
+matplotlib>=3.6.0
+seaborn>=0.12.0
+
+# Visualización interactiva
+plotly>=5.15.0
+
+# Machine Learning
+scikit-learn>=1.3.0
+xgboost>=1.7.0
+
+# Procesamiento de PDFs
+pdfplumber>=0.9.0
+PyPDF2>=3.0.0
+
+# NLP (opcional - instalar solo si se necesita)
+# spacy>=3.6.0
+
+# Jupyter Lab (opcional - si no está instalado)
+# jupyterlab>=4.0.0
+
+# Utilidades adicionales
+pathlib2>=2.3.7
+python-dateutil>=2.8.0
+

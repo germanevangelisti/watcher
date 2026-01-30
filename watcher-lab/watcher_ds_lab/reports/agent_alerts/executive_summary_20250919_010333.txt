@@ -1,0 +1,34 @@
+
+🤖 REPORTE EJECUTIVO - WATCHER DETECTION AGENT
+=============================================
+
+📊 RESUMEN DE ANÁLISIS:
+• Timestamp: 2025-09-19 01:03:33
+• Documentos analizados: 99
+• Red flags detectadas: 102
+• Tasa de detección: 103.0%
+• Confianza promedio: 77.3%
+
+🚨 ALERTAS POR SEVERIDAD:
+• CRITICO: 5 casos (confianza: 90.0%)
+• ALTO: 64 casos (confianza: 79.2%)
+• MEDIO: 14 casos (confianza: 70.7%)
+• INFORMATIVO: 19 casos (confianza: 72.1%)
+
+🎯 DOCUMENTOS MÁS PROBLEMÁTICOS:
+• 20250808_2_Secc.pdf: 4 red flags
+• 20250801_2_Secc.pdf: 3 red flags
+• 20250804_2_Secc.pdf: 3 red flags
+
+⚡ ACCIONES PRIORITARIAS:
+1. AUDITORIA INMEDIATA: Red flags críticas detectadas
+2. REVISION_URGENTE: Múltiples red flags de alta severidad
+
+💡 RECOMENDACIONES DEL SISTEMA:
+1. [HIGH] Muchos casos de transparencia crítica (10)
+   Acción: Revisar algoritmo de scoring de transparencia
+2. [MEDIUM] Patrones sospechosos detectados (13)
+   Acción: Análisis profundo de patrones específicos
+
+🔍 Estado del Agente: OPERATIONAL
+📈 Rendimiento: 99 docs procesados

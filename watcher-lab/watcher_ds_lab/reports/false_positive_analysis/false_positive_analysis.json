@@ -1,0 +1,263 @@
+{
+  "timestamp": "2025-09-19T01:00:07.761455",
+  "performance_analysis": {
+    "total_documents": 99,
+    "risk_distribution": {
+      "MEDIO": 62,
+      "BAJO": 21,
+      "ALTO": 16
+    },
+    "transparency_stats": {
+      "mean": 44.55555555555556,
+      "std": 16.11769354937219,
+      "min": 16.0,
+      "max": 80.0
+    },
+    "potential_issues": {
+      "high_risk_high_transparency": 0,
+      "percentage": 0.0
+    },
+    "section_analysis": {
+      "1": {
+        "high_risk_count": 2,
+        "avg_transparency": 37.79,
+        "avg_amounts": 2.21,
+        "avg_entities": 18.42
+      },
+      "2": {
+        "high_risk_count": 6,
+        "avg_transparency": 34.4,
+        "avg_amounts": 271.8,
+        "avg_entities": 189.8
+      },
+      "3": {
+        "high_risk_count": 0,
+        "avg_transparency": 38.95,
+        "avg_amounts": 222.9,
+        "avg_entities": 123.4
+      },
+      "4": {
+        "high_risk_count": 4,
+        "avg_transparency": 60.95,
+        "avg_amounts": 28.4,
+        "avg_entities": 8.6
+      },
+      "5": {
+        "high_risk_count": 4,
+        "avg_transparency": 50.35,
+        "avg_amounts": 22.25,
+        "avg_entities": 6.9
+      }
+    }
+  },
+  "deep_case_analysis": {
+    "total_high_risk_cases": 16,
+    "detailed_cases": [
+      {
+        "filename": "20250826_5_Secc.pdf",
+        "fecha": "2025-08-26",
+        "seccion": 5,
+        "transparency_score": 29,
+        "num_amounts": 29,
+        "num_entities": 5,
+        "act_type": "CONTRATACION",
+        "is_false_positive": false,
+        "fp_confidence": 0.5,
+        "reasons": [
+          "Keywords transparencia detectadas (3)",
+          "Riesgo aparenta estar justificado"
+        ],
+        "corrected_risk": "ALTO",
+        "transparency_evidence": [
+          "licitación pública",
+          "concurso",
+          "marco legal"
+        ],
+        "recommendation": "MONITOREAR: Algunos indicadores de falso positivo"
+      },
+      {
+        "filename": "20250812_5_Secc.pdf",
+        "fecha": "2025-08-12",
+        "seccion": 5,
+        "transparency_score": 26,
+        "num_amounts": 33,
+        "num_entities": 0,
+        "act_type": "DESIGNACION",
+        "is_false_positive": false,
+        "fp_confidence": 0.3,
+        "reasons": [
+          "Keywords transparencia detectadas (2)"
+        ],
+        "corrected_risk": "ALTO",
+        "transparency_evidence": [
+          "concurso",
+          "transparencia"
+        ],
+        "recommendation": "MONITOREAR: Algunos indicadores de falso positivo"
+      },
+      {
+        "filename": "20250822_2_Secc.pdf",
+        "fecha": "2025-08-22",
+        "seccion": 2,
+        "transparency_score": 16,
+        "num_amounts": 230,
+        "num_entities": 162,
+        "act_type": "DESIGNACION",
+        "is_false_positive": false,
+        "fp_confidence": 0.3,
+        "reasons": [
+          "Keywords transparencia detectadas (2)"
+        ],
+        "corrected_risk": "ALTO",
+        "transparency_evidence": [
+          "concurso",
+          "registro público"
+        ],
+        "recommendation": "MONITOREAR: Algunos indicadores de falso positivo"
+      },
+      {
+        "filename": "20250826_4_Secc.pdf",
+        "fecha": "2025-08-26",
+        "seccion": 4,
+        "transparency_score": 29,
+        "num_amounts": 69,
+        "num_entities": 16,
+        "act_type": "CONTRATACION",
+        "is_false_positive": false,
+        "fp_confidence": 0.3,
+        "reasons": [
+          "Keywords transparencia detectadas (2)"
+        ],
+        "corrected_risk": "ALTO",
+        "transparency_evidence": [
+          "licitación pública",
+          "concurso"
+        ],
+        "recommendation": "MONITOREAR: Algunos indicadores de falso positivo"
+      },
+      {
+        "filename": "20250829_5_Secc.pdf",
+        "fecha": "2025-08-29",
+        "seccion": 5,
+        "transparency_score": 21,
+        "num_amounts": 15,
+        "num_entities": 4,
+        "act_type": "CONTRATACION",
+        "is_false_positive": false,
+        "fp_confidence": 0.3,
+        "reasons": [
+          "Keywords transparencia detectadas (2)"
+        ],
+        "corrected_risk": "ALTO",
+        "transparency_evidence": [
+          "licitación pública",
+          "concurso"
+        ],
+        "recommendation": "MONITOREAR: Algunos indicadores de falso positivo"
+      },
+      {
+        "filename": "20250801_1_Secc.pdf",
+        "fecha": "2025-08-01",
+        "seccion": 1,
+        "transparency_score": 22,
+        "num_amounts": 0,
+        "num_entities": 2,
+        "act_type": "DESIGNACION",
+        "is_false_positive": false,
+        "fp_confidence": 0.0,
+        "reasons": [],
+        "corrected_risk": "ALTO",
+        "transparency_evidence": [
+          "transparencia"
+        ],
+        "recommendation": "MANTENER: Clasificación parece correcta"
+      },
+      {
+        "filename": "20250804_4_Secc.pdf",
+        "fecha": "2025-08-04",
+        "seccion": 4,
+        "transparency_score": 32,
+        "num_amounts": 19,
+        "num_entities": 7,
+        "act_type": "CONTRATACION",
+        "is_false_positive": false,
+        "fp_confidence": 0.0,
+        "reasons": [],
+        "corrected_risk": "ALTO",
+        "transparency_evidence": [
+          "licitación pública"
+        ],
+        "recommendation": "MANTENER: Clasificación parece correcta"
+      },
+      {
+        "filename": "20250801_2_Secc.pdf",
+        "fecha": "2025-08-01",
+        "seccion": 2,
+        "transparency_score": 16,
+        "num_amounts": 220,
+        "num_entities": 169,
+        "act_type": "DESIGNACION",
+        "is_false_positive": false,
+        "fp_confidence": 0.0,
+        "reasons": [],
+        "corrected_risk": "ALTO",
+        "transparency_evidence": [
+          "concurso"
+        ],
+        "recommendation": "MANTENER: Clasificación parece correcta"
+      },
+      {
+        "filename": "20250805_4_Secc.pdf",
+        "fecha": "2025-08-05",
+        "seccion": 4,
+        "transparency_score": 32,
+        "num_amounts": 22,
+        "num_entities": 4,
+        "act_type": "CONTRATACION",
+        "is_false_positive": false,
+        "fp_confidence": 0.0,
+        "reasons": [],
+        "corrected_risk": "ALTO",
+        "transparency_evidence": [
+          "licitación pública"
+        ],
+        "recommendation": "MANTENER: Clasificación parece correcta"
+      },
+      {
+        "filename": "20250804_2_Secc.pdf",
+        "fecha": "2025-08-04",
+        "seccion": 2,
+        "transparency_score": 24,
+        "num_amounts": 301,
+        "num_entities": 213,
+        "act_type": "DESIGNACION",
+        "is_false_positive": false,
+        "fp_confidence": 0.0,
+        "reasons": [],
+        "corrected_risk": "ALTO",
+        "transparency_evidence": [
+          "concurso"
+        ],
+        "recommendation": "MANTENER: Clasificación parece correcta"
+      }
+    ],
+    "summary": {
+      "likely_false_positives": 0,
+      "avg_fp_confidence": 0.10625000000000001,
+      "most_common_reasons": [
+        "Keywords transparencia detectadas (2)",
+        "Keywords transparencia detectadas (3)",
+        "Riesgo aparenta estar justificado"
+      ]
+    }
+  },
+  "improvement_recommendations": [
+    {
+      "priority": "MEDIUM",
+      "category": "Scoring Algorithm",
+      "issue": "Score transparencia promedio bajo (44.6)",
+      "action": "Revisar algoritmo de scoring de transparencia",
+      "expected_impact": "Mejorar precisión de clasificación"
+    }
+  ]
+}

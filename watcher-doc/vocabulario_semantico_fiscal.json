@@ -1,0 +1,212 @@
+{
+  "licitacion": [
+    "contratación",
+    "adjudicación",
+    "concurso",
+    "llamado",
+    "puja"
+  ],
+  "decreto": [
+    "resolución",
+    "disposición",
+    "acto administrativo",
+    "norma"
+  ],
+  "subsidio": [
+    "asistencia",
+    "ayuda económica",
+    "transferencia",
+    "aporte"
+  ],
+  "obra": [
+    "construcción",
+    "infraestructura",
+    "proyecto",
+    "edificación"
+  ],
+  "programa": [
+    "plan",
+    "proyecto",
+    "iniciativa",
+    "política pública"
+  ],
+  "presupuesto": [
+    "crédito",
+    "partida",
+    "asignación",
+    "recursos"
+  ],
+  "ministerio": [
+    "jurisdicción",
+    "cartera",
+    "organismo",
+    "secretaría"
+  ],
+  "empleado": [
+    "agente",
+    "funcionario",
+    "personal",
+    "trabajador"
+  ],
+  "gasto": [
+    "erogación",
+    "egreso",
+    "desembolso",
+    "inversión"
+  ],
+  "ingreso": [
+    "recurso",
+    "recaudación",
+    "renta",
+    "tributo"
+  ],
+  "salud": [
+    "hospital",
+    "salud"
+  ],
+  "educacion": [
+    "escuela",
+    "docente",
+    "alumno",
+    "educativo",
+    "universidad",
+    "educación"
+  ],
+  "infraestructura": [
+    "obra",
+    "construcción",
+    "vial",
+    "ruta",
+    "camino",
+    "infraestructura",
+    "edificio"
+  ],
+  "seguridad": [
+    "seguridad",
+    "protección"
+  ],
+  "desarrollo_social": [
+    "social",
+    "comunidad",
+    "subsidio",
+    "pobreza",
+    "inclusión"
+  ],
+  "economia": [
+    "económico",
+    "financiero",
+    "presupuesto",
+    "fiscal",
+    "tributario",
+    "impuesto",
+    "recaudación"
+  ],
+  "ambiente": [
+    "ambiente",
+    "ambiental",
+    "residuo",
+    "agua",
+    "energía",
+    "sostenible",
+    "sustentable"
+  ],
+  "produccion": [
+    "producción",
+    "industria",
+    "comercio",
+    "tecnología"
+  ],
+  "keywords_generales": [
+    "detalle",
+    "cargos",
+    "noventa",
+    "estima",
+    "fuente",
+    "fiscal",
+    "interanual",
+    "cálculo",
+    "financieras",
+    "anexo",
+    "productivo",
+    "economía",
+    "previsional",
+    "transferencias",
+    "acuerdo",
+    "estímase",
+    "estimándose",
+    "cuatro",
+    "setecientos",
+    "financiera",
+    "presente",
+    "respecto",
+    "pesos",
+    "correspondiente",
+    "planta",
+    "público",
+    "financiamiento",
+    "ochocientos",
+    "provincia",
+    "agencia",
+    "ingresos",
+    "millones",
+    "trescientos",
+    "marco",
+    "sector",
+    "presupuesto",
+    "corrientes",
+    "provincial",
+    "gráfico",
+    "totales",
+    "nacional",
+    "autorízase",
+    "cuarenta",
+    "incremento",
+    "servicios",
+    "política",
+    "gasto",
+    "crecimiento",
+    "personal",
+    "ochenta",
+    "anexos",
+    "erogaciones",
+    "destinado",
+    "total",
+    "general",
+    "cierre",
+    "empresas",
+    "pública",
+    "participación",
+    "financiarlo",
+    "ejercicio",
+    "ministerio",
+    "recursos",
+    "cinco",
+    "fíjase",
+    "gastos",
+    "inversión",
+    "capital",
+    "crédito",
+    "social",
+    "empleo",
+    "sesenta",
+    "desarrollo",
+    "ciento",
+    "córdoba",
+    "sociedad",
+    "ejecutivo",
+    "términos",
+    "administración",
+    "inflación",
+    "estado",
+    "número",
+    "nueve",
+    "doscientos",
+    "tributarios",
+    "políticas",
+    "gestión",
+    "tabla",
+    "permanente",
+    "importe",
+    "asimismo"
+  ]
+}

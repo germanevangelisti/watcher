@@ -1,0 +1,44 @@
+{
+  "model_type": "IsolationForest",
+  "trained_date": "2025-11-16T03:06:57.446541",
+  "n_samples": 375,
+  "n_features": 8,
+  "feature_names": [
+    "porcentaje_ejecucion_marzo",
+    "porcentaje_ejecucion_junio",
+    "delta_porcentaje",
+    "velocidad_mensual",
+    "log_presupuesto",
+    "ratio_devengado_pagado",
+    "tiene_alerta",
+    "proyeccion_diciembre_pct"
+  ],
+  "thresholds": {
+    "p5": -0.5471943116567896,
+    "p10": -0.49934773240261043,
+    "p25": -0.4157405882156475,
+    "p50": -0.361786218784057,
+    "p75": -0.3299778564283199,
+    "p90": -0.32333072105042804,
+    "p95": -0.32333072105042804,
+    "CRITICO": -0.5471943116567896,
+    "ALTO": -0.49934773240261043,
+    "MEDIO": -0.4157405882156475,
+    "BAJO": -0.361786218784057
+  },
+  "validation": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1_score": 1.0,
+    "total_samples": 375,
+    "ml_anomalies": 57,
+    "tendencias_anomalies": 305
+  },
+  "severity_distribution": {
+    "NORMAL": 188,
+    "MEDIO": 56,
+    "BAJO": 93,
+    "CRITICO": 19,
+    "ALTO": 19
+  }
+}

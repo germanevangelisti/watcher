@@ -1,0 +1,3008 @@
+{
+  "metadata": {
+    "fecha": "2025-11-16T03:06:57.446779",
+    "total_programas": 375
+  },
+  "programas": [
+    {
+      "organismo": "605 - AGENCIA CÓRDOBA DE INVERSIÓN Y FINANCIAMIENTO SEM",
+      "programa": "839 - Ppa - Programa De Proyectos De Agroindustria",
+      "presupuesto": 6458766000.0,
+      "anomaly_score": -0.34730822832351504,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "109 - MINISTERIO DE AMBIENTE Y ECONOMÍA CIRCULAR",
+      "programa": "555 - Ministerio De Ambiente Y Economía Circular",
+      "presupuesto": 5000000.0,
+      "anomaly_score": -0.32333072105042804,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "185 - MINISTERIO DE PRODUCCIÓN CIENCIA E INNOVACIÓN TECNOLÓGICA",
+      "programa": "855 - Defensa Del Consumidor Y Lealtad Comercial",
+      "presupuesto": 22000000.0,
+      "anomaly_score": -0.3516935785945869,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "615 - AGENCIA CÓRDOBA DEPORTES - SEM",
+      "programa": "994 - Apoyo Al Deporte Comunitario Con Financiamiento Nacional",
+      "presupuesto": 2500000.0,
+      "anomaly_score": -0.3309366090465505,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "185 - MINISTERIO DE PRODUCCIÓN CIENCIA E INNOVACIÓN TECNOLÓGICA",
+      "programa": "300 - Ciencia Y Tecnología",
+      "presupuesto": 39800000.0,
+      "anomaly_score": -0.3233971629189152,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "135 - MINISTERIO DE EDUCACIÓN",
+      "programa": "383 - Infancias Primero: Educación Inicial",
+      "presupuesto": 93776510000.0,
+      "anomaly_score": -0.4565113169790324,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "109 - MINISTERIO DE AMBIENTE Y ECONOMÍA CIRCULAR",
+      "programa": "557 - Fondo De Asistencia Ambiental De Cuencas - Ley 10.941",
+      "presupuesto": 5000000.0,
+      "anomaly_score": -0.32333072105042804,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+      "programa": "645 - Desarrollo Regional Del Noroeste",
+      "presupuesto": 100000000.0,
+      "anomaly_score": -0.3240007037069757,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "113 - MINISTERIO DE VINCULACIÓN COMUNITARIA",
+      "programa": "134 - Audiencia Y Ceremonial",
+      "presupuesto": 50000000.0,
+      "anomaly_score": -0.34414423494677565,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "170 - GASTOS GENERALES DE LA ADMINISTRACIONINISTRACIÓN",
+      "programa": "704 - Secretaría De Innovación E Infraestructura De La Gestión",
+      "presupuesto": 14847792000.0,
+      "anomaly_score": -0.46225832495632285,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "630 - AGENCIA CÓRDOBA TURISMO SEM",
+      "programa": "867 - Inversiones Y Calidad Turística - Recursos Afectados",
+      "presupuesto": 1000000.0,
+      "anomaly_score": -0.3345729995830848,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "140 - MINISTERIO DE JUSTICIA Y TRABAJO",
+      "programa": "408 - Actividades Centrales Del Servicio Penitenciario",
+      "presupuesto": 19211286000.0,
+      "anomaly_score": -0.38640919597778384,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "140 - MINISTERIO DE JUSTICIA Y TRABAJO",
+      "programa": "400 - Ministerio De Justicia Y Trabajo",
+      "presupuesto": 76250000.0,
+      "anomaly_score": -0.3230713116283634,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "213 - (P.A.I.Cor.) Programa Asistencia Integral Córdoba",
+      "presupuesto": 695500000.0,
+      "anomaly_score": -0.3591780265655099,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "200 - PODER LEGISLATIVO",
+      "programa": "905 - Jurado De Enjuiciamiento Magistrados Y Funcionarios",
+      "presupuesto": 13392000.0,
+      "anomaly_score": -0.3331378734877809,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "630 - AGENCIA CÓRDOBA TURISMO SEM",
+      "programa": "890 - Promoción Turística Y Acceso A La Comunicación Digital",
+      "presupuesto": 6459560000.0,
+      "anomaly_score": -0.562770105176637,
+      "is_anomaly": true,
+      "severity": "CRITICO"
+    },
+    {
+      "organismo": "175 - MINISTERIO DE SEGURIDAD",
+      "programa": "766 - Participación Ciudadana En Políticas De Seguridad",
+      "presupuesto": 42000.0,
+      "anomaly_score": -0.3942642299686223,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "140 - MINISTERIO DE JUSTICIA Y TRABAJO",
+      "programa": "405 - Registro Civil",
+      "presupuesto": 94600000.0,
+      "anomaly_score": -0.32308895439289104,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "145 - MINISTERIO DE SALUD",
+      "programa": "451 - Actividades De Fiscalización, Evaluación Y Registro - Ley 6222 Y Modificatorias",
+      "presupuesto": 1000000.0,
+      "anomaly_score": -0.3345729995830848,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "185 - MINISTERIO DE PRODUCCIÓN CIENCIA E INNOVACIÓN TECNOLÓGICA",
+      "programa": "254 - Autorización Y Vigilancia Alimentaria",
+      "presupuesto": 10000000.0,
+      "anomaly_score": -0.34666430052949065,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "125 - MINISTERIO DE BIOAGROINDUSTRIA",
+      "programa": "257 - Programas Agropecuarios Financiados Con Recursos Nacionales",
+      "presupuesto": 2600000.0,
+      "anomaly_score": -0.32907898662008644,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "175 - MINISTERIO DE SEGURIDAD",
+      "programa": "761 - (C.E) Comisión Provincial De Tránsito Y Seguridad Vial - Cuenta Especial Ley 8560",
+      "presupuesto": 11318000.0,
+      "anomaly_score": -0.32456088602881833,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "060 - Integración Y Relaciones Internacionales, Desarrollo Regional Y Vinculación Internacional",
+      "presupuesto": 40436000.0,
+      "anomaly_score": -0.35954315850687474,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "185 - MINISTERIO DE PRODUCCIÓN CIENCIA E INNOVACIÓN TECNOLÓGICA",
+      "programa": "851 - Industria",
+      "presupuesto": 602288000.0,
+      "anomaly_score": -0.36390228985367695,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "605 - AGENCIA CÓRDOBA DE INVERSIÓN Y FINANCIAMIENTO SEM",
+      "programa": "830 - Gestión Y Administración De Financiamiento Para Programas De Inversión De La Admistración Pública Provincial",
+      "presupuesto": 499220289000.0,
+      "anomaly_score": -0.6526854474703557,
+      "is_anomaly": true,
+      "severity": "CRITICO"
+    },
+    {
+      "organismo": "200 - PODER LEGISLATIVO",
+      "programa": "910 - Programa De Financiamiento De Las Comisiones Permanentes Del Poder Legislativo",
+      "presupuesto": 547024000.0,
+      "anomaly_score": -0.35455836334005714,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "140 - MINISTERIO DE JUSTICIA Y TRABAJO",
+      "programa": "428 - Convenios Con El Gobierno Nacional",
+      "presupuesto": 1000000.0,
+      "anomaly_score": -0.3345729995830848,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "140 - MINISTERIO DE JUSTICIA Y TRABAJO",
+      "programa": "402 - Org., Coord.Y Prom. Del Saneamiento De Tít. Y La Inscr.De Parcelas Urbanas, Rurales Y Semirurales",
+      "presupuesto": 12800000.0,
+      "anomaly_score": -0.3329176579993959,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "160 - MINISTERIO DE DESARROLLO HUMANO",
+      "programa": "675 - Coordinación Y Fortalecimiento Familiar-Actividades Comunes",
+      "presupuesto": 56000000.0,
+      "anomaly_score": -0.34382049875308035,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "155 - MINISTERIO DE INFRAESTRUCTURA Y SERVICIOS PÚBLICOS",
+      "programa": "565 - Desarrollo Energético",
+      "presupuesto": 12000000.0,
+      "anomaly_score": -0.32482612981158254,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "845 - ARCHIVO PROVINCIALINCIAL DE LA MEMORIA",
+      "programa": "895 - Archivo Provincial De La Memoria",
+      "presupuesto": 4530000.0,
+      "anomaly_score": -0.6901762049752631,
+      "is_anomaly": true,
+      "severity": "CRITICO"
+    },
+    {
+      "organismo": "135 - MINISTERIO DE EDUCACIÓN",
+      "programa": "367 - Apoyo A La Gestión Y El Bienestar En La Educación Obligatoria Y Modalidades",
+      "presupuesto": 561134000.0,
+      "anomaly_score": -0.5391068118254548,
+      "is_anomaly": true,
+      "severity": "ALTO"
+    },
+    {
+      "organismo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+      "programa": "640 - Ministerio De Desarrollo Social Y Promoción Del Empleo",
+      "presupuesto": 418676000.0,
+      "anomaly_score": -0.3289982607961392,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "615 - AGENCIA CÓRDOBA DEPORTES - SEM",
+      "programa": "991 - Funcionamiento Operativo Y Mejora Continua De La Agencia Córdoba Deportes Sem",
+      "presupuesto": 890000000.0,
+      "anomaly_score": -0.3530503397705655,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "135 - MINISTERIO DE EDUCACIÓN",
+      "programa": "366 - Educación Permanente De Jóvenes Y Adultos: Terminalidad Y Formación Profesional",
+      "presupuesto": 43244981000.0,
+      "anomaly_score": -0.42459038064633364,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "175 - MINISTERIO DE SEGURIDAD",
+      "programa": "760 - Tribunal De Conducta Policial",
+      "presupuesto": 5000000.0,
+      "anomaly_score": -0.32333072105042804,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "109 - MINISTERIO DE AMBIENTE Y ECONOMÍA CIRCULAR",
+      "programa": "560 - (C.E) Fondo Para La Gestión De Residuos Sólidos Urbanos Ley N° 9088 - Cuenta Especial",
+      "presupuesto": 39243000.0,
+      "anomaly_score": -0.3502866077140457,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "715 - FIDEICOMISO PARA EL DESARROLLO AGROPECUARIO FDA",
+      "programa": "715 - Fideicomiso Para El Desarrollo Agropecuario (Fda)",
+      "presupuesto": 30800000000.0,
+      "anomaly_score": -0.40567830857566084,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+      "programa": "502 - Vivienda - Actividades Comunes",
+      "presupuesto": 155641000.0,
+      "anomaly_score": -0.3534249446450201,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+      "programa": "142 - Programa Provincial De Promoción Del Empleo",
+      "presupuesto": 70659664000.0,
+      "anomaly_score": -0.44100196825888643,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "140 - MINISTERIO DE JUSTICIA Y TRABAJO",
+      "programa": "401 - Asistencia A La Victima Del Delito",
+      "presupuesto": 10660000.0,
+      "anomaly_score": -0.3247087300166646,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "610 - AGENCIA CONECTIVIDAD CÓRDOBA SE",
+      "programa": "610 - Agencia Conectividad Córdoba S.E.",
+      "presupuesto": 5000000.0,
+      "anomaly_score": -0.32333072105042804,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "205 - Innovación De La Gestión",
+      "presupuesto": 3000000.0,
+      "anomaly_score": -0.3270621657589927,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "145 - MINISTERIO DE SALUD",
+      "programa": "464 - (C.E.) Conv. Con Organismos De Seg.Soc. Y Otros -Cta Esp-Recup Del Gto Hosp-Ley 8373",
+      "presupuesto": 1000000.0,
+      "anomaly_score": -0.3345729995830848,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "605 - AGENCIA CÓRDOBA DE INVERSIÓN Y FINANCIAMIENTO SEM",
+      "programa": "840 - Infraestructura De Conectividad Vial: Autovía Alternativa A La Ruta Nacional Nº 38 (Aarn38)",
+      "presupuesto": 3003802000.0,
+      "anomaly_score": -0.40631708537206856,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "041 - Infraestructura Tecnológica",
+      "presupuesto": 73400000.0,
+      "anomaly_score": -0.4982399267619151,
+      "is_anomaly": true,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "169 - Innovación Y Modernización - Inspección De Personas Jurídicas",
+      "presupuesto": 56492000.0,
+      "anomaly_score": -0.3224458093364279,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "082 - Estadística Provincial",
+      "presupuesto": 123040000.0,
+      "anomaly_score": -0.39583129432485925,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "135 - MINISTERIO DE EDUCACIÓN",
+      "programa": "361 - Educación Pública De Gestión Privada",
+      "presupuesto": 3462864000.0,
+      "anomaly_score": -0.37085235962474133,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "635 - AGENCIA PROCÓRDOBA SEM",
+      "programa": "874 - Difusión y Promoción",
+      "presupuesto": 19259000.0,
+      "anomaly_score": -0.49450409764958897,
+      "is_anomaly": true,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "110 - MINISTERIO DE GOBIERNO",
+      "programa": "772 - (C.E) Partidos Políticos- Ley 9572 - Cuenta Especial",
+      "presupuesto": 64821000.0,
+      "anomaly_score": -0.3230713116283634,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "625 - AGENCIA CÓRDOBA CULTURA SE",
+      "programa": "628 - Cultura I.N.C.A.A. - Recursos Afectados",
+      "presupuesto": 6000000.0,
+      "anomaly_score": -0.3243979832337569,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "170 - GASTOS GENERALES DE LA ADMINISTRACIONINISTRACIÓN",
+      "programa": "703 - Aportes Al Fideicomiso Para El Desarrollo Agropecuario",
+      "presupuesto": 243281660000.0,
+      "anomaly_score": -0.5728376408654298,
+      "is_anomaly": true,
+      "severity": "CRITICO"
+    },
+    {
+      "organismo": "155 - MINISTERIO DE INFRAESTRUCTURA Y SERVICIOS PÚBLICOS",
+      "programa": "551 - Ministerio De Infraestructura Y Servicios Públicos - Actividades Comunes",
+      "presupuesto": 840780000.0,
+      "anomaly_score": -0.40168519544070314,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "820 - AGENCIA CÓRDOBA INNOVAR Y EMPRENDER SEM",
+      "programa": "821 - Financiamiento para emprendimientos e Innovación",
+      "presupuesto": 610000000.0,
+      "anomaly_score": -0.3757175811365976,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "158 - Infraestructura Y Mantenimiento Edilicio Del Ministerio",
+      "presupuesto": 310000000.0,
+      "anomaly_score": -0.32784851416629807,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+      "programa": "667 - Veteranos De Malvinas",
+      "presupuesto": 8468569000.0,
+      "anomaly_score": -0.41771474522084656,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "155 - MINISTERIO DE INFRAESTRUCTURA Y SERVICIOS PÚBLICOS",
+      "programa": "577 - Biocombustibles Y Energias Renovables",
+      "presupuesto": 50000000.0,
+      "anomaly_score": -0.3227494194450926,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "185 - MINISTERIO DE PRODUCCIÓN CIENCIA E INNOVACIÓN TECNOLÓGICA",
+      "programa": "313 - Divulgación De La Ciencia Y La Tecnología",
+      "presupuesto": 1600000.0,
+      "anomaly_score": -0.5080582517002712,
+      "is_anomaly": true,
+      "severity": "ALTO"
+    },
+    {
+      "organismo": "185 - MINISTERIO DE PRODUCCIÓN CIENCIA E INNOVACIÓN TECNOLÓGICA",
+      "programa": "862 - (C.E.) Registro Comercial Sifcos (Sistema De Información Para El Fortalecimiento De La Actividad Comercial Y De Servicios) Cuenta Especial Ley 9693",
+      "presupuesto": 43189000.0,
+      "anomaly_score": -0.33925405465391967,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "175 - MINISTERIO DE SEGURIDAD",
+      "programa": "757 - (C.E.) Servicios Policiales - Cuenta Especial Ley 7386",
+      "presupuesto": 5103908000.0,
+      "anomaly_score": -0.3787636721579523,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "175 - MINISTERIO DE SEGURIDAD",
+      "programa": "768 - Fondo Permanente Para La Atención De Situaciones De Desastre - Ampliación (Etac)",
+      "presupuesto": 251000000.0,
+      "anomaly_score": -0.3268030982753561,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "400 - DEFENSORÍA DEL PUEBLO",
+      "programa": "952 - Instituto De Prevención De Adicciones Del Defensor Del Pueblo (Ipadep)",
+      "presupuesto": 300000.0,
+      "anomaly_score": -0.35459900509037684,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "185 - MINISTERIO DE PRODUCCIÓN CIENCIA E INNOVACIÓN TECNOLÓGICA",
+      "programa": "314 - Innovación Científico    -    Tecnológica",
+      "presupuesto": 10000000.0,
+      "anomaly_score": -0.32412146159416655,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+      "programa": "141 - Programa De Formación Profesional Y Capacitación Laboral",
+      "presupuesto": 642750000.0,
+      "anomaly_score": -0.3526393355854274,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "610 - Boleto Social Cordobes (Bsc)- Decreto N° 779/2017 Y N° 411/2021",
+      "presupuesto": 250000.0,
+      "anomaly_score": -0.35367613101567436,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "400 - DEFENSORÍA DEL PUEBLO",
+      "programa": "946 - Instituto De Estadística (Inedep)",
+      "presupuesto": 2101000.0,
+      "anomaly_score": -0.4193014187155433,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "640 - AGENCIA PARA LA COMPETITIVIDAD DE CÓRDOBA SEM",
+      "programa": "640 - Agencia para la competitividad de Córdoba SEM",
+      "presupuesto": 5000000.0,
+      "anomaly_score": -0.32333072105042804,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "160 - MINISTERIO DE DESARROLLO HUMANO",
+      "programa": "425 - Promoción Y Defensa De Los Derechos Humanos",
+      "presupuesto": 11877000.0,
+      "anomaly_score": -0.379006793385949,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "450 - DEFENSORÍA DE LOS DERECHOS DE NIÑAS NIÑOS Y ADOLESCENTES",
+      "programa": "965 - (C.E.) Monitoreo De Derechos- Cuenta Especial Ley 8665-",
+      "presupuesto": 11710000.0,
+      "anomaly_score": -0.3768835704466864,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "135 - MINISTERIO DE EDUCACIÓN",
+      "programa": "356 - Educación Secundaria Integral",
+      "presupuesto": 157591157000.0,
+      "anomaly_score": -0.5369490144147617,
+      "is_anomaly": true,
+      "severity": "ALTO"
+    },
+    {
+      "organismo": "145 - MINISTERIO DE SALUD",
+      "programa": "473 - Programa De Protección De La Embarazada Y Su Bebe",
+      "presupuesto": 1776887000.0,
+      "anomaly_score": -0.5147214962131591,
+      "is_anomaly": true,
+      "severity": "ALTO"
+    },
+    {
+      "organismo": "865 - CENTRO DE EXCELENCIA EN PRODUCTOS Y PROCESOS",
+      "programa": "968 - Proyectos De Investigación Y Desarrollo",
+      "presupuesto": 92000000.0,
+      "anomaly_score": -0.35682955820955564,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "135 - MINISTERIO DE EDUCACIÓN",
+      "programa": "365 - Educación, Trabajo Y Producción: Educación Técnica Y Formación Profesional",
+      "presupuesto": 159421169000.0,
+      "anomaly_score": -0.5016697468515812,
+      "is_anomaly": true,
+      "severity": "ALTO"
+    },
+    {
+      "organismo": "630 - AGENCIA CÓRDOBA TURISMO SEM",
+      "programa": "868 - Desarrollo De Infraestructura Y Equipamiento Técnico",
+      "presupuesto": 3524250000.0,
+      "anomaly_score": -0.3739859325883005,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+      "programa": "208 - Fondo Permanente Para La Atención De Situaciones De Desastres",
+      "presupuesto": 5000000.0,
+      "anomaly_score": -0.32333072105042804,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "150 - Ministerio De Economía Y Gestión Pública",
+      "presupuesto": 23035000.0,
+      "anomaly_score": -0.3893678052041388,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "145 - MINISTERIO DE SALUD",
+      "programa": "658 - Protección Integral De Personas Con Discapacidad",
+      "presupuesto": 80380000.0,
+      "anomaly_score": -0.4944439852746403,
+      "is_anomaly": true,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "635 - AGENCIA PROCÓRDOBA SEM",
+      "programa": "870 - (Procor) Agencia Procórdoba S.E.M. - Gastos Generales De Funcionamiento",
+      "presupuesto": 5000000.0,
+      "anomaly_score": -0.32333072105042804,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "185 - MINISTERIO DE PRODUCCIÓN CIENCIA E INNOVACIÓN TECNOLÓGICA",
+      "programa": "861 - Consumidor Informado",
+      "presupuesto": 20000000.0,
+      "anomaly_score": -0.35284502623384845,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "131 - Aportes A La Agencia Conectividad Córdoba S.E.",
+      "presupuesto": 23432000000.0,
+      "anomaly_score": -0.40716324251145236,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "185 - MINISTERIO DE PRODUCCIÓN CIENCIA E INNOVACIÓN TECNOLÓGICA",
+      "programa": "322 - Editorial Y Comunicación Pública De La Ciencia",
+      "presupuesto": 2000000.0,
+      "anomaly_score": -0.33239546523107905,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "135 - MINISTERIO DE EDUCACIÓN",
+      "programa": "010 - Aportes Universidad Provincial De Córdoba",
+      "presupuesto": 57091000000.0,
+      "anomaly_score": -0.4227037409640574,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "170 - GASTOS GENERALES DE LA ADMINISTRACIONINISTRACIÓN",
+      "programa": "712 - Actualización E Intereses Por Mora  - Administración Central",
+      "presupuesto": 22662000.0,
+      "anomaly_score": -0.7423927990062882,
+      "is_anomaly": true,
+      "severity": "CRITICO"
+    },
+    {
+      "organismo": "125 - MINISTERIO DE BIOAGROINDUSTRIA",
+      "programa": "251 - Programa Apícola Provincial",
+      "presupuesto": 5000000.0,
+      "anomaly_score": -0.32333072105042804,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "135 - MINISTERIO DE EDUCACIÓN",
+      "programa": "386 - Mejoramiento De La Calidad Educativa",
+      "presupuesto": 1300000.0,
+      "anomaly_score": -0.3356550948572067,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "185 - MINISTERIO DE PRODUCCIÓN CIENCIA E INNOVACIÓN TECNOLÓGICA",
+      "programa": "316 - Promoción Científica",
+      "presupuesto": 100000000.0,
+      "anomaly_score": -0.48271861494585383,
+      "is_anomaly": true,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+      "programa": "525 - Crédito Tu Casa - Diferencial De Interés",
+      "presupuesto": 96000000.0,
+      "anomaly_score": -0.36585986797138614,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "135 - MINISTERIO DE EDUCACIÓN",
+      "programa": "378 - Habitar La Escuela: Programa De Reparación, Ampliación Y Construcción De Escuelas",
+      "presupuesto": 67386403000.0,
+      "anomaly_score": -0.4294976625037791,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "166 - Coordinación Legal Y Operativa",
+      "presupuesto": 14331000.0,
+      "anomaly_score": -0.40429730961380766,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "635 - AGENCIA PROCÓRDOBA SEM",
+      "programa": "873 - Cooperación y Relaciones Internacionales",
+      "presupuesto": 35000000.0,
+      "anomaly_score": -0.5761073560803978,
+      "is_anomaly": true,
+      "severity": "CRITICO"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "163 - Consejo General De Tasaciones",
+      "presupuesto": 5870000.0,
+      "anomaly_score": -0.36349603830389865,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+      "programa": "517 - Escrituración De Viviendas",
+      "presupuesto": 568320000.0,
+      "anomaly_score": -0.35246419059512396,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "175 - MINISTERIO DE SEGURIDAD",
+      "programa": "751 - Defensa Civil",
+      "presupuesto": 5000000.0,
+      "anomaly_score": -0.32333072105042804,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "865 - CENTRO DE EXCELENCIA EN PRODUCTOS Y PROCESOS",
+      "programa": "995 - Administración Y Pañol",
+      "presupuesto": 133504000.0,
+      "anomaly_score": -0.345488328457012,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "135 - MINISTERIO DE EDUCACIÓN",
+      "programa": "379 - Inclusión Para La Terminalidad De La Educación Secundaria Y Formación Laboral Para Jóvenes De 14 A 17 Años",
+      "presupuesto": 11866020000.0,
+      "anomaly_score": -0.4066747913670121,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "135 - MINISTERIO DE EDUCACIÓN",
+      "programa": "371 - Programa Provincial De Formación Docente (Infod)",
+      "presupuesto": 61355000.0,
+      "anomaly_score": -0.36949302465215667,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "170 - GASTOS GENERALES DE LA ADMINISTRACIONINISTRACIÓN",
+      "programa": "705 - Crédito Adicional",
+      "presupuesto": 38914672000.0,
+      "anomaly_score": -0.3779080214861664,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "500 - TRIBUNAL DE CUENTAS",
+      "programa": "980 - Control Externo De La Administración Pública - Actividades Centrales",
+      "presupuesto": 40000000.0,
+      "anomaly_score": -0.3233971629189152,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "140 - MINISTERIO DE JUSTICIA Y TRABAJO",
+      "programa": "423 - Educación Formal Para Los Internos",
+      "presupuesto": 17472000.0,
+      "anomaly_score": -0.38824716744939974,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "171 - Idecor -Infraestructura De Datos Espaciales De La Provincia De Córdoba",
+      "presupuesto": 390422000.0,
+      "anomaly_score": -0.3289982607961392,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "110 - MINISTERIO DE GOBIERNO",
+      "programa": "771 - (I.P.C.M) Inst. Pcial De Capacitación Municipal",
+      "presupuesto": 56860000.0,
+      "anomaly_score": -0.34231557422555026,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "218 - Delegaciones Del Gobierno En El Interior De La Provincia",
+      "presupuesto": 5000000.0,
+      "anomaly_score": -0.32333072105042804,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "155 - MINISTERIO DE INFRAESTRUCTURA Y SERVICIOS PÚBLICOS",
+      "programa": "575 - Programa Federal De Saneamiento (Profesa)",
+      "presupuesto": 15364821000.0,
+      "anomaly_score": -0.442873270198863,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "170 - GASTOS GENERALES DE LA ADMINISTRACIONINISTRACIÓN",
+      "programa": "708 - Gastos Generales  De La Administración",
+      "presupuesto": 1734590000.0,
+      "anomaly_score": -0.4008075591665287,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "154 - Registro General De La Provincia",
+      "presupuesto": 2465000.0,
+      "anomaly_score": -0.3806674265891398,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "175 - MINISTERIO DE SEGURIDAD",
+      "programa": "763 - Mantenimiento De Móviles Y Edificios Policiales",
+      "presupuesto": 604000000.0,
+      "anomaly_score": -0.3304103930185189,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "215 - Casa De La Provincia De Córdoba En Buenos Aires",
+      "presupuesto": 5000000.0,
+      "anomaly_score": -0.32333072105042804,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "135 - MINISTERIO DE EDUCACIÓN",
+      "programa": "384 - Infancias Primero: Educación Primaria",
+      "presupuesto": 218175148000.0,
+      "anomaly_score": -0.558100024165015,
+      "is_anomaly": true,
+      "severity": "CRITICO"
+    },
+    {
+      "organismo": "610 - AGENCIA CONECTIVIDAD CÓRDOBA SE",
+      "programa": "613 - Conectividad Y Redes - Recursos Afectados",
+      "presupuesto": 1175301000.0,
+      "anomaly_score": -0.3332269261321242,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "615 - AGENCIA CÓRDOBA DEPORTES - SEM",
+      "programa": "864 - Merito Deportivo",
+      "presupuesto": 70073000.0,
+      "anomaly_score": -0.5209838408770058,
+      "is_anomaly": true,
+      "severity": "ALTO"
+    },
+    {
+      "organismo": "867 - TERMINAL DE ÓMNIBUS CÓRDOBA SAU",
+      "programa": "860 - Terminal De Omnibus Cordoba S.E. (Tocse)",
+      "presupuesto": 16200000000.0,
+      "anomaly_score": -0.4991894581829694,
+      "is_anomaly": true,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "865 - CENTRO DE EXCELENCIA EN PRODUCTOS Y PROCESOS",
+      "programa": "964 - Ordenamiento Ambiental Del Territorio Y El Desarrollo Forestal Con Especies Nativas",
+      "presupuesto": 41090000.0,
+      "anomaly_score": -0.4077303709525953,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "866 - UNIVERSIDAD PROVINCIALINCIAL DE CÓRDOBA",
+      "programa": "912 - Funcionamiento General",
+      "presupuesto": 53878000000.0,
+      "anomaly_score": -0.42843683735451765,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "135 - MINISTERIO DE EDUCACIÓN",
+      "programa": "362 - Aportes Educación Inicial Y Primaria De Gestión Privada",
+      "presupuesto": 106983583000.0,
+      "anomaly_score": -0.4679894753012774,
+      "is_anomaly": true,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "185 - MINISTERIO DE PRODUCCIÓN CIENCIA E INNOVACIÓN TECNOLÓGICA",
+      "programa": "850 - Ministerio De Producción, Ciencia E Innovación Tecnológica",
+      "presupuesto": 86450000.0,
+      "anomaly_score": -0.4277973866767282,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "110 - MINISTERIO DE GOBIERNO",
+      "programa": "100 - Ministerio De Gobierno",
+      "presupuesto": 5000000.0,
+      "anomaly_score": -0.32333072105042804,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "135 - MINISTERIO DE EDUCACIÓN",
+      "programa": "355 - Programa Avanzado De Nivel Secundario En Educación En Tecnologías De La Información Y La Comunicación - Proa",
+      "presupuesto": 5507164000.0,
+      "anomaly_score": -0.4333027349330781,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "110 - MINISTERIO DE GOBIERNO",
+      "programa": "770 - Comunidades Regionales",
+      "presupuesto": 2000000000.0,
+      "anomaly_score": -0.3432393977846244,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "153 - Catastro Territorial",
+      "presupuesto": 8364000.0,
+      "anomaly_score": -0.3602505056981883,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "155 - MINISTERIO DE INFRAESTRUCTURA Y SERVICIOS PÚBLICOS",
+      "programa": "571 - Programa Para El Financiamiento Y El Desarrollo De Infraestructura De Saneamiento",
+      "presupuesto": 22945000000.0,
+      "anomaly_score": -0.3657527184826015,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "125 - MINISTERIO DE BIOAGROINDUSTRIA",
+      "programa": "250 - Ministerio De Bioagroindustria",
+      "presupuesto": 2000000.0,
+      "anomaly_score": -0.33239546523107905,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "140 - MINISTERIO DE JUSTICIA Y TRABAJO",
+      "programa": "800 - Trabajo",
+      "presupuesto": 5000000.0,
+      "anomaly_score": -0.32333072105042804,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "135 - MINISTERIO DE EDUCACIÓN",
+      "programa": "360 - Innovación Educativa Y Desarrollo Profesional Docente",
+      "presupuesto": 23700000.0,
+      "anomaly_score": -0.34463136770297315,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "185 - MINISTERIO DE PRODUCCIÓN CIENCIA E INNOVACIÓN TECNOLÓGICA",
+      "programa": "858 - (C.E.) Fondo Minero Provincial - Cuenta Especial Leyes 7059 Y 7071",
+      "presupuesto": 60000000.0,
+      "anomaly_score": -0.3400812519543569,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "200 - PODER LEGISLATIVO",
+      "programa": "903 - Foro Social Por La Inclusión Ciudadana",
+      "presupuesto": 21974000.0,
+      "anomaly_score": -0.4928932180775893,
+      "is_anomaly": true,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "125 - MINISTERIO DE BIOAGROINDUSTRIA",
+      "programa": "261 - Producción Agropecuaria Familiar",
+      "presupuesto": 7719000.0,
+      "anomaly_score": -0.36002701865125813,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "865 - CENTRO DE EXCELENCIA EN PRODUCTOS Y PROCESOS",
+      "programa": "969 - Ceprocor - Recursos Afectados",
+      "presupuesto": 278554000.0,
+      "anomaly_score": -0.3631847940300196,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "612 - Programa De Asistencia A La Terminal De Ómnibus Córdoba - S.E. - (Tocse)",
+      "presupuesto": 16200000000.0,
+      "anomaly_score": -0.3552785980231689,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "155 - MINISTERIO DE INFRAESTRUCTURA Y SERVICIOS PÚBLICOS",
+      "programa": "504 - (C.E.)  Vialidad - Cuenta Especial Ley 8555",
+      "presupuesto": 58531495000.0,
+      "anomaly_score": -0.5109563841622761,
+      "is_anomaly": true,
+      "severity": "ALTO"
+    },
+    {
+      "organismo": "175 - MINISTERIO DE SEGURIDAD",
+      "programa": "769 - Fondos Nacionales - Servicio Nacional De Manejo Del Fuego",
+      "presupuesto": 25000000.0,
+      "anomaly_score": -0.32429366940789417,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+      "programa": "663 - Consejo Políticas Sociales",
+      "presupuesto": 114602000.0,
+      "anomaly_score": -0.350649429468914,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+      "programa": "518 - Plan Lotengo",
+      "presupuesto": 5557118000.0,
+      "anomaly_score": -0.34730822832351504,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "450 - DEFENSORÍA DE LOS DERECHOS DE NIÑAS NIÑOS Y ADOLESCENTES",
+      "programa": "963 - (C.E.) Difusión - Cuenta Especial Ley 8665",
+      "presupuesto": 53454000.0,
+      "anomaly_score": -0.3666594114975652,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "125 - MINISTERIO DE BIOAGROINDUSTRIA",
+      "programa": "252 - Desarrollo Sustentable Del Sector Acuícola",
+      "presupuesto": 10000000.0,
+      "anomaly_score": -0.42181874558030846,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "160 - MINISTERIO DE DESARROLLO HUMANO",
+      "programa": "465 - Fondo Provincial De Inclusion Social De Personas Con Discapacidad",
+      "presupuesto": 1855739000.0,
+      "anomaly_score": -0.3678223661296282,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "175 - MINISTERIO DE SEGURIDAD",
+      "programa": "774 - Administración De Los Servicios Policiales - Art.59 Ley Nº 10.954",
+      "presupuesto": 2086640000.0,
+      "anomaly_score": -0.36968549123163214,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "155 - MINISTERIO DE INFRAESTRUCTURA Y SERVICIOS PÚBLICOS",
+      "programa": "500 - Secretaria De Coordinación De Infraestructura - Actividades Comunes",
+      "presupuesto": 6200000.0,
+      "anomaly_score": -0.36402313459982855,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "175 - MINISTERIO DE SEGURIDAD",
+      "programa": "759 - (C.E.) Policlínico Policial - Cuenta Especial Decreto 1677/73",
+      "presupuesto": 424156000.0,
+      "anomaly_score": -0.4005450103204406,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "203 - Capital Humano",
+      "presupuesto": 12700000.0,
+      "anomaly_score": -0.35355443553490185,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "200 - PODER LEGISLATIVO",
+      "programa": "901 - Programa De Apoyo A Los Sistemas Educativos",
+      "presupuesto": 3586000.0,
+      "anomaly_score": -0.32486647196105556,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "300 - PODER JUDICIAL",
+      "programa": "924 - Funcionamiento Del Fuero Electoral De La Provincia",
+      "presupuesto": 9000000.0,
+      "anomaly_score": -0.32412146159416655,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "109 - MINISTERIO DE AMBIENTE Y ECONOMÍA CIRCULAR",
+      "programa": "558 - Biodiversidad Y Áreas Naturales Protegidas",
+      "presupuesto": 441000000.0,
+      "anomaly_score": -0.35949438703949976,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "160 - MINISTERIO DE DESARROLLO HUMANO",
+      "programa": "673 - Niñez, Adolescencia Y Familia - Actividades Comunes",
+      "presupuesto": 904000000.0,
+      "anomaly_score": -0.3673942539773704,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+      "programa": "664 - Regularización Dominial Y Escrituración Social",
+      "presupuesto": 5769000.0,
+      "anomaly_score": -0.34881150974104685,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "200 - PODER LEGISLATIVO",
+      "programa": "906 - Comisiones No Permanentes Del Poder Legislativo Y Comisiones Especiales",
+      "presupuesto": 14061000.0,
+      "anomaly_score": -0.3240032714296125,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "866 - UNIVERSIDAD PROVINCIALINCIAL DE CÓRDOBA",
+      "programa": "920 - Polo Cultural Y Recreativo- Recursos Afectados-",
+      "presupuesto": 15000000.0,
+      "anomaly_score": -0.41747415838374335,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+      "programa": "683 - Programa Alimentario Provincial",
+      "presupuesto": 48140937000.0,
+      "anomaly_score": -0.4201222815899096,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "170 - GASTOS GENERALES DE LA ADMINISTRACIONINISTRACIÓN",
+      "programa": "711 - Seguro De Vida E Incapacidad",
+      "presupuesto": 7641892000.0,
+      "anomaly_score": -0.38085202583415906,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "603 - Boleto Metropolitano Y Obrero Social",
+      "presupuesto": 250000.0,
+      "anomaly_score": -0.35367613101567436,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "625 - AGENCIA CÓRDOBA CULTURA SE",
+      "programa": "629 - Programa De Articulación Y Apoyo A La Producción Y Realización Artístico Cultural",
+      "presupuesto": 80000000.0,
+      "anomaly_score": -0.3230713116283634,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "109 - MINISTERIO DE AMBIENTE Y ECONOMÍA CIRCULAR",
+      "programa": "569 - Fondo De Protección Ambiental Provincial (Fopap) - Ley 10208",
+      "presupuesto": 38527000.0,
+      "anomaly_score": -0.36727646007913634,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "109 - MINISTERIO DE AMBIENTE Y ECONOMÍA CIRCULAR",
+      "programa": "559 - Economía Circular Y Empleo Verde",
+      "presupuesto": 400000000.0,
+      "anomaly_score": -0.34820473247495276,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "155 - (C.E) Ingresos De La Dirección General Del Registro De La Propiedad - Cuenta Especial - Ley 9342",
+      "presupuesto": 300000000.0,
+      "anomaly_score": -0.327881588073563,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "204 - Aeronáutica",
+      "presupuesto": 35000000.0,
+      "anomaly_score": -0.3244782517291298,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "175 - MINISTERIO DE SEGURIDAD",
+      "programa": "083 - Consejo Para La Planificación Estratégica De La Provincia De Córdoba (Co.P.E.C.)",
+      "presupuesto": 5000000.0,
+      "anomaly_score": -0.32333072105042804,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "160 - MINISTERIO DE DESARROLLO HUMANO",
+      "programa": "460 - Ministerio De Desarrollo Humano",
+      "presupuesto": 5000000.0,
+      "anomaly_score": -0.32333072105042804,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "866 - UNIVERSIDAD PROVINCIALINCIAL DE CÓRDOBA",
+      "programa": "918 - Educacion Formal",
+      "presupuesto": 14026574000.0,
+      "anomaly_score": -0.4884681999514234,
+      "is_anomaly": true,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "160 - MINISTERIO DE DESARROLLO HUMANO",
+      "programa": "676 - (C.E.) Organismos De Gestión Asociada (Oga) - Cuenta Especial Ley 8665",
+      "presupuesto": 604098000.0,
+      "anomaly_score": -0.5922144101224653,
+      "is_anomaly": true,
+      "severity": "CRITICO"
+    },
+    {
+      "organismo": "135 - MINISTERIO DE EDUCACIÓN",
+      "programa": "353 - Infraestructura Escuelas",
+      "presupuesto": 4043000000.0,
+      "anomaly_score": -0.3653029832817897,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+      "programa": "643 - Programa De Fortalecimiento Habitacional",
+      "presupuesto": 46857368000.0,
+      "anomaly_score": -0.41768591525797727,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "113 - MINISTERIO DE VINCULACIÓN COMUNITARIA",
+      "programa": "130 - Ministerio De Vinculación Comunitaria",
+      "presupuesto": 5000000.0,
+      "anomaly_score": -0.32333072105042804,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "635 - AGENCIA PROCÓRDOBA SEM",
+      "programa": "871 - Promoción Comercial",
+      "presupuesto": 938247934.0,
+      "anomaly_score": -0.3728815718732013,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "300 - PODER JUDICIAL",
+      "programa": "923 - (C.E.) Administración De Justicia - Cuenta Especial Ley 8002",
+      "presupuesto": 32019290000.0,
+      "anomaly_score": -0.41377763531351924,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "175 - MINISTERIO DE SEGURIDAD",
+      "programa": "764 - Prevención Y Lucha Contra El Fuego - Ley 8751",
+      "presupuesto": 97944000.0,
+      "anomaly_score": -0.4351202907245094,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "615 - AGENCIA CÓRDOBA DEPORTES - SEM",
+      "programa": "856 - Proyectos Especiales Deportivos",
+      "presupuesto": 78386000.0,
+      "anomaly_score": -0.4876883188046211,
+      "is_anomaly": true,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "084 - Aportes A Agencia Córdoba De Inversión Y Financiamiento S.E.M.",
+      "presupuesto": 532780698000.0,
+      "anomaly_score": -0.6540220883140557,
+      "is_anomaly": true,
+      "severity": "CRITICO"
+    },
+    {
+      "organismo": "175 - MINISTERIO DE SEGURIDAD",
+      "programa": "767 - Prevención De Catástrofes (Etac)",
+      "presupuesto": 5000000.0,
+      "anomaly_score": -0.32333072105042804,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "185 - MINISTERIO DE PRODUCCIÓN CIENCIA E INNOVACIÓN TECNOLÓGICA",
+      "programa": "317 - Aportes Al Centro De Excelencia En Productos Y Procesos (Ceprocor)",
+      "presupuesto": 177504000.0,
+      "anomaly_score": -0.3759955764677526,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+      "programa": "070 - Prevención Asistencia Y Protección Contra La Violencia Familiar, De Género Y Trata De Personas",
+      "presupuesto": 1365340000.0,
+      "anomaly_score": -0.33539158172901085,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "400 - DEFENSORÍA DEL PUEBLO",
+      "programa": "951 - Instituto De Ambiente Del Defensor Del Pueblo (Inadep)",
+      "presupuesto": 300000.0,
+      "anomaly_score": -0.35459900509037684,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "135 - MINISTERIO DE EDUCACIÓN",
+      "programa": "359 - Escuelas De Oficiales Y Suboficiales De Policía De La Provincia",
+      "presupuesto": 2687647000.0,
+      "anomaly_score": -0.3797545496486989,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "185 - MINISTERIO DE PRODUCCIÓN CIENCIA E INNOVACIÓN TECNOLÓGICA",
+      "programa": "856 - Tribunal Minero Provincial",
+      "presupuesto": 10000.0,
+      "anomaly_score": -0.43216194794387347,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "175 - MINISTERIO DE SEGURIDAD",
+      "programa": "750 - Ministerio De Seguridad- Actividades Comunes",
+      "presupuesto": 5000000.0,
+      "anomaly_score": -0.32333072105042804,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "170 - GASTOS GENERALES DE LA ADMINISTRACIONINISTRACIÓN",
+      "programa": "709 - Procesos Judiciales Y Extrajudiciales",
+      "presupuesto": 9800000000.0,
+      "anomaly_score": -0.44709356340246015,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "110 - MINISTERIO DE GOBIERNO",
+      "programa": "004 - Aportes A Agencia Córdoba Deportes - S.E.M.",
+      "presupuesto": 1160000000.0,
+      "anomaly_score": -0.4683938497464863,
+      "is_anomaly": true,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "156 - Inteligencia Fiscal",
+      "presupuesto": 50000000.0,
+      "anomaly_score": -0.3353874933705881,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "200 - PODER LEGISLATIVO",
+      "programa": "911 - Programa De Estímulo A Las Ediciones Literarias Cordobesas Y De Fomento A La Lectura",
+      "presupuesto": 55000.0,
+      "anomaly_score": -0.38802011767585903,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "400 - DEFENSORÍA DEL PUEBLO",
+      "programa": "940 - Defensoría Del Pueblo - Actividades Centrales",
+      "presupuesto": 1250000.0,
+      "anomaly_score": -0.3356550948572067,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "135 - MINISTERIO DE EDUCACIÓN",
+      "programa": "357 - Educación Superior: Jerarquización De La Formacion Docente",
+      "presupuesto": 59347590000.0,
+      "anomaly_score": -0.42275395698834645,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "635 - AGENCIA PROCÓRDOBA SEM",
+      "programa": "872 - Inteligencia Comercial Y Desarrollo De Oferta Exportable",
+      "presupuesto": 40000000.0,
+      "anomaly_score": -0.3878012965021822,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "185 - MINISTERIO DE PRODUCCIÓN CIENCIA E INNOVACIÓN TECNOLÓGICA",
+      "programa": "854 - Comercio",
+      "presupuesto": 370000000.0,
+      "anomaly_score": -0.3289982607961392,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "625 - AGENCIA CÓRDOBA CULTURA SE",
+      "programa": "626 - Cultura - Recursos Afectados",
+      "presupuesto": 15073000.0,
+      "anomaly_score": -0.32284147894293713,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "705 - CAJA DE JUBILACIONES PENSIONES Y RETIROS DE CÓRDOBA",
+      "programa": "891 - Fondo De Financiamiento De Actividades Recreativas Y Sociales - Ley 9884",
+      "presupuesto": 25000000.0,
+      "anomaly_score": -0.5724272103870838,
+      "is_anomaly": true,
+      "severity": "CRITICO"
+    },
+    {
+      "organismo": "450 - DEFENSORÍA DE LOS DERECHOS DE NIÑAS NIÑOS Y ADOLESCENTES",
+      "programa": "962 - (C.E.) Capacitaciones - Cuenta Especial Ley 8665",
+      "presupuesto": 31799000.0,
+      "anomaly_score": -0.3568608675566996,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "140 - MINISTERIO DE JUSTICIA Y TRABAJO",
+      "programa": "430 - Sistema De Control Disciplinario De Las Fuerzas De Seguridad Pública Y Ciudadana",
+      "presupuesto": 2500000.0,
+      "anomaly_score": -0.3598388256907118,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+      "programa": "661 - Tarifa Solidaria",
+      "presupuesto": 12000000000.0,
+      "anomaly_score": -0.3975230208155345,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "145 - MINISTERIO DE SALUD",
+      "programa": "467 - Actividades Comunes De La Secretaría De Medicina Preventiva Y Vinculación Territorial",
+      "presupuesto": 21979000.0,
+      "anomaly_score": -0.49063296015580016,
+      "is_anomaly": true,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "160 - MINISTERIO DE DESARROLLO HUMANO",
+      "programa": "649 - Salas Cunas",
+      "presupuesto": 5000000.0,
+      "anomaly_score": -0.32333072105042804,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "450 - DEFENSORÍA DE LOS DERECHOS DE NIÑAS NIÑOS Y ADOLESCENTES",
+      "programa": "960 - (C.E.) Defensoría De Los Derechos De Niñas, Niños Y Adolescentes - Cuenta Especial Ley 8665",
+      "presupuesto": 5000000.0,
+      "anomaly_score": -0.32333072105042804,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "615 - AGENCIA CÓRDOBA DEPORTES - SEM",
+      "programa": "860 - Apoyo Y Acompañamiento Al Deporte Olimpico Y Federado",
+      "presupuesto": 511334000.0,
+      "anomaly_score": -0.5322523326753993,
+      "is_anomaly": true,
+      "severity": "ALTO"
+    },
+    {
+      "organismo": "185 - MINISTERIO DE PRODUCCIÓN CIENCIA E INNOVACIÓN TECNOLÓGICA",
+      "programa": "872 - Fortalecimiento De Parques Industriales",
+      "presupuesto": 270000000.0,
+      "anomaly_score": -0.3891807433355166,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "145 - MINISTERIO DE SALUD",
+      "programa": "690 - (Ce) Contención Y Protección De Víctimas Del Narcotráfico - Cuenta Especial Ley 10.067",
+      "presupuesto": 3363000.0,
+      "anomaly_score": -0.32486647196105556,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "600 - Transporte - Actividades Comunes",
+      "presupuesto": 5000000.0,
+      "anomaly_score": -0.32333072105042804,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "217 - Actividades Región Sur",
+      "presupuesto": 5000000.0,
+      "anomaly_score": -0.32333072105042804,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "450 - DEFENSORÍA DE LOS DERECHOS DE NIÑAS NIÑOS Y ADOLESCENTES",
+      "programa": "966 - Sistema Integral De Monitoreo De Los Derechos De Niñas, Niños Y Adolescentes",
+      "presupuesto": 60259000.0,
+      "anomaly_score": -0.3673619925391024,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "155 - MINISTERIO DE INFRAESTRUCTURA Y SERVICIOS PÚBLICOS",
+      "programa": "526 - Instituto De Planificación Metropolitana (Iplam)",
+      "presupuesto": 14220000.0,
+      "anomaly_score": -0.33822865169421,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "135 - MINISTERIO DE EDUCACIÓN",
+      "programa": "363 - Aportes Educación Secundaria, Superior, Adulto Y Especial De Gestión  Privada",
+      "presupuesto": 233484742000.0,
+      "anomaly_score": -0.5841606783965195,
+      "is_anomaly": true,
+      "severity": "CRITICO"
+    },
+    {
+      "organismo": "175 - MINISTERIO DE SEGURIDAD",
+      "programa": "754 - (C.E.) Agencias Privadas De Seguridad - Cuenta Especial Ley 10.571",
+      "presupuesto": 9140000.0,
+      "anomaly_score": -0.35547433066868744,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "730 - UNIDAD EJECUTORA BIPROVINCIALINCIAL ACUEDUCTO INTERPROVINCIALINCIAL SANTA FE- CÓRDOBA",
+      "programa": "730 - Programa Acueducto Interprovincial Santa Fe - Córdoba",
+      "presupuesto": 45945410000.0,
+      "anomaly_score": -0.5573226495459565,
+      "is_anomaly": true,
+      "severity": "CRITICO"
+    },
+    {
+      "organismo": "125 - MINISTERIO DE BIOAGROINDUSTRIA",
+      "programa": "265 - Promoción De Buenas Prácticas Agropecuarias",
+      "presupuesto": 1340344000.0,
+      "anomaly_score": -0.36695483779041344,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "160 - MINISTERIO DE DESARROLLO HUMANO",
+      "programa": "671 - (C.E.) Políticas De Asistencia A Niños Y Adolescentes - Cuenta Especial Ley 8665",
+      "presupuesto": 91747000.0,
+      "anomaly_score": -0.403585939988453,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "175 - MINISTERIO DE SEGURIDAD",
+      "programa": "758 - (C.E.) Policía De La Provincia - Seguridad Vial Y Prevención - Cuenta Especial Ley 8560",
+      "presupuesto": 8170243000.0,
+      "anomaly_score": -0.3651327332304939,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "645 - ENTE REGULADOR DE SERVICIOS PÚBLICOS",
+      "programa": "977 - Consumo Responsable Y Sustentable De Los Servicios Públicos",
+      "presupuesto": 207445000.0,
+      "anomaly_score": -0.3648567125561476,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+      "programa": "503 - Viviendas, Infraestructura, Equipamiento Comunitario Y Regularización Dominial",
+      "presupuesto": 1829424000.0,
+      "anomaly_score": -0.33749507484587477,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "140 - MINISTERIO DE JUSTICIA Y TRABAJO",
+      "programa": "422 - Mantenimiento E Inversión En Infraestructura Penitenciaria",
+      "presupuesto": 3789940000.0,
+      "anomaly_score": -0.3694730021186649,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "140 - MINISTERIO DE JUSTICIA Y TRABAJO",
+      "programa": "413 - Convenio Con El Registro Nacional De Las Personas",
+      "presupuesto": 171489000.0,
+      "anomaly_score": -0.3247207339727852,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "400 - DEFENSORÍA DEL PUEBLO",
+      "programa": "947 - Instituto De Equidad E Inclusion Social",
+      "presupuesto": 100000.0,
+      "anomaly_score": -0.36901423035059655,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "101 - DEPENDENCIA INMEDIATA DEL PODER EJECUTIVO",
+      "programa": "002 - Fuerza Policial Antinarcotráfico",
+      "presupuesto": 460000000.0,
+      "anomaly_score": -0.32973390189950147,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+      "programa": "073 - Políticas De Género",
+      "presupuesto": 25640000.0,
+      "anomaly_score": -0.3237176211616502,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "140 - MINISTERIO DE JUSTICIA Y TRABAJO",
+      "programa": "170 - Mejoramiento De La Infraestructura, Operación Y Servicios De Las Oficinas De Registro Civil",
+      "presupuesto": 38586000.0,
+      "anomaly_score": -0.32304237286728643,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "615 - AGENCIA CÓRDOBA DEPORTES - SEM",
+      "programa": "857 - Deporte Social Y Comunitario",
+      "presupuesto": 249011000.0,
+      "anomaly_score": -0.3983607589326985,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+      "programa": "143 - Formación Profesional Y Desarrollo Regional",
+      "presupuesto": 1000000.0,
+      "anomaly_score": -0.3345729995830848,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "110 - MINISTERIO DE GOBIERNO",
+      "programa": "112 - Fondo Complementario Acuerdo Federal",
+      "presupuesto": 5000000000.0,
+      "anomaly_score": -0.6120117186517724,
+      "is_anomaly": true,
+      "severity": "CRITICO"
+    },
+    {
+      "organismo": "810 - LOTERÍA DE LA PROVINCIALINCIA DE CÓRDOBA SE",
+      "programa": "930 - Lotería De Córdoba S.E.",
+      "presupuesto": 20000000.0,
+      "anomaly_score": -0.3812516935128043,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "175 - MINISTERIO DE SEGURIDAD",
+      "programa": "755 - (C.E.) Seguridad Vial Y Prevención - Cuenta Especial Ley 8560",
+      "presupuesto": 12823021000.0,
+      "anomaly_score": -0.3569311860876772,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+      "programa": "656 - Banco De La Gente",
+      "presupuesto": 10902983000.0,
+      "anomaly_score": -0.45349913419812016,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "710 - ADMINISTRACIONINISTRACIÓN PROVINCIALINCIAL DEL SEGURO DE SALUD",
+      "programa": "820 - Programa Prestacional Y Administrativo",
+      "presupuesto": 16000000.0,
+      "anomaly_score": -0.32284147894293713,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "185 - MINISTERIO DE PRODUCCIÓN CIENCIA E INNOVACIÓN TECNOLÓGICA",
+      "programa": "853 - Registro, Fiscalización Y Prevención Industrial",
+      "presupuesto": 5816000.0,
+      "anomaly_score": -0.42712294916659577,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "170 - GASTOS GENERALES DE LA ADMINISTRACIONINISTRACIÓN",
+      "programa": "717 - Financiamiento Municipios Y Comunas",
+      "presupuesto": 50592864000.0,
+      "anomaly_score": -0.4205143234648206,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "160 - MINISTERIO DE DESARROLLO HUMANO",
+      "programa": "427 - (C.E.) Promoción Y Protección De Niños, Niñas Y Adolescentes - Cuenta Especial Ley 10.326",
+      "presupuesto": 224579000.0,
+      "anomaly_score": -0.5125659328038734,
+      "is_anomaly": true,
+      "severity": "ALTO"
+    },
+    {
+      "organismo": "135 - MINISTERIO DE EDUCACIÓN",
+      "programa": "352 - Fondo Para El Financiamiento Del Sistema Educativo De La Provincia De Cordoba - Ley Nº 9870",
+      "presupuesto": 29629783000.0,
+      "anomaly_score": -0.5237716832748132,
+      "is_anomaly": true,
+      "severity": "ALTO"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "157 - Fiscalía Tributaria Adjunta",
+      "presupuesto": 1525000.0,
+      "anomaly_score": -0.3372264574247434,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "019 - Aportes Agencia Córdoba Innovar Y Emprender S.E.M",
+      "presupuesto": 9000000.0,
+      "anomaly_score": -0.32412146159416655,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "175 - MINISTERIO DE SEGURIDAD",
+      "programa": "753 - (C.E.) Seguridad Náutica - Cuenta Especial Ley 5040",
+      "presupuesto": 15288000.0,
+      "anomaly_score": -0.33924604603162606,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "167 - Coordinación Integral De Modernización Administrativa",
+      "presupuesto": 2963000.0,
+      "anomaly_score": -0.6731624596693458,
+      "is_anomaly": true,
+      "severity": "CRITICO"
+    },
+    {
+      "organismo": "125 - MINISTERIO DE BIOAGROINDUSTRIA",
+      "programa": "264 - Mejoramiento De Agencias Zonales En El Interior De La Provincia",
+      "presupuesto": 4912000.0,
+      "anomaly_score": -0.4253707298165387,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "645 - ENTE REGULADOR DE SERVICIOS PÚBLICOS",
+      "programa": "880 - Ersep - Regulación De Los Servicios Públicos",
+      "presupuesto": 985231650.0,
+      "anomaly_score": -0.4878124520753662,
+      "is_anomaly": true,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "125 - MINISTERIO DE BIOAGROINDUSTRIA",
+      "programa": "266 - Programa Para El Desarrollo Forestal Y Ambiental De Córdoba - Ley N° 10.467",
+      "presupuesto": 11487000.0,
+      "anomaly_score": -0.37796959591548324,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "125 - MINISTERIO DE BIOAGROINDUSTRIA",
+      "programa": "268 - Programa De Desarrollo Para Ovinos, Caprinos Y Ganado Menor",
+      "presupuesto": 40000000.0,
+      "anomaly_score": -0.515444553542349,
+      "is_anomaly": true,
+      "severity": "ALTO"
+    },
+    {
+      "organismo": "300 - PODER JUDICIAL",
+      "programa": "925 - (C.E.) Descontaminación Y Compactación De Vehículos- Ley 10207 - Cuenta Especial",
+      "presupuesto": 4000000.0,
+      "anomaly_score": -0.3240419166628681,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "135 - MINISTERIO DE EDUCACIÓN",
+      "programa": "368 - Mejora Continua De La Calidad De La Educación Técnico Profesional (Inet)",
+      "presupuesto": 2448218000.0,
+      "anomaly_score": -0.3461256309265456,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+      "programa": "074 - Córdoba Con Ellas",
+      "presupuesto": 1667154000.0,
+      "anomaly_score": -0.36698384528838557,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "145 - MINISTERIO DE SALUD",
+      "programa": "688 - Programa De Servicios A Las Personas Con Discapacidad (Prosad)",
+      "presupuesto": 411000.0,
+      "anomaly_score": -0.3469240693007488,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "155 - MINISTERIO DE INFRAESTRUCTURA Y SERVICIOS PÚBLICOS",
+      "programa": "562 - Control Y Ordenamiento Hídrico - Fda",
+      "presupuesto": 30938784000.0,
+      "anomaly_score": -0.42637407804736055,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+      "programa": "140 - Empleo Y Formación Profesional - Actividades Comunes",
+      "presupuesto": 13120000.0,
+      "anomaly_score": -0.36174496637799136,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "200 - PODER LEGISLATIVO",
+      "programa": "900 - Funcionamiento De La Legislatura De La Provincia De Córdoba - Actividades Centrales",
+      "presupuesto": 5000000.0,
+      "anomaly_score": -0.32333072105042804,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "400 - DEFENSORÍA DEL PUEBLO",
+      "programa": "942 - Centro De Mediación Comunitaria",
+      "presupuesto": 16301000.0,
+      "anomaly_score": -0.37904676432899864,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "086 - I.N.D.E.C.  Córdoba",
+      "presupuesto": 335057000.0,
+      "anomaly_score": -0.3671342919457051,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "151 - Ingresos Públicos",
+      "presupuesto": 2034000.0,
+      "anomaly_score": -0.33239546523107905,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "705 - CAJA DE JUBILACIONES PENSIONES Y RETIROS DE CÓRDOBA",
+      "programa": "992 - Caja De Jubilaciones, Pensiones Y Retiro De Córdoba",
+      "presupuesto": 380000000.0,
+      "anomaly_score": -0.36410896177510177,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "185 - MINISTERIO DE PRODUCCIÓN CIENCIA E INNOVACIÓN TECNOLÓGICA",
+      "programa": "870 - (C.E.) Registro Industrial - Siic (Sistema De Inform. Industrial De La Pcia De Cba) - Ley 10.240 -Cuenta Especial",
+      "presupuesto": 13000000.0,
+      "anomaly_score": -0.32482612981158254,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+      "programa": "007 - Aportes Agencia Córdoba Joven",
+      "presupuesto": 15000000.0,
+      "anomaly_score": -0.35749122427320607,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "860 - CONSEJO PARA LA PLANIFICACIÓN ESTRATÉGICA DE LA PCIA DE CBA COPEC",
+      "programa": "989 - Prioridades Estratégicas - Consejo Para La Planificación Estratégica De La Provincia De Córdoba (Copec)",
+      "presupuesto": 5000000.0,
+      "anomaly_score": -0.32333072105042804,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "601 - (C.E.) Transporte -  Ley 8669 - Cuenta Especial",
+      "presupuesto": 32808000.0,
+      "anomaly_score": -0.3251987143966775,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "101 - DEPENDENCIA INMEDIATA DEL PODER EJECUTIVO",
+      "programa": "011 - (C.E) - Fuerza Policial Antinarcotráfico - Cuenta Especial Ley 10.067",
+      "presupuesto": 31650000.0,
+      "anomaly_score": -0.37743428801648304,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+      "programa": "650 - Desarrollo Social - Actividades Comunes",
+      "presupuesto": 5000000.0,
+      "anomaly_score": -0.32333072105042804,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "170 - GASTOS GENERALES DE LA ADMINISTRACIONINISTRACIÓN",
+      "programa": "718 - Vinculación Estratégica",
+      "presupuesto": 1536046000.0,
+      "anomaly_score": -0.4140070180475517,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "206 - Coordinación",
+      "presupuesto": 2080000.0,
+      "anomaly_score": -0.5428535954185751,
+      "is_anomaly": true,
+      "severity": "ALTO"
+    },
+    {
+      "organismo": "145 - MINISTERIO DE SALUD",
+      "programa": "471 - Integración Sanitaria",
+      "presupuesto": 4000000.0,
+      "anomaly_score": -0.3240419166628681,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "145 - MINISTERIO DE SALUD",
+      "programa": "455 - Programa De Lucha Contra El Vih-Sida E Its- Ley 9161",
+      "presupuesto": 466529000.0,
+      "anomaly_score": -0.32973390189950147,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+      "programa": "652 - (C.E.) Desarrollo Social - Cuenta Especial Ley 8665",
+      "presupuesto": 861852000.0,
+      "anomaly_score": -0.39357173934594153,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "140 - MINISTERIO DE JUSTICIA Y TRABAJO",
+      "programa": "403 - Convivencia Ciudadana",
+      "presupuesto": 4500000.0,
+      "anomaly_score": -0.34161437058933575,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "620 - AGENCIA CÓRDOBA JOVEN",
+      "programa": "620 - Promoción De La Juventud",
+      "presupuesto": 5000000.0,
+      "anomaly_score": -0.32333072105042804,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "202 - Secretaría General De La Gobernación",
+      "presupuesto": 5000000.0,
+      "anomaly_score": -0.8218396044512026,
+      "is_anomaly": true,
+      "severity": "CRITICO"
+    },
+    {
+      "organismo": "155 - MINISTERIO DE INFRAESTRUCTURA Y SERVICIOS PÚBLICOS",
+      "programa": "566 - Fondo Para La Ejecución De Redes Domiciliarias De Distribución De Gas Natural",
+      "presupuesto": 7936460000.0,
+      "anomaly_score": -0.4351650996640258,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "175 - MINISTERIO DE SEGURIDAD",
+      "programa": "762 - Consejo De Seguridad Deportiva Provincial (Co.Se.De.Pro.)",
+      "presupuesto": 157755000.0,
+      "anomaly_score": -0.34468207018565467,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "135 - MINISTERIO DE EDUCACIÓN",
+      "programa": "350 - Ministerio De Educación",
+      "presupuesto": 1500000000.0,
+      "anomaly_score": -0.3358306426888094,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "155 - MINISTERIO DE INFRAESTRUCTURA Y SERVICIOS PÚBLICOS",
+      "programa": "564 - Aportes A La Unidad Ejecutora Biprovincial, Acueducto Interprovincial Santa Fe-Córdoba",
+      "presupuesto": 9465280000.0,
+      "anomaly_score": -0.5073565365571319,
+      "is_anomaly": true,
+      "severity": "ALTO"
+    },
+    {
+      "organismo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+      "programa": "135 - Consejos Barriales",
+      "presupuesto": 40000000.0,
+      "anomaly_score": -0.3233971629189152,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "185 - MINISTERIO DE PRODUCCIÓN CIENCIA E INNOVACIÓN TECNOLÓGICA",
+      "programa": "253 - Promoción De La Calidad De Los Alimentos De Córdoba",
+      "presupuesto": 79900000.0,
+      "anomaly_score": -0.36871781890625405,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "110 - MINISTERIO DE GOBIERNO",
+      "programa": "005 - Aportes Agencia Córdoba Cultura - S.E.",
+      "presupuesto": 5244514000.0,
+      "anomaly_score": -0.3749527678043762,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "135 - MINISTERIO DE EDUCACIÓN",
+      "programa": "354 - Fortalecimiento Educativo Territorial (Foet)",
+      "presupuesto": 59970000.0,
+      "anomaly_score": -0.3228893969319166,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "300 - PODER JUDICIAL",
+      "programa": "921 - Ministerio Público",
+      "presupuesto": 1300000000.0,
+      "anomaly_score": -0.3742757622031029,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "145 - MINISTERIO DE SALUD",
+      "programa": "462 - Programa Sumar - Ex-Plan Nacer -Resolucion Nº 00425/05",
+      "presupuesto": 1000000.0,
+      "anomaly_score": -0.3345729995830848,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "855 - CAMINOS DE LAS SIERRAS SA CASISA",
+      "programa": "990 - Redes De Acceso A Córdoba (R.A.C.)",
+      "presupuesto": 2030000000.0,
+      "anomaly_score": -0.3711559853458807,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "185 - MINISTERIO DE PRODUCCIÓN CIENCIA E INNOVACIÓN TECNOLÓGICA",
+      "programa": "315 - Vinculación Institucional Y Sectorial",
+      "presupuesto": 14000000.0,
+      "anomaly_score": -0.3240032714296125,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "865 - CENTRO DE EXCELENCIA EN PRODUCTOS Y PROCESOS",
+      "programa": "967 - Vinculación Tecnológica",
+      "presupuesto": 10080000.0,
+      "anomaly_score": -0.32412146159416655,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "160 - Presupuesto  Y Contaduría General",
+      "presupuesto": 1973000.0,
+      "anomaly_score": -0.3597467961608107,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "140 - MINISTERIO DE JUSTICIA Y TRABAJO",
+      "programa": "406 - (C.E.) Tasas Oficina  Móvil Del Registro Civil - Cuenta Especial Ley 9138",
+      "presupuesto": 65032000.0,
+      "anomaly_score": -0.3230713116283634,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "109 - MINISTERIO DE AMBIENTE Y ECONOMÍA CIRCULAR",
+      "programa": "570 - Gestión Ambiental",
+      "presupuesto": 200694000.0,
+      "anomaly_score": -0.33303500207993725,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "608 - Boleto Gratuito Al Adulto Mayor (Bam) - Decreto N° 1990/2015",
+      "presupuesto": 585000.0,
+      "anomaly_score": -0.3432812848519956,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "185 - MINISTERIO DE PRODUCCIÓN CIENCIA E INNOVACIÓN TECNOLÓGICA",
+      "programa": "857 - Minería",
+      "presupuesto": 55000.0,
+      "anomaly_score": -0.38802011767585903,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "145 - MINISTERIO DE SALUD",
+      "programa": "458 - Centros Asistenciales Del Interior",
+      "presupuesto": 1650662000.0,
+      "anomaly_score": -0.4273481824490791,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "200 - PODER LEGISLATIVO",
+      "programa": "914 - Innovación Tecnológica",
+      "presupuesto": 211176000.0,
+      "anomaly_score": -0.324934700277107,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "160 - MINISTERIO DE DESARROLLO HUMANO",
+      "programa": "678 - (C.E.) Desarrollo Comunitario Y Fortalecimiento Familiar - Cuenta Especial Ley 8665",
+      "presupuesto": 217300000.0,
+      "anomaly_score": -0.40002423513656366,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "875 - ADMINISTRACIONINISTRACIÓN PROVINCIALINCIAL DE RECURSOS HÍDRICOS APRHI LEY 9867",
+      "programa": "875 - Administración Provincial De Recursos Hídricos (Aprhi) Ley 9867",
+      "presupuesto": 227531000.0,
+      "anomaly_score": -0.3301987985893071,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "175 - MINISTERIO DE SEGURIDAD",
+      "programa": "752 - (Ce) Descontaminación Y Compactación De Vehículos - Ley 10207 - Cuenta Especial",
+      "presupuesto": 31438000.0,
+      "anomaly_score": -0.3251987143966775,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "170 - GASTOS GENERALES DE LA ADMINISTRACIONINISTRACIÓN",
+      "programa": "700 - Coparticipación Impositiva Y Apoyo Financiero A Municipios",
+      "presupuesto": 12113400000.0,
+      "anomaly_score": -0.39056692316180674,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "145 - MINISTERIO DE SALUD",
+      "programa": "681 - Asistencia Y Prevención De La Adicción",
+      "presupuesto": 45115000.0,
+      "anomaly_score": -0.6495936315845534,
+      "is_anomaly": true,
+      "severity": "CRITICO"
+    },
+    {
+      "organismo": "866 - UNIVERSIDAD PROVINCIALINCIAL DE CÓRDOBA",
+      "programa": "916 - Inclusion Educativa",
+      "presupuesto": 30000000.0,
+      "anomaly_score": -0.36615504146074285,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "109 - MINISTERIO DE AMBIENTE Y ECONOMÍA CIRCULAR",
+      "programa": "561 - Ordenamiento De Bosques Nativos",
+      "presupuesto": 402742000.0,
+      "anomaly_score": -0.3326699095260069,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "145 - MINISTERIO DE SALUD",
+      "programa": "453 - Incluir Salud Programa Federal",
+      "presupuesto": 120123000.0,
+      "anomaly_score": -0.36864544101498004,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "300 - PODER JUDICIAL",
+      "programa": "920 - Administración De Justicia - Actividades Centrales",
+      "presupuesto": 71000000.0,
+      "anomaly_score": -0.4393079560169582,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "866 - UNIVERSIDAD PROVINCIALINCIAL DE CÓRDOBA",
+      "programa": "914 - Universidad Puertas Abiertas- Recursos Afectados-",
+      "presupuesto": 979824957.0,
+      "anomaly_score": -0.40830784517523955,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "113 - MINISTERIO DE VINCULACIÓN COMUNITARIA",
+      "programa": "133 - Comunicaciones",
+      "presupuesto": 130000000.0,
+      "anomaly_score": -0.36138141747235825,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "155 - MINISTERIO DE INFRAESTRUCTURA Y SERVICIOS PÚBLICOS",
+      "programa": "528 - Fondo Para El Mantenimiento, Conservación, Modificación Y/O Mejoramiento Red De Caminos Primarios Y Secundarios Pavimentados De La Provincia De Córdoba",
+      "presupuesto": 33440528000.0,
+      "anomaly_score": -0.5103068254802141,
+      "is_anomaly": true,
+      "severity": "ALTO"
+    },
+    {
+      "organismo": "140 - MINISTERIO DE JUSTICIA Y TRABAJO",
+      "programa": "801 - Convenio Con Superintendencia De Riesgos Del Trabajo",
+      "presupuesto": 6000000.0,
+      "anomaly_score": -0.4700813350324818,
+      "is_anomaly": true,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "155 - MINISTERIO DE INFRAESTRUCTURA Y SERVICIOS PÚBLICOS",
+      "programa": "567 - Fondo Para El Desarrollo Energético Provincial (Fodep)",
+      "presupuesto": 75952020000.0,
+      "anomaly_score": -0.4717848994104029,
+      "is_anomaly": true,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "159 - Administración Financiera",
+      "presupuesto": 16000000.0,
+      "anomaly_score": -0.32284147894293713,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "190 - MINISTERIO DE COOPERATIVAS Y MUTUALES",
+      "programa": "654 - Desarrollo Y Fortalecimiento De Cooperativas Y Mutuales - Fondo Cooperativo",
+      "presupuesto": 521000000.0,
+      "anomaly_score": -0.5134401584796395,
+      "is_anomaly": true,
+      "severity": "ALTO"
+    },
+    {
+      "organismo": "135 - MINISTERIO DE EDUCACIÓN",
+      "programa": "385 - Conectar Igualdad",
+      "presupuesto": 23264000.0,
+      "anomaly_score": -0.3236943436889246,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "125 - MINISTERIO DE BIOAGROINDUSTRIA",
+      "programa": "259 - Desarrollo Sustentable Del Sector Equino",
+      "presupuesto": 29350000.0,
+      "anomaly_score": -0.3605156496966058,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "145 - MINISTERIO DE SALUD",
+      "programa": "457 - Centros Asistenciales De Capital",
+      "presupuesto": 589449000.0,
+      "anomaly_score": -0.4905576380645692,
+      "is_anomaly": true,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "110 - MINISTERIO DE GOBIERNO",
+      "programa": "765 - Fondo Financiamiento Ambiental - Plan Provincial Para La Gestion Integral De Residuos - Ley 10.896",
+      "presupuesto": 4553122000.0,
+      "anomaly_score": -0.387116390574558,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "185 - MINISTERIO DE PRODUCCIÓN CIENCIA E INNOVACIÓN TECNOLÓGICA",
+      "programa": "852 - Pyme Y Desarrollo Emprendedor",
+      "presupuesto": 18500000.0,
+      "anomaly_score": -0.3742919968497697,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "135 - MINISTERIO DE EDUCACIÓN",
+      "programa": "358 - Educación Especial Y Hospitalaria",
+      "presupuesto": 43054955000.0,
+      "anomaly_score": -0.4177849129772964,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "300 - PODER JUDICIAL",
+      "programa": "926 - Ministerio Público De La Defensa. Ley 10.915",
+      "presupuesto": 8500000.0,
+      "anomaly_score": -0.32340797358705187,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "109 - MINISTERIO DE AMBIENTE Y ECONOMÍA CIRCULAR",
+      "programa": "556 - Ambiente- Recursos Afectados",
+      "presupuesto": 36080000.0,
+      "anomaly_score": -0.39460325035537624,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "140 - MINISTERIO DE JUSTICIA Y TRABAJO",
+      "programa": "409 - Laborterapia En El Servicio Penitenciario",
+      "presupuesto": 135503000.0,
+      "anomaly_score": -0.34938588501087653,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "500 - TRIBUNAL DE CUENTAS",
+      "programa": "981 - (C.E.) Fondo De Perfeccionamiento Y Modernización Institucional Y De Convenios Especiales - Cuenta Especial",
+      "presupuesto": 11000000.0,
+      "anomaly_score": -0.4300201038692004,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "190 - MINISTERIO DE COOPERATIVAS Y MUTUALES",
+      "programa": "653 - Coordinación Operativa Para La Promoción Del Cooperativismo Y Mutualismo",
+      "presupuesto": 5000000.0,
+      "anomaly_score": -0.32333072105042804,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "605 - AGENCIA CÓRDOBA DE INVERSIÓN Y FINANCIAMIENTO SEM",
+      "programa": "849 - Programa Del Desarrollo Interior Y Apoyo Social",
+      "presupuesto": 65293549000.0,
+      "anomaly_score": -0.4518687576938062,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "140 - MINISTERIO DE JUSTICIA Y TRABAJO",
+      "programa": "412 - (C.E.) Trabajos Penitenciarios - Cuenta Especial",
+      "presupuesto": 20000000.0,
+      "anomaly_score": -0.49334591826229873,
+      "is_anomaly": true,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "175 - MINISTERIO DE SEGURIDAD",
+      "programa": "756 - Mantenimiento De La Seguridad Ciudadana Y El Orden Y Lucha Contra Siniestros",
+      "presupuesto": 5000000.0,
+      "anomaly_score": -0.32333072105042804,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "450 - DEFENSORÍA DE LOS DERECHOS DE NIÑAS NIÑOS Y ADOLESCENTES",
+      "programa": "961 - (C.E.) Espacios Participativos De Niños, Niñas Y Adolescentes- Cuenta Especial Ley 8665",
+      "presupuesto": 40820000.0,
+      "anomaly_score": -0.36856166958268044,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "645 - ENTE REGULADOR DE SERVICIOS PÚBLICOS",
+      "programa": "978 - Capacitacion Al Personal",
+      "presupuesto": 113922000.0,
+      "anomaly_score": -0.36234418401155827,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "145 - MINISTERIO DE SALUD",
+      "programa": "468 - Asistencia Sanitaria",
+      "presupuesto": 6688000.0,
+      "anomaly_score": -0.34015694989006173,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "125 - MINISTERIO DE BIOAGROINDUSTRIA",
+      "programa": "267 - Desarrollo Agropecuario Cordoba - Fda",
+      "presupuesto": 4000000.0,
+      "anomaly_score": -0.3240419166628681,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "125 - MINISTERIO DE BIOAGROINDUSTRIA",
+      "programa": "258 - Politicas Activas Para El Desarrollo Agropecuario",
+      "presupuesto": 326093000.0,
+      "anomaly_score": -0.33895220189662356,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "160 - MINISTERIO DE DESARROLLO HUMANO",
+      "programa": "426 - Aportes Al Archivo Provincial De La Memoria",
+      "presupuesto": 882213000.0,
+      "anomaly_score": -0.3844070825881818,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "865 - CENTRO DE EXCELENCIA EN PRODUCTOS Y PROCESOS",
+      "programa": "963 - Gestión De Servicios Tecnológicos",
+      "presupuesto": 32000000.0,
+      "anomaly_score": -0.3805490615733209,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "110 - MINISTERIO DE GOBIERNO",
+      "programa": "003 - Aportes Agencia Córdoba Turismo - S.E.M.",
+      "presupuesto": 3624250000.0,
+      "anomaly_score": -0.4201701479881091,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "164 - Política Económica",
+      "presupuesto": 1118000.0,
+      "anomaly_score": -0.3345729995830848,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "101 - DEPENDENCIA INMEDIATA DEL PODER EJECUTIVO",
+      "programa": "001 - Fiscalía De Estado",
+      "presupuesto": 5000000.0,
+      "anomaly_score": -0.3767447811655186,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "820 - AGENCIA CÓRDOBA INNOVAR Y EMPRENDER SEM",
+      "programa": "820 - Agencia Córdoba Innovar Y Emprender S.E.M",
+      "presupuesto": 5000000.0,
+      "anomaly_score": -0.32333072105042804,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "630 - AGENCIA CÓRDOBA TURISMO SEM",
+      "programa": "869 - Agencia Córdoba Turismo - S.E.M. - General",
+      "presupuesto": 154440000.0,
+      "anomaly_score": -0.3706349511809581,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "407 - Fortalecimiento Institucional De Inspección De Personas Jurídicas",
+      "presupuesto": 1608000.0,
+      "anomaly_score": -0.335121611831019,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "145 - MINISTERIO DE SALUD",
+      "programa": "461 - Centros Asistenciales De Salud Mental",
+      "presupuesto": 405528000.0,
+      "anomaly_score": -0.3289982607961392,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "145 - MINISTERIO DE SALUD",
+      "programa": "450 - Actividades Centrales Del Ministerio De Salud",
+      "presupuesto": 109281000.0,
+      "anomaly_score": -0.5065655839017038,
+      "is_anomaly": true,
+      "severity": "ALTO"
+    },
+    {
+      "organismo": "865 - CENTRO DE EXCELENCIA EN PRODUCTOS Y PROCESOS",
+      "programa": "996 - Proyectos Estratégicos De Investigación, Desarrollo E Innovación",
+      "presupuesto": 5472000.0,
+      "anomaly_score": -0.4061855261112342,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "152 - Rentas De La Provincia",
+      "presupuesto": 53525000.0,
+      "anomaly_score": -0.361786218784057,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "168 - Fondo De Innovación Y Modernización En La Gestión Tributaria De Municipios Y Comunas",
+      "presupuesto": 19162000.0,
+      "anomaly_score": -0.32357055888015357,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "145 - MINISTERIO DE SALUD",
+      "programa": "456 - Actividades Comunes De La Secretaría De Salud",
+      "presupuesto": 1528320000.0,
+      "anomaly_score": -0.5374419229665995,
+      "is_anomaly": true,
+      "severity": "ALTO"
+    },
+    {
+      "organismo": "170 - GASTOS GENERALES DE LA ADMINISTRACIONINISTRACIÓN",
+      "programa": "780 - Proyectos Estratégicos",
+      "presupuesto": 5767116000.0,
+      "anomaly_score": -0.34730822832351504,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+      "programa": "668 - (C.E.) Turismo Social - Cuenta Especial Ley 8665",
+      "presupuesto": 21532000.0,
+      "anomaly_score": -0.5172579596607505,
+      "is_anomaly": true,
+      "severity": "ALTO"
+    },
+    {
+      "organismo": "170 - GASTOS GENERALES DE LA ADMINISTRACIONINISTRACIÓN",
+      "programa": "701 - Participación En Organismos Interprovinciales",
+      "presupuesto": 14734575000.0,
+      "anomaly_score": -0.41142655059054567,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "860 - CONSEJO PARA LA PLANIFICACIÓN ESTRATÉGICA DE LA PCIA DE CBA COPEC",
+      "programa": "999 - Instituto De Planificación Y Formación - Observatorio De Seguridad Y Convivencia",
+      "presupuesto": 123072000.0,
+      "anomaly_score": -0.6700542675561094,
+      "is_anomaly": true,
+      "severity": "CRITICO"
+    },
+    {
+      "organismo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+      "programa": "071 - Secretaría De La Mujer - Actividades Centrales",
+      "presupuesto": 1000000.0,
+      "anomaly_score": -0.3345729995830848,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "606 - Fondo Compensador Del Transporte Ley 9832",
+      "presupuesto": 2649000.0,
+      "anomaly_score": -0.32907898662008644,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "135 - MINISTERIO DE EDUCACIÓN",
+      "programa": "351 - (C.E.) Fondos Caducos De Quiebras - Cuenta Especial Ley Nº 9268",
+      "presupuesto": 700000.0,
+      "anomaly_score": -0.3413348507811004,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "170 - GASTOS GENERALES DE LA ADMINISTRACIONINISTRACIÓN",
+      "programa": "707 - Servicios A Instituciones Bancarias",
+      "presupuesto": 1940227000.0,
+      "anomaly_score": -0.7674176760625434,
+      "is_anomaly": true,
+      "severity": "CRITICO"
+    },
+    {
+      "organismo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+      "programa": "075 - (C.E.) Fondo Para La Prevención De La Violencia Familiar - Cuenta Especial Ley 9505",
+      "presupuesto": 217160000.0,
+      "anomaly_score": -0.338194883756165,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+      "programa": "642 - (C.E.) Programa De Fortalecimiento De La Economía Familiar - Cta Esp. Ley 8665 Y Convenios",
+      "presupuesto": 10000000.0,
+      "anomaly_score": -0.4321449026349703,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "170 - GASTOS GENERALES DE LA ADMINISTRACIONINISTRACIÓN",
+      "programa": "719 - Conexión A Internet Estudiantil Gratuito",
+      "presupuesto": 1663254000.0,
+      "anomaly_score": -0.3356659006934588,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "140 - MINISTERIO DE JUSTICIA Y TRABAJO",
+      "programa": "802 - (C.E.) Multas Ley 8015 Y Tasas Retributivas - Cuenta Especial",
+      "presupuesto": 54000000.0,
+      "anomaly_score": -0.35649211211353293,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "604 - Boleto Interurbano Para El Personal De Salud (Bis) - Decreto 748/2023",
+      "presupuesto": 557146000.0,
+      "anomaly_score": -0.4285386080558476,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "125 - MINISTERIO DE BIOAGROINDUSTRIA",
+      "programa": "260 - Cordoba Vidriera Productiva",
+      "presupuesto": 56137000.0,
+      "anomaly_score": -0.3224458093364279,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "160 - MINISTERIO DE DESARROLLO HUMANO",
+      "programa": "659 - Atención Integral Para Las Personas Mayores",
+      "presupuesto": 5600000.0,
+      "anomaly_score": -0.7074875015669891,
+      "is_anomaly": true,
+      "severity": "CRITICO"
+    },
+    {
+      "organismo": "200 - PODER LEGISLATIVO",
+      "programa": "902 - Recursos Económicos Para Organismos De Derechos Humanos",
+      "presupuesto": 42911000.0,
+      "anomaly_score": -0.3506554321138274,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "630 - AGENCIA CÓRDOBA TURISMO SEM",
+      "programa": "870 - Relaciones Institucionales",
+      "presupuesto": 35100000.0,
+      "anomaly_score": -0.3244782517291298,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "450 - DEFENSORÍA DE LOS DERECHOS DE NIÑAS NIÑOS Y ADOLESCENTES",
+      "programa": "964 - (C.E.) Acciones Intersectoriales- Cuenta Especial Ley 8665-",
+      "presupuesto": 14317000.0,
+      "anomaly_score": -0.3538520893430491,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "145 - MINISTERIO DE SALUD",
+      "programa": "470 - Desarrollo De Infraestructura Y Equipamiento Hospitalario",
+      "presupuesto": 5876542000.0,
+      "anomaly_score": -0.4883396623570367,
+      "is_anomaly": true,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "170 - GASTOS GENERALES DE LA ADMINISTRACIONINISTRACIÓN",
+      "programa": "710 - Abastecimientos Comunes",
+      "presupuesto": 1247000000.0,
+      "anomaly_score": -0.3628389715282252,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+      "programa": "136 - Articulación Territorial",
+      "presupuesto": 7500000000.0,
+      "anomaly_score": -0.34730822832351504,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+      "programa": "641 - Desarrollo Emprendedor",
+      "presupuesto": 200000000.0,
+      "anomaly_score": -0.324934700277107,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "016 - Aportes Agencia Para La Competitividad De Córdoba - S.E.M.",
+      "presupuesto": 14000000.0,
+      "anomaly_score": -0.3240032714296125,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "200 - PODER LEGISLATIVO",
+      "programa": "907 - Programa De Fortalecimiento Institucional",
+      "presupuesto": 26793000.0,
+      "anomaly_score": -0.4472360334615014,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "135 - MINISTERIO DE EDUCACIÓN",
+      "programa": "364 - Fortalecimiento Educativo Institucional",
+      "presupuesto": 8383529000.0,
+      "anomaly_score": -0.37678549221209934,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "635 - AGENCIA PROCÓRDOBA SEM",
+      "programa": "877 - Atraccion De Inversiones Y Marca Cordoba",
+      "presupuesto": 1100000000.0,
+      "anomaly_score": -0.4994532485490378,
+      "is_anomaly": true,
+      "severity": "ALTO"
+    },
+    {
+      "organismo": "145 - MINISTERIO DE SALUD",
+      "programa": "454 - (C.E.) Recurso Solidario Para Ablación E Implantes - Cuenta Especial- Ley Provincial Nº 9146",
+      "presupuesto": 44414000.0,
+      "anomaly_score": -0.3226812139153936,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "615 - AGENCIA CÓRDOBA DEPORTES - SEM",
+      "programa": "998 - Deporte Con Energía - Recursos Afectados",
+      "presupuesto": 550271000.0,
+      "anomaly_score": -0.3965136476317679,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "155 - MINISTERIO DE INFRAESTRUCTURA Y SERVICIOS PÚBLICOS",
+      "programa": "506 - Arquitectura",
+      "presupuesto": 10217063000.0,
+      "anomaly_score": -0.37919149694373505,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "110 - MINISTERIO DE GOBIERNO",
+      "programa": "101 - Gobierno Abierto",
+      "presupuesto": 32000000.0,
+      "anomaly_score": -0.3462591719886133,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "145 - MINISTERIO DE SALUD",
+      "programa": "463 - Programas Nacionales Varios",
+      "presupuesto": 1000000.0,
+      "anomaly_score": -0.3345729995830848,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "185 - MINISTERIO DE PRODUCCIÓN CIENCIA E INNOVACIÓN TECNOLÓGICA",
+      "programa": "311 - Planeamiento Y Políticas Públicas De Ciencia, Tecnología E Innovación",
+      "presupuesto": 25000000.0,
+      "anomaly_score": -0.32429366940789417,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "602 - Boleto Educativo Gratuito (B.E.G) - Ley 10031",
+      "presupuesto": 10311000.0,
+      "anomaly_score": -0.34368278284790216,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "155 - MINISTERIO DE INFRAESTRUCTURA Y SERVICIOS PÚBLICOS",
+      "programa": "540 - Ministerio De Infraestructura Y Servicios Públicos - Actividades Centrales",
+      "presupuesto": 5772000.0,
+      "anomaly_score": -0.43690434526217364,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "175 - MINISTERIO DE SEGURIDAD",
+      "programa": "773 - Fondo De Seguridad Ciudadana Y Mejoramiento De Los Servicios Públicos Y Sociales",
+      "presupuesto": 12347877000.0,
+      "anomaly_score": -0.3748721880212953,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "170 - GASTOS GENERALES DE LA ADMINISTRACIONINISTRACIÓN",
+      "programa": "702 - Deuda Pública",
+      "presupuesto": 144781488000.0,
+      "anomaly_score": -0.48682857986366956,
+      "is_anomaly": true,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "300 - PODER JUDICIAL",
+      "programa": "922 - Programa De Apoyo Al Servicio De Justicia",
+      "presupuesto": 638900000.0,
+      "anomaly_score": -0.38530712427524694,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "805 - EMPRESA PROVINCIALINCIAL DE ENERGÍA DE CÓRDOBA EPEC",
+      "programa": "993 - Empresa Provincial De Energía De Córdoba",
+      "presupuesto": 2095911000.0,
+      "anomaly_score": -0.36653514445823254,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "140 - MINISTERIO DE JUSTICIA Y TRABAJO",
+      "programa": "415 - (C.E.) Mediación Extrajudicial - Cuenta Especial Ley 10.543",
+      "presupuesto": 6000000.0,
+      "anomaly_score": -0.3491358853425402,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "625 - AGENCIA CÓRDOBA CULTURA SE",
+      "programa": "625 - Agencia Cultura",
+      "presupuesto": 5000000000.0,
+      "anomaly_score": -0.37505699484089294,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "645 - ENTE REGULADOR DE SERVICIOS PÚBLICOS",
+      "programa": "881 - Satisfacción De Los Usuarios",
+      "presupuesto": 5000000.0,
+      "anomaly_score": -0.32333072105042804,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "155 - MINISTERIO DE INFRAESTRUCTURA Y SERVICIOS PÚBLICOS",
+      "programa": "550 - Infraestructura Hídrica Y Gasífera",
+      "presupuesto": 128600000.0,
+      "anomaly_score": -0.4565132735465936,
+      "is_anomaly": false,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "113 - MINISTERIO DE VINCULACIÓN COMUNITARIA",
+      "programa": "132 -  Información Pública",
+      "presupuesto": 19123000000.0,
+      "anomaly_score": -0.39537264854772575,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "630 - AGENCIA CÓRDOBA TURISMO SEM",
+      "programa": "876 - Desarrollo De Infraestructura Y Equipamiento Técnico - Recursos Afectados",
+      "presupuesto": 5000000.0,
+      "anomaly_score": -0.32333072105042804,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "109 - MINISTERIO DE AMBIENTE Y ECONOMÍA CIRCULAR",
+      "programa": "568 - Policía Ambiental",
+      "presupuesto": 460000000.0,
+      "anomaly_score": -0.32973390189950147,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "200 - PODER LEGISLATIVO",
+      "programa": "912 - Programa De Capacitación Legislativa",
+      "presupuesto": 3027000.0,
+      "anomaly_score": -0.3270621657589927,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "400 - DEFENSORÍA DEL PUEBLO",
+      "programa": "941 - El Defensor Con Todos",
+      "presupuesto": 70915000.0,
+      "anomaly_score": -0.40069372185611324,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "165 - MINISTERIO DE DESARROLLO SOCIAL Y PROMOCIÓN DEL EMPLEO",
+      "programa": "662 - Infraestructura Social",
+      "presupuesto": 7847552000.0,
+      "anomaly_score": -0.4063910358179225,
+      "is_anomaly": false,
+      "severity": "BAJO"
+    },
+    {
+      "organismo": "115 - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA",
+      "programa": "161 - Compras Y Tesorería General",
+      "presupuesto": 2255000.0,
+      "anomaly_score": -0.3297569142673326,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    },
+    {
+      "organismo": "185 - MINISTERIO DE PRODUCCIÓN CIENCIA E INNOVACIÓN TECNOLÓGICA",
+      "programa": "310 - Planificación Y Despliegue De Políticas Para La Promoción De La Economía Del Conocimiento Y Nuevas Tecnologías",
+      "presupuesto": 40000000.0,
+      "anomaly_score": -0.4849232110494264,
+      "is_anomaly": true,
+      "severity": "MEDIO"
+    },
+    {
+      "organismo": "185 - MINISTERIO DE PRODUCCIÓN CIENCIA E INNOVACIÓN TECNOLÓGICA",
+      "programa": "865 - Aportes A Agencia Procórdoba S.E.M",
+      "presupuesto": 27500000.0,
+      "anomaly_score": -0.3553831508116674,
+      "is_anomaly": false,
+      "severity": "NORMAL"
+    }
+  ]
+}
