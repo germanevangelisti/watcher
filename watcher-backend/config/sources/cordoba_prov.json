@@ -1,0 +1,190 @@
+{
+  "$schema": "../sources.schema.json",
+  "version": "1.0.0",
+  "last_updated": "2026-02-09",
+  "jurisdiction_code": "cordoba_provincia",
+  "jurisdiction_name": "Provincia de Córdoba",
+  "sources": {
+    "presupuesto_anual": {
+      "check_codes": ["RF_25917_PRESUPUESTO_ANUAL"],
+      "category": "presupuesto",
+      "official_urls": [
+        {
+          "url": "https://www.cba.gov.ar/presupuesto/",
+          "description": "Portal oficial de presupuesto provincial",
+          "discovery_patterns": {
+            "file_extensions": ["pdf", "xlsx"],
+            "keywords": ["presupuesto", "2024", "2025", "2026", "ejercicio"],
+            "selectors": {
+              "css": "a[href*='presupuesto']",
+              "xpath": "//a[contains(@href, 'presupuesto')]"
+            }
+          },
+          "expected_frequency": "anual",
+          "status": "active"
+        },
+        {
+          "url": "https://transparencia.cba.gov.ar/",
+          "description": "Portal de transparencia provincial",
+          "discovery_patterns": {
+            "keywords": ["presupuesto anual", "ley de presupuesto"],
+            "sections": ["presupuesto", "finanzas"]
+          },
+          "status": "active"
+        }
+      ],
+      "validation_hints": {
+        "expected_fields": ["ejercicio", "monto_total", "fecha_aprobacion"],
+        "file_size_range": {"min_mb": 1, "max_mb": 100}
+      }
+    },
+    "ejecucion_presupuestaria": {
+      "check_codes": ["RF_25917_EJECUCION_TRIMESTRAL"],
+      "category": "presupuesto",
+      "official_urls": [
+        {
+          "url": "https://transparencia.cba.gov.ar/ejecucion-presupuestaria",
+          "description": "Ejecución presupuestaria trimestral",
+          "discovery_patterns": {
+            "file_extensions": ["pdf", "xlsx", "html"],
+            "keywords": ["ejecución", "trimestre", "Q1", "Q2", "Q3", "Q4", "devengado", "caja"],
+            "table_headers": ["periodo", "devengado", "caja", "finalidad", "funcion"]
+          },
+          "expected_frequency": "trimestral",
+          "max_rezago_quarters": 1,
+          "status": "active"
+        },
+        {
+          "url": "https://www.cba.gov.ar/presupuesto/ejecucion/",
+          "description": "Ejecución presupuestaria (portal principal)",
+          "discovery_patterns": {
+            "keywords": ["ejecución presupuestaria", "trimestral"]
+          },
+          "status": "active"
+        }
+      ],
+      "validation_hints": {
+        "expected_fields": ["periodo", "devengado", "caja", "finalidad", "funcion"],
+        "must_include_both_bases": true
+      }
+    },
+    "deuda_publica": {
+      "check_codes": ["RF_25917_DEUDA_PUBLICA"],
+      "category": "deuda",
+      "official_urls": [
+        {
+          "url": "https://www.cba.gov.ar/ministerio-de-finanzas/deuda-publica/",
+          "description": "Información de deuda pública provincial",
+          "discovery_patterns": {
+            "keywords": ["deuda", "stock", "flotante", "trimestre"],
+            "file_extensions": ["pdf", "xlsx"],
+            "table_headers": ["stock_total", "deuda_flotante", "periodo"]
+          },
+          "expected_frequency": "trimestral",
+          "max_rezago_quarters": 1,
+          "status": "active"
+        },
+        {
+          "url": "https://transparencia.cba.gov.ar/deuda",
+          "description": "Deuda pública en portal de transparencia",
+          "discovery_patterns": {
+            "keywords": ["deuda pública", "deuda flotante"]
+          },
+          "status": "active"
+        }
+      ],
+      "validation_hints": {
+        "expected_fields": ["stock_total", "deuda_flotante", "periodo"],
+        "must_include_flotante": true
+      }
+    },
+    "servicios_deuda": {
+      "check_codes": ["RF_25917_SERVICIOS_DEUDA"],
+      "category": "deuda",
+      "official_urls": [
+        {
+          "url": "https://www.cba.gov.ar/ministerio-de-finanzas/deuda-publica/servicios/",
+          "description": "Servicios de deuda con tipo de acreedor",
+          "discovery_patterns": {
+            "keywords": ["servicios", "pago", "acreedor", "intereses", "capital"],
+            "file_extensions": ["pdf", "xlsx"],
+            "table_headers": ["monto_servicio", "tipo_acreedor", "periodo"]
+          },
+          "expected_frequency": "trimestral",
+          "max_rezago_quarters": 1,
+          "status": "active"
+        },
+        {
+          "url": "https://transparencia.cba.gov.ar/deuda/servicios",
+          "description": "Servicios de deuda en portal de transparencia",
+          "status": "active"
+        }
+      ],
+      "validation_hints": {
+        "expected_fields": ["monto_servicio", "tipo_acreedor", "periodo"],
+        "tipos_acreedor_validos": [
+          "organismo_internacional",
+          "banco_local",
+          "bonista",
+          "proveedor",
+          "otro"
+        ]
+      }
+    },
+    "empleo_publico": {
+      "check_codes": ["RF_25917_EMPLEO_PUBLICO"],
+      "category": "empleo",
+      "official_urls": [
+        {
+          "url": "https://www.cba.gov.ar/recursos-humanos/estadisticas/",
+          "description": "Estadísticas de empleo público",
+          "discovery_patterns": {
+            "keywords": ["empleo público", "planta", "contratados", "junio", "diciembre"],
+            "file_extensions": ["pdf", "xlsx"],
+            "table_headers": ["total_empleados", "planta_permanente", "contratados", "fecha_corte"]
+          },
+          "expected_frequency": "semestral",
+          "cortes_requeridos": ["30/06", "31/12"],
+          "max_rezago_quarters": 1,
+          "status": "active"
+        },
+        {
+          "url": "https://transparencia.cba.gov.ar/empleo-publico",
+          "description": "Empleo público en portal de transparencia",
+          "status": "active"
+        }
+      ],
+      "validation_hints": {
+        "expected_fields": ["total_empleados", "planta_permanente", "contratados", "fecha_corte"],
+        "cortes_requeridos": ["30/06", "31/12"]
+      }
+    },
+    "boletines_oficiales": {
+      "check_codes": [],
+      "category": "general",
+      "official_urls": [
+        {
+          "url": "https://boletinoficial.cba.gov.ar/",
+          "description": "Boletín Oficial de la Provincia de Córdoba",
+          "discovery_patterns": {
+            "file_extensions": ["pdf"],
+            "date_formats": ["YYYYMMDD", "YYYY-MM-DD"],
+            "sections": ["1_Secc", "2_Secc", "3_Secc", "4_Secc", "5_Secc"]
+          },
+          "expected_frequency": "diario",
+          "status": "active"
+        }
+      ]
+    }
+  },
+  "scraping_config": {
+    "user_agent": "Watcher Agent Compliance Bot/1.0 (Transparency Monitor)",
+    "rate_limit_seconds": 2,
+    "retry_attempts": 3,
+    "timeout_seconds": 30,
+    "respect_robots_txt": true
+  },
+  "notification_emails": [],
+  "last_scan": null,
+  "next_scheduled_scan": null
+}

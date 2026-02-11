@@ -1,0 +1,713 @@
+{
+  "timestamp": "2026-02-09T01:02:58.613543",
+  "total_tests": 6,
+  "passed_tests": 1,
+  "pass_rate": 0.167,
+  "avg_precision_at_10": 0.133,
+  "avg_score": 0.446,
+  "avg_execution_time_ms": 380.04,
+  "results": [
+    {
+      "query": "contrato",
+      "description": "Búsqueda genérica de contratos",
+      "execution_time_ms": 1549.29,
+      "total_results": 10,
+      "results_analysis": [
+        {
+          "rank": 1,
+          "score": 0.293,
+          "distance": 1.414,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_2_Secc.pdf",
+          "snippet": "cordoba, (r.a.), martes 3 de febrero de 2026\nboletin oficial de la provincia de cordoba judiciales2amide 72,11 m (lado d-a) colindando con lote 06 \n(p..."
+        },
+        {
+          "rank": 2,
+          "score": 0.275,
+          "distance": 1.449,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "la ciu -\ndad de la carlota, secretaria n° 2, designar a la \nsra. rosario armeñanzas como administradora \njudicial de la sucesión, cargo que fue acepta..."
+        },
+        {
+          "rank": 3,
+          "score": 0.268,
+          "distance": 1.465,
+          "keywords_found": [
+            "obra"
+          ],
+          "is_relevant": false,
+          "filename": "20260203_2_Secc.pdf",
+          "snippet": "ncia en autos. (...) noti -\nfíquese.” fdo. martos francisco gustavo – juez \nde 1° instancia, juarez mariano – secretario \njuzgado 1° instancia.\n5 días..."
+        },
+        {
+          "rank": 4,
+          "score": 0.26,
+          "distance": 1.48,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_2_Secc.pdf",
+          "snippet": "rio/a letrado. “río segundo, 09/05/2024. \npor presentado, por parte en el carácter invocado \ny con el domicilio procesal constituido. a lo demás, \nest..."
+        },
+        {
+          "rank": 5,
+          "score": 0.26,
+          "distance": 1.48,
+          "keywords_found": [
+            "contrato"
+          ],
+          "is_relevant": false,
+          "filename": "20260203_2_Secc.pdf",
+          "snippet": "da -\nmetto gisela, prosecretario/a letrado \notro decreto: 13996989 - battello, germán \njorge ignacio c/ sancor cooperativa \nde seguros limitada - ordi..."
+        },
+        {
+          "rank": 6,
+          "score": 0.257,
+          "distance": 1.486,
+          "keywords_found": [
+            "obra"
+          ],
+          "is_relevant": false,
+          "filename": "20260203_2_Secc.pdf",
+          "snippet": "ictado \nla siguiente resolución: “córdoba, \n10/12/2025… cítese y emplácese a los \nherederos de abel artemio conci a fin \nque en el término de veinte (..."
+        },
+        {
+          "rank": 7,
+          "score": 0.256,
+          "distance": 1.488,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_2_Secc.pdf",
+          "snippet": "hasta unirse con el punto de partida, formando \ncon aquella linea un ángulo de 50 41, o sea una \nsup . total de 1 .923 mts 41 dcm.2, lindando al \ns-0 ..."
+        },
+        {
+          "rank": 8,
+          "score": 0.256,
+          "distance": 1.488,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_4_Secc.pdf",
+          "snippet": "presentación: 06/02/2026. hora límite de pre -\nsentación: 16:00 horas. presentación de oferta: los oferentes que \nhayan gestionado el acceso a compras..."
+        },
+        {
+          "rank": 9,
+          "score": 0.255,
+          "distance": 1.49,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_4_Secc.pdf",
+          "snippet": "al (p .o.). margen mínimo de mejora de ofertas: 0,5000%. \nconsultas: los interesados en participar del proceso o hacer consul -\ntas deberán gestionar ..."
+        },
+        {
+          "rank": 10,
+          "score": 0.249,
+          "distance": 1.501,
+          "keywords_found": [
+            "obra"
+          ],
+          "is_relevant": false,
+          "filename": "20260203_2_Secc.pdf",
+          "snippet": "antes  \neucebia gonzalez dni 1 .062.642  - angel \nrosendo lujan dni 2.643.177 .-\n1 día - nº 644483 - $ 12683,20 - 3/2/2026 - boe\nel sr juez de primera..."
+        }
+      ],
+      "metrics": {
+        "precision_at_10": 0.0,
+        "avg_score": 0.263,
+        "min_score": 0.249,
+        "max_score": 0.293,
+        "relevant_count": 0,
+        "passed": false,
+        "threshold": 0.3
+      }
+    },
+    {
+      "query": "contrato de construcción",
+      "description": "Contratos específicos de construcción",
+      "execution_time_ms": 134.38,
+      "total_results": 10,
+      "results_analysis": [
+        {
+          "rank": 1,
+          "score": 0.448,
+          "distance": 1.104,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "tina, para tratar el siguiente orden del día: 1º) \nlectura del acta anterior. 2º) designación de dos \nasambleístas para firmar el acta conjuntamen -\nt..."
+        },
+        {
+          "rank": 2,
+          "score": 0.447,
+          "distance": 1.106,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_4_Secc.pdf",
+          "snippet": "radas del organismo. consultas y aclarato -\nrias: of. de compras y contrataciones del ersep , en avenida emilio olmos n° \n513, 1er piso, ciudad de cór..."
+        },
+        {
+          "rank": 3,
+          "score": 0.439,
+          "distance": 1.122,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_5_Secc.pdf",
+          "snippet": "e personal necesarias para \nla implementación del presente decreto.\n art.5°.-) derógase toda norma que se oponga al presente decreto.\n art.6°.-) comun..."
+        },
+        {
+          "rank": 4,
+          "score": 0.435,
+          "distance": 1.13,
+          "keywords_found": [
+            "contrato"
+          ],
+          "is_relevant": false,
+          "filename": "20260203_2_Secc.pdf",
+          "snippet": "da -\nmetto gisela, prosecretario/a letrado \notro decreto: 13996989 - battello, germán \njorge ignacio c/ sancor cooperativa \nde seguros limitada - ordi..."
+        },
+        {
+          "rank": 5,
+          "score": 0.433,
+          "distance": 1.133,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "sión directiva, según articulo treinta y nueve del \nestatuto, a permutar, gravar, realizar convenios \nespeciales, alquilar, y otras formas de disposi ..."
+        },
+        {
+          "rank": 6,
+          "score": 0.431,
+          "distance": 1.137,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_2_Secc.pdf",
+          "snippet": "01 y rentas municipal en cuenta \nn° 19-02-2275261/6 (a nombre de hugo hernán \nrobles). afectación parcial (mayor superficie) en \nasiento genérico nº 3..."
+        },
+        {
+          "rank": 7,
+          "score": 0.425,
+          "distance": 1.151,
+          "keywords_found": [
+            "contrato"
+          ],
+          "is_relevant": false,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "o hugo alonso \nha fallecido con fecha 27 de marzo de 2024 y \ndesde ese momento solo se ha ejercido la ge -\nrencia a través del ponente, por lo que pro..."
+        },
+        {
+          "rank": 8,
+          "score": 0.423,
+          "distance": 1.154,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_2_Secc.pdf",
+          "snippet": "e paola elizabeth  \n– prosecretaria letrada.\n5 días - nº 643594 - $ 30352,50 - 5/2/2026 - boe\nusucapiones\nel sr. juez durán lobato marcelo ramiro del ..."
+        },
+        {
+          "rank": 9,
+          "score": 0.422,
+          "distance": 1.155,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_2_Secc.pdf",
+          "snippet": "érrez bustamante, se ha \ndictado la siguiente resolución. sentencia nu -\nmero: 230. marcos juarez, 12/12/2025. y \nvistos: …y considerando:…se resuel -..."
+        },
+        {
+          "rank": 10,
+          "score": 0.42,
+          "distance": 1.159,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "-\nvincia de córdoba y rosario armeñanzas, d.n.i. \nn° 29.372.275, argentina, nacida el 19/05/1982, \nde estado civil viuda del sr. federico hugo alon -\n..."
+        }
+      ],
+      "metrics": {
+        "precision_at_10": 0.0,
+        "avg_score": 0.432,
+        "min_score": 0.42,
+        "max_score": 0.448,
+        "relevant_count": 0,
+        "passed": false,
+        "threshold": 0.4
+      }
+    },
+    {
+      "query": "licitación pública obras públicas",
+      "description": "Licitaciones de obras públicas",
+      "execution_time_ms": 151.98,
+      "total_results": 10,
+      "results_analysis": [
+        {
+          "rank": 1,
+          "score": 0.562,
+          "distance": 0.876,
+          "keywords_found": [
+            "pública",
+            "obra"
+          ],
+          "is_relevant": true,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "profesión \ncomerciante, con domicilio real en avenida av \nvalparaiso 6639, manzana 11, lote 5, barrio los \nmimbres, de la ciudad de cordoba, departa -..."
+        },
+        {
+          "rank": 2,
+          "score": 0.551,
+          "distance": 0.898,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_4_Secc.pdf",
+          "snippet": "09:00 - presupuesto oficial: $1 .582.268.600,00. - \nlugar: administración central, área compras y contrataciones, la tablada \nn° 350 – córdoba – consu..."
+        },
+        {
+          "rank": 3,
+          "score": 0.541,
+          "distance": 0.917,
+          "keywords_found": [
+            "pública",
+            "obra"
+          ],
+          "is_relevant": true,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "funes 231, de la \nciudad de coronel moldes, departamento rio \ncuarto, de la provincia de cordoba, república \nargentina denominación: marvel s.a.s.sede..."
+        },
+        {
+          "rank": 4,
+          "score": 0.539,
+          "distance": 0.922,
+          "keywords_found": [
+            "obra"
+          ],
+          "is_relevant": false,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "o, tales como recargas virtuales, cobranzas de \nservicios habilitados, venta de tarjetas prepagas, \ncarga de transporte público, fotocopiado, impre -\n..."
+        },
+        {
+          "rank": 5,
+          "score": 0.528,
+          "distance": 0.944,
+          "keywords_found": [
+            "pública",
+            "obra"
+          ],
+          "is_relevant": true,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "incia de cordoba, \nrepública argentina denominación: turismo \ny viajes para todos s.a.s.sede: calle ve -\nlez sarsfield 571, barrio centro, de la ciuda..."
+        },
+        {
+          "rank": 6,
+          "score": 0.524,
+          "distance": 0.953,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "en el artículo tercero. queda facultado por \neste acto el socio gerente david hugo payovich, \nd.n.i. nº 27 .102.325 y/o el dr. héctor h. petroch, \nd.n..."
+        },
+        {
+          "rank": 7,
+          "score": 0.514,
+          "distance": 0.971,
+          "keywords_found": [
+            "pública",
+            "obra"
+          ],
+          "is_relevant": true,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "real en ca -\nlle francisco perito moreno 924, barrio mariano \nmoreno, de la ciudad de villa maria, departa -\nmento general san martin, de la provincia..."
+        },
+        {
+          "rank": 8,
+          "score": 0.514,
+          "distance": 0.972,
+          "keywords_found": [
+            "obra"
+          ],
+          "is_relevant": false,
+          "filename": "20260203_5_Secc.pdf",
+          "snippet": "municipal de juventudes.\ne) en representación del concejo deliberante: dos (2) miembros que serán \ndesignados por dicho cuerpo.\n art.5°.-) establécese..."
+        },
+        {
+          "rank": 9,
+          "score": 0.513,
+          "distance": 0.974,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "lida -\ndes legales, reglamentarias y estatutarias para \nejercer el cargo y que no se encuentra incluida \ny/o alcanzada dentro de la “nomina de persona..."
+        },
+        {
+          "rank": 10,
+          "score": 0.505,
+          "distance": 0.989,
+          "keywords_found": [
+            "pública",
+            "obra"
+          ],
+          "is_relevant": true,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "día \n08/10/1980, estado civil casado/a, nacionalidad \nargentina, sexo masculino, de profesión em -\npleado/a, con domicilio real encalle rincon 1029, \n..."
+        }
+      ],
+      "metrics": {
+        "precision_at_10": 0.5,
+        "avg_score": 0.529,
+        "min_score": 0.505,
+        "max_score": 0.562,
+        "relevant_count": 5,
+        "passed": true,
+        "threshold": 0.45
+      }
+    },
+    {
+      "query": "designación funcionario",
+      "description": "Designaciones de personal",
+      "execution_time_ms": 120.26,
+      "total_results": 10,
+      "results_analysis": [
+        {
+          "rank": 1,
+          "score": 0.522,
+          "distance": 0.955,
+          "keywords_found": [
+            "designa"
+          ],
+          "is_relevant": false,
+          "filename": "20260203_5_Secc.pdf",
+          "snippet": "municipal de juventudes.\ne) en representación del concejo deliberante: dos (2) miembros que serán \ndesignados por dicho cuerpo.\n art.5°.-) establécese..."
+        },
+        {
+          "rank": 2,
+          "score": 0.511,
+          "distance": 0.979,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "vi -\ncio de catering, de concesiones gastronómicas, \nbares, restoranes, comedores, organización y \nlogística en eventos sociales. 7) creación, pro -\nd..."
+        },
+        {
+          "rank": 3,
+          "score": 0.509,
+          "distance": 0.983,
+          "keywords_found": [
+            "designa"
+          ],
+          "is_relevant": false,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "naria \na realizarse en el sum del barrio, ubicado en \nlas cañitas barrio privado, en camino a falda \ndel carmen, provincia de córdoba, la que se ce -\n..."
+        },
+        {
+          "rank": 4,
+          "score": 0.507,
+          "distance": 0.986,
+          "keywords_found": [
+            "designa",
+            "cargo"
+          ],
+          "is_relevant": true,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "argo de direc -\ntor suplente a hernandez jorgelina dni \n28.115.983 presente en ese acto la persona de -\nsignada como director suplente manifiesta que ..."
+        },
+        {
+          "rank": 5,
+          "score": 0.496,
+          "distance": 1.008,
+          "keywords_found": [
+            "designa",
+            "cargo"
+          ],
+          "is_relevant": true,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "cuenta \n(750) acciones. administración: la administra -\nción de la sociedad está a cargo de un directorio \ncompuesto por el número de miembros que fij..."
+        },
+        {
+          "rank": 6,
+          "score": 0.494,
+          "distance": 1.012,
+          "keywords_found": [
+            "designa"
+          ],
+          "is_relevant": false,
+          "filename": "20260203_2_Secc.pdf",
+          "snippet": "1 .063.211 . la dirección general de catastro efec -\ntuó la siguiente observación: “la presente pose -\nsión afecta al dominio n° 9056 f° 11172 t° 45 a..."
+        },
+        {
+          "rank": 7,
+          "score": 0.493,
+          "distance": 1.015,
+          "keywords_found": [
+            "designa"
+          ],
+          "is_relevant": false,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "904.027 .\n1 día - nº 644185 - $ 5147 ,70 - 3/2/2026 - boe\nitzamara s.a. \nitzamara s.a. publicación art 10 ley 19550 \n- por acta de asamblea general or..."
+        },
+        {
+          "rank": 8,
+          "score": 0.492,
+          "distance": 1.016,
+          "keywords_found": [
+            "designa"
+          ],
+          "is_relevant": false,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "..........  pág. 1\nfondos de comercio  .................................  pág. 4\nsociedades comerciales  ..........................  pág. 4\nde octubre..."
+        },
+        {
+          "rank": 9,
+          "score": 0.491,
+          "distance": 1.018,
+          "keywords_found": [
+            "designa",
+            "cargo"
+          ],
+          "is_relevant": true,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "ominal cada una \na el socio mariano beviaqua (d.n.i.: \n31 .301 .073). séptimo: administración y repre -\nsentación: la administración de la sociedad es..."
+        },
+        {
+          "rank": 10,
+          "score": 0.491,
+          "distance": 1.019,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "xxxiv - nº 25\ncordoba, (r.a.), martes 3 de febrero de 2026\nboletin oficial de la provincia de cordobasociedades - personas jurídicas\nasambleas y otras..."
+        }
+      ],
+      "metrics": {
+        "precision_at_10": 0.3,
+        "avg_score": 0.5,
+        "min_score": 0.491,
+        "max_score": 0.522,
+        "relevant_count": 3,
+        "passed": false,
+        "threshold": 0.4
+      }
+    },
+    {
+      "query": "decreto presupuesto asignación fondos",
+      "description": "Asignaciones presupuestarias",
+      "execution_time_ms": 197.47,
+      "total_results": 10,
+      "results_analysis": [
+        {
+          "rank": 1,
+          "score": 0.525,
+          "distance": 0.951,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "-\nnistas. octavo-fiscalización: la sociedad \nprescinde de la sindicatura, siendo ejercida la \nfiscalización por los accionistas de acuerdo a lo \npresc..."
+        },
+        {
+          "rank": 2,
+          "score": 0.519,
+          "distance": 0.962,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "es co -\nnexas, complementarias o vinculadas; pudien -\ndo asimismo brindar asesoramiento industrial, \ncomercial, técnico, administrativo, y en proyec -..."
+        },
+        {
+          "rank": 3,
+          "score": 0.499,
+          "distance": 1.002,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_2_Secc.pdf",
+          "snippet": "vistos:… y \nconsiderando:… resuelvo: i) hacer lugar \na la demanda de usucapión oportunamente pro -\nmovida, a favor de claudio pedro mandile dni n° \n17..."
+        },
+        {
+          "rank": 4,
+          "score": 0.499,
+          "distance": 1.003,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "es \ninmobiliarias de terceros. podrá inclusive reali -\nzar todas las operaciones sobre inmuebles que \nautorice la legislación vigente con relación a l..."
+        },
+        {
+          "rank": 5,
+          "score": 0.496,
+          "distance": 1.009,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_5_Secc.pdf",
+          "snippet": "de la tasa por servicio \na la propiedad, en razón de que padece una discapacidad su hijo, la cual \nconsta en el certificado único de discapacidad (cud..."
+        },
+        {
+          "rank": 6,
+          "score": 0.495,
+          "distance": 1.01,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "e so -\ncial en calle maipu n° 1471, planta baja, depto. \nn° 7 de la ciudad de río cuarto, pcia. de córdo -\nba, república argentina. tercero: a los fin..."
+        },
+        {
+          "rank": 7,
+          "score": 0.493,
+          "distance": 1.014,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "ara capitalización, y celebrar contratos de \nfranquicia ganadera (“franchising”), ya sea como \ncontratista, franquiciante o ganadera franquicia -\nda; ..."
+        },
+        {
+          "rank": 8,
+          "score": 0.492,
+          "distance": 1.016,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "en el artículo tercero. queda facultado por \neste acto el socio gerente david hugo payovich, \nd.n.i. nº 27 .102.325 y/o el dr. héctor h. petroch, \nd.n..."
+        },
+        {
+          "rank": 9,
+          "score": 0.49,
+          "distance": 1.019,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_2_Secc.pdf",
+          "snippet": "interviniente, \nmanifiesta: que presta conformidad a lo peticiona -\ndo por la actora y que esperará la etapa procesal \noportuna para expedirse. lo que..."
+        },
+        {
+          "rank": 10,
+          "score": 0.487,
+          "distance": 1.025,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_2_Secc.pdf",
+          "snippet": "érrez bustamante, se ha \ndictado la siguiente resolución. sentencia nu -\nmero: 230. marcos juarez, 12/12/2025. y \nvistos: …y considerando:…se resuel -..."
+        }
+      ],
+      "metrics": {
+        "precision_at_10": 0.0,
+        "avg_score": 0.499,
+        "min_score": 0.487,
+        "max_score": 0.525,
+        "relevant_count": 0,
+        "passed": false,
+        "threshold": 0.4
+      }
+    },
+    {
+      "query": "resolución aprobación",
+      "description": "Resoluciones administrativas",
+      "execution_time_ms": 126.83,
+      "total_results": 10,
+      "results_analysis": [
+        {
+          "rank": 1,
+          "score": 0.462,
+          "distance": 1.076,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "coreográficos, desfiles, exposiciones, ferias, con -\nciertos musicales, recitales, y eventos sociales. \n9) explotación de agencia de viajes y turismo,..."
+        },
+        {
+          "rank": 2,
+          "score": 0.458,
+          "distance": 1.084,
+          "keywords_found": [
+            "autoriza"
+          ],
+          "is_relevant": false,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "a comisión \nrevisora de cuentas y documentación contable \ncorrespondiente a los ejercicios económicos ce -\nrrados el 31/05/2021, 31/05/2022, 31/05/202..."
+        },
+        {
+          "rank": 3,
+          "score": 0.455,
+          "distance": 1.091,
+          "keywords_found": [
+            "autoriza"
+          ],
+          "is_relevant": false,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "responsabilidad de ley, se \nnotifican del tiempo de duración de los mismos y \nmanifiestan, con carácter de declaración jurada, \nque no les comprenden ..."
+        },
+        {
+          "rank": 4,
+          "score": 0.45,
+          "distance": 1.1,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "siones, reservas de hotelería, reserva, organi -\nzación y ventas de charters y traslados, dentro y \nfuera del país de contingentes. 10) organización, ..."
+        },
+        {
+          "rank": 5,
+          "score": 0.449,
+          "distance": 1.101,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "ferias, conciertos musicales, recitales, y eventos \nsociales. 9) explotación de agencia de viajes y \nturismo, pudiendo realizar reservas y ventas de \n..."
+        },
+        {
+          "rank": 6,
+          "score": 0.447,
+          "distance": 1.106,
+          "keywords_found": [
+            "autoriza"
+          ],
+          "is_relevant": false,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "cualquier trabajo de la construcción. 2) trans -\nporte nacional o internacional de cargas en ge -\nneral, ya sea por vía terrestre, aérea o marítima, \n..."
+        },
+        {
+          "rank": 7,
+          "score": 0.447,
+          "distance": 1.106,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_4_Secc.pdf",
+          "snippet": "oom: https://us02web.zoom.us/\nj/82792034397pwd=fkhqkrciofuzrpq3gfgpwmzo8clei3.1 id de reunión: \n827 9203 4397 código de acceso: 789991 plazo límite de..."
+        },
+        {
+          "rank": 8,
+          "score": 0.446,
+          "distance": 1.108,
+          "keywords_found": [
+            "resolución"
+          ],
+          "is_relevant": false,
+          "filename": "20260203_5_Secc.pdf",
+          "snippet": "idorogabrielguzman.presidentecomunal.\ndelfinaleiva.tesorera.antoniovivas.secretario\n1 día - nº 644292 - s/c - 3/2/2026 - boe\ncomuna de  los reartes\nre..."
+        },
+        {
+          "rank": 9,
+          "score": 0.446,
+          "distance": 1.109,
+          "keywords_found": [
+            "autoriza"
+          ],
+          "is_relevant": false,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "inherente a su logística. 3) \ncompra, venta y permuta, explotación, arrenda -\nmientos y administración de bienes inmuebles, \nurbanos y rurales y la re..."
+        },
+        {
+          "rank": 10,
+          "score": 0.442,
+          "distance": 1.115,
+          "keywords_found": [],
+          "is_relevant": false,
+          "filename": "20260203_3_Secc.pdf",
+          "snippet": "ualquier \nnaturaleza, debentures, valores mobiliarios, ac -\nciones y papeles de créditos de cualquiera de \nlos sistemas o modalidades creadas o crears..."
+        }
+      ],
+      "metrics": {
+        "precision_at_10": 0.0,
+        "avg_score": 0.45,
+        "min_score": 0.442,
+        "max_score": 0.462,
+        "relevant_count": 0,
+        "passed": false,
+        "threshold": 0.35
+      }
+    }
+  ]
+}

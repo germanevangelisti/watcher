@@ -1,0 +1,40 @@
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview",
+    "test": "echo 'Frontend tests not yet configured. Backend tests available via: make test'"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.11.3",
+    "@mantine/core": "^7.5.3",
+    "@mantine/dates": "^7.17.8",
+    "@mantine/hooks": "^7.5.3",
+    "@mantine/notifications": "^7.17.8",
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@tabler/icons-react": "^2.47.0",
+    "axios": "^1.6.7",
+    "dayjs": "^1.11.19",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.22.1",
+    "recharts": "^3.4.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.55",
+    "@types/react-dom": "^18.2.19",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "@vitejs/plugin-react": "^4.2.1",
+    "eslint": "^8.56.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.5",
+    "typescript": "^5.2.2",
+    "vite": "^5.1.0"
+  }
+}

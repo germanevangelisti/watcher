@@ -1,0 +1,32 @@
+{
+  "companies": [
+    "TEST SOCIEDAD ANÓNIMA",
+    "MEDICAL SUPPLIES SRL"
+  ],
+  "people": [
+    "Juan Pérez",
+    "María González",
+    "Carlos Rodríguez",
+    "Roberto López",
+    "Ana Martínez"
+  ],
+  "amounts": [
+    "$1.000.000",
+    "$5.000.000",
+    "$500.000"
+  ],
+  "dates": [
+    "1 de enero de 2026",
+    "31 de marzo de 2026",
+    "15 de febrero de 2026"
+  ],
+  "document_types": [
+    "DECRETO",
+    "RESOLUCIÓN",
+    "LICITACIÓN PÚBLICA"
+  ],
+  "cuits": [
+    "30-12345678-9",
+    "30-98765432-1"
+  ]
+}

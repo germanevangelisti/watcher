@@ -1,0 +1,279 @@
+{
+  "$schema": "./required_documents.schema.json",
+  "version": "1.0.0",
+  "last_updated": "2026-02-09",
+  "description": "Documentos obligatorios por jurisdicción según leyes de transparencia fiscal",
+  "jurisdictions": {
+    "nacion": {
+      "jurisdiction_id": null,
+      "jurisdiction_name": "Nación Argentina",
+      "jurisdiction_code": "AR",
+      "applicable_laws": [
+        "Ley 27.275 (Acceso a la Información Pública)",
+        "Decreto 780/2024 (Reglamentación)",
+        "Ley 24.156 (Administración Financiera)"
+      ],
+      "documents": [
+        {
+          "document_type": "presupuesto_anual",
+          "document_name": "Presupuesto Nacional 2025",
+          "period": "2025",
+          "check_code": "RF_NACION_PRESUPUESTO_ANUAL",
+          "expected_url": "https://www.economia.gob.ar/onp/presupuesto/",
+          "expected_format": "pdf",
+          "frequency": "anual",
+          "description": "Ley de Presupuesto Nacional aprobada por el Congreso"
+        },
+        {
+          "document_type": "ejecucion_trimestral",
+          "document_name": "Ejecución Presupuestaria Q1 2025",
+          "period": "2025-Q1",
+          "check_code": "RF_NACION_EJECUCION_Q1",
+          "expected_url": "https://www.economia.gob.ar/onp/ejecucion/",
+          "expected_format": "csv",
+          "frequency": "trimestral",
+          "description": "Ejecución presupuestaria primer trimestre (devengado + caja)"
+        },
+        {
+          "document_type": "ejecucion_trimestral",
+          "document_name": "Ejecución Presupuestaria Q2 2025",
+          "period": "2025-Q2",
+          "check_code": "RF_NACION_EJECUCION_Q2",
+          "expected_url": "https://www.economia.gob.ar/onp/ejecucion/",
+          "expected_format": "csv",
+          "frequency": "trimestral",
+          "description": "Ejecución presupuestaria segundo trimestre"
+        },
+        {
+          "document_type": "deuda_publica",
+          "document_name": "Stock de Deuda Pública Q1 2025",
+          "period": "2025-Q1",
+          "check_code": "RF_NACION_DEUDA_Q1",
+          "expected_url": "https://www.economia.gob.ar/deuda-publica/",
+          "expected_format": "pdf",
+          "frequency": "trimestral",
+          "description": "Stock de deuda consolidada + deuda flotante"
+        },
+        {
+          "document_type": "empleo_publico",
+          "document_name": "Empleo Público 30/06/2024",
+          "period": "2024-S2",
+          "check_code": "RF_NACION_EMPLEO_JUN2024",
+          "expected_url": "https://www.argentina.gob.ar/jefatura/gestion-y-empleo-publico/estadisticas",
+          "expected_format": "xlsx",
+          "frequency": "semestral",
+          "description": "Planta permanente + contratados + equivalentes al 30/06"
+        }
+      ]
+    },
+    "cordoba_provincia": {
+      "jurisdiction_id": 1,
+      "jurisdiction_name": "Provincia de Córdoba",
+      "jurisdiction_code": "AR-X",
+      "applicable_laws": [
+        "Ley 25.917 Art. 7 (Federal de Responsabilidad Fiscal)",
+        "Ley Provincial 10.471 (Adhesión a Ley 25.917)",
+        "Ley Provincial 8803 (Transparencia y Acceso a la Información)"
+      ],
+      "documents": [
+        {
+          "document_type": "presupuesto_anual",
+          "document_name": "Ley de Presupuesto Provincial 2025",
+          "period": "2025",
+          "check_code": "RF_25917_PRESUPUESTO_ANUAL",
+          "expected_url": "https://www.cba.gov.ar/presupuesto/2025/",
+          "expected_format": "pdf",
+          "frequency": "anual",
+          "description": "Presupuesto general de la Provincia para el ejercicio 2025",
+          "notes": "Debe incluir anexos con detalle por jurisdicción y programa"
+        },
+        {
+          "document_type": "presupuesto_plurianual",
+          "document_name": "Presupuesto Plurianual 2025-2027",
+          "period": "2025-2027",
+          "check_code": "RF_25917_PRESUPUESTO_ANUAL",
+          "expected_url": "https://www.cba.gov.ar/presupuesto/plurianual/",
+          "expected_format": "pdf",
+          "frequency": "anual",
+          "description": "Proyecciones presupuestarias a 3 años"
+        },
+        {
+          "document_type": "ejecucion_trimestral",
+          "document_name": "Ejecución Presupuestaria Q1 2025 - Devengado",
+          "period": "2025-Q1",
+          "check_code": "RF_25917_EJECUCION_TRIMESTRAL",
+          "expected_url": "https://transparencia.cba.gov.ar/ejecucion-presupuestaria/2025-Q1",
+          "expected_format": "csv",
+          "frequency": "trimestral",
+          "description": "Ejecución base devengado Q1 2025",
+          "notes": "Debe incluir desagregación por finalidad y función"
+        },
+        {
+          "document_type": "ejecucion_trimestral",
+          "document_name": "Ejecución Presupuestaria Q1 2025 - Caja",
+          "period": "2025-Q1",
+          "check_code": "RF_25917_EJECUCION_TRIMESTRAL",
+          "expected_url": "https://transparencia.cba.gov.ar/ejecucion-presupuestaria/2025-Q1",
+          "expected_format": "csv",
+          "frequency": "trimestral",
+          "description": "Ejecución base caja Q1 2025",
+          "notes": "Complementa la base devengado"
+        },
+        {
+          "document_type": "ejecucion_trimestral",
+          "document_name": "Ejecución Presupuestaria Q4 2024 - Devengado",
+          "period": "2024-Q4",
+          "check_code": "RF_25917_EJECUCION_TRIMESTRAL",
+          "expected_url": "https://transparencia.cba.gov.ar/ejecucion-presupuestaria/2024-Q4",
+          "expected_format": "csv",
+          "frequency": "trimestral",
+          "description": "Ejecución base devengado Q4 2024"
+        },
+        {
+          "document_type": "ejecucion_trimestral",
+          "document_name": "Ejecución Presupuestaria Q4 2024 - Caja",
+          "period": "2024-Q4",
+          "check_code": "RF_25917_EJECUCION_TRIMESTRAL",
+          "expected_url": "https://transparencia.cba.gov.ar/ejecucion-presupuestaria/2024-Q4",
+          "expected_format": "csv",
+          "frequency": "trimestral",
+          "description": "Ejecución base caja Q4 2024"
+        },
+        {
+          "document_type": "deuda_publica",
+          "document_name": "Stock de Deuda Pública Q4 2024",
+          "period": "2024-Q4",
+          "check_code": "RF_25917_DEUDA_PUBLICA",
+          "expected_url": "https://www.cba.gov.ar/ministerio-de-finanzas/deuda-publica/",
+          "expected_format": "pdf",
+          "frequency": "trimestral",
+          "description": "Stock total de deuda + deuda flotante desagregada",
+          "notes": "CRÍTICO: debe incluir deuda flotante explícitamente"
+        },
+        {
+          "document_type": "deuda_flotante",
+          "document_name": "Deuda Flotante Q4 2024",
+          "period": "2024-Q4",
+          "check_code": "RF_25917_DEUDA_PUBLICA",
+          "expected_url": "https://www.cba.gov.ar/ministerio-de-finanzas/deuda-flotante/",
+          "expected_format": "csv",
+          "frequency": "trimestral",
+          "description": "Detalle de deuda flotante: facturas impagas, compromisos asumidos"
+        },
+        {
+          "document_type": "servicios_deuda",
+          "document_name": "Servicios de Deuda Q4 2024",
+          "period": "2024-Q4",
+          "check_code": "RF_25917_SERVICIOS_DEUDA",
+          "expected_url": "https://www.cba.gov.ar/ministerio-de-finanzas/deuda-publica/servicios/",
+          "expected_format": "csv",
+          "frequency": "trimestral",
+          "description": "Pago de servicios con tipo de acreedor (internacional/local/bonista/etc.)"
+        },
+        {
+          "document_type": "empleo_publico",
+          "document_name": "Empleo Público 31/12/2024",
+          "period": "2024-S2",
+          "check_code": "RF_25917_EMPLEO_PUBLICO",
+          "expected_url": "https://www.cba.gov.ar/recursos-humanos/estadisticas/",
+          "expected_format": "xlsx",
+          "frequency": "semestral",
+          "description": "Estadísticas de empleo público al 31/12/2024",
+          "notes": "Debe incluir: planta permanente, contratados, equivalentes"
+        },
+        {
+          "document_type": "empleo_publico",
+          "document_name": "Empleo Público 30/06/2024",
+          "period": "2024-S1",
+          "check_code": "RF_25917_EMPLEO_PUBLICO",
+          "expected_url": "https://www.cba.gov.ar/recursos-humanos/estadisticas/",
+          "expected_format": "xlsx",
+          "frequency": "semestral",
+          "description": "Estadísticas de empleo público al 30/06/2024"
+        },
+        {
+          "document_type": "cuenta_inversion",
+          "document_name": "Cuenta Anual de Inversión 2024",
+          "period": "2024",
+          "check_code": "RF_25917_PRESUPUESTO_ANUAL",
+          "expected_url": "https://www.cba.gov.ar/presupuesto/cuenta-inversion/",
+          "expected_format": "pdf",
+          "frequency": "anual",
+          "description": "Cuenta de inversión del ejercicio cerrado"
+        }
+      ]
+    },
+    "cordoba_ciudad": {
+      "jurisdiction_id": 2,
+      "jurisdiction_name": "Ciudad de Córdoba",
+      "jurisdiction_code": "AR-X-CBA",
+      "applicable_laws": [
+        "Ley 25.917 Art. 7 (aplica por adhesión provincial)",
+        "Ordenanza Municipal de Transparencia"
+      ],
+      "documents": [
+        {
+          "document_type": "presupuesto_anual",
+          "document_name": "Presupuesto Municipal 2025",
+          "period": "2025",
+          "check_code": "RF_MUNICIPAL_PRESUPUESTO_ANUAL",
+          "expected_url": "https://www.cordoba.gov.ar/presupuesto/",
+          "expected_format": "pdf",
+          "frequency": "anual",
+          "description": "Presupuesto de la Municipalidad de Córdoba Capital"
+        },
+        {
+          "document_type": "ejecucion_trimestral",
+          "document_name": "Ejecución Municipal Q4 2024",
+          "period": "2024-Q4",
+          "check_code": "RF_MUNICIPAL_EJECUCION",
+          "expected_url": "https://www.cordoba.gov.ar/hacienda/ejecucion/",
+          "expected_format": "csv",
+          "frequency": "trimestral",
+          "description": "Ejecución presupuestaria municipal Q4 2024"
+        },
+        {
+          "document_type": "deuda_municipal",
+          "document_name": "Deuda Municipal Q4 2024",
+          "period": "2024-Q4",
+          "check_code": "RF_MUNICIPAL_DEUDA",
+          "expected_url": "https://www.cordoba.gov.ar/hacienda/deuda/",
+          "expected_format": "pdf",
+          "frequency": "trimestral",
+          "description": "Stock de deuda municipal + deuda flotante"
+        },
+        {
+          "document_type": "empleo_publico",
+          "document_name": "Empleo Público Municipal 31/12/2024",
+          "period": "2024-S2",
+          "check_code": "RF_MUNICIPAL_EMPLEO",
+          "expected_url": "https://www.cordoba.gov.ar/personal/estadisticas/",
+          "expected_format": "xlsx",
+          "frequency": "semestral",
+          "description": "Nómina de empleados municipales"
+        },
+        {
+          "document_type": "boletin_municipal",
+          "document_name": "Boletín Oficial Municipal - Histórico 2024",
+          "period": "2024",
+          "check_code": "RF_MUNICIPAL_BOLETIN",
+          "expected_url": "https://boletinoficialcba.gov.ar/",
+          "expected_format": "pdf",
+          "frequency": "continuo",
+          "description": "Colección de boletines municipales publicados"
+        }
+      ]
+    }
+  },
+  "metadata": {
+    "total_jurisdictions": 3,
+    "total_documents": 18,
+    "collection_priority": [
+      "presupuesto_anual",
+      "ejecucion_trimestral",
+      "deuda_publica",
+      "servicios_deuda",
+      "empleo_publico"
+    ]
+  }
+}

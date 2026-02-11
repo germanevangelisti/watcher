@@ -1,0 +1,83 @@
+---
+description: Sync task status with Notion board after completing implementation tasks
+globs:
+alwaysApply: true
+---
+
+# Notion Task Board Sync Protocol
+
+## Context
+
+This project uses a Notion database as the source of truth for task tracking.
+The database is called "Tablero de tareas - Watcher" and is connected via MCP.
+
+**Data Source ID:** `5f56c917-2c70-4734-8df4-8566f3e28094`
+
+**Status values:** `Por hacer` | `En progreso` | `Testing` | `Hecho`
+
+**Épicas:** `Épica 0: Migración` | `Épica 1: Ingesta` | `Épica 2: Extracción` | `Épica 3: Feature Engineering` | `Épica 4: Indexación` | `Épica 5: Retrieval` | `Épica 6: Sistema Agéntico` | `Épica 7: Deuda Técnica`
+
+## Rules
+
+### 1. Starting a Task
+
+When you begin implementing a task from the Notion board:
+- Search for the task using `notion-search` with the task number (e.g., "0.3 Migrar")
+- Update its status to **"En progreso"** using `notion-update-page`
+- Reference the task number in your commit messages
+
+### 2. Completing a Task
+
+**IMPORTANT:** After finishing the implementation of ANY task that matches a ticket in the Notion board, you MUST:
+
+1. Search for the task page using `notion-search` with the task title or number
+2. Update the task status to **"Hecho"** using the `notion-update-page` tool:
+   ```
+   page_id: <the task's page ID>
+   command: update_properties
+   properties:
+     Estado: "Hecho"
+   ```
+3. Confirm to the user that Notion has been updated
+
+### 3. Identifying Tasks
+
+Tasks in this project follow the naming convention: `{epic}.{number} {Title}`
+
+Examples:
+- `0.3 Migrar EmbeddingService de OpenAI a Google text-embedding-004`
+- `1.1 Implementar deduplicación por SHA256 en upload`
+- `5.2 Implementar Hybrid Search con RRF`
+
+When the user mentions a task number (like "tarea 0.3" or "ticket 1.1"), search Notion for it and use the page ID for updates.
+
+### 4. Reporting Blockers
+
+If a task cannot be completed due to a blocker:
+- Update the task status back to **"Por hacer"**
+- Add a comment to the Notion page explaining the blocker using `notion-create-comment`
+
+### 5. After Completing a Plan
+
+When a Cursor Plan (.plan.md) finishes executing and all its steps are complete:
+- Identify which Notion task(s) the plan corresponds to
+- Update ALL corresponding tasks to **"Hecho"**
+- Inform the user of the Notion update
+
+### 6. Batch Updates
+
+If multiple tasks are completed in a single session, update them all before ending the conversation.
+
+## Example Flow
+
+```
+User: "Implementa la tarea 0.3"
+
+Agent:
+1. Search Notion for "0.3 Migrar EmbeddingService"
+2. Update status → "En progreso"
+3. Implement the changes
+4. Run tests
+5. Update status → "Hecho"
+6. Tell user: "Tarea 0.3 completada y actualizada en Notion."
+```

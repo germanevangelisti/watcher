@@ -29,9 +29,18 @@ htmlcov/
 .venv/
 venv/
 env/
+.venv-minimal/
 ENV/
+.venv-minimal/
 .conda/
 .python-version
+
+# Environment / secrets
+.env
+.env.*
+*.env
+*.env.*
+.envrc
 
 # Notebooks
 .ipynb_checkpoints/
@@ -54,3 +63,15 @@ boletines/
 boletines.zip
 watcher-lab/resultados_watcher/
 
+# Session logs / completion summaries (should be in docs/ or not tracked)
+*_COMPLETADO.md
+*_COMPLETADA.md
+*_SUMMARY.md
+*_IMPLEMENTED.md
+*_SUCCESS.md
+*_FIXES.md
+RESUMEN_*.md
+*_RESUMEN.md
+
+watcher-backend/data/processed/
+watcher-backend/data/raw/

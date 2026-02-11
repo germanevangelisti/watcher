@@ -1,0 +1,134 @@
+{
+  "$schema": "./checks.schema.json",
+  "version": "1.0.0",
+  "last_updated": "2026-02-09",
+  "jurisdiction": "cordoba_provincia",
+  "checks": [
+    {
+      "check_code": "RF_25917_PRESUPUESTO_ANUAL",
+      "check_name": "Presupuesto Anual Publicado",
+      "priority": "critical",
+      "weight": 3.0,
+      "category": "presupuesto",
+      "legal_basis": "Ley 25.917 Art. 7 + Ley Provincial 10.471",
+      "legal_text": "Los gobiernos de cada provincia, de la Ciudad Autónoma de Buenos Aires y de los municipios adheridos deberán publicar en sus páginas web oficiales: a) El presupuesto del ejercicio, luego de su aprobación legislativa. Si no fuera aprobado, el proyecto de presupuesto presentado con constancia de su presentación legislativa.",
+      "legal_url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/95000-99999/98518/norma.htm",
+      "obligation_summary": "Publicar el presupuesto anual aprobado o el proyecto presentado si no fue aprobado",
+      "frequency": "anual",
+      "rezago_permitido": null,
+      "expected_sources": [
+        "https://www.cba.gov.ar/presupuesto/",
+        "https://transparencia.cba.gov.ar/"
+      ],
+      "validation_rules": {
+        "required_fields": ["ejercicio", "monto_total", "fecha_aprobacion"],
+        "formats_accepted": ["pdf", "xlsx", "html_table"],
+        "must_be_accessible": true,
+        "must_be_downloadable": true
+      },
+      "citizen_explanation": "La ley obliga a la Provincia a publicar su presupuesto anual en internet. Esto te permite saber cuánto dinero público se va a gastar y en qué. Si no lo publican, no puedes ejercer control ciudadano sobre el uso de tus impuestos.",
+      "auditor_notes": "Check CRITICAL. Verificar existencia de PDF o tabla HTML con presupuesto del ejercicio actual. Si el presupuesto no fue aprobado aún, debe publicarse el proyecto presentado."
+    },
+    {
+      "check_code": "RF_25917_EJECUCION_TRIMESTRAL",
+      "check_name": "Ejecución Presupuestaria Trimestral",
+      "priority": "critical",
+      "weight": 3.0,
+      "category": "presupuesto",
+      "legal_basis": "Ley 25.917 Art. 7 + Ley Provincial 10.471",
+      "legal_text": "Los gobiernos [...] deberán publicar [...] con rezago no superior a UN (1) trimestre: a) El estado trimestral de la ejecución del presupuesto con base en el devengado y en base caja. b) El estado trimestral del gasto, en base devengado, por finalidad y función del gasto.",
+      "legal_url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/95000-99999/98518/norma.htm",
+      "obligation_summary": "Publicar trimestralmente la ejecución presupuestaria en base devengado y caja, con rezago máximo de 1 trimestre",
+      "frequency": "trimestral",
+      "rezago_permitido": 1,
+      "expected_sources": [
+        "https://transparencia.cba.gov.ar/ejecucion-presupuestaria",
+        "https://www.cba.gov.ar/presupuesto/ejecucion/"
+      ],
+      "validation_rules": {
+        "required_fields": ["periodo", "devengado", "caja", "finalidad", "funcion"],
+        "periods_required": ["Q1", "Q2", "Q3", "Q4"],
+        "must_include_both_bases": true,
+        "check_rezago": true,
+        "max_rezago_quarters": 1
+      },
+      "citizen_explanation": "Cada 3 meses, la Provincia debe mostrar cuánto gastó realmente versus lo presupuestado. Esto te permite ver si están gastando de más, de menos, o desviando fondos. La ley permite que lo publiquen con hasta 3 meses de retraso (rezago), pero no más.",
+      "auditor_notes": "Check CRITICAL. Validar que existan publicaciones trimestrales con datos de devengado Y caja. Verificar que el rezago no supere 1 trimestre. Si falta alguno de los dos (devengado o caja), marcar como WARN. Si faltan ambos o faltan 2+ trimestres, marcar como FAIL."
+    },
+    {
+      "check_code": "RF_25917_DEUDA_PUBLICA",
+      "check_name": "Stock de Deuda Pública y Deuda Flotante",
+      "priority": "critical",
+      "weight": 3.0,
+      "category": "deuda",
+      "legal_basis": "Ley 25.917 Art. 7 + Ley Provincial 10.471",
+      "legal_text": "Los gobiernos [...] deberán publicar [...] con rezago no superior a UN (1) trimestre: c) El stock de deuda pública, incluida la deuda flotante.",
+      "legal_url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/95000-99999/98518/norma.htm",
+      "obligation_summary": "Publicar trimestralmente el stock de deuda pública incluyendo deuda flotante, con rezago máximo de 1 trimestre",
+      "frequency": "trimestral",
+      "rezago_permitido": 1,
+      "expected_sources": [
+        "https://www.cba.gov.ar/ministerio-de-finanzas/deuda-publica/",
+        "https://transparencia.cba.gov.ar/deuda"
+      ],
+      "validation_rules": {
+        "required_fields": ["stock_total", "deuda_flotante", "periodo"],
+        "must_include_flotante": true,
+        "check_rezago": true,
+        "max_rezago_quarters": 1
+      },
+      "citizen_explanation": "La Provincia debe informar cuánta deuda tiene (cuánto debe). 'Deuda flotante' son facturas sin pagar o compromisos asumidos pero no ejecutados. Si ocultan la deuda flotante, el déficit real es mayor del que muestran. Esta información te permite saber si la Provincia está endeudándose de forma insostenible.",
+      "auditor_notes": "Check CRITICAL. Verificar publicación trimestral de stock de deuda. CRÍTICO: debe incluir deuda flotante explícitamente. Si solo publican deuda consolidada sin flotante, marcar FAIL. Validar rezago."
+    },
+    {
+      "check_code": "RF_25917_SERVICIOS_DEUDA",
+      "check_name": "Pago de Servicios de Deuda con Tipo de Acreedor",
+      "priority": "high",
+      "weight": 2.0,
+      "category": "deuda",
+      "legal_basis": "Ley 25.917 Art. 7 + Ley Provincial 10.471",
+      "legal_text": "Los gobiernos [...] deberán publicar [...] con rezago no superior a UN (1) trimestre: [...] e) El pago de los servicios de la deuda pública, con detalle del tipo de acreedor, cuando corresponda.",
+      "legal_url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/95000-99999/98518/norma.htm",
+      "obligation_summary": "Publicar trimestralmente el pago de servicios de deuda con detalle del tipo de acreedor",
+      "frequency": "trimestral",
+      "rezago_permitido": 1,
+      "expected_sources": [
+        "https://www.cba.gov.ar/ministerio-de-finanzas/deuda-publica/servicios/",
+        "https://transparencia.cba.gov.ar/deuda/servicios"
+      ],
+      "validation_rules": {
+        "required_fields": ["monto_servicio", "tipo_acreedor", "periodo"],
+        "tipos_acreedor_validos": ["organismo_internacional", "banco_local", "bonista", "proveedor", "otro"],
+        "check_rezago": true,
+        "max_rezago_quarters": 1
+      },
+      "citizen_explanation": "Los servicios de deuda son los pagos de intereses y capital que hace la Provincia a quien le prestó plata. La ley obliga a detallar A QUIÉN se le está pagando (bancos, organismos internacionales, bonistas). Esto es clave para detectar si hay acreedores privilegiados o pagos sospechosos.",
+      "auditor_notes": "Check HIGH. Validar que los pagos de servicios incluyan categorización del acreedor. Si publican montos sin clasificar acreedores, marcar WARN. Si no publican nada, FAIL."
+    },
+    {
+      "check_code": "RF_25917_EMPLEO_PUBLICO",
+      "check_name": "Información de Empleo Público Semestral",
+      "priority": "medium",
+      "weight": 1.0,
+      "category": "empleo",
+      "legal_basis": "Ley 25.917 Art. 7 + Ley Provincial 10.471",
+      "legal_text": "Los gobiernos [...] deberán publicar [...] con rezago no superior a UN (1) trimestre: [...] La información de empleo público al 30 de junio y 31 de diciembre de cada año, incluyendo personal de planta permanente, contratado y equivalentes.",
+      "legal_url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/95000-99999/98518/norma.htm",
+      "obligation_summary": "Publicar información de empleo público en cortes 30/06 y 31/12, con categorías (planta/contratados/equivalentes) y rezago máximo 1 trimestre",
+      "frequency": "semestral",
+      "rezago_permitido": 1,
+      "expected_sources": [
+        "https://www.cba.gov.ar/recursos-humanos/estadisticas/",
+        "https://transparencia.cba.gov.ar/empleo-publico"
+      ],
+      "validation_rules": {
+        "required_fields": ["total_empleados", "planta_permanente", "contratados", "fecha_corte"],
+        "cortes_requeridos": ["30/06", "31/12"],
+        "check_rezago": true,
+        "max_rezago_quarters": 1
+      },
+      "citizen_explanation": "Dos veces al año (junio y diciembre), la Provincia debe publicar cuántas personas trabajan para el Estado y en qué categorías (empleados permanentes vs contratados). Esto permite detectar si hay 'crecimiento desmedido' de la planta estatal o uso excesivo de contratos temporales para evadir controles.",
+      "auditor_notes": "Check MEDIUM. Verificar que existan cortes al 30/06 y 31/12. Debe haber desglose entre planta permanente, contratados y equivalentes. Si solo publican total sin categorías, marcar WARN."
+    }
+  ]
+}

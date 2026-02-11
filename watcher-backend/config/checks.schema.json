@@ -1,0 +1,175 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://watcher.cba.gov.ar/schemas/compliance-checks.schema.json",
+  "title": "Compliance Checks Configuration Schema",
+  "description": "Schema for defining compliance checks based on legal obligations",
+  "type": "object",
+  "required": ["version", "checks"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Reference to this schema"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Version of the checks configuration"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date",
+      "description": "Last update date in YYYY-MM-DD format"
+    },
+    "jurisdiction": {
+      "type": "string",
+      "description": "Jurisdiction code"
+    },
+    "checks": {
+      "type": "array",
+      "description": "Array of compliance checks",
+      "items": {
+        "$ref": "#/definitions/ComplianceCheck"
+      }
+    }
+  },
+  "definitions": {
+    "ComplianceCheck": {
+      "type": "object",
+      "required": [
+        "check_code",
+        "check_name",
+        "priority",
+        "category",
+        "legal_basis",
+        "obligation_summary"
+      ],
+      "properties": {
+        "check_code": {
+          "type": "string",
+          "pattern": "^RF_[A-Z0-9_]+$",
+          "description": "Unique check code (e.g., RF_25917_PRESUPUESTO_ANUAL)"
+        },
+        "check_name": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 255,
+          "description": "Human-readable name of the check"
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["critical", "high", "medium", "low"],
+          "description": "Priority level of the check"
+        },
+        "weight": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Weight for scoring calculation"
+        },
+        "category": {
+          "type": "string",
+          "description": "Category of the check (presupuesto, deuda, empleo, etc.)"
+        },
+        "legal_basis": {
+          "type": "string",
+          "minLength": 5,
+          "description": "Legal basis (law + article)"
+        },
+        "legal_text": {
+          "type": "string",
+          "description": "Full or excerpt of the legal text"
+        },
+        "legal_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to the legal text"
+        },
+        "obligation_summary": {
+          "type": "string",
+          "minLength": 10,
+          "description": "Summary of what must be published"
+        },
+        "frequency": {
+          "type": "string",
+          "enum": ["anual", "semestral", "trimestral", "mensual", "continuo", null],
+          "description": "Publication frequency"
+        },
+        "rezago_permitido": {
+          "type": ["integer", "null"],
+          "minimum": 0,
+          "description": "Allowed lag in quarters"
+        },
+        "expected_sources": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri"
+          },
+          "description": "Expected source URLs"
+        },
+        "validation_rules": {
+          "type": "object",
+          "description": "Validation rules for the check",
+          "properties": {
+            "required_fields": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "formats_accepted": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "must_be_accessible": {
+              "type": "boolean"
+            },
+            "must_be_downloadable": {
+              "type": "boolean"
+            },
+            "check_rezago": {
+              "type": "boolean"
+            },
+            "max_rezago_quarters": {
+              "type": "integer"
+            },
+            "must_include_both_bases": {
+              "type": "boolean"
+            },
+            "must_include_flotante": {
+              "type": "boolean"
+            },
+            "periods_required": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "cortes_requeridos": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "tipos_acreedor_validos": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "citizen_explanation": {
+          "type": "string",
+          "description": "Explanation in simple language for citizens"
+        },
+        "auditor_notes": {
+          "type": "string",
+          "description": "Technical notes for auditors"
+        }
+      }
+    }
+  }
+}
