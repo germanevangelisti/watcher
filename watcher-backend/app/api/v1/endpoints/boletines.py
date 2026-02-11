@@ -113,6 +113,59 @@ async def list_boletines(
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/{boletin_id}")
+async def get_boletin(
+    boletin_id: int,
+    db: AsyncSession = Depends(get_db)
+) -> Dict:
+    """
+    Obtiene un boletín específico por ID.
+    
+    Args:
+        boletin_id: ID del boletín
+        db: Sesión de base de datos
+    
+    Returns:
+        Información del boletín
+    """
+    try:
+        query = select(Boletin).where(Boletin.id == boletin_id)
+        result = await db.execute(query)
+        boletin = result.scalar_one_or_none()
+        
+        if not boletin:
+            raise HTTPException(status_code=404, detail=f"Boletín {boletin_id} no encontrado")
+        
+        # Manejo seguro de fuente
+        fuente_value = None
+        if hasattr(boletin, 'fuente') and boletin.fuente:
+            fuente_value = boletin.fuente.value if hasattr(boletin.fuente, 'value') else str(boletin.fuente)
+        
+        # Manejo seguro de jurisdiccion
+        jurisdiccion_nombre = None
+        if hasattr(boletin, 'jurisdiccion') and boletin.jurisdiccion:
+            jurisdiccion_nombre = boletin.jurisdiccion.nombre
+        
+        return {
+            "id": boletin.id,
+            "filename": boletin.filename,
+            "date": boletin.date,
+            "section": boletin.section,
+            "status": boletin.status,
+            "created_at": boletin.created_at.isoformat() if boletin.created_at else None,
+            "updated_at": boletin.updated_at.isoformat() if boletin.updated_at else None,
+            "error_message": boletin.error_message,
+            "fuente": fuente_value,
+            "jurisdiccion_id": boletin.jurisdiccion_id,
+            "jurisdiccion_nombre": jurisdiccion_nombre,
+            "seccion_nombre": boletin.seccion_nombre if hasattr(boletin, 'seccion_nombre') else None,
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error obteniendo boletín: {str(e)}")
+
 @router.post("/import/")
 async def import_boletines(
     source_dir: str,

@@ -15,7 +15,7 @@ The database is called "Tablero de tareas - Watcher" and is connected via MCP.
 
 **Status values:** `Por hacer` | `En progreso` | `Testing` | `Hecho`
 
-**Épicas:** `Épica 0: Migración` | `Épica 1: Ingesta` | `Épica 2: Extracción` | `Épica 3: Feature Engineering` | `Épica 4: Indexación` | `Épica 5: Retrieval` | `Épica 6: Sistema Agéntico` | `Épica 7: Deuda Técnica`
+**Épicas:** `Épica 0: Migración` | `Épica 1: Ingesta` | `Épica 2: Extracción` | `Épica 3: Feature Engineering` | `Épica 4: Indexación` | `Épica 5: Retrieval` | `Épica 6: Sistema Agéntico` | `Épica 7: Deuda Técnica` | `UI Refactor`
 
 ## Rules
 
