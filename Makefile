@@ -85,7 +85,7 @@ test: test-backend test-frontend
 
 test-backend:
 	@echo "🧪 Running backend tests..."
-	python -m pytest watcher-backend/tests/ -v || echo "⚠️  No tests found or tests failed"
+	@./watcher-backend/tests/run_tests.sh -v || echo "⚠️  Some tests failed"
 
 test-frontend:
 	@echo "ℹ️  Frontend tests not yet configured (backend tests: 104 passing ✅)"

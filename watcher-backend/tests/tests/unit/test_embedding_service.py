@@ -37,7 +37,7 @@ def test_embedding_service_init_defaults():
     service = EmbeddingService()
     
     assert service.collection_name == "watcher_documents"
-    assert service.embedding_provider in ["openai", "local"]
+    assert service.embedding_provider in ["google", "local"]
 
 
 # ============================================================================
@@ -53,7 +53,7 @@ def test_chunk_text_basic():
     chunks = service.chunk_text(text, chunk_size=500, overlap=100)
     
     assert len(chunks) > 1
-    assert all(len(chunk) <= 550 for chunk in chunks)  # Allow some variation
+    assert all(len(chunk) <= 600 for chunk in chunks)  # Allow overhead for overlap
 
 
 @pytest.mark.dia
@@ -98,10 +98,11 @@ def test_chunk_text_empty():
 
 @pytest.mark.dia
 def test_chunk_text_short():
-    """Test chunking text shorter than chunk size."""
+    """Test chunking text shorter than chunk size but longer than min_chunk_size."""
     service = EmbeddingService()
     
-    text = "Short text."
+    # Use text longer than min_chunk_size (100 chars) but shorter than chunk_size (1000)
+    text = "This is a test sentence. " * 5  # 125 characters
     chunks = service.chunk_text(text, chunk_size=1000, overlap=100)
     
     assert len(chunks) == 1

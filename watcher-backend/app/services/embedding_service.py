@@ -357,6 +357,66 @@ class EmbeddingService:
                     "error": str(e),
                     "triple_indexed": False
                 }
+        
+        # Fallback: simple direct indexing without db persistence
+        logger.info(f"Adding document {document_id} without triple indexing")
+        
+        try:
+            # Clean text if enabled
+            cleaned_content = content
+            if self.text_cleaner and self.enable_text_cleaning:
+                cleaned_content = self.text_cleaner.clean(content)
+            
+            # Generate chunks
+            chunks_to_add = []
+            if chunk:
+                chunks_to_add = self.chunk_text(cleaned_content)
+            else:
+                chunks_to_add = [cleaned_content]
+            
+            if not chunks_to_add:
+                return {
+                    "success": False,
+                    "error": "No chunks generated (text may be too short)"
+                }
+            
+            # Add to ChromaDB
+            chunk_ids = [f"{document_id}_{i}" for i in range(len(chunks_to_add))]
+            chunk_metadatas = []
+            for i in range(len(chunks_to_add)):
+                chunk_meta = {
+                    "document_id": document_id,
+                    "chunk_index": i,
+                    **(metadata or {})
+                }
+                chunk_metadatas.append(chunk_meta)
+            
+            self.collection.add(
+                ids=chunk_ids,
+                documents=chunks_to_add,
+                metadatas=chunk_metadatas
+            )
+            
+            self.stats["documents_added"] += 1
+            self.stats["embeddings_created"] += len(chunks_to_add)
+            
+            logger.info(f"✓ Added document {document_id} with {len(chunks_to_add)} chunks (simple mode)")
+            
+            return {
+                "success": True,
+                "document_id": document_id,
+                "chunks_created": len(chunks_to_add),
+                "triple_indexed": False
+            }
+        
+        except Exception as e:
+            logger.error(f"Error adding document: {e}", exc_info=True)
+            self.stats["errors"] += 1
+            return {
+                "success": False,
+                "error": str(e),
+                "triple_indexed": False
+            }
     
     async def search(
         self,

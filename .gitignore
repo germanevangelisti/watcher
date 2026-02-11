@@ -24,6 +24,7 @@ pip-wheel-metadata/
 .coverage
 coverage.xml
 htmlcov/
+test-results.xml
 
 # Virtual environments
 .venv/
@@ -62,6 +63,7 @@ out/
 boletines/
 boletines.zip
 watcher-lab/resultados_watcher/
+logs/
 
 # Session logs / completion summaries (should be in docs/ or not tracked)
 *_COMPLETADO.md
