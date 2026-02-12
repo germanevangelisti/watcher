@@ -9,6 +9,7 @@ import { AnalisisHub } from "./pages/analisis"
 import { AgentsDashboard } from "./pages/analisis/agents-dashboard"
 import AlertasPage from "./pages/analisis/alertas"
 import AlertaDetailPage from "./pages/analisis/alerta-detail"
+import { PipelineStatusPage } from "./pages/analisis/pipeline-status"
 
 // Root route with AppShell layout
 const rootRoute = createRootRoute({
@@ -93,6 +94,12 @@ const alertaDetailRoute = createRoute({
   component: AlertaDetailPage,
 })
 
+const pipelineStatusRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/analisis/pipeline",
+  component: PipelineStatusPage,
+})
+
 // Create route tree
 const routeTree = rootRoute.addChildren([
   indexRoute,
@@ -105,6 +112,7 @@ const routeTree = rootRoute.addChildren([
   agentsDashboardRoute,
   alertasRoute,
   alertaDetailRoute,
+  pipelineStatusRoute,
 ])
 
 // Create router

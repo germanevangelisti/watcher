@@ -38,9 +38,11 @@ class Settings(BaseModel):
     
     # Paths
     BASE_DIR: Path = Path(__file__).resolve().parent.parent.parent
+    PROJECT_ROOT: Path = BASE_DIR.parent  # /watcher (repo root)
     DATA_DIR: Path = BASE_DIR / "data"
     UPLOADS_DIR: Path = DATA_DIR / "uploads"
     RESULTS_DIR: Path = DATA_DIR / "results"
+    BOLETINES_DIR: Path = PROJECT_ROOT / "boletines"  # Downloaded PDFs organized by year/month
 
     class Config:
         case_sensitive = True

@@ -10,13 +10,15 @@ Key responsibilities:
 - Coordinate triple indexing with rollback on failure
 - Verify index consistency across all three stores
 - Repair inconsistencies when detected
+
+MIGRATED to AsyncSession (P-1).
 """
 
 import logging
 from typing import List, Dict, Optional, Any, Tuple
 from datetime import datetime
-from sqlalchemy.orm import Session
-from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, text, func, delete
 
 logger = logging.getLogger(__name__)
 
@@ -79,14 +81,15 @@ class IndexingService:
     Service for orchestrating triple indexing across ChromaDB, SQLite, and FTS5.
     
     Ensures atomic indexing with rollback on failure.
+    Uses AsyncSession for database operations.
     """
     
-    def __init__(self, db_session: Session, embedding_service: Optional[EmbeddingService] = None):
+    def __init__(self, db_session: AsyncSession, embedding_service: Optional[EmbeddingService] = None):
         """
         Initialize indexing service.
         
         Args:
-            db_session: SQLAlchemy session
+            db_session: SQLAlchemy AsyncSession
             embedding_service: Optional EmbeddingService instance (will create if not provided)
         """
         self.db = db_session
@@ -163,7 +166,6 @@ class IndexingService:
                 }
             
             # Step 2: Create ChunkRecord in SQLite
-            # This automatically triggers FTS5 insert via database trigger
             chunk_record = ChunkRecord(
                 document_id=document_id,
                 boletin_id=enriched.get("boletin_id"),
@@ -179,12 +181,12 @@ class IndexingService:
                 has_tables=enriched.get("has_tables", False),
                 has_amounts=enriched.get("has_amounts", False),
                 entities_json=enriched.get("entities_json"),
-                embedding_model=EMBEDDING_MODEL,
-                embedding_dimensions=EMBEDDING_DIM,
+                embedding_model=EMBEDDING_MODEL if EMBEDDING_SERVICE_AVAILABLE else None,
+                embedding_dimensions=EMBEDDING_DIM if EMBEDDING_SERVICE_AVAILABLE else None,
             )
             
             self.db.add(chunk_record)
-            self.db.flush()  # Get the ID without committing
+            await self.db.flush()  # Get the ID without committing
             
             logger.debug(f"Created ChunkRecord {chunk_record.id} for {document_id} chunk {chunk_result.chunk_index}")
             
@@ -219,9 +221,9 @@ class IndexingService:
             chunk_record.indexed_at = datetime.utcnow()
             
             # Commit SQLite transaction
-            self.db.commit()
+            await self.db.commit()
             
-            logger.info(f"✓ Triple-indexed chunk {chunk_result.chunk_index} of {document_id}")
+            logger.info(f"Triple-indexed chunk {chunk_result.chunk_index} of {document_id}")
             
             return True, chunk_record, None
         
@@ -229,7 +231,7 @@ class IndexingService:
             logger.error(f"Error indexing chunk: {e}", exc_info=True)
             
             # Rollback SQLite
-            self.db.rollback()
+            await self.db.rollback()
             
             # Rollback ChromaDB if it was added
             if chromadb_id and self.embedding_service and self.embedding_service.collection:
@@ -250,8 +252,6 @@ class IndexingService:
     ) -> IndexingResult:
         """
         Index all chunks of a document with rollback on failure.
-        
-        If any chunk fails, all previously indexed chunks are rolled back.
         
         Args:
             document_id: Unique document identifier
@@ -283,7 +283,7 @@ class IndexingService:
                 if (i + 1) % 10 == 0:
                     logger.info(f"Indexed {i + 1}/{len(chunks)} chunks for {document_id}")
             
-            logger.info(f"✓ Successfully indexed {len(chunks)} chunks for document {document_id}")
+            logger.info(f"Successfully indexed {len(chunks)} chunks for document {document_id}")
             
             return IndexingResult(
                 success=True,
@@ -293,22 +293,18 @@ class IndexingService:
         except Exception as e:
             logger.error(f"Error during document indexing, rolling back: {e}", exc_info=True)
             
-            # Rollback all indexed chunks
-            rollback_count = 0
-            
-            # Rollback SQLite chunks
+            # Rollback all indexed chunks from SQLite
             for chunk_record in indexed_chunks:
                 try:
-                    self.db.delete(chunk_record)
-                    rollback_count += 1
+                    await self.db.delete(chunk_record)
                 except Exception as rollback_err:
                     logger.error(f"Error rolling back ChunkRecord {chunk_record.id}: {rollback_err}")
             
             try:
-                self.db.commit()
+                await self.db.commit()
             except Exception as commit_err:
                 logger.error(f"Error committing rollback: {commit_err}")
-                self.db.rollback()
+                await self.db.rollback()
             
             # Rollback ChromaDB entries
             if indexed_chromadb_ids and self.embedding_service and self.embedding_service.collection:
@@ -328,25 +324,15 @@ class IndexingService:
     async def verify_triple_index(self, document_id: str) -> Dict[str, Any]:
         """
         Verify that a document is consistently indexed in all three stores.
-        
-        Checks:
-        1. ChunkRecords exist in SQLite
-        2. Corresponding entries exist in FTS5
-        3. Corresponding entries exist in ChromaDB
-        
-        Args:
-            document_id: Document to verify
-        
-        Returns:
-            Dict with verification results
         """
         try:
             # 1. Get chunks from SQLite
-            sql_chunks = self.db.query(ChunkRecord).filter(
-                ChunkRecord.document_id == document_id
-            ).all()
-            
-            sql_count = len(sql_chunks)
+            result = await self.db.execute(
+                select(func.count()).select_from(ChunkRecord).where(
+                    ChunkRecord.document_id == document_id
+                )
+            )
+            sql_count = result.scalar() or 0
             
             # 2. Count in FTS5
             fts_sql = text("""
@@ -355,8 +341,8 @@ class IndexingService:
                 JOIN chunk_records AS c ON c.id = fts.rowid
                 WHERE c.document_id = :document_id
             """)
-            result = self.db.execute(fts_sql, {"document_id": document_id})
-            fts_count = result.scalar()
+            fts_result = await self.db.execute(fts_sql, {"document_id": document_id})
+            fts_count = fts_result.scalar() or 0
             
             # 3. Count in ChromaDB
             chromadb_count = 0
@@ -375,7 +361,7 @@ class IndexingService:
                 "sql_chunks": sql_count,
                 "fts_chunks": fts_count,
                 "chromadb_chunks": chromadb_count,
-                "message": "✓ All indices in sync" if is_consistent else "✗ Indices out of sync"
+                "message": "All indices in sync" if is_consistent else "Indices out of sync"
             }
         
         except Exception as e:
@@ -389,23 +375,15 @@ class IndexingService:
     async def repair_index(self, document_id: str) -> Dict[str, Any]:
         """
         Attempt to repair inconsistencies in the triple index for a document.
-        
-        Strategy:
-        1. Use SQLite ChunkRecords as source of truth
-        2. Rebuild FTS5 entries for this document
-        3. Rebuild ChromaDB entries for this document
-        
-        Args:
-            document_id: Document to repair
-        
-        Returns:
-            Dict with repair results
         """
         try:
             # Get chunks from SQLite (source of truth)
-            sql_chunks = self.db.query(ChunkRecord).filter(
-                ChunkRecord.document_id == document_id
-            ).order_by(ChunkRecord.chunk_index).all()
+            result = await self.db.execute(
+                select(ChunkRecord).where(
+                    ChunkRecord.document_id == document_id
+                ).order_by(ChunkRecord.chunk_index)
+            )
+            sql_chunks = result.scalars().all()
             
             if not sql_chunks:
                 return {
@@ -427,24 +405,20 @@ class IndexingService:
                 except Exception as e:
                     logger.warning(f"Error clearing ChromaDB: {e}")
             
-            # Rebuild FTS5 (delete and re-insert)
-            # FTS5 is auto-synced via triggers, so we just need to trigger an update
+            # Rebuild FTS5 - triggers fire on update
             for chunk in sql_chunks:
-                # Force trigger by updating a field
                 chunk.updated_at = datetime.utcnow()
-            self.db.commit()
+            await self.db.commit()
             
             # Rebuild ChromaDB entries
             repaired_count = 0
             for chunk in sql_chunks:
                 try:
-                    # Generate embedding
                     embedding = await self.embedding_service.generate_embedding(chunk.text)
                     if not embedding:
                         logger.warning(f"Failed to generate embedding for chunk {chunk.id}")
                         continue
                     
-                    # Add to ChromaDB
                     chromadb_id = f"{document_id}_chunk_{chunk.chunk_index}"
                     self.embedding_service.collection.add(
                         documents=[chunk.text],
@@ -457,16 +431,14 @@ class IndexingService:
                         embeddings=[embedding]
                     )
                     
-                    # Update indexed_at
                     chunk.indexed_at = datetime.utcnow()
                     repaired_count += 1
                 
                 except Exception as e:
                     logger.error(f"Error repairing chunk {chunk.id}: {e}")
             
-            self.db.commit()
+            await self.db.commit()
             
-            # Verify repair
             verification = await self.verify_triple_index(document_id)
             
             return {
@@ -477,19 +449,19 @@ class IndexingService:
         
         except Exception as e:
             logger.error(f"Error repairing index: {e}", exc_info=True)
-            self.db.rollback()
+            await self.db.rollback()
             return {
                 "success": False,
                 "error": str(e)
             }
 
 
-def get_indexing_service(db_session: Session) -> IndexingService:
+def get_indexing_service(db_session: AsyncSession) -> IndexingService:
     """
     Get IndexingService instance.
     
     Args:
-        db_session: SQLAlchemy session
+        db_session: SQLAlchemy AsyncSession
     
     Returns:
         IndexingService instance

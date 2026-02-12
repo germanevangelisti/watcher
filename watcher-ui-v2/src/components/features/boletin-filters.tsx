@@ -13,7 +13,7 @@ const YEARS = [2025, 2024, 2023, 2022]
 const MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 
 export function BoletinFilters({ filters, onFiltersChange }: BoletinFiltersProps) {
-  const hasFilters = filters.year || filters.month || filters.section || filters.processed !== undefined
+  const hasFilters = filters.year || filters.month || filters.section || filters.processed !== undefined || filters.has_file !== undefined
 
   const handleClear = () => {
     onFiltersChange({})
@@ -39,7 +39,7 @@ export function BoletinFilters({ filters, onFiltersChange }: BoletinFiltersProps
             )}
           </div>
 
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-5">
             <div className="space-y-2">
               <label className="text-sm font-medium">Año</label>
               <select
@@ -127,6 +127,33 @@ export function BoletinFilters({ filters, onFiltersChange }: BoletinFiltersProps
                 <option value="">Todos</option>
                 <option value="true">Procesados</option>
                 <option value="false">Pendientes</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Archivo</label>
+              <select
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                value={
+                  filters.has_file === undefined
+                    ? ""
+                    : filters.has_file
+                    ? "true"
+                    : "false"
+                }
+                onChange={(e) =>
+                  onFiltersChange({
+                    ...filters,
+                    has_file:
+                      e.target.value === ""
+                        ? undefined
+                        : e.target.value === "true",
+                  })
+                }
+              >
+                <option value="">Todos</option>
+                <option value="true">Con PDF</option>
+                <option value="false">Sin PDF</option>
               </select>
             </div>
           </div>

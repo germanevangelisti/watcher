@@ -1,11 +1,13 @@
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useBoletines } from "@/lib/api/hooks/use-boletines"
 import { BoletinCard } from "@/components/features/boletin-card"
 import { BoletinFilters } from "@/components/features/boletin-filters"
+import { PipelineControls } from "@/components/features/pipeline-controls"
 import { FileText, Upload, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react"
+import { apiClient } from "@/lib/api/client"
 import type { BoletinesFilters } from "@/types"
 
 const PAGE_SIZE = 12
@@ -14,6 +16,7 @@ export function DocumentosHub() {
   const [filters, setFilters] = useState<BoletinesFilters>({
     limit: PAGE_SIZE,
     skip: 0,
+    has_file: true,  // Only show documents with files on disk
   })
 
   const { data, isLoading, error } = useBoletines(filters)
@@ -31,9 +34,36 @@ export function DocumentosHub() {
   const handleFiltersChange = (newFilters: Omit<BoletinesFilters, 'limit' | 'skip'>) => {
     setFilters({
       ...newFilters,
+      has_file: newFilters.has_file ?? true,  // Default to showing only files on disk
       limit: PAGE_SIZE,
       skip: 0, // Reset to first page when filters change
     })
+  }
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    setUploading(true)
+    try {
+      for (const file of Array.from(files)) {
+        const formData = new FormData()
+        formData.append("file", file)
+        await apiClient.post("/upload/pdf", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        })
+      }
+      // Refresh boletines list
+      setFilters((prev) => ({ ...prev }))
+    } catch (err) {
+      console.error("Upload error:", err)
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ""
+    }
   }
 
   return (
@@ -43,14 +73,31 @@ export function DocumentosHub() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Documentos</h1>
           <p className="text-muted-foreground mt-2">
-            Gestión de boletines oficiales
+            Gestion de boletines oficiales y pipeline de procesamiento
           </p>
         </div>
-        <Button className="gap-2">
-          <Upload className="h-4 w-4" />
-          Cargar documento
-        </Button>
+        <div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf"
+            multiple
+            className="hidden"
+            onChange={handleUpload}
+          />
+          <Button
+            className="gap-2"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+          >
+            <Upload className="h-4 w-4" />
+            {uploading ? "Subiendo..." : "Cargar PDFs"}
+          </Button>
+        </div>
       </div>
+
+      {/* Pipeline Controls */}
+      <PipelineControls />
 
       {/* Stats Summary */}
       {!error && !isLoading && data && (

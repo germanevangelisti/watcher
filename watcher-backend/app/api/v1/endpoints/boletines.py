@@ -18,6 +18,39 @@ from app.db import crud
 from app.db.models import Boletin
 import uuid
 
+
+def _find_pdf_path(filename: str) -> Optional[Path]:
+    """
+    Find a PDF file across all known directories.
+    Returns the Path if found, None otherwise.
+    
+    Search order:
+    1. boletines/{year}/{month}/ - main download location (organized by date)
+    2. data/raw/ - legacy flat directory
+    3. data/uploaded_documents/ - manual uploads
+    """
+    # 1. Search in boletines/{year}/{month}/ based on filename pattern YYYYMMDD_*
+    if settings.BOLETINES_DIR.exists() and len(filename) >= 8:
+        try:
+            year = filename[:4]
+            month = filename[4:6]
+            candidate = settings.BOLETINES_DIR / year / month / filename
+            if candidate.exists():
+                return candidate
+        except (ValueError, IndexError):
+            pass
+    
+    # 2. Flat directories
+    for search_dir in [
+        settings.DATA_DIR / "raw",
+        settings.DATA_DIR / "uploaded_documents",
+    ]:
+        candidate = search_dir / filename
+        if candidate.exists():
+            return candidate
+    
+    return None
+
 router = APIRouter()
 pdf_processor = PDFProcessor()
 watcher_service = WatcherService()
@@ -28,6 +61,7 @@ async def list_boletines(
     skip: int = 0,
     limit: int = 100,
     status: Optional[str] = None,
+    has_file: Optional[bool] = Query(None, description="Filter by file existence on disk"),
     year: Optional[str] = Query(None),
     month: Optional[str] = Query(None),
     day: Optional[str] = Query(None),
@@ -40,6 +74,7 @@ async def list_boletines(
         skip: Número de registros a omitir
         limit: Número máximo de registros a devolver
         status: Filtrar por estado específico (pending, processed, failed)
+        has_file: Si True, solo retorna boletines con archivo PDF en disco
         year: Filtrar por año (formato YYYY)
         month: Filtrar por mes (formato MM)
         day: Filtrar por día (formato DD)
@@ -70,12 +105,27 @@ async def list_boletines(
             # Usar LIKE para búsqueda de patrón
             query = query.where(Boletin.date.like(f"{date_pattern}%"))
         
-        # Aplicar skip y limit
-        query = query.offset(skip).limit(limit)
-        
-        # Ejecutar query
-        result = await db.execute(query)
-        boletines = result.scalars().all()
+        # If filtering by has_file, we need all records then filter in Python
+        # because file existence is a filesystem check, not a DB column
+        if has_file is not None:
+            # Fetch more to compensate for filtering
+            query_all = query
+            result = await db.execute(query_all)
+            all_boletines = result.scalars().all()
+            
+            # Filter by file existence
+            if has_file:
+                boletines = [b for b in all_boletines if _find_pdf_path(b.filename)]
+            else:
+                boletines = [b for b in all_boletines if not _find_pdf_path(b.filename)]
+            
+            # Apply pagination manually
+            boletines = boletines[skip:skip + limit]
+        else:
+            # Normal paginated query
+            query = query.offset(skip).limit(limit)
+            result = await db.execute(query)
+            boletines = result.scalars().all()
         
         # Convertir a formato de respuesta simple
         boletines_data = []
@@ -90,12 +140,17 @@ async def list_boletines(
             if hasattr(boletin, 'jurisdiccion') and boletin.jurisdiccion:
                 jurisdiccion_nombre = boletin.jurisdiccion.nombre
             
+            # Check file existence
+            pdf_path = _find_pdf_path(boletin.filename)
+            
             boletines_data.append({
                 "id": boletin.id,
                 "filename": boletin.filename,
                 "date": boletin.date,
                 "section": boletin.section,
                 "status": boletin.status,
+                "has_file": pdf_path is not None,
+                "file_path": str(pdf_path) if pdf_path else None,
                 "created_at": boletin.created_at.isoformat() if boletin.created_at else None,
                 "updated_at": boletin.updated_at.isoformat() if boletin.updated_at else None,
                 "error_message": boletin.error_message,
@@ -146,12 +201,16 @@ async def get_boletin(
         if hasattr(boletin, 'jurisdiccion') and boletin.jurisdiccion:
             jurisdiccion_nombre = boletin.jurisdiccion.nombre
         
+        pdf_path = _find_pdf_path(boletin.filename)
+        
         return {
             "id": boletin.id,
             "filename": boletin.filename,
             "date": boletin.date,
             "section": boletin.section,
             "status": boletin.status,
+            "has_file": pdf_path is not None,
+            "file_path": str(pdf_path) if pdf_path else None,
             "created_at": boletin.created_at.isoformat() if boletin.created_at else None,
             "updated_at": boletin.updated_at.isoformat() if boletin.updated_at else None,
             "error_message": boletin.error_message,

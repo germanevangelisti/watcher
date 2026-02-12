@@ -42,6 +42,16 @@ class EventType(str, Enum):
     RED_FLAG_VALIDATED = "redflag.validated"
     RED_FLAG_DISMISSED = "redflag.dismissed"
     
+    # Pipeline events
+    PIPELINE_RESET = "pipeline.reset"
+    PIPELINE_RESET_DOCUMENT = "pipeline.reset.document"
+    PIPELINE_STARTED = "pipeline.started"
+    PIPELINE_DOCUMENT_STARTED = "pipeline.document.started"
+    PIPELINE_DOCUMENT_STAGE = "pipeline.document.stage"
+    PIPELINE_DOCUMENT_COMPLETED = "pipeline.document.completed"
+    PIPELINE_DOCUMENT_FAILED = "pipeline.document.failed"
+    PIPELINE_COMPLETED = "pipeline.completed"
+    
     # System events
     SYSTEM_HEALTH_CHECK = "system.health_check"
     SYSTEM_ALERT = "system.alert"

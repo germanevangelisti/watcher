@@ -15,13 +15,14 @@ from pydantic import BaseModel
 
 from app.scrapers.pds_prov import create_provincial_scraper
 from app.scrapers.base_scraper import DocumentType
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-# Configuración
-BOLETINES_BASE_DIR = Path("/Users/germanevangelisti/watcher-agent/boletines")
+# Configuración - use centralized settings
+BOLETINES_BASE_DIR = settings.BOLETINES_DIR
 
 def get_boletin_path(year: int, month: int, filename: str) -> Path:
     """Retorna la ruta organizada del boletín"""

@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router"
-import { Bot, AlertTriangle, Workflow } from "lucide-react"
+import { Bot, AlertTriangle, Workflow, Activity } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
@@ -9,13 +9,37 @@ export function AnalisisHub() {
   return (
     <div className="space-y-6 p-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Análisis</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Analisis</h1>
         <p className="text-muted-foreground mt-2">
-          Análisis presupuestario y detección de anomalías
+          Analisis presupuestario y deteccion de anomalias
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Pipeline Status */}
+        <Card className="hover:bg-surface-elevated transition-colors cursor-pointer"
+              onClick={() => navigate({ to: "/analisis/pipeline" })}>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-green-500/10">
+                <Activity className="h-6 w-6 text-green-400" />
+              </div>
+              <CardTitle>Pipeline</CardTitle>
+            </div>
+            <CardDescription>
+              Estado del pipeline de procesamiento
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Metricas, errores y actividad del pipeline en tiempo real
+            </p>
+            <Button variant="outline" size="sm" className="w-full">
+              Ver Pipeline &rarr;
+            </Button>
+          </CardContent>
+        </Card>
+
         {/* Agents Dashboard */}
         <Card className="hover:bg-surface-elevated transition-colors cursor-pointer"
               onClick={() => navigate({ to: "/analisis/agentes" })}>
@@ -35,7 +59,7 @@ export function AnalisisHub() {
               Monitorea el estado de los agentes y consulta insights del sistema
             </p>
             <Button variant="outline" size="sm" className="w-full">
-              Abrir Dashboard →
+              Abrir Dashboard &rarr;
             </Button>
           </CardContent>
         </Card>
@@ -51,7 +75,7 @@ export function AnalisisHub() {
               <CardTitle>Alertas</CardTitle>
             </div>
             <CardDescription>
-              Gestión de alertas y anomalías
+              Gestion de alertas y anomalias
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -59,7 +83,7 @@ export function AnalisisHub() {
               Revisa y gestiona alertas detectadas por el sistema
             </p>
             <Button variant="outline" size="sm" className="w-full">
-              Ver Alertas →
+              Ver Alertas &rarr;
             </Button>
           </CardContent>
         </Card>
@@ -74,15 +98,15 @@ export function AnalisisHub() {
               <CardTitle>Workflows</CardTitle>
             </div>
             <CardDescription>
-              Gestión de flujos de trabajo
+              Gestion de flujos de trabajo
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
-              Próximamente disponible
+              Proximamente disponible
             </p>
             <Button variant="outline" size="sm" className="w-full" disabled>
-              Próximamente
+              Proximamente
             </Button>
           </CardContent>
         </Card>

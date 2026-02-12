@@ -225,10 +225,10 @@ class BatchProcessor:
         filename = pdf_path.name
         logger.info(f"Procesando {filename}")
         
-        # Usar una nueva sesión para cada archivo para evitar conflictos
-        from app.db.database import AsyncSessionLocal
+        # Usar una sesión de background para evitar conflictos con HTTP handlers
+        from app.db.database import BackgroundSessionLocal
         
-        async with AsyncSessionLocal() as file_db:
+        async with BackgroundSessionLocal() as file_db:
             try:
                 # Extraer información del archivo
                 boletin_date_match = re.match(r'(\d{8})', filename)

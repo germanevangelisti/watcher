@@ -5,3 +5,11 @@ export { useSearch } from "./use-search"
 export { useKnowledgeGraph, useEntityTimeline, useEntityStats } from "./use-knowledge-graph"
 export { useAgentHealth, useAgentChat, useSystemStatistics, useTopRiskDocuments, useTransparencyTrends } from "./use-agents"
 export { useAlertas, useAlerta, useAlertasStats, useUpdateAlerta } from "./use-alertas"
+export {
+  usePipelineStatus,
+  usePipelineDefaults,
+  usePipelineResetAll,
+  usePipelineResetOne,
+  usePipelineProcessOne,
+  usePipelineProcessAll,
+} from "./use-pipeline"

@@ -1,4 +1,4 @@
-.PHONY: help install install-backend install-frontend install-lab install-test start start-backend start-frontend test test-backend test-frontend test-unit test-integration test-e2e test-coverage test-fast test-pds test-dia test-kaa test-oex lint lint-backend lint-frontend build build-frontend clean
+.PHONY: help install install-backend install-frontend install-lab install-test start start-backend stop-backend start-frontend test test-backend test-frontend test-unit test-integration test-e2e test-coverage test-fast test-pds test-dia test-kaa test-oex lint lint-backend lint-frontend build build-frontend clean
 
 # Default target
 help:
@@ -71,9 +71,16 @@ start:
 	@echo "Use watcher-backend/scripts/dev.sh for parallel execution"
 	@./watcher-backend/scripts/dev.sh
 
-start-backend:
+stop-backend:
+	@echo "🛑 Stopping backend server..."
+	@-pkill -f "uvicorn app.main:app" 2>/dev/null; sleep 1
+	@lsof -ti :8001 | xargs kill -9 2>/dev/null || true
+	@sleep 1
+	@echo "✅ Backend stopped"
+
+start-backend: stop-backend
 	@echo "🚀 Starting backend server..."
-	cd watcher-backend && uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
+	cd watcher-backend && uvicorn app.main:app --reload --reload-dir app --host 0.0.0.0 --port 8001
 
 start-frontend:
 	@echo "🚀 Starting frontend dev server..."

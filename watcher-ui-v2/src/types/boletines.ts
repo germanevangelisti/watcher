@@ -7,6 +7,8 @@ export interface BoletinBackend {
   date: string;  // Format: "YYYYMMDD"
   section: string;
   status: string;  // "completed", "pending", "failed"
+  has_file: boolean;
+  file_path: string | null;
   created_at: string;
   updated_at: string;
   error_message: string | null;
@@ -27,6 +29,7 @@ export interface Boletin {
   pdf_path?: string;
   txt_path?: string;
   processed: boolean;
+  has_file: boolean;
   processing_date?: string;
   total_pages?: number;
   file_hash?: string;
@@ -51,6 +54,7 @@ export interface BoletinesFilters {
   month?: number;
   section?: string;
   processed?: boolean;
+  has_file?: boolean;
 }
 
 export interface BoletinesListResponse {

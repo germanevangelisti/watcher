@@ -9,13 +9,16 @@ Pipeline stages:
 5. Triple-index chunks (ChromaDB + SQLite + FTS5)
 
 Each stage is tracked with timing and error handling.
+
+MIGRATED to AsyncSession (P-1).
 """
 
 import logging
 from typing import Optional, List
 from datetime import datetime
 from pathlib import Path
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 logger = logging.getLogger(__name__)
 
@@ -54,20 +57,29 @@ except ImportError:
     logger.warning("ExtractorRegistry not available")
     EXTRACTOR_AVAILABLE = False
 
+# Import models
+try:
+    from ..db.models import Boletin
+    BOLETIN_MODEL_AVAILABLE = True
+except ImportError:
+    logger.warning("Boletin model not available")
+    BOLETIN_MODEL_AVAILABLE = False
+
 
 class PipelineService:
     """
     Service for orchestrating the complete document processing pipeline.
     
     Handles extraction, cleaning, chunking, enrichment, and indexing.
+    Uses AsyncSession for database operations.
     """
     
-    def __init__(self, db_session: Session):
+    def __init__(self, db_session: AsyncSession):
         """
         Initialize pipeline service.
         
         Args:
-            db_session: SQLAlchemy session
+            db_session: SQLAlchemy AsyncSession
         """
         self.db = db_session
         
@@ -120,8 +132,6 @@ class PipelineService:
             stage_start = datetime.utcnow()
             current_stage = PipelineStage.EXTRACTING
             
-            # TODO: Query database for file_id to get file path
-            # For now, assume we get the path somehow
             file_path = await self._get_file_path(file_id)
             if not file_path or not Path(file_path).exists():
                 raise FileNotFoundError(f"File {file_id} not found at {file_path}")
@@ -160,7 +170,6 @@ class PipelineService:
                 details={
                     "pages": len(extraction_result.pages),
                     "total_chars": len(extracted_text),
-                    "extractor": extraction_result.extractor_used
                 }
             ))
             
@@ -231,8 +240,6 @@ class PipelineService:
                 stage_start = datetime.utcnow()
                 current_stage = PipelineStage.ENRICHING
                 
-                # Enrichment is done per-chunk in the indexing service
-                # Just log that we're ready for it
                 stages.append(StageStats(
                     stage=PipelineStage.ENRICHING,
                     started_at=stage_start,
@@ -287,7 +294,7 @@ class PipelineService:
             completed_at = datetime.utcnow()
             total_duration = (completed_at - started_at).total_seconds() * 1000
             
-            logger.info(f"✓ Pipeline completed for file {file_id} in {total_duration:.2f}ms")
+            logger.info(f"Pipeline completed for file {file_id} in {total_duration:.2f}ms")
             
             return PipelineResponse(
                 file_id=file_id,
@@ -303,7 +310,6 @@ class PipelineService:
         except Exception as e:
             logger.error(f"Pipeline failed at stage {current_stage}: {e}", exc_info=True)
             
-            # Add failure stage
             stages.append(StageStats(
                 stage=current_stage,
                 started_at=datetime.utcnow(),
@@ -328,24 +334,38 @@ class PipelineService:
     
     async def _get_file_path(self, file_id: int) -> Optional[str]:
         """
-        Get the file path for a file ID.
-        
-        This would query the database for the actual file path.
-        For now, returns a placeholder.
+        Get the file path for a file ID by querying the database.
         
         Args:
-            file_id: File ID
+            file_id: Boletin ID
         
         Returns:
             File path or None
         """
-        # TODO: Implement actual database query
-        # Example:
-        # from ..db.models import RequiredDocument
-        # doc = self.db.query(RequiredDocument).filter(RequiredDocument.id == file_id).first()
-        # return doc.local_path if doc else None
+        if not BOLETIN_MODEL_AVAILABLE:
+            logger.warning("Boletin model not available, cannot resolve file path")
+            return None
         
-        logger.warning(f"_get_file_path not fully implemented, using placeholder for file {file_id}")
+        from ..core.config import settings
+        
+        result = await self.db.execute(
+            select(Boletin).where(Boletin.id == file_id)
+        )
+        boletin = result.scalar_one_or_none()
+        
+        if not boletin:
+            return None
+        
+        # Check for .txt first, then PDF in all known directories
+        txt_path = settings.DATA_DIR / "processed" / boletin.filename.replace(".pdf", ".txt")
+        if txt_path.exists():
+            return str(txt_path)
+        
+        for subdir in ["raw", "uploaded_documents", "pdfs"]:
+            pdf_path = settings.DATA_DIR / subdir / boletin.filename
+            if pdf_path.exists():
+                return str(pdf_path)
+        
         return None
     
     async def process_batch(
@@ -371,9 +391,9 @@ class PipelineService:
                 results.append(result)
                 
                 if result.success:
-                    logger.info(f"✓ Batch: file {file_id} succeeded")
+                    logger.info(f"Batch: file {file_id} succeeded")
                 else:
-                    logger.warning(f"✗ Batch: file {file_id} failed: {result.error}")
+                    logger.warning(f"Batch: file {file_id} failed: {result.error}")
             
             except Exception as e:
                 logger.error(f"Batch processing error for file {file_id}: {e}")
@@ -390,12 +410,12 @@ class PipelineService:
         return results
 
 
-def get_pipeline_service(db_session: Session) -> PipelineService:
+def get_pipeline_service(db_session: AsyncSession) -> PipelineService:
     """
     Get PipelineService instance.
     
     Args:
-        db_session: SQLAlchemy session
+        db_session: SQLAlchemy AsyncSession
     
     Returns:
         PipelineService instance

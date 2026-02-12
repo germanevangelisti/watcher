@@ -21,6 +21,7 @@ function transformBoletin(backend: BoletinBackend): Boletin {
     month,
     section: backend.section,
     processed: backend.status === "completed",
+    has_file: backend.has_file ?? true,
     created_at: backend.created_at,
     updated_at: backend.updated_at,
     status: backend.status,
@@ -44,6 +45,9 @@ export function useBoletines(filters?: BoletinesFilters) {
       if (filters?.processed !== undefined) {
         // Backend uses "status" field with values "completed" or "pending"
         params.append("status", filters.processed ? "completed" : "pending")
+      }
+      if (filters?.has_file !== undefined) {
+        params.append("has_file", filters.has_file.toString())
       }
 
       const { data } = await apiClient.get<BoletinBackend[]>(

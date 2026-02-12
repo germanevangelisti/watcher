@@ -4,12 +4,17 @@ Configuración de la base de datos
 Incluye:
 - SQLite para datos estructurados
 - ChromaDB para embeddings y búsqueda semántica
+
+Uses NullPool so each session gets its own connection (no sharing).
+With SQLite WAL mode, concurrent readers + single writer works fine.
+PRAGMAs are set on every new connection via event listener.
 """
 
 import logging
+from sqlalchemy import event, text
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import declarative_base, sessionmaker
-from sqlalchemy.pool import StaticPool
+from sqlalchemy.pool import NullPool
 
 from app.core.config import settings
 
@@ -18,14 +23,26 @@ logger = logging.getLogger(__name__)
 # URL de la base de datos SQLite
 SQLALCHEMY_DATABASE_URL = f"sqlite+aiosqlite:///{settings.BASE_DIR}/sqlite.db"
 
-# Crear el motor de base de datos
+# Single engine with NullPool: each session creates its own connection.
+# No cursor conflicts between HTTP requests and background tasks.
 engine = create_async_engine(
     SQLALCHEMY_DATABASE_URL,
     connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
+    poolclass=NullPool,
 )
 
-# Crear sesión asíncrona
+
+# Set SQLite PRAGMAs on every new connection (NullPool creates a new one each time)
+@event.listens_for(engine.sync_engine, "connect")
+def _set_sqlite_pragma(dbapi_conn, connection_record):
+    cursor = dbapi_conn.cursor()
+    cursor.execute("PRAGMA journal_mode=WAL")
+    cursor.execute("PRAGMA busy_timeout=5000")
+    cursor.execute("PRAGMA synchronous=NORMAL")
+    cursor.close()
+
+
+# Session factory for HTTP request handlers (via get_db dependency)
 AsyncSessionLocal = sessionmaker(
     engine,
     class_=AsyncSession,
@@ -33,6 +50,10 @@ AsyncSessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False
 )
+
+# Background tasks use the same engine with NullPool (each gets its own connection)
+# Kept as a separate alias for backward compatibility
+BackgroundSessionLocal = AsyncSessionLocal
 
 # Base para los modelos
 Base = declarative_base()
@@ -66,7 +87,7 @@ def init_vector_db():
 
 async def init_db():
     """Inicializa la base de datos SQL y Vector DB."""
-    # Initialize SQL database
+    # Initialize SQL database (PRAGMAs are set automatically via event listener)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     

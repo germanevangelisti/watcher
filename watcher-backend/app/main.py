@@ -34,13 +34,12 @@ async def shutdown_event():
     stop_scheduler()
 
 # Configurar CORS
+# allow_origins=["*"] is needed to avoid CORSMiddleware blocking WebSocket upgrades (403).
+# In production, replace with specific origins.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",  # Frontend Vite default
-        "http://localhost:5174",  # Alternative Vite port
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
