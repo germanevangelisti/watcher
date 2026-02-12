@@ -12,6 +12,7 @@ from app.core.agent_config import InsightReportingConfig
 from agents.orchestrator.state import WorkflowState, TaskDefinition, AgentType
 from agents.tools.database_tools import DatabaseTools
 from agents.tools.analysis_tools import AnalysisTools
+from app.db.database import AsyncSessionLocal
 
 try:
     import google.generativeai as genai

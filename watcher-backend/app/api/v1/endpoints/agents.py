@@ -1,9 +1,10 @@
 """
 API endpoints para gestión de agentes
 """
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from agents.orchestrator import AgentOrchestrator
 from agents.orchestrator.state import TaskStatus, AgentType
@@ -13,6 +14,7 @@ from agents.insight_reporting import InsightReportingAgent
 from agents.historical_intelligence import HistoricalIntelligenceAgent
 from app.core.agent_config import DEFAULT_AGENT_CONFIG
 from app.core.events import event_bus, EventType
+from app.db.session import get_db
 
 router = APIRouter()
 
@@ -173,36 +175,27 @@ async def clear_chat_history():
 
 
 @router.get("/insights/statistics")
-async def get_system_statistics():
+async def get_system_statistics(db: AsyncSession = Depends(get_db)):
     """
     Obtiene estadísticas generales del sistema
     """
     try:
         from agents.tools.database_tools import DatabaseTools
-        db = DatabaseTools.get_db()
-        try:
-            stats = DatabaseTools.get_statistics(db)
-            return stats
-        finally:
-            db.close()
+        stats = await DatabaseTools.get_statistics(db)
+        return stats
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/insights/top-risk")
-async def get_top_risk_documents(limit: int = 20):
+async def get_top_risk_documents(limit: int = 20, db: AsyncSession = Depends(get_db)):
     """
     Obtiene documentos con mayor riesgo
     """
     try:
-        from agents.tools.database_tools import DatabaseTools
         from agents.tools.analysis_tools import AnalysisTools
-        db = DatabaseTools.get_db()
-        try:
-            top_risk = AnalysisTools.get_top_risk_documents(db, limit=limit)
-            return {"documents": top_risk}
-        finally:
-            db.close()
+        top_risk = await AnalysisTools.get_top_risk_documents(db, limit=limit)
+        return {"documents": top_risk}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -212,40 +205,31 @@ async def get_transparency_trends(
     start_year: int = 2025,
     start_month: int = 1,
     end_year: int = 2025,
-    end_month: int = 11
+    end_month: int = 11,
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Obtiene tendencias de transparencia en un período
     """
     try:
-        from agents.tools.database_tools import DatabaseTools
         from agents.tools.analysis_tools import AnalysisTools
-        db = DatabaseTools.get_db()
-        try:
-            trends = AnalysisTools.get_transparency_trends(
-                db, start_year, start_month, end_year, end_month
-            )
-            return {"trends": trends}
-        finally:
-            db.close()
+        trends = await AnalysisTools.get_transparency_trends(
+            db, start_year, start_month, end_year, end_month
+        )
+        return {"trends": trends}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/insights/monthly-summary/{year}/{month}")
-async def get_monthly_summary(year: int, month: int):
+async def get_monthly_summary(year: int, month: int, db: AsyncSession = Depends(get_db)):
     """
     Genera un resumen mensual completo
     """
     try:
-        from agents.tools.database_tools import DatabaseTools
         from agents.tools.analysis_tools import AnalysisTools
-        db = DatabaseTools.get_db()
-        try:
-            summary = AnalysisTools.get_monthly_summary(db, year, month)
-            return summary
-        finally:
-            db.close()
+        summary = await AnalysisTools.get_monthly_summary(db, year, month)
+        return summary
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -253,20 +237,16 @@ async def get_monthly_summary(year: int, month: int):
 @router.get("/insights/red-flag-distribution")
 async def get_red_flag_distribution(
     year: Optional[int] = None,
-    month: Optional[int] = None
+    month: Optional[int] = None,
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Obtiene la distribución de red flags
     """
     try:
-        from agents.tools.database_tools import DatabaseTools
         from agents.tools.analysis_tools import AnalysisTools
-        db = DatabaseTools.get_db()
-        try:
-            distribution = AnalysisTools.get_red_flag_distribution(db, year, month)
-            return distribution
-        finally:
-            db.close()
+        distribution = await AnalysisTools.get_red_flag_distribution(db, year, month)
+        return distribution
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
