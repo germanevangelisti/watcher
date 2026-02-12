@@ -243,7 +243,8 @@ async def upload_files(
                 section=section,
                 status="pending",
                 file_hash=file_hash,
-                file_size_bytes=file_size
+                file_size_bytes=file_size,
+                origin="uploaded"
             )
             
             # Check if this is a new upload or duplicate

@@ -1,4 +1,4 @@
-.PHONY: help install install-backend install-frontend install-lab install-test start start-backend stop-backend start-frontend test test-backend test-frontend test-unit test-integration test-e2e test-coverage test-fast test-pds test-dia test-kaa test-oex lint lint-backend lint-frontend build build-frontend clean
+.PHONY: help install install-backend install-frontend install-frontend-legacy install-lab install-test start start-backend stop-backend start-frontend start-frontend-legacy test test-backend test-frontend test-unit test-integration test-e2e test-coverage test-fast test-pds test-dia test-kaa test-oex lint lint-backend lint-frontend build build-frontend clean
 
 # Default target
 help:
@@ -16,7 +16,8 @@ help:
 	@echo "Development Commands:"
 	@echo "  make start             - Start backend and frontend servers"
 	@echo "  make start-backend     - Start backend server only"
-	@echo "  make start-frontend    - Start frontend dev server only"
+	@echo "  make stop-backend      - Stop backend server"
+	@echo "  make start-frontend    - Start frontend dev server"
 	@echo ""
 	@echo "Quality Commands:"
 	@echo "  make test              - Run all tests"
@@ -60,6 +61,11 @@ install-frontend:
 	cd watcher-frontend && npm install
 	@echo "✅ Frontend dependencies installed"
 
+install-frontend-legacy:
+	@echo "📦 Installing legacy frontend dependencies..."
+	cd watcher-frontend-legacy && npm install
+	@echo "✅ Legacy frontend dependencies installed"
+
 install-lab:
 	@echo "📦 Installing lab dependencies..."
 	cd watcher-lab && pip install -r requirements.txt
@@ -86,6 +92,10 @@ start-frontend:
 	@echo "🚀 Starting frontend dev server..."
 	cd watcher-frontend && npm run dev
 
+start-frontend-legacy:
+	@echo "🚀 Starting legacy frontend dev server..."
+	cd watcher-frontend-legacy && npm run dev
+
 # Testing
 test: test-backend test-frontend
 	@echo "✅ All tests completed"
@@ -95,8 +105,8 @@ test-backend:
 	@./watcher-backend/tests/run_tests.sh -v || echo "⚠️  Some tests failed"
 
 test-frontend:
-	@echo "ℹ️  Frontend tests not yet configured (backend tests: 104 passing ✅)"
-	@echo "   Backend test suite covers PDS, DIA, KAA, and OEx layers"
+	@echo "🧪 Running frontend tests..."
+	cd watcher-frontend && npm run test -- --run || echo "⚠️  Some frontend tests failed"
 
 # New architecture test commands
 test-unit:
@@ -160,7 +170,7 @@ build-frontend:
 # Clean
 clean:
 	@echo "🧹 Cleaning build artifacts..."
-	rm -rf watcher-frontend/dist
+	rm -rf watcher-frontend/dist watcher-frontend-legacy/dist
 	rm -rf htmlcov .coverage coverage.xml .pytest_cache
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc" -delete 2>/dev/null || true

@@ -1,29 +1,41 @@
 // Tipos para búsqueda semántica y grafo de conocimiento
 
 export interface SearchResult {
-  document: string;
-  metadata: {
-    document_id: string;
-    filename: string;
-    date: string;
-    section: string;
-    jurisdiccion_id: string;
-    chunk_id: string;
-  };
-  distance: number;
+  chunk_id: string;
+  text: string;
   score: number;
+  file_name?: string;
+  page_numbers?: number[];
+  metadata: {
+    document_id?: string;
+    boletin_id?: number;
+    filename?: string;
+    date?: string;
+    section?: string;
+    section_type?: string;
+    jurisdiccion_id?: string;
+    chunk_id?: string;
+    chunk_index?: number;
+    [key: string]: unknown;
+  };
+  highlight?: string;
+  // Legacy fields for backward compatibility
+  document?: string;
+  distance?: number;
 }
 
+// Actualizado para alinear con backend UnifiedSearchRequest
 export interface SearchRequest {
   query: string;
-  n_results?: number;
+  top_k?: number; // n_results renombrado a top_k
   filters?: {
     year?: string;
     month?: string;
     section?: string;
     jurisdiccion_id?: number;
   };
-  model?: string;  // Modelo de búsqueda
+  technique?: 'semantic' | 'keyword' | 'hybrid'; // Nueva: técnica de búsqueda
+  rerank?: boolean; // Nueva: aplicar re-ranking
 }
 
 export interface SearchResponse {
@@ -31,6 +43,8 @@ export interface SearchResponse {
   query: string;
   total_results: number;
   execution_time_ms: number;
+  technique?: string; // Técnica usada (semantic/keyword/hybrid)
+  reranked?: boolean; // Si se aplicó re-ranking
 }
 
 // Tipos para Grafo de Conocimiento

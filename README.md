@@ -161,13 +161,15 @@ watcher-agent/
 │   ├── migrations/            # Migraciones SQL
 │   └── sqlite.db              # Base de datos
 │
-├── watcher-frontend/          # React frontend
+├── watcher-frontend/          # React frontend (v2 - shadcn/ui + TanStack)
 │   ├── src/
-│   │   ├── pages/             # Páginas principales
-│   │   ├── components/        # Componentes reutilizables
-│   │   ├── services/          # Clientes API
-│   │   └── routes/            # Configuración de rutas
+│   │   ├── pages/             # Páginas principales (10 pages)
+│   │   ├── components/        # UI primitives + feature components
+│   │   ├── lib/               # API hooks, stores, WebSocket, utils
+│   │   └── types/             # TypeScript definitions
 │   └── dist/                  # Build de producción
+│
+├── watcher-frontend-legacy/   # React frontend v1 (Mantine - deprecated)
 │
 ├── watcher-lab/               # Notebooks y experimentos
 │   └── watcher_ds_lab/        # Módulo Python DS
@@ -249,17 +251,16 @@ cd watcher-agent
 make install
 # o manualmente:
 # cd watcher-backend && pip install -r requirements.txt
-# cd ../watcher-frontend && npm install
+# cd watcher-frontend && npm install
 
 # 3. Configurar variables de entorno (opcional)
 cp watcher-backend/.env.example watcher-backend/.env
+cp watcher-frontend/.env.example watcher-frontend/.env
 # Editar .env y agregar API keys si están disponibles
 
 # 4. Iniciar servicios
-make start
-# o manualmente:
-# Terminal 1: cd watcher-backend && python -m uvicorn app.main:app --reload --port 8001
-# Terminal 2: cd watcher-frontend && npm run dev
+make start-backend   # Terminal 1
+make start-frontend  # Terminal 2
 ```
 
 ### Acceso
@@ -342,7 +343,7 @@ pytest
 
 # Frontend
 cd watcher-frontend
-npm test
+npm run test -- --run
 
 # Todos
 make test
@@ -358,9 +359,15 @@ make test
   - Agents → usan `AsyncSession` con `AsyncSessionLocal()`
 - ✅ **Estructura Reorganizada**:
   - `watcher-monolith/backend/` → `watcher-backend/`
-  - `watcher-monolith/frontend/` → `watcher-frontend/`
+  - `watcher-monolith/frontend/` → `watcher-frontend-legacy/`
+  - `watcher-ui-v2/` → `watcher-frontend/` (v2 con shadcn/ui + TanStack)
   - `tests/` y `scripts/` consolidados en `watcher-backend/`
   - `docs/` reorganizado con `architecture/` subdirectorio
+- ✅ **UI v2 Refactor Completado**:
+  - Stack: Vite 7 + React 19 + shadcn/ui + TanStack Router + TanStack Query + Zustand
+  - 10 pages, 11 feature components, 20+ API hooks, 3 stores, 11 routes
+  - Dark mode minimalist design, real-time WebSocket pipeline monitoring
+  - Production build: ~260KB gzip total
 - ✅ **Eliminación de Legacy Code**:
   - Removidos 30+ archivos obsoletos (.bak, scripts de ejemplo, docs redundantes)
   - Limpiado código legacy de servicios deprecated

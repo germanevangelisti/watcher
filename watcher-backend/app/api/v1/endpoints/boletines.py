@@ -65,6 +65,7 @@ async def list_boletines(
     year: Optional[str] = Query(None),
     month: Optional[str] = Query(None),
     day: Optional[str] = Query(None),
+    jurisdiccion_id: Optional[int] = Query(None, description="Filter by jurisdiccion ID"),
     db: AsyncSession = Depends(get_db)
 ) -> List[Dict]:
     """
@@ -104,6 +105,10 @@ async def list_boletines(
             
             # Usar LIKE para búsqueda de patrón
             query = query.where(Boletin.date.like(f"{date_pattern}%"))
+        
+        # Filtrar por jurisdiccion
+        if jurisdiccion_id is not None:
+            query = query.where(Boletin.jurisdiccion_id == jurisdiccion_id)
         
         # If filtering by has_file, we need all records then filter in Python
         # because file existence is a filesystem check, not a DB column
@@ -157,7 +162,8 @@ async def list_boletines(
                 "fuente": fuente_value,
                 "jurisdiccion_id": boletin.jurisdiccion_id if hasattr(boletin, 'jurisdiccion_id') else None,
                 "jurisdiccion_nombre": jurisdiccion_nombre,
-                "seccion_nombre": boletin.seccion_nombre if hasattr(boletin, 'seccion_nombre') else None
+                "seccion_nombre": boletin.seccion_nombre if hasattr(boletin, 'seccion_nombre') else None,
+                "origin": getattr(boletin, 'origin', 'downloaded')
             })
         
         return boletines_data

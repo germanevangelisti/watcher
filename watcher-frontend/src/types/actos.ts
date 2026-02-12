@@ -49,4 +49,3 @@ export interface ActosListResponse {
   page: number;
   page_size: number;
 }
-

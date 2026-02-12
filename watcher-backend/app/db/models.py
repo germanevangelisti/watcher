@@ -48,6 +48,9 @@ class Boletin(Base):
     fuente = Column(String(50), default="provincial", nullable=False)  # Valores: provincial, municipal_capital, municipal_otros
     jurisdiccion_id = Column(Integer, ForeignKey("jurisdicciones.id"), nullable=True)
     seccion_nombre = Column(String(100), nullable=True)  # Nombre legible de la sección
+    
+    # Origen del documento (v1.1 Phase 2)
+    origin = Column(String(20), default="downloaded", nullable=False)  # downloaded, uploaded, synced
 
     # Relaciones
     analisis = relationship("Analisis", back_populates="boletin", cascade="all, delete-orphan")
@@ -706,6 +709,43 @@ class Jurisdiccion(Base):
     
     def __repr__(self):
         return f"<Jurisdiccion(nombre={self.nombre}, tipo={self.tipo})>"
+
+
+class JurisdiccionSyncConfig(Base):
+    """
+    Configuración de sincronización de boletines por jurisdicción (v1.1 Phase 2).
+    Define cómo y de dónde descargar documentos para cada jurisdicción.
+    """
+    __tablename__ = "jurisdiccion_sync_configs"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    jurisdiccion_id = Column(Integer, ForeignKey("jurisdicciones.id"), nullable=False, unique=True, index=True)
+    
+    # Configuración de fuente
+    source_url_template = Column(String(500), nullable=True)  # URL template con {year}, {month}, {day}, {section}
+    scraper_type = Column(String(50), default="generic", nullable=False)  # provincial, municipal, national, generic
+    sync_enabled = Column(Boolean, default=False, nullable=False)
+    
+    # Estado de sincronización
+    last_sync_date = Column(Date, nullable=True)
+    last_sync_timestamp = Column(DateTime, nullable=True)
+    last_sync_status = Column(String(20), default="idle")  # idle, syncing, completed, failed
+    last_sync_error = Column(Text, nullable=True)
+    
+    # Configuración adicional
+    sync_frequency = Column(String(20), default="manual")  # manual, daily, weekly
+    sections_to_sync = Column(JSON, nullable=True)  # e.g. ["1_Secc", "2_Secc"]
+    extra_config = Column(JSON, nullable=True)  # Additional scraper-specific configuration
+    
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    
+    # Relaciones
+    jurisdiccion = relationship("Jurisdiccion", backref="sync_config", uselist=False)
+    
+    def __repr__(self):
+        return f"<JurisdiccionSyncConfig(jurisdiccion_id={self.jurisdiccion_id}, enabled={self.sync_enabled})>"
 
 
 class MencionJurisdiccional(Base):

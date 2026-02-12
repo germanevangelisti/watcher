@@ -51,4 +51,3 @@ export interface DistribucionRiesgo {
   por_organismo: Record<string, Record<string, number>>;
   monto_por_nivel: Record<string, number>;
 }
-

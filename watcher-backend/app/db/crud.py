@@ -17,7 +17,8 @@ async def create_boletin(
     section: str,
     status: str = "pending",
     file_hash: Optional[str] = None,
-    file_size_bytes: Optional[int] = None
+    file_size_bytes: Optional[int] = None,
+    origin: str = "downloaded"
 ) -> Boletin:
     """
     Crea un nuevo registro de boletín o actualiza existente.
@@ -81,7 +82,8 @@ async def create_boletin(
         section=section,
         status=status,
         file_hash=file_hash,
-        file_size_bytes=file_size_bytes
+        file_size_bytes=file_size_bytes,
+        origin=origin
     )
     db.add(db_boletin)
     await db.flush()  # Flush para obtener el ID

@@ -129,7 +129,8 @@ See `.cursor/rules/notion-sync.mdc` for the full protocol and data source IDs.
 ```
 watcher-agent/
 ├── watcher-backend/      # FastAPI backend + agents + tests + scripts
-├── watcher-frontend/     # React + TypeScript frontend
+├── watcher-frontend/         # React + TypeScript frontend (v2: shadcn/ui + TanStack)
+├── watcher-frontend-legacy/  # React + Mantine frontend (v1, deprecated)
 ├── watcher-lab/          # Data science notebooks and tools
 ├── docs/                 # Project documentation
 │   └── architecture/     # Legacy architecture docs

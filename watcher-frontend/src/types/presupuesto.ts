@@ -55,4 +55,3 @@ export interface Organismo {
   monto_inicial_total: number;
   monto_vigente_total: number;
 }
-
