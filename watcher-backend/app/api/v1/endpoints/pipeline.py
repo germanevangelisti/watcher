@@ -20,7 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, update, delete
 
 from app.db.session import get_db
-from app.db.models import Boletin, ChunkRecord
+from app.db.models import Boletin, ChunkRecord, Analisis
 from app.core.config import settings
 from app.core.events import event_bus, EventType
 from app.schemas.pipeline import (
@@ -82,6 +82,7 @@ async def reset_all_pipeline_data(
     try:
         results = {
             "chunks_deleted": 0,
+            "analisis_deleted": 0,
             "chromadb_cleared": False,
             "txt_files_deleted": 0,
             "boletines_reset": 0,
@@ -91,6 +92,11 @@ async def reset_all_pipeline_data(
         count_result = await db.execute(select(func.count()).select_from(ChunkRecord))
         results["chunks_deleted"] = count_result.scalar() or 0
         await db.execute(delete(ChunkRecord))
+        
+        # 1b. Delete all analisis records
+        count_result = await db.execute(select(func.count()).select_from(Analisis))
+        results["analisis_deleted"] = count_result.scalar() or 0
+        await db.execute(delete(Analisis))
         
         # 2. Clear ChromaDB collection
         try:
@@ -174,6 +180,7 @@ async def reset_document_pipeline(
             "boletin_id": boletin_id,
             "filename": boletin.filename,
             "chunks_deleted": 0,
+            "analisis_deleted": 0,
             "chromadb_deleted": 0,
             "txt_deleted": False,
             "previous_status": boletin.status,
@@ -181,6 +188,17 @@ async def reset_document_pipeline(
         
         # Build the document_id used in chunk_records
         document_id = boletin.filename.replace(".pdf", "")
+        
+        # 0. Delete analisis records for this boletin
+        count_result = await db.execute(
+            select(func.count()).select_from(Analisis).where(
+                Analisis.boletin_id == boletin_id
+            )
+        )
+        results["analisis_deleted"] = count_result.scalar() or 0
+        await db.execute(
+            delete(Analisis).where(Analisis.boletin_id == boletin_id)
+        )
         
         # 1. Delete chunk_records for this boletin
         count_result = await db.execute(
@@ -465,7 +483,7 @@ async def _process_document_pipeline(
     """Background task: process a single document through the full pipeline."""
     from app.db.database import BackgroundSessionLocal
     
-    TOTAL_STAGES = 5  # extract, clean, chunk, index, completed
+    TOTAL_STAGES = 6  # extract, clean, chunk, index, analyze, completed
     
     # Track active session globally so /status can report it
     _active_sessions[session_id] = {
@@ -479,7 +497,7 @@ async def _process_document_pipeline(
     
     async with BackgroundSessionLocal() as db:
         try:
-            # Stage 1/5: EXTRACTION
+            # Stage 1/6: EXTRACTION
             _active_sessions[session_id]["stage"] = "extracting"
             _active_sessions[session_id]["stages_done"] = 0
             await _emit_stage(session_id, boletin_id, filename, "extracting", 1, TOTAL_STAGES)
@@ -487,7 +505,7 @@ async def _process_document_pipeline(
             
             text = await _extract_text(boletin_id, filename, config.extraction, db)
             
-            # Stage 2/5: CLEANING
+            # Stage 2/6: CLEANING
             _active_sessions[session_id]["stage"] = "cleaning"
             _active_sessions[session_id]["stages_done"] = 1
             await _emit_stage(session_id, boletin_id, filename, "cleaning", 2, TOTAL_STAGES)
@@ -495,7 +513,7 @@ async def _process_document_pipeline(
             if config.cleaning.enabled:
                 text = _clean_text(text, config.cleaning)
             
-            # Stage 3/5: CHUNKING
+            # Stage 3/6: CHUNKING
             _active_sessions[session_id]["stage"] = "chunking"
             _active_sessions[session_id]["stages_done"] = 2
             await _emit_stage(session_id, boletin_id, filename, "chunking", 3, TOTAL_STAGES)
@@ -503,7 +521,7 @@ async def _process_document_pipeline(
             
             chunks = _chunk_text(text, config.chunking)
             
-            # Stage 4/5: ENRICHMENT + INDEXING
+            # Stage 4/6: ENRICHMENT + INDEXING
             _active_sessions[session_id]["stage"] = "indexing"
             _active_sessions[session_id]["stages_done"] = 3
             await _emit_stage(session_id, boletin_id, filename, "indexing", 4, TOTAL_STAGES, 
@@ -514,13 +532,22 @@ async def _process_document_pipeline(
                 db, boletin_id, filename, chunks, config.enrichment, config.indexing
             )
             
-            # Stage 5/5: COMPLETED
+            # Stage 5/6: GEMINI ANALYSIS
+            _active_sessions[session_id]["stage"] = "analyzing"
+            _active_sessions[session_id]["stages_done"] = 4
+            await _emit_stage(session_id, boletin_id, filename, "analyzing", 5, TOTAL_STAGES,
+                            details={"chunks_indexed": indexed})
+            await _update_status(db, boletin_id, "analyzing")
+            
+            actos_count = await _analyze_document(db, boletin_id, filename, text)
+            
+            # Stage 6/6: COMPLETED
             _active_sessions[session_id]["stage"] = "completed"
-            _active_sessions[session_id]["stages_done"] = 5
+            _active_sessions[session_id]["stages_done"] = 6
             _active_sessions[session_id]["status"] = "completed"
             await _update_status(db, boletin_id, "completed")
-            await _emit_stage(session_id, boletin_id, filename, "completed", 5, TOTAL_STAGES,
-                            details={"chunks_created": len(chunks), "chunks_indexed": indexed})
+            await _emit_stage(session_id, boletin_id, filename, "completed", 6, TOTAL_STAGES,
+                            details={"chunks_created": len(chunks), "chunks_indexed": indexed, "actos_extracted": actos_count})
             
             await event_bus.emit(
                 EventType.PIPELINE_DOCUMENT_COMPLETED,
@@ -530,6 +557,7 @@ async def _process_document_pipeline(
                     "filename": filename,
                     "chunks_created": len(chunks),
                     "chunks_indexed": indexed,
+                    "actos_extracted": actos_count,
                 },
                 source="pipeline"
             )
@@ -918,3 +946,75 @@ async def _index_chunks(
     # Final commit for remaining chunks
     await db.commit()
     return indexed_count
+
+
+async def _analyze_document(
+    db: AsyncSession,
+    boletin_id: int,
+    filename: str,
+    text: str,
+) -> int:
+    """
+    Run Gemini analysis on extracted text and save individual actos to the database.
+    
+    Returns the number of actos extracted.
+    """
+    from app.services.watcher_service import WatcherService
+    from app.db.crud import create_analisis
+    
+    watcher = WatcherService()
+    
+    # Build metadata for contextual prompt
+    metadata = {
+        "boletin": filename.replace(".pdf", ""),
+    }
+    
+    # Try to get jurisdiccion info from the boletin record
+    try:
+        from sqlalchemy.orm import selectinload
+        result = await db.execute(
+            select(Boletin).options(selectinload(Boletin.jurisdiccion)).where(Boletin.id == boletin_id)
+        )
+        boletin = result.scalar_one_or_none()
+        if boletin:
+            if boletin.jurisdiccion:
+                metadata["jurisdiccion_nombre"] = boletin.jurisdiccion.nombre
+            metadata["fuente"] = getattr(boletin, "fuente", "provincial")
+            metadata["section_type"] = str(boletin.section) if boletin.section else ""
+            # Pass readable section name for better contextual prompt
+            seccion_nombre = getattr(boletin, "seccion_nombre", None)
+            if seccion_nombre:
+                metadata["seccion_nombre"] = seccion_nombre
+    except Exception as e:
+        logger.warning(f"Could not load boletin metadata for analysis: {e}")
+    
+    # Run Gemini analysis
+    try:
+        actos = await watcher.analyze_content(content=text, metadata=metadata)
+    except Exception as e:
+        logger.error(f"Gemini analysis failed for {filename}: {e}")
+        return 0
+    
+    # Save each acto individually
+    total_saved = 0
+    for acto in actos:
+        try:
+            # Extract internal fields before saving
+            fragment_text = acto.pop("_fragment_content", text[:500])
+            acto.pop("_fragment_index", None)
+            acto.pop("_resumen_fragmento", None)
+            acto.pop("_model_used", None)
+            
+            await create_analisis(
+                db,
+                boletin_id=boletin_id,
+                fragmento=fragment_text,
+                analisis_data=acto,
+            )
+            total_saved += 1
+        except Exception as e:
+            logger.error(f"Failed to save acto for {filename}: {e}")
+    
+    await db.commit()
+    logger.info(f"Analysis complete for {filename}: {total_saved} actos saved")
+    return total_saved

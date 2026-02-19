@@ -59,21 +59,30 @@ class Boletin(Base):
     menciones_jurisdiccionales = relationship("MencionJurisdiccional", back_populates="boletin", cascade="all, delete-orphan", lazy="select")
 
 class Analisis(Base):
-    """Modelo para almacenar análisis de fragmentos."""
+    """Modelo para almacenar análisis de actos administrativos individuales."""
     __tablename__ = "analisis"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     boletin_id = Column(Integer, ForeignKey("boletines.id"))
     fragmento = Column(Text)
-    categoria = Column(String)
+    categoria = Column(String)  # Legacy: kept for backward compat
     entidad_beneficiaria = Column(String)
     monto_estimado = Column(String, nullable=True)
-    monto_numerico = Column(Float, nullable=True)  # Monto parseado numéricamente
-    riesgo = Column(String)  # ALTO, MEDIO, BAJO
-    tipo_curro = Column(String)
-    accion_sugerida = Column(Text)
-    datos_extra = Column(JSON, nullable=True)  # Para datos adicionales
+    monto_numerico = Column(Float, nullable=True)
+    riesgo = Column(String)  # alto, medio, bajo, informativo (was: ALTO, MEDIO, BAJO)
+    tipo_curro = Column(String, nullable=True)  # Legacy: kept for backward compat
+    accion_sugerida = Column(Text, nullable=True)
+    datos_extra = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+    # v2 fields: structured multi-acto analysis
+    tipo_acto = Column(String(50), nullable=True)  # decreto, resolucion, licitacion, designacion, subsidio, transferencia, otro
+    numero_acto = Column(String(100), nullable=True)  # "Resolución N° 1813"
+    organismo = Column(String(200), nullable=True)  # Organismo emisor
+    beneficiarios_json = Column(JSON, nullable=True)  # ["persona1", "empresa2"]
+    montos_json = Column(JSON, nullable=True)  # ["$1.000.000", "$500.000"]
+    descripcion = Column(Text, nullable=True)  # Resumen del acto
+    motivo_riesgo = Column(Text, nullable=True)  # Justificación del riesgo asignado
 
     # Relación con boletín
     boletin = relationship("Boletin", back_populates="analisis")

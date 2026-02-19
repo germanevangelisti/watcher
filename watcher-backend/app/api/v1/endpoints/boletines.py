@@ -508,7 +508,7 @@ async def get_boletin_analisis(
         # Convertir a formato de respuesta
         analisis_data = []
         for analisis in analisis_list:
-            analisis_data.append({
+            item = {
                 "id": analisis.id,
                 "fragmento": analisis.fragmento,
                 "categoria": analisis.categoria,
@@ -518,8 +518,18 @@ async def get_boletin_analisis(
                 "tipo_curro": analisis.tipo_curro,
                 "accion_sugerida": analisis.accion_sugerida,
                 "datos_extra": analisis.datos_extra,
-                "created_at": analisis.created_at.isoformat() if analisis.created_at else None
-            })
+                "created_at": analisis.created_at.isoformat() if analisis.created_at else None,
+                # v2 fields
+                "tipo_acto": getattr(analisis, 'tipo_acto', None),
+                "numero_acto": getattr(analisis, 'numero_acto', None),
+                "organismo": getattr(analisis, 'organismo', None),
+                "beneficiarios": getattr(analisis, 'beneficiarios_json', None) or [],
+                "montos": getattr(analisis, 'montos_json', None) or [],
+                "monto_numerico": getattr(analisis, 'monto_numerico', None),
+                "descripcion": getattr(analisis, 'descripcion', None),
+                "motivo_riesgo": getattr(analisis, 'motivo_riesgo', None),
+            }
+            analisis_data.append(item)
         
         return {
             "boletin": {

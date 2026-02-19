@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useParams, Link } from "@tanstack/react-router"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -7,17 +7,107 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { useBoletin, useBoletinContent, useBoletinAnalisis } from "@/lib/api"
-import { ArrowLeft, FileText, Calendar, Database, CheckCircle2, Clock, ExternalLink, Maximize2, Upload, Download, RefreshCw, MapPin, AlertTriangle, Shield } from "lucide-react"
+import { ArrowLeft, FileText, Calendar, Database, CheckCircle2, Clock, ExternalLink, Maximize2, Upload, Download, RefreshCw, MapPin, AlertTriangle, Shield, Filter, Gavel, Building2, DollarSign } from "lucide-react"
 import dayjs from "dayjs"
+
+// Types for analysis items (supports both v1 and v2)
+interface AnalisisItem {
+  id: number
+  fragmento: string
+  categoria: string
+  entidad_beneficiaria: string
+  monto_estimado: string
+  riesgo: string
+  tipo_curro: string
+  accion_sugerida: string
+  // v2 fields
+  tipo_acto?: string | null
+  numero_acto?: string | null
+  organismo?: string | null
+  beneficiarios?: string[]
+  montos?: string[]
+  monto_numerico?: number | null
+  descripcion?: string | null
+  motivo_riesgo?: string | null
+}
+
+function formatCurrency(value: number): string {
+  if (value >= 1_000_000_000) {
+    return `$${(value / 1_000_000_000).toFixed(1).replace('.0', '')}B`
+  }
+  if (value >= 1_000_000) {
+    return `$${(value / 1_000_000).toFixed(1).replace('.0', '')}M`
+  }
+  return `$${value.toLocaleString("es-AR", { maximumFractionDigits: 0 })}`
+}
+
+function formatCurrencyFull(value: number): string {
+  return `$${value.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
+const TIPO_ACTO_LABELS: Record<string, string> = {
+  decreto: "Decreto",
+  resolucion: "Resolución",
+  licitacion: "Licitación",
+  designacion: "Designación",
+  subsidio: "Subsidio",
+  transferencia: "Transferencia",
+  otro: "Otro",
+}
+
+const TIPO_ACTO_ICONS: Record<string, typeof Gavel> = {
+  decreto: Gavel,
+  resolucion: FileText,
+  licitacion: Building2,
+  designacion: Shield,
+  subsidio: Download,
+  transferencia: RefreshCw,
+  otro: FileText,
+}
+
+function getRiesgoVariant(riesgo: string): "destructive" | "default" | "secondary" | "outline" {
+  const r = riesgo.toLowerCase()
+  if (r === "alto") return "destructive"
+  if (r === "medio") return "default"
+  if (r === "bajo") return "secondary"
+  return "outline" // informativo
+}
+
+function getRiesgoLabel(riesgo: string): string {
+  const r = riesgo.toLowerCase()
+  if (r === "informativo") return "Informativo"
+  return `Riesgo ${r.charAt(0).toUpperCase() + r.slice(1)}`
+}
 
 export function BoletinDetail() {
   const { id } = useParams({ strict: false })
   const boletinId = id ? parseInt(id) : 0
   const [showFullText, setShowFullText] = useState(false)
+  const [riesgoFilter, setRiesgoFilter] = useState<string>("all")
 
   const { data: boletin, isLoading, error } = useBoletin(boletinId)
   const { data: content, isLoading: contentLoading } = useBoletinContent(boletin?.filename)
   const { data: analisis, isLoading: analisisLoading } = useBoletinAnalisis(boletinId)
+
+  // Filter and count analysis items by risk level, compute total montos
+  const { filteredItems, riesgoCounts, totalMontoNumerico, actosConMonto } = useMemo(() => {
+    const items: AnalisisItem[] = analisis?.analisis || []
+    const counts: Record<string, number> = { all: items.length, alto: 0, medio: 0, bajo: 0, informativo: 0 }
+    let montoSum = 0
+    let conMonto = 0
+    for (const item of items) {
+      const r = (item.riesgo || "informativo").toLowerCase()
+      counts[r] = (counts[r] || 0) + 1
+      if (item.monto_numerico && item.monto_numerico > 0) {
+        montoSum += item.monto_numerico
+        conMonto++
+      }
+    }
+    const filtered = riesgoFilter === "all"
+      ? items
+      : items.filter(item => (item.riesgo || "informativo").toLowerCase() === riesgoFilter)
+    return { filteredItems: filtered, riesgoCounts: counts, totalMontoNumerico: montoSum, actosConMonto: conMonto }
+  }, [analisis, riesgoFilter])
 
   if (isLoading) {
     return (
@@ -210,13 +300,25 @@ export function BoletinDetail() {
         <TabsContent value="analisis" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Análisis del Documento</CardTitle>
-              <CardDescription>
-                Información extraída y procesada
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Análisis del Documento</CardTitle>
+                  <CardDescription>
+                    Actos administrativos extraídos y evaluados
+                  </CardDescription>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
-              {analisisLoading ? (
+              {!boletin.processed ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Clock className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm font-medium">Documento pendiente de procesamiento</p>
+                  <p className="text-xs mt-1">
+                    El análisis estará disponible una vez que el documento sea procesado por el pipeline.
+                  </p>
+                </div>
+              ) : analisisLoading ? (
                 <div className="space-y-2">
                   <Skeleton className="h-4 w-full" />
                   <Skeleton className="h-4 w-full" />
@@ -224,81 +326,167 @@ export function BoletinDetail() {
                 </div>
               ) : analisis?.total > 0 ? (
                 <div className="space-y-4">
-                  {/* Stats */}
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm font-medium">
-                        <Database className="h-4 w-4" />
-                        Fragmentos analizados
-                      </div>
+                  {/* Stats row */}
+                  <div className="grid gap-3 grid-cols-2 md:grid-cols-5">
+                    <div className="space-y-1 text-center p-3 rounded-lg bg-muted/50">
                       <p className="text-2xl font-bold">{analisis.total}</p>
+                      <p className="text-xs text-muted-foreground">Actos totales</p>
+                    </div>
+                    <div className="space-y-1 text-center p-3 rounded-lg bg-muted/50">
+                      <p className="text-2xl font-bold">
+                        {new Set(
+                          analisis.analisis.flatMap((a: AnalisisItem) => 
+                            a.organismo ? [a.organismo] : a.entidad_beneficiaria ? [a.entidad_beneficiaria] : []
+                          ).filter(Boolean)
+                        ).size}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Organismos</p>
+                    </div>
+                    <div className="space-y-1 text-center p-3 rounded-lg bg-emerald-500/10">
+                      <p className="text-xl font-bold text-emerald-400 font-mono">
+                        {totalMontoNumerico > 0 ? formatCurrency(totalMontoNumerico) : "-"}
+                      </p>
                       <p className="text-xs text-muted-foreground">
-                        Actos normativos identificados
+                        {actosConMonto > 0 ? `Montos (${actosConMonto} actos)` : "Sin montos"}
                       </p>
                     </div>
-
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm font-medium">
-                        <FileText className="h-4 w-4" />
-                        Entidades detectadas
-                      </div>
-                      <p className="text-2xl font-bold">
-                        {new Set(analisis.analisis.map((a: { entidad_beneficiaria: string }) => a.entidad_beneficiaria).filter(Boolean)).size}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Organismos y entidades únicas
-                      </p>
+                    <div className="space-y-1 text-center p-3 rounded-lg bg-red-500/10">
+                      <p className="text-2xl font-bold text-red-500">{riesgoCounts.alto || 0}</p>
+                      <p className="text-xs text-muted-foreground">Riesgo alto</p>
+                    </div>
+                    <div className="space-y-1 text-center p-3 rounded-lg bg-yellow-500/10">
+                      <p className="text-2xl font-bold text-yellow-500">{riesgoCounts.medio || 0}</p>
+                      <p className="text-xs text-muted-foreground">Riesgo medio</p>
                     </div>
                   </div>
 
-                  {/* Analysis items */}
-                  <div className="space-y-3 mt-4">
-                    <h4 className="text-sm font-medium text-muted-foreground">Detalle de análisis</h4>
-                    {analisis.analisis.map((item: { id: number; categoria: string; entidad_beneficiaria: string; monto_estimado: string; riesgo: string; tipo_curro: string; accion_sugerida: string; fragmento: string }) => (
-                      <Card key={item.id} className="border-muted">
-                        <CardContent className="pt-4 pb-3 space-y-3">
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="space-y-1 flex-1">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <Badge variant="outline" className="text-xs">
-                                  {item.categoria}
-                                </Badge>
-                                <Badge 
-                                  variant={item.riesgo === "ALTO" ? "destructive" : item.riesgo === "MEDIO" ? "default" : "secondary"}
-                                  className="text-xs"
-                                >
-                                  {item.riesgo === "ALTO" && <AlertTriangle className="h-3 w-3 mr-1" />}
-                                  {item.riesgo === "MEDIO" && <Shield className="h-3 w-3 mr-1" />}
-                                  Riesgo {item.riesgo}
-                                </Badge>
-                              </div>
-                              <p className="text-sm font-medium">{item.tipo_curro}</p>
-                              <p className="text-xs text-muted-foreground">
-                                Entidad: {item.entidad_beneficiaria}
-                              </p>
-                              {item.monto_estimado && item.monto_estimado !== "No especificado" && (
-                                <p className="text-xs text-muted-foreground">
-                                  Monto: <span className="font-mono font-medium text-foreground">{item.monto_estimado}</span>
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                          <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
-                            <p className="font-medium mb-1">Acción sugerida:</p>
-                            <p>{item.accion_sugerida}</p>
-                          </div>
-                          <details className="text-xs">
-                            <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
-                              Ver fragmento original
-                            </summary>
-                            <pre className="mt-2 text-xs whitespace-pre-wrap bg-muted p-2 rounded max-h-40 overflow-y-auto">
-                              {item.fragmento?.substring(0, 500)}
-                              {item.fragmento && item.fragmento.length > 500 && "..."}
-                            </pre>
-                          </details>
-                        </CardContent>
-                      </Card>
+                  {/* Risk filter */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Filter className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">Filtrar:</span>
+                    {[
+                      { key: "all", label: "Todos", count: riesgoCounts.all },
+                      { key: "alto", label: "Alto", count: riesgoCounts.alto },
+                      { key: "medio", label: "Medio", count: riesgoCounts.medio },
+                      { key: "bajo", label: "Bajo", count: riesgoCounts.bajo },
+                      { key: "informativo", label: "Informativo", count: riesgoCounts.informativo },
+                    ].filter(f => f.count > 0).map(f => (
+                      <Button
+                        key={f.key}
+                        variant={riesgoFilter === f.key ? "default" : "outline"}
+                        size="sm"
+                        className="h-7 text-xs gap-1"
+                        onClick={() => setRiesgoFilter(f.key)}
+                      >
+                        {f.label} ({f.count})
+                      </Button>
                     ))}
+                  </div>
+
+                  {/* Analysis items */}
+                  <div className="space-y-3">
+                    {filteredItems.map((item: AnalisisItem) => {
+                      const isV2 = !!item.tipo_acto
+                      const tipoLabel = isV2 ? (TIPO_ACTO_LABELS[item.tipo_acto!] || item.tipo_acto) : item.categoria
+                      const TipoIcon = isV2 ? (TIPO_ACTO_ICONS[item.tipo_acto!] || FileText) : FileText
+                      const description = item.descripcion || item.tipo_curro || "Sin descripción"
+                      const organismo = item.organismo || item.entidad_beneficiaria || "No especificado"
+                      const montos = item.montos?.length ? item.montos : (item.monto_estimado && item.monto_estimado !== "No especificado" ? [item.monto_estimado] : [])
+                      const beneficiarios = item.beneficiarios?.length ? item.beneficiarios : []
+                      const riesgo = (item.riesgo || "informativo").toLowerCase()
+
+                      return (
+                        <Card key={item.id} className={riesgo === "alto" ? "border-red-500/30" : riesgo === "medio" ? "border-yellow-500/30" : "border-muted"}>
+                          <CardContent className="pt-4 pb-3 space-y-3">
+                            {/* Header: tipo_acto badge + riesgo badge + numero */}
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="space-y-1.5 flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <Badge variant="outline" className="text-xs gap-1">
+                                    <TipoIcon className="h-3 w-3" />
+                                    {tipoLabel}
+                                  </Badge>
+                                  {item.numero_acto && (
+                                    <span className="text-xs font-mono text-muted-foreground">
+                                      {item.numero_acto}
+                                    </span>
+                                  )}
+                                  <Badge variant={getRiesgoVariant(riesgo)} className="text-xs">
+                                    {riesgo === "alto" && <AlertTriangle className="h-3 w-3 mr-1" />}
+                                    {riesgo === "medio" && <Shield className="h-3 w-3 mr-1" />}
+                                    {getRiesgoLabel(riesgo)}
+                                  </Badge>
+                                </div>
+                                
+                                {/* Description */}
+                                <p className="text-sm font-medium">{description}</p>
+                                
+                                {/* Organismo */}
+                                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <Building2 className="h-3 w-3" />
+                                  {organismo}
+                                </p>
+
+                                {/* Beneficiarios (if any) */}
+                                {beneficiarios.length > 0 && (
+                                  <p className="text-xs text-muted-foreground">
+                                    Beneficiarios: {beneficiarios.join(", ")}
+                                  </p>
+                                )}
+                                
+                                {/* Montos */}
+                                {(item.monto_numerico || montos.length > 0) && (
+                                  <div className="flex items-center gap-2 text-xs">
+                                    <DollarSign className="h-3 w-3 text-emerald-400" />
+                                    {item.monto_numerico && item.monto_numerico > 0 ? (
+                                      <span className="font-mono font-bold text-emerald-400" title={formatCurrencyFull(item.monto_numerico)}>
+                                        {formatCurrency(item.monto_numerico)}
+                                      </span>
+                                    ) : null}
+                                    {montos.length > 0 && (
+                                      <span className="text-muted-foreground truncate" title={montos.join(", ")}>
+                                        {montos.length === 1 ? montos[0] : `${montos.length} montos`}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Motivo riesgo (if not informativo) */}
+                            {item.motivo_riesgo && riesgo !== "informativo" && (
+                              <div className={`text-xs p-2 rounded border ${
+                                riesgo === "alto" ? "bg-red-500/10 border-red-500/20" :
+                                riesgo === "medio" ? "bg-yellow-500/10 border-yellow-500/20" :
+                                "bg-blue-500/10 border-blue-500/20"
+                              }`}>
+                                <p className="font-medium mb-0.5">Motivo del riesgo:</p>
+                                <p>{item.motivo_riesgo}</p>
+                              </div>
+                            )}
+
+                            {/* Accion sugerida (if present and not informativo) */}
+                            {item.accion_sugerida && riesgo !== "informativo" && (
+                              <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
+                                <p className="font-medium mb-0.5">Acción sugerida:</p>
+                                <p>{item.accion_sugerida}</p>
+                              </div>
+                            )}
+
+                            {/* Expandable fragment */}
+                            <details className="text-xs">
+                              <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                                Ver fragmento original
+                              </summary>
+                              <pre className="mt-2 text-xs whitespace-pre-wrap bg-muted p-2 rounded max-h-40 overflow-y-auto">
+                                {item.fragmento?.substring(0, 500)}
+                                {item.fragmento && item.fragmento.length > 500 && "..."}
+                              </pre>
+                            </details>
+                          </CardContent>
+                        </Card>
+                      )
+                    })}
                   </div>
                 </div>
               ) : (

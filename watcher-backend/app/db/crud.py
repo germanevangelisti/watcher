@@ -2,6 +2,7 @@
 Operaciones CRUD para la base de datos
 """
 
+import re
 from datetime import datetime
 from typing import List, Optional, Dict
 from sqlalchemy import select, func
@@ -129,23 +130,109 @@ async def update_boletin_status(
         boletin.updated_at = datetime.utcnow()
     return boletin
 
+def _parse_monto_string(monto_str: str) -> Optional[float]:
+    """
+    Parse an Argentine monto string to a float.
+    
+    Handles formats like:
+    - "pesos 3.010.523.733,29" -> 3010523733.29
+    - "$1.066.200.000,00" -> 1066200000.0
+    - "198.731.610,00" -> 198731610.0
+    - "PESOS TRES MIL DIEZ MILLONES... (pesos 3.010.523.733,29)" -> 3010523733.29
+    """
+    if not monto_str:
+        return None
+    
+    # Try to find a numeric amount in parentheses first (often contains the parsed value)
+    paren_match = re.search(r'\((?:pesos\s+)?([0-9]{1,3}(?:\.[0-9]{3})*(?:,[0-9]{2})?)\)', monto_str)
+    if paren_match:
+        num_str = paren_match.group(1).replace('.', '').replace(',', '.')
+        try:
+            return float(num_str)
+        except ValueError:
+            pass
+    
+    # Try to find a standalone numeric pattern
+    num_match = re.search(r'(?:pesos\s+|\$\s*)?([0-9]{1,3}(?:\.[0-9]{3})*(?:,[0-9]{2})?)', monto_str)
+    if num_match:
+        num_str = num_match.group(1).replace('.', '').replace(',', '.')
+        try:
+            return float(num_str)
+        except ValueError:
+            pass
+    
+    return None
+
+
 async def create_analisis(
     db: AsyncSession,
     boletin_id: int,
     fragmento: str,
     analisis_data: Dict
 ) -> Analisis:
-    """Crea un nuevo registro de análisis."""
+    """
+    Crea un nuevo registro de análisis.
+    
+    Supports both legacy format (v1: single flat dict) and new format
+    (v2: ActoExtraido with tipo_acto, numero, organismo, etc.)
+    """
+    # Detect v2 format (has 'tipo_acto' key)
+    is_v2 = "tipo_acto" in analisis_data
+    
+    # Build beneficiarios string for legacy field
+    beneficiarios = analisis_data.get("beneficiarios", [])
+    beneficiarios_str = ", ".join(beneficiarios[:3]) if beneficiarios else analisis_data.get("entidad_beneficiaria", "No especificado")
+    
+    # Build montos string for legacy field
+    montos = analisis_data.get("montos", [])
+    montos_str = ", ".join(montos[:3]) if montos else analisis_data.get("monto_estimado", "No especificado")
+    
+    # Map riesgo to uppercase for legacy compat
+    riesgo_raw = analisis_data.get("riesgo", "informativo")
+    
+    # Map tipo_acto to legacy categoria
+    tipo_to_categoria = {
+        "decreto": "otros",
+        "resolucion": "otros",
+        "licitacion": "obras sin trazabilidad",
+        "designacion": "designaciones políticas",
+        "subsidio": "subsidios poco claros",
+        "transferencia": "gasto excesivo",
+        "otro": "otros",
+    }
+    
+    # Parse monto_numerico: prefer Gemini's monto_total_numerico, fallback to parsing strings
+    monto_numerico = None
+    gemini_monto = analisis_data.get("monto_total_numerico")
+    if gemini_monto and isinstance(gemini_monto, (int, float)) and gemini_monto > 0:
+        monto_numerico = float(gemini_monto)
+    elif montos:
+        # Fallback: parse from monto strings
+        for monto_str in montos:
+            parsed = _parse_monto_string(monto_str)
+            if parsed and parsed > 0:
+                monto_numerico = (monto_numerico or 0) + parsed
+    
     db_analisis = Analisis(
         boletin_id=boletin_id,
         fragmento=fragmento,
-        categoria=analisis_data.get("categoria"),
-        entidad_beneficiaria=analisis_data.get("entidad_beneficiaria"),
-        monto_estimado=analisis_data.get("monto_estimado"),
-        riesgo=analisis_data.get("riesgo"),
-        tipo_curro=analisis_data.get("tipo_curro"),
+        # Legacy fields (backward compat)
+        categoria=tipo_to_categoria.get(analisis_data.get("tipo_acto", ""), analisis_data.get("categoria", "otros")),
+        entidad_beneficiaria=beneficiarios_str,
+        monto_estimado=montos_str,
+        monto_numerico=monto_numerico,
+        riesgo=riesgo_raw,
+        tipo_curro=analisis_data.get("tipo_curro", analisis_data.get("descripcion", "")),
         accion_sugerida=analisis_data.get("accion_sugerida"),
-        datos_extra=analisis_data.get("metadata", {})
+        datos_extra=analisis_data.get("metadata") or analisis_data.get("datos_extra", {}),
+        # v2 fields
+        tipo_acto=analisis_data.get("tipo_acto"),
+        numero_acto=analisis_data.get("numero") or analisis_data.get("numero_acto"),
+        organismo=analisis_data.get("organismo"),
+        beneficiarios_json=beneficiarios if is_v2 else None,
+        montos_json=montos if is_v2 else None,
+        descripcion=analisis_data.get("descripcion"),
+        motivo_riesgo=analisis_data.get("motivo_riesgo"),
     )
     db.add(db_analisis)
     return db_analisis

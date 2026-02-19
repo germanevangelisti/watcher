@@ -275,38 +275,59 @@ class BatchProcessor:
                 ejecuciones_detectadas = 0
                 monto_procesado = 0.0
                 alertas_generadas = 0
+                total_actos = 0
                 
-                # Analizar cada sección (limitado para evitar problemas)
-                for i, section in enumerate(sections[:3]):  # Solo primeras 3 secciones
+                # Enrich metadata with jurisdiccion info for contextual prompt
+                jurisdiccion_nombre = None
+                if boletin.jurisdiccion:
+                    jurisdiccion_nombre = boletin.jurisdiccion.nombre
+                
+                # Analizar TODAS las secciones (no limitado a 3)
+                for i, section in enumerate(sections):
                     try:
-                        # Análisis con Watcher (contenido limitado)
-                        content_limited = section["content"][:2000]  # Limitar contenido
-                        analysis_result = await self.watcher_service.analyze_content(
-                            content=content_limited,
-                            metadata=section["metadata"]
+                        section_content = section["content"]
+                        section_metadata = section["metadata"].copy()
+                        
+                        # Add jurisdiccion context to metadata
+                        if jurisdiccion_nombre:
+                            section_metadata["jurisdiccion_nombre"] = jurisdiccion_nombre
+                        section_metadata["fuente"] = getattr(boletin, 'fuente', 'provincial')
+                        
+                        # Analyze full section content (no truncation)
+                        # analyze_content returns a list of actos (v2)
+                        actos = await self.watcher_service.analyze_content(
+                            content=section_content,
+                            metadata=section_metadata
                         )
                         
-                        # Guardar análisis
-                        await crud.create_analisis(
-                            file_db,
-                            boletin_id=boletin.id,
-                            fragmento=content_limited,
-                            analisis_data=analysis_result
-                        )
+                        # Save each acto individually
+                        for acto in actos:
+                            fragment_text = acto.pop("_fragment_content", section_content[:500])
+                            acto.pop("_fragment_index", None)
+                            acto.pop("_resumen_fragmento", None)
+                            acto.pop("_model_used", None)
+                            
+                            await crud.create_analisis(
+                                file_db,
+                                boletin_id=boletin.id,
+                                fragmento=fragment_text,
+                                analisis_data=acto
+                            )
+                            total_actos += 1
                         
-                        # Extraer monto simple (sin SQL directo por ahora)
-                        monto = self._extraer_monto(content_limited)
+                        # Extract montos for stats
+                        monto = self._extraer_monto(section_content)
                         if monto:
                             ejecuciones_detectadas += 1
                             monto_procesado += monto
-                            
-                            # Alerta simple
                             if monto > 10000000:  # > $10M
                                 alertas_generadas += 1
                         
                     except Exception as e:
                         logger.error(f"Error analizando sección {i} de {filename}: {e}")
                         continue
+                
+                logger.info(f"Documento {filename}: {total_actos} actos extraídos de {len(sections)} secciones")
                 
                 # Actualizar estado final
                 await crud.update_boletin_status(file_db, boletin.id, "completed")

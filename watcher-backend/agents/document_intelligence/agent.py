@@ -3,6 +3,7 @@ Document Intelligence Agent
 
 Extrae información estructurada de PDFs y clasifica contenido
 """
+import datetime
 import logging
 from typing import Dict, List, Any, Optional, Tuple
 from pathlib import Path

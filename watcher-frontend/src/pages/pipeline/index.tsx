@@ -54,6 +54,7 @@ import {
   Sparkles,
   Scissors,
   ArrowRight,
+  Brain,
 } from "lucide-react"
 
 // Pipeline event types to subscribe to
@@ -74,6 +75,7 @@ const STAGE_INFO: Record<string, { label: string; icon: typeof FileSearch; color
   cleaning: { label: "Limpieza", icon: Sparkles, color: "text-purple-400" },
   chunking: { label: "Chunking", icon: Scissors, color: "text-yellow-400" },
   indexing: { label: "Indexación", icon: Database, color: "text-orange-400" },
+  analyzing: { label: "Análisis IA", icon: Brain, color: "text-cyan-400" },
   completed: { label: "Completado", icon: CheckCircle2, color: "text-green-400" },
   failed: { label: "Fallido", icon: AlertCircle, color: "text-red-400" },
 }
@@ -497,6 +499,7 @@ export function PipelineWorkflowPage() {
                   ["extracting", "Extrayendo", "bg-blue-400"],
                   ["chunking", "Chunking", "bg-yellow-400"],
                   ["indexing", "Indexando", "bg-orange-400"],
+                  ["analyzing", "Analizando", "bg-cyan-400"],
                   ["completed", "Completados", "bg-green-400"],
                   ["failed", "Fallidos", "bg-red-400"],
                 ] as const
@@ -571,9 +574,9 @@ export function PipelineWorkflowPage() {
 
                       {/* Mini stage timeline */}
                       <div className="flex items-center gap-1">
-                        {["extracting", "cleaning", "chunking", "indexing", "completed"].map(
+                        {["extracting", "cleaning", "chunking", "indexing", "analyzing", "completed"].map(
                           (stageName, idx) => {
-                            const stageIdx = ["extracting", "cleaning", "chunking", "indexing", "completed"].indexOf(state.stage)
+                            const stageIdx = ["extracting", "cleaning", "chunking", "indexing", "analyzing", "completed"].indexOf(state.stage)
                             const isDone = idx < stageIdx || state.stage === "completed"
                             const isCurrent = stageName === state.stage && state.stage !== "completed" && state.stage !== "failed"
 
