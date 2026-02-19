@@ -108,7 +108,7 @@ export interface PatternDetection {
     entidad_nombre: string;
     fecha: string;
     documento_id: number;
-    metadata: Record<string, any>;
+    metadata: Record<string, unknown>;
   }>;
   estadisticas: {
     total_casos: number;

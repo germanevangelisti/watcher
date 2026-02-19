@@ -4,7 +4,7 @@ API endpoints for Red Flags - Datos reales del DS Lab
 from pathlib import Path
 import json
 import logging
-from typing import Dict, List, Optional
+from typing import Dict
 from fastapi import APIRouter, HTTPException
 
 logger = logging.getLogger(__name__)

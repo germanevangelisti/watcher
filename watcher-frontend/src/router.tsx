@@ -1,4 +1,5 @@
-import { createRouter, createRoute, createRootRoute, redirect } from "@tanstack/react-router"
+/* eslint-disable react-refresh/only-export-components */
+import { createRouter, createRoute, createRootRoute, redirect, Outlet, useRouter } from "@tanstack/react-router"
 import { AppShell } from "./components/layout/app-shell"
 import { DashboardPage } from "./pages/dashboard"
 import { DocumentosHub } from "./pages/documentos"
@@ -12,21 +13,23 @@ import AlertaDetailPage from "./pages/analisis/alerta-detail"
 import { PipelineStatusPage } from "./pages/analisis/pipeline-status"
 import { PipelineWorkflowPage } from "./pages/pipeline"
 
+function RootComponent() {
+  const router = useRouter()
+  const currentPath = router.state.location.pathname
+
+  return (
+    <AppShell 
+      currentPath={currentPath}
+      onNavigate={(path) => router.navigate({ to: path })}
+    >
+      <Outlet />
+    </AppShell>
+  )
+}
+
 // Root route with AppShell layout
 const rootRoute = createRootRoute({
-  component: () => {
-    const router = useRouter()
-    const currentPath = router.state.location.pathname
-
-    return (
-      <AppShell 
-        currentPath={currentPath}
-        onNavigate={(path) => router.navigate({ to: path })}
-      >
-        <Outlet />
-      </AppShell>
-    )
-  },
+  component: RootComponent,
 })
 
 // Dashboard route
@@ -133,6 +136,3 @@ declare module "@tanstack/react-router" {
     router: typeof router
   }
 }
-
-// Required imports for AppShell integration
-import { Outlet, useRouter } from "@tanstack/react-router"

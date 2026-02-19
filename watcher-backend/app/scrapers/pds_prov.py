@@ -10,7 +10,7 @@ import logging
 import random
 from datetime import date, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import List, Optional
 import httpx
 
 from .base_scraper import (

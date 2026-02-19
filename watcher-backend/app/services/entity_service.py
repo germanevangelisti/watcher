@@ -5,14 +5,13 @@ Consolida lógica dispersa en múltiples archivos para un sistema centralizado
 
 import re
 import unicodedata
-from typing import List, Dict, Optional, Tuple, Any
-from datetime import datetime, date
+from typing import List, Dict, Optional, Any
+from datetime import datetime
 from dataclasses import dataclass
 import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, or_
-from sqlalchemy.dialects.sqlite import insert
+from sqlalchemy import select
 
 from app.db.models import EntidadExtraida, MencionEntidad, RelacionEntidad, Boletin
 
@@ -258,7 +257,7 @@ class EntityService:
         try:
             clean = amount_str.replace('.', '').replace(',', '.')
             return float(clean)
-        except:
+        except Exception:
             return 0.0
     
     def _get_context(self, text: str, start: int, end: int, window: int = 150) -> str:

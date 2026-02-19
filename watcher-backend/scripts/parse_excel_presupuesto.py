@@ -12,10 +12,9 @@ import pandas as pd
 import json
 import re
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple
 from collections import defaultdict
 from datetime import datetime
-import sys
 
 # Rutas base
 BASE_DIR = Path(__file__).parent.parent.parent.parent
@@ -392,7 +391,7 @@ def generate_reports(consolidated: Dict, all_programas: List[Dict], normalizer: 
         print(f"⚠ Alertas pipeline (pago lento): {stats['programas_alerta_pipeline']}")
     
     print(f"\n{'='*80}")
-    print(f"💰 TOP 10 ORGANISMOS POR PRESUPUESTO")
+    print("💰 TOP 10 ORGANISMOS POR PRESUPUESTO")
     print(f"{'='*80}")
     for i, org_data in enumerate(stats['top_organismos_presupuesto'], 1):
         print(f"{i:2d}. {org_data['organismo'][:60]:<60} ${org_data['presupuestado']:>15,.0f}")
@@ -520,7 +519,7 @@ def process_period(periodo: str, normalizer: OrganismoNormalizer) -> Tuple[List[
 def compare_periods(marzo_data: List[Dict], junio_data: List[Dict]) -> Dict:
     """Compara datos entre períodos y genera métricas comparativas"""
     print(f"\n{'='*80}")
-    print(f"ANÁLISIS COMPARATIVO: MARZO vs JUNIO")
+    print("ANÁLISIS COMPARATIVO: MARZO vs JUNIO")
     print(f"{'='*80}")
     
     # Crear diccionario de programas por key para matching
@@ -578,13 +577,13 @@ def compare_periods(marzo_data: List[Dict], junio_data: List[Dict]) -> Dict:
     
     # Top 10 programas con mayor aceleración
     top_aceleracion = sorted(comparisons, key=lambda x: x['delta_ejecucion_pct'], reverse=True)[:10]
-    print(f"\n🚀 TOP 10 PROGRAMAS CON MAYOR ACELERACIÓN:")
+    print("\n🚀 TOP 10 PROGRAMAS CON MAYOR ACELERACIÓN:")
     for i, comp in enumerate(top_aceleracion, 1):
         print(f"{i:2d}. {comp['organismo'][:50]:<50} Δ{comp['delta_ejecucion_pct']:>6.1f}%")
     
     # Top 10 programas con desaceleración
     top_desaceleracion = sorted(comparisons, key=lambda x: x['delta_ejecucion_pct'])[:10]
-    print(f"\n⚠ TOP 10 PROGRAMAS CON DESACELERACIÓN/MENOR CRECIMIENTO:")
+    print("\n⚠ TOP 10 PROGRAMAS CON DESACELERACIÓN/MENOR CRECIMIENTO:")
     for i, comp in enumerate(top_desaceleracion, 1):
         print(f"{i:2d}. {comp['organismo'][:50]:<50} Δ{comp['delta_ejecucion_pct']:>6.1f}%")
     
@@ -601,7 +600,7 @@ def compare_periods(marzo_data: List[Dict], junio_data: List[Dict]) -> Dict:
 def main():
     """Función principal con soporte multi-período"""
     print(f"\n{'#'*80}")
-    print(f"# PARSER DE PRESUPUESTO PROVINCIAL - CÓRDOBA 2025 (MULTI-PERÍODO)")
+    print("# PARSER DE PRESUPUESTO PROVINCIAL - CÓRDOBA 2025 (MULTI-PERÍODO)")
     print(f"{'#'*80}")
     
     # Inicializar normalizer compartido
@@ -614,15 +613,15 @@ def main():
     # Generar reportes por período
     if marzo_programas:
         print(f"\n{'='*80}")
-        print(f"GENERANDO REPORTES: MARZO 2025")
+        print("GENERANDO REPORTES: MARZO 2025")
         print(f"{'='*80}")
-        marzo_files = generate_reports(marzo_consolidated, marzo_programas, normalizer, periodo='marzo')
+        _marzo_files = generate_reports(marzo_consolidated, marzo_programas, normalizer, periodo='marzo')
     
     if junio_programas:
         print(f"\n{'='*80}")
-        print(f"GENERANDO REPORTES: JUNIO 2025")
+        print("GENERANDO REPORTES: JUNIO 2025")
         print(f"{'='*80}")
-        junio_files = generate_reports(junio_consolidated, junio_programas, normalizer, periodo='junio')
+        _junio_files = generate_reports(junio_consolidated, junio_programas, normalizer, periodo='junio')
     
     # Análisis comparativo si tenemos ambos períodos
     if marzo_programas and junio_programas:
@@ -653,9 +652,9 @@ def main():
     
     # Resumen final
     print(f"\n{'#'*80}")
-    print(f"# ✅ PROCESAMIENTO COMPLETADO")
+    print("# ✅ PROCESAMIENTO COMPLETADO")
     print(f"{'#'*80}")
-    print(f"\n📊 RESUMEN GENERAL:")
+    print("\n📊 RESUMEN GENERAL:")
     if marzo_programas:
         print(f"  • Marzo 2025: {len(marzo_programas)} programas")
     if junio_programas:

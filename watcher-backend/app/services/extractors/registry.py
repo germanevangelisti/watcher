@@ -10,7 +10,7 @@ import os
 from pathlib import Path
 from typing import Dict, Optional
 
-from app.schemas.extraction import ExtractedContent, ExtractionMethod
+from app.schemas.extraction import ExtractedContent
 from .base import PDFExtractor
 from .pypdf2_extractor import PyPDF2Extractor
 from .pdfplumber_extractor import PdfPlumberExtractor, PDFPLUMBER_AVAILABLE

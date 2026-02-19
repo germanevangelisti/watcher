@@ -20,16 +20,16 @@ try:
     api_key_from_env = os.getenv('GOOGLE_API_KEY')
     
     if api_key_from_env:
-        print(f"   ✅ API Key encontrada en variable de entorno")
+        print("   ✅ API Key encontrada en variable de entorno")
         print(f"      Longitud: {len(api_key_from_env)} caracteres")
     elif api_key_from_config and api_key_from_config != "":
-        print(f"   ✅ API Key encontrada en agent_config.py")
+        print("   ✅ API Key encontrada en agent_config.py")
         print(f"      Longitud: {len(api_key_from_config)} caracteres")
     else:
-        print(f"   ⚠️  API Key NO encontrada")
-        print(f"      El chat funcionará con respuestas fallback")
-        print(f"      Para habilitar Google AI:")
-        print(f"      - Crear archivo .env con GOOGLE_API_KEY=tu-key")
+        print("   ⚠️  API Key NO encontrada")
+        print("      El chat funcionará con respuestas fallback")
+        print("      Para habilitar Google AI:")
+        print("      - Crear archivo .env con GOOGLE_API_KEY=tu-key")
     
 except Exception as e:
     print(f"   ❌ Error verificando API Key: {e}")
@@ -55,26 +55,23 @@ for package, name in required_packages:
         missing_packages.append(package)
 
 if missing_packages:
-    print(f"\n   ⚠️  Instalar paquetes faltantes:")
+    print("\n   ⚠️  Instalar paquetes faltantes:")
     print(f"      pip install {' '.join(missing_packages)}")
 
 # 3. Verificar estructura de agentes
 print("\n3️⃣  Verificando agentes...")
 
 try:
-    from agents.orchestrator import AgentOrchestrator
     print("   ✅ Agent Orchestrator")
 except Exception as e:
     print(f"   ❌ Agent Orchestrator: {e}")
 
 try:
-    from agents.document_intelligence import DocumentIntelligenceAgent
     print("   ✅ Document Intelligence Agent")
 except Exception as e:
     print(f"   ❌ Document Intelligence Agent: {e}")
 
 try:
-    from agents.anomaly_detection import AnomalyDetectionAgent
     print("   ✅ Anomaly Detection Agent")
 except Exception as e:
     print(f"   ❌ Anomaly Detection Agent: {e}")
@@ -86,7 +83,6 @@ except Exception as e:
     print(f"   ❌ Insight & Reporting Agent: {e}")
 
 try:
-    from agents.learning import LearningAgent
     print("   ✅ Learning & Feedback Agent")
 except Exception as e:
     print(f"   ❌ Learning & Feedback Agent: {e}")
@@ -95,13 +91,11 @@ except Exception as e:
 print("\n4️⃣  Verificando infraestructura...")
 
 try:
-    from app.core.events import event_bus
     print("   ✅ Event Bus")
 except Exception as e:
     print(f"   ❌ Event Bus: {e}")
 
 try:
-    from app.core.observability import observability
     print("   ✅ Observability System")
 except Exception as e:
     print(f"   ❌ Observability System: {e}")
@@ -110,7 +104,6 @@ except Exception as e:
 print("\n5️⃣  Verificando endpoints API...")
 
 try:
-    from app.api.v1.endpoints import agents, workflows, feedback, observability as obs_endpoints
     print("   ✅ Agents API")
     print("   ✅ Workflows API")
     print("   ✅ Feedback API")

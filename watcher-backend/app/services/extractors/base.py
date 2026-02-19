@@ -5,7 +5,6 @@ Interfaz base para extractores de PDF.
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Optional
 import re
 import logging
 

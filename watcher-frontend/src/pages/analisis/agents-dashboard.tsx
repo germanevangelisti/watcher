@@ -32,7 +32,7 @@ export function AgentsDashboard() {
       const content = typeof response === 'string' ? response : (response.response || JSON.stringify(response))
       const assistantMessage = { role: "assistant", content }
       setChatHistory((prev) => [...prev, assistantMessage])
-    } catch (error) {
+    } catch {
       const errorMessage = { role: "assistant", content: "Error: No se pudo obtener respuesta del agente" }
       setChatHistory((prev) => [...prev, errorMessage])
     }
@@ -325,16 +325,16 @@ export function AgentsDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {topRisk.map((doc: any, idx: number) => (
+                  {topRisk.map((doc: Record<string, unknown>, idx: number) => (
                     <div
                       key={idx}
                       className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
                     >
                       <div className="flex-1">
-                        <p className="text-sm font-medium">{doc.title || `Documento ${doc.id}`}</p>
-                        <p className="text-xs text-muted-foreground">{doc.date}</p>
+                        <p className="text-sm font-medium">{(doc.title as string) || `Documento ${doc.id}`}</p>
+                        <p className="text-xs text-muted-foreground">{doc.date as string}</p>
                       </div>
-                      <Badge variant="destructive">{doc.risk_score || "Alto"}</Badge>
+                      <Badge variant="destructive">{(doc.risk_score as string) || "Alto"}</Badge>
                     </div>
                   ))}
                 </div>

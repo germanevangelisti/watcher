@@ -14,7 +14,6 @@ sys.path.insert(0, str(project_root))
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from app.services.fts_service import FTSService
-from datetime import datetime
 
 def validate_fts5(db_path: str = None):
     """Validate FTS5 setup and basic functionality."""
@@ -84,7 +83,7 @@ def validate_fts5(db_path: str = None):
         print("\n5. Testing query validation...")
         test_result = service.test_query("decreto OR resolución")
         if test_result['valid']:
-            print(f"   ✓ Query validation works")
+            print("   ✓ Query validation works")
         else:
             print(f"   ✗ Query validation failed: {test_result.get('error')}")
         

@@ -9,11 +9,11 @@ Provides unified interface for:
 
 import logging
 import asyncio
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
 
 from app.services.embedding_service import get_embedding_service
-from app.services.fts_service import get_fts_service, FTSSearchResult
+from app.services.fts_service import get_fts_service
 from app.services.reranker_service import get_reranker_service
 
 logger = logging.getLogger(__name__)

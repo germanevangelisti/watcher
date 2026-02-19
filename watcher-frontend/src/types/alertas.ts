@@ -16,7 +16,7 @@ export interface Alerta {
   fecha_deteccion: string
   estado: "activa" | "revisada" | "descartada"
   created_at: string
-  acciones_sugeridas?: Record<string, any> | null
+  acciones_sugeridas?: Record<string, unknown> | null
 }
 
 export interface AlertasListResponse {

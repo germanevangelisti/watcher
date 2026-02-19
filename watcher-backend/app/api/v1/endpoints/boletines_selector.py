@@ -3,13 +3,12 @@
 Endpoints para listar y seleccionar boletines para análisis
 """
 
-import os
 import json
 import logging
 from pathlib import Path
 from datetime import datetime
 from typing import List, Dict, Optional
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 

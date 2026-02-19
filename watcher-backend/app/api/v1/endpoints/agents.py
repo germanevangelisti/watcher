@@ -1,13 +1,13 @@
 """
 API endpoints para gestión de agentes
 """
-from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
+from fastapi import APIRouter, HTTPException, Depends
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from agents.orchestrator import AgentOrchestrator
-from agents.orchestrator.state import TaskStatus, AgentType
+from agents.orchestrator.state import AgentType
 from agents.document_intelligence import DocumentIntelligenceAgent
 from agents.anomaly_detection import AnomalyDetectionAgent
 from agents.insight_reporting import InsightReportingAgent

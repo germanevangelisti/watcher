@@ -7,7 +7,6 @@ Transforms data from Boletín Oficial de Córdoba into unified DocumentSchema.
 import logging
 import re
 from datetime import date, datetime
-from pathlib import Path
 from typing import Dict, List, Optional, Any
 
 from .base_adapter import (
@@ -195,14 +194,14 @@ class ProvincialAdapter(BaseAdapter):
                 try:
                     # Try YYYY-MM-DD format
                     return datetime.fromisoformat(date_val.split()[0]).date()
-                except:
+                except Exception:
                     pass
                 
                 try:
                     # Try YYYYMMDD format
                     if len(date_val) == 8 and date_val.isdigit():
                         return datetime.strptime(date_val, '%Y%m%d').date()
-                except:
+                except Exception:
                     pass
         
         # Try parsing from filename: YYYYMMDD_N_Secc.pdf
@@ -211,7 +210,7 @@ class ProvincialAdapter(BaseAdapter):
         if match:
             try:
                 return datetime.strptime(match.group(1), '%Y%m%d').date()
-            except:
+            except Exception:
                 pass
         
         warnings.append("Could not parse date, using today as fallback")
@@ -223,7 +222,7 @@ class ProvincialAdapter(BaseAdapter):
         if 'section' in raw_data:
             try:
                 return int(raw_data['section'])
-            except:
+            except Exception:
                 pass
         
         # Try parsing from filename
@@ -232,7 +231,7 @@ class ProvincialAdapter(BaseAdapter):
         if match:
             try:
                 return int(match.group(1))
-            except:
+            except Exception:
                 pass
         
         warnings.append("Could not parse section number")

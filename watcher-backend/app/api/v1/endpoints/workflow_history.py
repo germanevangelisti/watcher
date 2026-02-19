@@ -121,13 +121,13 @@ def get_workflow_detail(
     logs = log_crud.get_workflow_logs(db, workflow_id)
     log_list = [
         {
-            "id": l.id,
-            "level": l.level,
-            "message": l.message,
-            "source": l.source,
-            "created_at": l.created_at.isoformat()
+            "id": log_entry.id,
+            "level": log_entry.level,
+            "message": log_entry.message,
+            "source": log_entry.source,
+            "created_at": log_entry.created_at.isoformat()
         }
-        for l in logs
+        for log_entry in logs
     ]
     
     # Construir respuesta
@@ -303,11 +303,11 @@ def export_workflow_results(
             ],
             "logs": [
                 {
-                    "level": l.level,
-                    "message": l.message,
-                    "created_at": l.created_at.isoformat()
+                    "level": log_entry.level,
+                    "message": log_entry.message,
+                    "created_at": log_entry.created_at.isoformat()
                 }
-                for l in logs
+                for log_entry in logs
             ]
         }
 

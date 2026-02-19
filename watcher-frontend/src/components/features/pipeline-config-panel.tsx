@@ -53,6 +53,7 @@ export function PipelineConfigPanel({
   // Sync defaults when loaded
   useEffect(() => {
     if (defaults) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- sync external defaults into local state
       setConfig(defaults)
     }
   }, [defaults])

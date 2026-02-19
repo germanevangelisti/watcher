@@ -74,7 +74,7 @@ try:
     prompt = f"Resume en 2 líneas el siguiente fragmento de boletín oficial:\n\n{text[:500]}"
     response = model.generate_content(prompt)
     
-    print(f"✅ Gemini respondió:")
+    print("✅ Gemini respondió:")
     print(f"   {response.text[:200]}...")
     
 except Exception as e:

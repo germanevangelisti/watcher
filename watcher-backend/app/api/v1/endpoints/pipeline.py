@@ -10,12 +10,11 @@ Provides endpoints for:
 """
 
 import logging
-import shutil
 import uuid
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 
-from fastapi import APIRouter, HTTPException, Depends, Header, BackgroundTasks, Request
+from fastapi import APIRouter, HTTPException, Depends, Header, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, update, delete
 
@@ -24,13 +23,8 @@ from app.db.models import Boletin, ChunkRecord, Analisis
 from app.core.config import settings
 from app.core.events import event_bus, EventType
 from app.schemas.pipeline import (
-    PipelineResponse,
-    PipelineStage,
-    StageStats,
     PipelineConfig,
     ExtractionConfig,
-    CleaningConfig as PipelineCleaningConfig,
-    ChunkingConfigSchema,
     EnrichmentConfig,
     IndexingConfig,
 )

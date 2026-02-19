@@ -74,7 +74,7 @@ class GoogleReindexer:
         print(f"📅 Fecha: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         print(f"📁 ChromaDB: {self.persist_dir}")
         print(f"🤖 Modelo: {self.model_name}")
-        print(f"📏 Dimensiones: 768")
+        print("📏 Dimensiones: 768")
         print("="*80)
         
         # Verificar API key
@@ -154,7 +154,7 @@ class GoogleReindexer:
             # Re-indexar documentos si existen
             if all_data and all_data['ids']:
                 print(f"\n   📝 Re-indexando {len(all_data['ids'])} chunks con Google AI...")
-                print(f"   ⚠️  Esto puede tomar tiempo debido a rate limits de la API")
+                print("   ⚠️  Esto puede tomar tiempo debido a rate limits de la API")
                 
                 batch_size = 50  # Batch más pequeño para evitar rate limits
                 total = len(all_data['ids'])
@@ -186,9 +186,9 @@ class GoogleReindexer:
                 
                 # Instrucciones para swap
                 print("\n   💡 Para usar la nueva colección:")
-                print(f"      1. Verificar resultados con búsquedas de prueba")
+                print("      1. Verificar resultados con búsquedas de prueba")
                 print(f"      2. Renombrar colección o actualizar código para usar '{new_collection_name}'")
-                print(f"      3. Eliminar colección antigua si todo funciona bien")
+                print("      3. Eliminar colección antigua si todo funciona bien")
                 
             else:
                 print("   ⚠️  No hay documentos previos para re-indexar")
@@ -206,7 +206,7 @@ class GoogleReindexer:
         print("="*80)
         print("✅ Re-indexación completada exitosamente")
         print(f"🤖 Modelo: Google {self.model_name}")
-        print(f"📏 Dimensiones: 768")
+        print("📏 Dimensiones: 768")
         print(f"📊 Documentos: {new_collection.count()}")
         print(f"🎯 Colección: {new_collection_name}")
         print("\n💡 Ventajas de Google embeddings:")

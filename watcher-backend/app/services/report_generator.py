@@ -5,10 +5,9 @@ Automated report generation service for analysis results, trends, and insights.
 """
 
 import logging
-from datetime import datetime, date
+from datetime import datetime
 from typing import Dict, List, Optional, Any
 from enum import Enum
-import json
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +98,7 @@ class ReportGenerator:
             self.stats["by_type"][report_type.value] += 1
             self.stats["by_format"][format.value] += 1
             
-            logger.info(f"✅ Report generated successfully")
+            logger.info("✅ Report generated successfully")
             
             return {
                 "success": True,

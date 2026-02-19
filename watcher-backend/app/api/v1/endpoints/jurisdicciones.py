@@ -5,13 +5,12 @@ API Endpoints para Jurisdicciones de Córdoba
 import logging
 from typing import List, Optional, Dict
 from fastapi import APIRouter, HTTPException, Depends, Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, or_
-from sqlalchemy.orm import selectinload
+from sqlalchemy import select, func, and_
 
 from app.db.database import get_db
-from app.db.models import Jurisdiccion, Boletin, MencionJurisdiccional, JurisdiccionTipo
+from app.db.models import Jurisdiccion, Boletin, MencionJurisdiccional
 
 logger = logging.getLogger(__name__)
 

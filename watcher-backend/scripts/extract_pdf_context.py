@@ -128,7 +128,7 @@ def extract_priority_topics(text: str) -> Dict[str, List[str]]:
 
 def generate_semantic_vocabulary(keywords_ley: List[tuple], keywords_mensaje: List[tuple], topics: Dict) -> Dict:
     """Genera vocabulario semántico fiscal"""
-    print(f"\n📝 Generando vocabulario semántico...")
+    print("\n📝 Generando vocabulario semántico...")
     
     # Combinar keywords de ambos documentos
     all_keywords = set()
@@ -188,12 +188,12 @@ def extract_priorities_summary(text: str, max_length: int = 2000) -> str:
 def main():
     """Función principal"""
     print(f"\n{'#'*80}")
-    print(f"# EXTRACTOR DE CONTEXTO PRESUPUESTARIO")
+    print("# EXTRACTOR DE CONTEXTO PRESUPUESTARIO")
     print(f"{'#'*80}")
     
     # 1. Extraer texto de Ley de Presupuesto
     print(f"\n{'='*80}")
-    print(f"FASE 1: LEY DE PRESUPUESTO")
+    print("FASE 1: LEY DE PRESUPUESTO")
     print(f"{'='*80}")
     
     if not LEY_PRESUPUESTO.exists():
@@ -203,13 +203,13 @@ def main():
     texto_ley = extract_text_from_pdf(LEY_PRESUPUESTO)
     keywords_ley = extract_keywords(texto_ley)
     
-    print(f"\n📊 Top 10 Keywords Ley de Presupuesto:")
+    print("\n📊 Top 10 Keywords Ley de Presupuesto:")
     for word, count in keywords_ley[:10]:
         print(f"   • {word:<30} {count:>4} menciones")
     
     # 2. Extraer texto de Mensaje de Elevación
     print(f"\n{'='*80}")
-    print(f"FASE 2: MENSAJE DE ELEVACIÓN")
+    print("FASE 2: MENSAJE DE ELEVACIÓN")
     print(f"{'='*80}")
     
     if not MENSAJE_ELEVACION.exists():
@@ -219,18 +219,18 @@ def main():
     texto_mensaje = extract_text_from_pdf(MENSAJE_ELEVACION, max_pages=30)
     keywords_mensaje = extract_keywords(texto_mensaje)
     
-    print(f"\n📊 Top 10 Keywords Mensaje de Elevación:")
+    print("\n📊 Top 10 Keywords Mensaje de Elevación:")
     for word, count in keywords_mensaje[:10]:
         print(f"   • {word:<30} {count:>4} menciones")
     
     # 3. Extraer tópicos prioritarios
     print(f"\n{'='*80}")
-    print(f"FASE 3: ANÁLISIS DE PRIORIDADES")
+    print("FASE 3: ANÁLISIS DE PRIORIDADES")
     print(f"{'='*80}")
     
     topics = extract_priority_topics(texto_mensaje)
     
-    print(f"\n📍 Tópicos Identificados:")
+    print("\n📍 Tópicos Identificados:")
     for topic, keywords in sorted(topics.items()):
         print(f"   • {topic}: {len(keywords)} keywords")
         print(f"     {', '.join(keywords[:5])}")
@@ -243,7 +243,7 @@ def main():
     
     # 6. Guardar outputs
     print(f"\n{'='*80}")
-    print(f"GUARDANDO ARCHIVOS")
+    print("GUARDANDO ARCHIVOS")
     print(f"{'='*80}")
     
     # Vocabulario semántico
@@ -270,7 +270,7 @@ def main():
     print(f"✓ Guardado: {priorities_path}")
     
     print(f"\n{'#'*80}")
-    print(f"# ✅ EXTRACCIÓN COMPLETADA")
+    print("# ✅ EXTRACCIÓN COMPLETADA")
     print(f"{'#'*80}\n")
 
 

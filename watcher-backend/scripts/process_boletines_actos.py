@@ -8,7 +8,6 @@ Autor: Watcher Fiscal Agent
 import asyncio
 import sys
 from pathlib import Path
-from datetime import datetime
 
 # Agregar path para imports
 sys.path.append(str(Path(__file__).parent.parent))
@@ -36,7 +35,7 @@ async def process_boletines(limit: int = None):
     parser = ActoAdministrativoParser()
     
     print(f"\n{'#'*80}")
-    print(f"# PROCESAMIENTO DE BOLETINES - EXTRACCIÓN DE ACTOS")
+    print("# PROCESAMIENTO DE BOLETINES - EXTRACCIÓN DE ACTOS")
     print(f"{'#'*80}\n")
     
     async with async_session() as session:
@@ -46,7 +45,7 @@ async def process_boletines(limit: int = None):
         
         if existing > 0:
             print(f"⚠ Ya existen {existing} actos en la base de datos")
-            print(f"✓ Eliminando para recargar...")
+            print("✓ Eliminando para recargar...")
             await session.execute("DELETE FROM actos_administrativos")
             await session.commit()
         
@@ -60,8 +59,8 @@ async def process_boletines(limit: int = None):
         print(f"📄 Boletines a procesar: {len(boletines)}")
         
         if len(boletines) == 0:
-            print(f"\n⚠ No hay boletines procesados en la base de datos")
-            print(f"   Primero ejecute el procesamiento batch de PDFs")
+            print("\n⚠ No hay boletines procesados en la base de datos")
+            print("   Primero ejecute el procesamiento batch de PDFs")
             return
         
         total_actos = 0
@@ -98,7 +97,7 @@ async def process_boletines(limit: int = None):
         
         # Estadísticas finales
         print(f"\n{'='*80}")
-        print(f"RESUMEN DE PROCESAMIENTO")
+        print("RESUMEN DE PROCESAMIENTO")
         print(f"{'='*80}")
         print(f"✓ Boletines procesados: {boletines_procesados}/{len(boletines)}")
         print(f"✓ Total actos extraídos: {total_actos}")
@@ -112,7 +111,7 @@ async def process_boletines(limit: int = None):
                 ).group_by(ActoAdministrativo.tipo_acto).order_by(func.count(ActoAdministrativo.id).desc())
             )
             
-            print(f"\n📊 ACTOS POR TIPO:")
+            print("\n📊 ACTOS POR TIPO:")
             for tipo, count in result:
                 print(f"   • {tipo:<30} {count:>4} actos")
             
@@ -124,7 +123,7 @@ async def process_boletines(limit: int = None):
                 ).group_by(ActoAdministrativo.nivel_riesgo).order_by(func.count(ActoAdministrativo.id).desc())
             )
             
-            print(f"\n📊 ACTOS POR NIVEL DE RIESGO:")
+            print("\n📊 ACTOS POR NIVEL DE RIESGO:")
             for nivel, count in result:
                 print(f"   • {nivel:<30} {count:>4} actos")
             
@@ -142,14 +141,14 @@ async def process_boletines(limit: int = None):
             top_actos = result.scalars().all()
             
             if top_actos:
-                print(f"\n💎 TOP 10 ACTOS POR MONTO:")
+                print("\n💎 TOP 10 ACTOS POR MONTO:")
                 for acto in top_actos:
                     print(f"   • ${acto.monto:>15,.0f} - {acto.tipo_acto} - {acto.organismo[:50]}")
         
         await engine.dispose()
     
     print(f"\n{'#'*80}")
-    print(f"# ✅ PROCESAMIENTO COMPLETADO")
+    print("# ✅ PROCESAMIENTO COMPLETADO")
     print(f"{'#'*80}\n")
 
 

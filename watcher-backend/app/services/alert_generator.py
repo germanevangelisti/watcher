@@ -8,7 +8,6 @@ Autor: Watcher Fiscal Agent
 import json
 from typing import Dict, List, Optional
 from dataclasses import dataclass
-from datetime import datetime
 
 
 @dataclass
@@ -125,7 +124,7 @@ class AlertGenerator:
         return AlertaCiudadana(
             tipo_alerta='LICITACION_SIN_PRESUPUESTO',
             severidad='ALTA',
-            titulo=f"Licitación sin respaldo presupuestario identificado",
+            titulo="Licitación sin respaldo presupuestario identificado",
             descripcion=f"Se detectó una {acto.get('tipo_acto', 'contratación')} ({acto.get('numero', 'S/N')}) "
                        f"del {acto.get('organismo', 'organismo no especificado')} por {monto_str} que no pudo "
                        f"vincularse con ningún programa presupuestario. Esto puede indicar falta de respaldo "

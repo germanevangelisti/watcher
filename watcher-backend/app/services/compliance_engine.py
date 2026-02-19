@@ -9,7 +9,7 @@ import json
 import hashlib
 from datetime import datetime, date
 from pathlib import Path
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
 from sqlalchemy.orm import selectinload
@@ -19,8 +19,7 @@ from ..db.models import (
     CheckResult, 
     Evidence, 
     Jurisdiccion,
-    ComplianceCheckStatus,
-    ComplianceCheckPriority
+    ComplianceCheckStatus
 )
 
 

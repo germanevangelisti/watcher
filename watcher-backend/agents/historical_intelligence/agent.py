@@ -7,16 +7,16 @@ detecta patrones sospechosos y genera alertas basadas en análisis temporal
 
 import logging
 from typing import Dict, List, Any, Optional
-from datetime import datetime, date, timedelta
+from datetime import datetime
 
-from sqlalchemy import text, select, and_, or_, func
+from sqlalchemy import text, select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import (
     EntidadExtraida, MencionEntidad, RelacionEntidad, 
-    Boletin, AlertasGestion
+    Boletin
 )
-from .patterns import PATRONES_SOSPECHOSOS, PatternRule, get_pattern, get_all_patterns
+from .patterns import PATRONES_SOSPECHOSOS
 
 logger = logging.getLogger(__name__)
 

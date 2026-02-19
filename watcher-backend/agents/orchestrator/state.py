@@ -1,7 +1,7 @@
 """
 Estado compartido para workflows de agentes
 """
-from typing import Dict, List, Any, Optional, Literal
+from typing import Dict, List, Any, Optional
 from datetime import datetime
 from pydantic import BaseModel, Field
 from enum import Enum

@@ -10,7 +10,7 @@ from pathlib import Path
 # Agregar path del backend
 sys.path.insert(0, str(Path(__file__).parent.parent / "watcher-monolith" / "backend"))
 
-from sqlalchemy import select, text
+from sqlalchemy import select
 from app.db.database import AsyncSessionLocal
 from app.db.models import Boletin
 from app.services.batch_processor import BatchProcessor
@@ -27,7 +27,7 @@ async def main():
         boletines = result.scalars().all()
         
         print(f"\n📊 Encontrados: {len(boletines)} boletines pendientes")
-        print(f"🎯 Procesando los primeros 50...\n")
+        print("🎯 Procesando los primeros 50...\n")
         
         if not boletines:
             print("✅ No hay boletines pendientes para procesar")
@@ -57,7 +57,7 @@ async def main():
                 
                 if result.get("status") == "success":
                     procesados += 1
-                    print(f"  ✅ Procesado exitosamente")
+                    print("  ✅ Procesado exitosamente")
                 else:
                     errores += 1
                     print(f"  ❌ Error: {result.get('error', 'Unknown')}")
@@ -67,7 +67,7 @@ async def main():
                 print(f"  ❌ Error: {str(e)}")
         
         print("\n" + "=" * 60)
-        print(f"  RESUMEN")
+        print("  RESUMEN")
         print("=" * 60)
         print(f"✅ Procesados:  {procesados}")
         print(f"❌ Errores:     {errores}")

@@ -109,7 +109,6 @@ async def get_boletines(
     status: Optional[str] = None
 ) -> List[Boletin]:
     """Obtiene lista de boletines con filtros opcionales."""
-    from sqlalchemy.orm import selectinload
     query = select(Boletin).options(selectinload(Boletin.jurisdiccion)).offset(skip).limit(limit)
     if status:
         query = query.where(Boletin.status == status)

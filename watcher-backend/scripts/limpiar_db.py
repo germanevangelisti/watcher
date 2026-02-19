@@ -7,7 +7,6 @@ Comando: python ../../scripts/limpiar_db.py
 """
 
 import asyncio
-import os
 from pathlib import Path
 
 # Asegurar que estamos en el directorio correcto
@@ -86,9 +85,9 @@ async def limpiar_base_datos():
             
             if count_sync > 0:
                 await db.execute(text("DELETE FROM sync_state"))
-                print(f"   ✅ Estado de sync reseteado")
+                print("   ✅ Estado de sync reseteado")
             else:
-                print(f"   ℹ️  No hay estado de sync para resetear")
+                print("   ℹ️  No hay estado de sync para resetear")
             
             # 6. Resetear estados de boletines
             print("\n📄 Reseteando estados de boletines...")
@@ -104,7 +103,7 @@ async def limpiar_base_datos():
                     updated_at = CURRENT_TIMESTAMP
                 WHERE status != 'pending'
             """))
-            print(f"   ✅ Estados de boletines reseteados a 'pending'")
+            print("   ✅ Estados de boletines reseteados a 'pending'")
             
             # 7. Mantener jurisdicciones (no eliminar)
             result = await db.execute(text("SELECT COUNT(*) FROM jurisdicciones"))

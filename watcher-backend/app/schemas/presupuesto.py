@@ -4,7 +4,7 @@ Schemas for Presupuesto endpoints
 
 from pydantic import BaseModel
 from typing import Optional, List
-from datetime import date, datetime
+from datetime import date
 
 class ProgramaBase(BaseModel):
     ejercicio: int

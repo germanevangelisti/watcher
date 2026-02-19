@@ -17,9 +17,8 @@ from typing import List, Dict, Optional
 sys.path.append(str(Path(__file__).parent.parent))
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy import select, func, text, delete
+from sqlalchemy import select, func, delete
 from app.db.models import PresupuestoBase, MetricasGestion
-from app.core.config import settings
 
 
 # Rutas
@@ -34,7 +33,7 @@ async def load_ml_dataset():
     print(f"📖 Cargando dataset ML desde: {ML_DATASET_PATH}")
     
     if not ML_DATASET_PATH.exists():
-        print(f"⚠ Dataset ML no encontrado. Buscando archivos individuales...")
+        print("⚠ Dataset ML no encontrado. Buscando archivos individuales...")
         return None
     
     with open(ML_DATASET_PATH, 'r', encoding='utf-8') as f:
@@ -52,7 +51,7 @@ async def load_comparison_data():
     print(f"📖 Cargando comparación desde: {COMPARISON_PATH}")
     
     if not COMPARISON_PATH.exists():
-        print(f"⚠ Archivo de comparación no encontrado")
+        print("⚠ Archivo de comparación no encontrado")
         return None
     
     with open(COMPARISON_PATH, 'r', encoding='utf-8') as f:
@@ -67,7 +66,7 @@ async def load_comparison_data():
 async def populate_presupuesto_base(session: AsyncSession, programas: List[Dict]) -> int:
     """Carga datos base de presupuesto"""
     print(f"\n{'='*80}")
-    print(f"CARGANDO PRESUPUESTO BASE")
+    print("CARGANDO PRESUPUESTO BASE")
     print(f"{'='*80}")
     
     # Agrupar por key única para evitar duplicados (tomar el más reciente)
@@ -129,7 +128,7 @@ async def populate_presupuesto_base(session: AsyncSession, programas: List[Dict]
 async def populate_metricas_gestion(session: AsyncSession, comparisons: List[Dict], programas: List[Dict]) -> int:
     """Carga métricas de gestión y comparaciones temporales"""
     print(f"\n{'='*80}")
-    print(f"CARGANDO MÉTRICAS DE GESTIÓN")
+    print("CARGANDO MÉTRICAS DE GESTIÓN")
     print(f"{'='*80}")
     
     # Limpiar métricas existentes
@@ -214,7 +213,7 @@ async def populate_metricas_gestion(session: AsyncSession, comparisons: List[Dic
     
     # Agregar métricas de comparación marzo-junio
     if comparisons:
-        print(f"\n  Agregando comparaciones temporales...")
+        print("\n  Agregando comparaciones temporales...")
         for comp in comparisons[:100]:  # Limitar para no saturar
             try:
                 # Buscar métrica de junio para este organismo
@@ -231,7 +230,7 @@ async def populate_metricas_gestion(session: AsyncSession, comparisons: List[Dic
                     metrica.variacion_mes_anterior = comp.get('delta_ejecucion_pct', 0.0)
                     metrica.desvio_presupuestario = comp.get('velocidad_mensual', 0.0)
             
-            except Exception as e:
+            except Exception:
                 continue
     
     await session.commit()
@@ -248,7 +247,7 @@ async def populate_database(ml_data: dict, comparison_data: Optional[dict]):
     
     async with async_session() as session:
         print(f"\n{'='*80}")
-        print(f"POPULANDO BASE DE DATOS - MULTI-PERÍODO")
+        print("POPULANDO BASE DE DATOS - MULTI-PERÍODO")
         print(f"{'='*80}")
         
         # Verificar si ya hay datos
@@ -259,12 +258,12 @@ async def populate_database(ml_data: dict, comparison_data: Optional[dict]):
             print(f"⚠ Base de datos ya tiene {existing_count} registros en PresupuestoBase")
             response = input("¿Desea eliminar y recargar? (s/N): ").strip().lower()
             if response == 's':
-                print(f"✓ Eliminando registros existentes...")
+                print("✓ Eliminando registros existentes...")
                 await session.execute(delete(PresupuestoBase))
                 await session.commit()
-                print(f"✓ Registros existentes eliminados")
+                print("✓ Registros existentes eliminados")
             else:
-                print(f"⚠ Manteniendo registros existentes, solo actualizando métricas")
+                print("⚠ Manteniendo registros existentes, solo actualizando métricas")
         
         # Cargar presupuesto base
         if existing_count == 0 or response == 's':
@@ -278,7 +277,7 @@ async def populate_database(ml_data: dict, comparison_data: Optional[dict]):
         
         # Resumen final
         print(f"\n{'='*80}")
-        print(f"RESUMEN DE CARGA")
+        print("RESUMEN DE CARGA")
         print(f"{'='*80}")
         print(f"✓ Programas en PresupuestoBase: {programas_cargados}")
         print(f"✓ Métricas de gestión: {metricas_cargadas}")
@@ -290,7 +289,7 @@ async def populate_database(ml_data: dict, comparison_data: Optional[dict]):
         total_metricas = result.scalar()
         
         print(f"\n{'='*80}")
-        print(f"VERIFICACIÓN FINAL")
+        print("VERIFICACIÓN FINAL")
         print(f"{'='*80}")
         print(f"✓ Total registros PresupuestoBase: {total_presupuesto}")
         print(f"✓ Total registros MetricasGestion: {total_metricas}")
@@ -307,7 +306,7 @@ async def populate_database(ml_data: dict, comparison_data: Optional[dict]):
         )
         
         print(f"\n{'='*80}")
-        print(f"TOP 10 ORGANISMOS POR PRESUPUESTO")
+        print("TOP 10 ORGANISMOS POR PRESUPUESTO")
         print(f"{'='*80}")
         for organismo, count, total in result:
             print(f"  • {organismo[:50]:<50} ${total:>15,.0f} ({count} progs)")
@@ -318,7 +317,7 @@ async def populate_database(ml_data: dict, comparison_data: Optional[dict]):
 async def main():
     """Función principal multi-período"""
     print(f"\n{'#'*80}")
-    print(f"# CARGA DE PRESUPUESTO A BASE DE DATOS - MULTI-PERÍODO")
+    print("# CARGA DE PRESUPUESTO A BASE DE DATOS - MULTI-PERÍODO")
     print(f"{'#'*80}\n")
     
     try:
@@ -326,8 +325,8 @@ async def main():
         ml_data = await load_ml_dataset()
         
         if not ml_data:
-            print(f"\n❌ Error: No se encontró dataset ML")
-            print(f"   Primero ejecute: python scripts/parse_excel_presupuesto.py")
+            print("\n❌ Error: No se encontró dataset ML")
+            print("   Primero ejecute: python scripts/parse_excel_presupuesto.py")
             sys.exit(1)
         
         # Cargar comparaciones
@@ -337,16 +336,16 @@ async def main():
         await populate_database(ml_data, comparison_data)
         
         print(f"\n{'#'*80}")
-        print(f"# ✅ CARGA COMPLETADA EXITOSAMENTE")
+        print("# ✅ CARGA COMPLETADA EXITOSAMENTE")
         print(f"{'#'*80}\n")
         print(f"✓ Datos de {len(ml_data['metadata'].get('periodos', []))} períodos cargados")
-        print(f"✓ Base de datos lista para análisis temporal")
+        print("✓ Base de datos lista para análisis temporal")
         print(f"\n{'#'*80}\n")
     
     except FileNotFoundError as e:
-        print(f"\n❌ Error: Archivo no encontrado")
+        print("\n❌ Error: Archivo no encontrado")
         print(f"   {e}")
-        print(f"\n   Primero ejecute: python scripts/parse_excel_presupuesto.py")
+        print("\n   Primero ejecute: python scripts/parse_excel_presupuesto.py")
         sys.exit(1)
     
     except Exception as e:

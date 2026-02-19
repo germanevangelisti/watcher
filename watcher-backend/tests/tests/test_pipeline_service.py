@@ -14,7 +14,7 @@ project_root = Path(__file__).parent.parent / "watcher-monolith" / "backend"
 sys.path.insert(0, str(project_root))
 
 from app.services.pipeline_service import PipelineService, get_pipeline_service
-from app.schemas.pipeline import PipelineOptions, PipelineStage
+from app.schemas.pipeline import PipelineOptions
 from app.db.models import Base
 
 

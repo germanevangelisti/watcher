@@ -15,7 +15,6 @@ async def run_migration():
     async with engine.begin() as conn:
         # Import all models to ensure they're registered
         # The import of Base already has all models registered via their class definitions
-        from app.db import models  # This will register all models
         
         # Create all tables
         await conn.run_sync(Base.metadata.create_all)

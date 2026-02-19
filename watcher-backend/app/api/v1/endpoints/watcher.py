@@ -2,8 +2,8 @@
 API endpoints para el servicio Watcher
 """
 
-from typing import List, Dict, Optional
-from fastapi import APIRouter, UploadFile, File, HTTPException, BackgroundTasks
+from typing import Dict, Optional
+from fastapi import APIRouter, UploadFile, File, HTTPException
 from pathlib import Path
 
 from app.core.config import settings

@@ -8,7 +8,7 @@ import pytest
 from pathlib import Path
 from datetime import date
 import sys
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 # Add backend to path
 backend_path = Path(__file__).resolve().parent.parent.parent / "watcher-monolith" / "backend"
@@ -99,7 +99,7 @@ async def test_scraper_range_to_adapter_batch(temp_output_dir, mock_http_client)
 def test_scraper_output_matches_adapter_input(temp_output_dir):
     """Test that scraper output format matches adapter expected input."""
     scraper = create_provincial_scraper(output_dir=temp_output_dir)
-    adapter = create_provincial_adapter()
+    _adapter = create_provincial_adapter()
     
     # Create mock scraper result
     target_date = date(2026, 1, 15)

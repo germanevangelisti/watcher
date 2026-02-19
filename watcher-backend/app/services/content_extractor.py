@@ -5,14 +5,10 @@ DEPRECADO: Este módulo se mantiene por compatibilidad.
 Usar ExtractorRegistry con detect_sections=True en su lugar.
 """
 
-import os
 import re
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List
 import logging
-import json
-import aiofiles
-from datetime import datetime
 import warnings
 
 logger = logging.getLogger(__name__)

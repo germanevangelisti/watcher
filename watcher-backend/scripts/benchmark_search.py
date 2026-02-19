@@ -8,7 +8,7 @@ comparando diferentes modelos y métricas.
 import asyncio
 import sys
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Dict, Any
 import time
 import json
 from datetime import datetime
@@ -152,12 +152,12 @@ class SearchBenchmark:
         }
         
         # Imprimir resumen
-        print(f"\n📊 Métricas:")
+        print("\n📊 Métricas:")
         print(f"   Precision@10: {precision_at_10:.1%}")
         print(f"   Score promedio: {avg_score:.1%}")
         print(f"   Resultados relevantes: {relevant_count}/10")
         print(f"   Tiempo de ejecución: {execution_time:.0f}ms")
-        print(f"   ✅ PASÓ" if passed else "   ❌ NO PASÓ")
+        print("   ✅ PASÓ" if passed else "   ❌ NO PASÓ")
         
         return evaluation
     

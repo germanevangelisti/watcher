@@ -20,6 +20,10 @@ from pathlib import Path
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
+from ..schemas.pipeline import (
+    PipelineStage, PipelineOptions, StageStats, PipelineResponse
+)
+
 logger = logging.getLogger(__name__)
 
 # Import services
@@ -43,11 +47,6 @@ try:
 except ImportError:
     logger.warning("IndexingService not available")
     INDEXING_SERVICE_AVAILABLE = False
-
-# Import schemas
-from ..schemas.pipeline import (
-    PipelineStage, PipelineOptions, StageStats, PipelineStatus, PipelineResponse
-)
 
 # Import extractors
 try:

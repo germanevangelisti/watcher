@@ -6,7 +6,6 @@ Tests specialized agents: KBA, RAGA, Document Intelligence.
 
 import pytest
 from pathlib import Path
-from datetime import date
 import sys
 
 # Add paths

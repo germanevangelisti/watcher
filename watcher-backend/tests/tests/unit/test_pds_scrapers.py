@@ -7,7 +7,7 @@ Tests the scraper interfaces and provincial scraper implementation.
 import pytest
 from datetime import date
 from pathlib import Path
-from unittest.mock import MagicMock, AsyncMock, patch
+from unittest.mock import patch
 import sys
 
 # Add backend to path

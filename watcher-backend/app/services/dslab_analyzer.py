@@ -3,12 +3,11 @@
 """
 import re
 import time
-from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime
 
 try:
-    import pdfplumber
+    import pdfplumber  # noqa: F401
     PDF_AVAILABLE = True
 except ImportError:
     PDF_AVAILABLE = False
@@ -206,7 +205,7 @@ class DSLabAnalyzer:
                 return float(num_part.group(0))
             
             return None
-        except:
+        except Exception:
             return None
     
     def _extract_beneficiaries(self, text: str) -> List[str]:

@@ -5,8 +5,6 @@ Tests for IndexingService - Triple indexing orchestration
 import pytest
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
-from datetime import datetime
-import asyncio
 
 # Import the service
 import sys
@@ -14,8 +12,8 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent / "watcher-monolith" / "backend"
 sys.path.insert(0, str(project_root))
 
-from app.services.indexing_service import IndexingService, get_indexing_service, IndexingResult
-from app.services.embedding_service import EmbeddingService, EMBEDDING_MODEL, EMBEDDING_DIM
+from app.services.indexing_service import IndexingService, get_indexing_service
+from app.services.embedding_service import EMBEDDING_MODEL, EMBEDDING_DIM
 from app.services.chunking_service import ChunkResult
 from app.db.models import Base, ChunkRecord
 

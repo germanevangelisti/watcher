@@ -11,7 +11,7 @@ PRAGMAs are set on every new connection via event listener.
 """
 
 import logging
-from sqlalchemy import event, text
+from sqlalchemy import event
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.pool import NullPool

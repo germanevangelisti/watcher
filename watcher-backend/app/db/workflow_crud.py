@@ -1,9 +1,9 @@
 """
 CRUD operations para Agent Workflows
 """
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, and_, or_
+from sqlalchemy import desc
 from datetime import datetime, timedelta
 
 from .models import AgentWorkflow, AgentTask, WorkflowLog

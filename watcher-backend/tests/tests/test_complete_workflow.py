@@ -7,13 +7,12 @@ import asyncio
 import sys
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Tuple
+from typing import Dict
 
 # Añadir el directorio raíz al path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "watcher-monolith" / "backend"))
 
 from app.db.database import AsyncSessionLocal
-from app.db import crud
 from app.db.models import Boletin, Analisis
 from app.services.pdf_service import PDFProcessor
 from app.services.processing_logger import processing_logger
@@ -98,10 +97,10 @@ class WorkflowValidator:
         """ETAPA 1: Descubrir boletines para la fecha"""
         stage = "1_discovery"
         print(f"\n{'='*80}", flush=True)
-        print(f"📋 ETAPA 1: DESCUBRIMIENTO DE BOLETINES", flush=True)
+        print("📋 ETAPA 1: DESCUBRIMIENTO DE BOLETINES", flush=True)
         print(f"{'='*80}", flush=True)
         
-        processing_logger.info(f"Iniciando etapa 1: Descubrimiento", self.session_id)
+        processing_logger.info("Iniciando etapa 1: Descubrimiento", self.session_id)
         
         try:
             print("   → Conectando a la base de datos...", flush=True)
@@ -119,7 +118,7 @@ class WorkflowValidator:
                 pdf_files = []
                 
                 if boletines_dir.exists():
-                    print(f"   → Escaneando directorio...", flush=True)
+                    print("   → Escaneando directorio...", flush=True)
                     # Buscar PDFs que coincidan con la fecha
                     for pdf_file in boletines_dir.glob("*.pdf"):
                         # Formato esperado: boletin_YYYYMMDD_N_Secc.pdf
@@ -167,7 +166,7 @@ class WorkflowValidator:
                         "warning": f"Discrepancia: {len(boletines_db)} en DB vs {len(pdf_files)} archivos",
                         "severity": "medium"
                     })
-                    processing_logger.warning(f"Discrepancia de archivos", self.session_id)
+                    processing_logger.warning("Discrepancia de archivos", self.session_id)
                 
                 print(f"\n✅ Boletines en DB: {len(boletines_db)}", flush=True)
                 print(f"✅ Archivos físicos: {len(pdf_files)}", flush=True)
@@ -188,10 +187,10 @@ class WorkflowValidator:
         """ETAPA 2: Extracción de contenido de PDFs"""
         stage = "2_extraction"
         print(f"\n{'='*80}", flush=True)
-        print(f"📄 ETAPA 2: EXTRACCIÓN DE CONTENIDO", flush=True)
+        print("📄 ETAPA 2: EXTRACCIÓN DE CONTENIDO", flush=True)
         print(f"{'='*80}", flush=True)
         
-        processing_logger.info(f"Iniciando etapa 2: Extracción", self.session_id)
+        processing_logger.info("Iniciando etapa 2: Extracción", self.session_id)
         
         try:
             print("   → Conectando a la base de datos...", flush=True)
@@ -231,7 +230,7 @@ class WorkflowValidator:
                             failed += 1
                             boletin.status = "failed"
                             boletin.error_message = f"PDF no encontrado: {pdf_path}"
-                            print(f"❌ No encontrado", flush=True)
+                            print("❌ No encontrado", flush=True)
                             processing_logger.error(f"PDF no encontrado: {boletin.filename}", self.session_id)
                             continue
                         
@@ -251,13 +250,13 @@ class WorkflowValidator:
                                 boletin.status = "failed"
                                 boletin.error_message = "Archivo de texto vacío"
                                 failed += 1
-                                print(f"⚠️  Vacío", flush=True)
+                                print("⚠️  Vacío", flush=True)
                                 processing_logger.warning(f"Texto vacío: {boletin.filename}", self.session_id)
                         else:
                             boletin.status = "failed"
                             boletin.error_message = "No se generó archivo de texto"
                             failed += 1
-                            print(f"❌ No generado", flush=True)
+                            print("❌ No generado", flush=True)
                             processing_logger.error(f"No se generó texto: {boletin.filename}", self.session_id)
                     
                     except Exception as e:
@@ -317,10 +316,10 @@ class WorkflowValidator:
         """ETAPA 3: Validación de extracción"""
         stage = "3_validation"
         print(f"\n{'='*80}", flush=True)
-        print(f"✔️  ETAPA 3: VALIDACIÓN DE EXTRACCIÓN", flush=True)
+        print("✔️  ETAPA 3: VALIDACIÓN DE EXTRACCIÓN", flush=True)
         print(f"{'='*80}", flush=True)
         
-        processing_logger.info(f"Iniciando etapa 3: Validación", self.session_id)
+        processing_logger.info("Iniciando etapa 3: Validación", self.session_id)
         
         try:
             print("   → Conectando a la base de datos...", flush=True)
@@ -416,10 +415,10 @@ class WorkflowValidator:
         """ETAPA 4: Análisis con agentes IA (opcional)"""
         stage = "4_analysis"
         print(f"\n{'='*80}")
-        print(f"🤖 ETAPA 4: ANÁLISIS CON AGENTES IA")
+        print("🤖 ETAPA 4: ANÁLISIS CON AGENTES IA")
         print(f"{'='*80}")
         
-        processing_logger.info(f"Iniciando etapa 4: Análisis IA", self.session_id)
+        processing_logger.info("Iniciando etapa 4: Análisis IA", self.session_id)
         
         # TODO: Implementar cuando esté listo el sistema de workflows
         self.results["stages"][stage]["status"] = "skipped"
@@ -433,10 +432,10 @@ class WorkflowValidator:
         """ETAPA 5: Resultados finales y métricas"""
         stage = "5_results"
         print(f"\n{'='*80}", flush=True)
-        print(f"📊 ETAPA 5: RESULTADOS FINALES", flush=True)
+        print("📊 ETAPA 5: RESULTADOS FINALES", flush=True)
         print(f"{'='*80}", flush=True)
         
-        processing_logger.info(f"Iniciando etapa 5: Resultados finales", self.session_id)
+        processing_logger.info("Iniciando etapa 5: Resultados finales", self.session_id)
         
         try:
             print("   → Calculando estadísticas finales...", flush=True)
@@ -523,7 +522,7 @@ class WorkflowValidator:
         }
         
         print(f"\n{'='*80}", flush=True)
-        print(f"📋 RESUMEN FINAL", flush=True)
+        print("📋 RESUMEN FINAL", flush=True)
         print(f"{'='*80}", flush=True)
         print(f"Estado General: {overall_status}", flush=True)
         print(f"Etapas completadas: {stages_completed}/{stages_total}", flush=True)

@@ -6,7 +6,6 @@ Script para registrar todos los boletines físicos en la base de datos
 import asyncio
 import sys
 from pathlib import Path
-from datetime import datetime
 
 # Añadir el directorio raíz del proyecto al sys.path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "watcher-monolith" / "backend"))
@@ -94,10 +93,10 @@ async def register_boletines():
         await db.commit()
         
         # Fix masivo: actualizar boletines existentes sin jurisdiccion_id
-        print(f"\n🔧 Actualizando boletines existentes sin jurisdicción...")
+        print("\n🔧 Actualizando boletines existentes sin jurisdicción...")
         result = await db.execute(
             update(Boletin)
-            .where(Boletin.jurisdiccion_id == None)
+            .where(Boletin.jurisdiccion_id.is_(None))
             .where(Boletin.fuente == 'provincial')
             .values(jurisdiccion_id=1)
         )
@@ -105,7 +104,7 @@ async def register_boletines():
         updated = result.rowcount if result.rowcount else 0
         print(f"  ✅ Actualizados: {updated} boletines")
         
-        print(f"\n📊 Resumen:")
+        print("\n📊 Resumen:")
         print(f"  ✅ Registrados:  {registered}")
         print(f"  ⏭️  Ya existían:  {skipped}")
         print(f"  🔧 Actualizados: {updated}")

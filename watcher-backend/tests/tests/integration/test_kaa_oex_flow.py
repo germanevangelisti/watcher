@@ -12,7 +12,7 @@ import sys
 backend_path = Path(__file__).resolve().parent.parent.parent / "watcher-monolith" / "backend"
 sys.path.insert(0, str(backend_path))
 
-from app.services.alert_dispatcher import AlertDispatcher, AlertPriority
+from app.services.alert_dispatcher import AlertDispatcher
 from app.services.report_generator import ReportGenerator, ReportType, ReportFormat
 
 

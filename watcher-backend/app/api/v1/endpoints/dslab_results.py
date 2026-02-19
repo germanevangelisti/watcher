@@ -3,7 +3,7 @@
 """
 from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, func, and_, or_
+from sqlalchemy import desc, func
 from typing import List, Optional, Dict, Any
 
 from app.db.sync_session import get_sync_db
@@ -13,12 +13,10 @@ from app.db.models import (
 )
 from app.schemas.dslab import (
     AnalysisResultResponse,
-    ResultWithDocument,
     RedFlagResponse,
     RedFlagStats,
     AnalysisComparisonCreate,
-    AnalysisComparisonResponse,
-    ComparisonDetail
+    AnalysisComparisonResponse
 )
 
 router = APIRouter()

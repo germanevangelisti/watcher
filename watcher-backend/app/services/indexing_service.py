@@ -18,7 +18,7 @@ import logging
 from typing import List, Dict, Optional, Any, Tuple
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, text, func, delete
+from sqlalchemy import select, text, func
 
 logger = logging.getLogger(__name__)
 

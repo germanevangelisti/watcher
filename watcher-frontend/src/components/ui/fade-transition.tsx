@@ -22,22 +22,14 @@ export function FadeTransition({
 
   useEffect(() => {
     if (isLoading) {
-      // Fade out current content
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- animation state machine
       setIsVisible(false)
-      // Show skeleton after fade out
-      const timer = setTimeout(() => {
-        setShouldShowSkeleton(true)
-      }, duration)
-      return () => clearTimeout(timer)
-    } else {
-      // Hide skeleton
-      setShouldShowSkeleton(false)
-      // Fade in new content
-      const timer = setTimeout(() => {
-        setIsVisible(true)
-      }, 50)
+      const timer = setTimeout(() => setShouldShowSkeleton(true), duration)
       return () => clearTimeout(timer)
     }
+    setShouldShowSkeleton(false)
+    const timer = setTimeout(() => setIsVisible(true), 50)
+    return () => clearTimeout(timer)
   }, [isLoading, duration])
 
   return (

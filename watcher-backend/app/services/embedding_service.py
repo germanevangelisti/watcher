@@ -10,9 +10,7 @@ This service handles:
 """
 
 import logging
-import hashlib
-import time
-from typing import List, Dict, Optional, Any, Tuple
+from typing import List, Dict, Optional, Any
 from pathlib import Path
 import os
 
@@ -20,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 # Import TextCleaner
 try:
-    from .text_cleaner import TextCleaner, CleaningConfig
+    from .text_cleaner import TextCleaner
     TEXT_CLEANER_AVAILABLE = True
 except ImportError:
     logger.warning("TextCleaner not available")
@@ -28,7 +26,7 @@ except ImportError:
 
 # Import ChunkingService
 try:
-    from .chunking_service import ChunkingService, ChunkingConfig, ChunkResult
+    from .chunking_service import ChunkingService, ChunkingConfig
     CHUNKING_SERVICE_AVAILABLE = True
 except ImportError:
     logger.warning("ChunkingService not available")

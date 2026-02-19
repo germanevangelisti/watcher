@@ -12,7 +12,6 @@ import re
 import asyncio
 from pathlib import Path
 from typing import List, Optional, Dict, Any
-from datetime import datetime
 import httpx
 
 from fastapi import (
@@ -29,7 +28,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
 from app.db import crud
 from app.core.config import settings
-from app.services.hash_utils import compute_sha256_bytes, compute_sha256
+from app.services.hash_utils import compute_sha256_bytes
 
 router = APIRouter()
 
@@ -269,7 +268,7 @@ async def upload_files(
                 duplicates += 1
             else:
                 # Save file
-                filepath = await save_uploaded_file(
+                _filepath = await save_uploaded_file(
                     upload_file.filename,
                     content,
                     date=date if parsed['valid'] else None
@@ -415,7 +414,7 @@ async def download_from_url(
         
         if not is_duplicate:
             # Save file
-            filepath = await save_uploaded_file(filename, content, date=date)
+            _filepath = await save_uploaded_file(filename, content, date=date)
         
         await db.commit()
         

@@ -132,12 +132,13 @@ export function useWebSocket({
   }, [reconnectInterval, maxReconnectAttempts])
 
   // Keep connectRef synced
-  connectRef.current = connect
+  useEffect(() => { connectRef.current = connect }, [connect])
 
   useEffect(() => {
     if (!enabled) {
       wsRef.current?.close()
       wsRef.current = null
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- synchronous cleanup on disable
       setIsConnected(false)
       return
     }

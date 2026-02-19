@@ -11,16 +11,13 @@ import json
 import sys
 import numpy as np
 from pathlib import Path
-from datetime import date, datetime
-from typing import List, Dict, Tuple, Optional
+from datetime import datetime
+from typing import List, Dict
 from collections import defaultdict
 
 # Agregar path para imports
 sys.path.append(str(Path(__file__).parent.parent))
 
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy import select, func
-from app.db.models import PresupuestoBase, MetricasGestion
 
 # Rutas
 BASE_DIR = Path(__file__).parent.parent.parent.parent
@@ -47,7 +44,7 @@ class BudgetTrendAnalyzer:
     
     def calculate_execution_velocity(self) -> List[Dict]:
         """Calcula velocidad de ejecución mensual"""
-        print(f"\n📈 Calculando velocidad de ejecución...")
+        print("\n📈 Calculando velocidad de ejecución...")
         
         velocities = []
         for comp in self.comparisons:
@@ -80,7 +77,7 @@ class BudgetTrendAnalyzer:
     
     def calculate_execution_efficiency(self) -> Dict:
         """Calcula índice de eficiencia de ejecución (0-100)"""
-        print(f"\n⚡ Calculando eficiencia de ejecución...")
+        print("\n⚡ Calculando eficiencia de ejecución...")
         
         efficiency_scores = []
         
@@ -139,7 +136,7 @@ class BudgetTrendAnalyzer:
     
     def detect_anomalous_patterns(self, velocities: List[Dict]) -> List[Dict]:
         """Detecta patrones anómalos en ejecución"""
-        print(f"\n🔍 Detectando anomalías de ejecución...")
+        print("\n🔍 Detectando anomalías de ejecución...")
         
         anomalies = []
         
@@ -204,7 +201,7 @@ class BudgetTrendAnalyzer:
     
     def calculate_consistency_index(self) -> Dict:
         """Calcula índice de consistencia de ejecución (varianza)"""
-        print(f"\n📊 Calculando índice de consistencia...")
+        print("\n📊 Calculando índice de consistencia...")
         
         # Agrupar por organismo
         by_organismo = defaultdict(list)
@@ -259,7 +256,7 @@ class BudgetTrendAnalyzer:
     
     def generate_forecasts(self, velocities: List[Dict]) -> Dict:
         """Genera proyecciones para Q3 y Q4"""
-        print(f"\n🔮 Generando proyecciones Q3/Q4...")
+        print("\n🔮 Generando proyecciones Q3/Q4...")
         
         # Agrupar proyecciones por organismo
         by_organismo = defaultdict(list)
@@ -320,7 +317,7 @@ class BudgetTrendAnalyzer:
     def run_full_analysis(self) -> Dict:
         """Ejecuta análisis completo"""
         print(f"\n{'='*80}")
-        print(f"ANÁLISIS DE TENDENCIAS PRESUPUESTARIAS 2025")
+        print("ANÁLISIS DE TENDENCIAS PRESUPUESTARIAS 2025")
         print(f"{'='*80}")
         
         # 1. Velocidad de ejecución
@@ -365,7 +362,7 @@ class BudgetTrendAnalyzer:
 
 async def load_data():
     """Carga datos necesarios para análisis"""
-    print(f"📖 Cargando datos para análisis...")
+    print("📖 Cargando datos para análisis...")
     
     with open(ML_DATASET_PATH, 'r', encoding='utf-8') as f:
         ml_data = json.load(f)
@@ -380,7 +377,7 @@ async def load_data():
 
 async def save_analysis(analysis: Dict):
     """Guarda resultados del análisis"""
-    print(f"\n💾 Guardando análisis...")
+    print("\n💾 Guardando análisis...")
     
     with open(OUTPUT_PATH, 'w', encoding='utf-8') as f:
         json.dump(analysis, f, ensure_ascii=False, indent=2)
@@ -391,7 +388,7 @@ async def save_analysis(analysis: Dict):
 async def main():
     """Función principal"""
     print(f"\n{'#'*80}")
-    print(f"# ANÁLISIS DE TENDENCIAS PRESUPUESTARIAS")
+    print("# ANÁLISIS DE TENDENCIAS PRESUPUESTARIAS")
     print(f"{'#'*80}\n")
     
     try:
@@ -409,7 +406,7 @@ async def main():
         
         # Mostrar resumen
         print(f"\n{'='*80}")
-        print(f"RESUMEN DE ANÁLISIS")
+        print("RESUMEN DE ANÁLISIS")
         print(f"{'='*80}")
         print(f"✓ Programas analizados: {analysis['summary']['total_programas_analizados']}")
         print(f"✓ Eficiencia promedio: {analysis['summary']['avg_efficiency_score']:.2f}/100")
@@ -418,7 +415,7 @@ async def main():
         print(f"✓ Proyecciones alto riesgo: {analysis['summary']['high_risk_forecasts']}")
         
         print(f"\n{'#'*80}")
-        print(f"# ✅ ANÁLISIS COMPLETADO")
+        print("# ✅ ANÁLISIS COMPLETADO")
         print(f"{'#'*80}\n")
     
     except Exception as e:

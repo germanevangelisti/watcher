@@ -11,8 +11,7 @@ from .state import (
     WorkflowState, 
     TaskDefinition, 
     TaskStatus, 
-    AgentType,
-    AgentMessage
+    AgentType
 )
 from app.db.workflow_crud import workflow_crud, task_crud, log_crud
 from app.db.database import AsyncSessionLocal
@@ -228,7 +227,7 @@ class AgentOrchestrator:
                     # Aplicar modificaciones si las hay
                     if modifications:
                         task.parameters.update(modifications)
-                        workflow.add_log(f"Parámetros modificados por usuario")
+                        workflow.add_log("Parámetros modificados por usuario")
                 
                 # Cambiar a aprobado
                 task.status = TaskStatus.APPROVED

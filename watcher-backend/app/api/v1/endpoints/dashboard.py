@@ -3,10 +3,9 @@ Dashboard endpoint with real data from Watcher Agent
 """
 
 from fastapi import APIRouter, Depends
-from sqlalchemy import func, desc, extract
+from sqlalchemy import func, desc
 from sqlalchemy.orm import Session
-from datetime import datetime, timedelta
-from typing import Dict, List, Any
+from typing import Dict, Any
 
 from app.db.sync_session import get_sync_db
 from app.db.models import (
@@ -98,7 +97,7 @@ async def get_dashboard_stats(
                 risk_distribution['low'] = count
         
         # Documentos por mes (basado en fecha del boletín: YYYYMMDD)
-        boletines_with_dates = db.query(Boletin.date).filter(Boletin.date != None).all()
+        boletines_with_dates = db.query(Boletin.date).filter(Boletin.date.isnot(None)).all()
         
         monthly_counts = {}
         for (date_str,) in boletines_with_dates:

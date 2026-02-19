@@ -8,7 +8,7 @@ from datetime import datetime, date
 from fastapi import APIRouter, HTTPException, Depends, Query, BackgroundTasks
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, or_
+from sqlalchemy import select, func
 
 from app.db.database import get_db
 from app.db.models import MencionJurisdiccional, Boletin, Jurisdiccion

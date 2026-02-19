@@ -6,7 +6,6 @@ Prueba la cadena completa: Extracción -> Análisis con Gemini
 
 import requests
 import time
-import json
 import sys
 import sqlite3
 from pathlib import Path
@@ -137,7 +136,7 @@ for i in range(max_retries):
             if logs:
                 last_log = logs[-1]
                 print(f"  [{i+1}] {last_log.get('message', 'Processing...')}")
-    except:
+    except Exception:
         pass
     
     # Verificar status del documento
@@ -151,7 +150,7 @@ for i in range(max_retries):
     if r_status.ok:
         doc = r_status.json()[0]
         if doc['status'] == 'processed':
-            print_success(f"Documento procesado exitosamente!")
+            print_success("Documento procesado exitosamente!")
             break
         elif doc['status'] == 'failed':
             print_error(f"Documento falló: {doc.get('error_message')}")
@@ -180,7 +179,7 @@ try:
             level = log.get('level', 'info').upper()
             msg = log.get('message', '')
             print(f"  [{level}] {msg}")
-except:
+except Exception:
     print("  (Logs no disponibles)")
 
 print(f"\n{'='*60}\n")

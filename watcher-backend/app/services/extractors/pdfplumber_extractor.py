@@ -9,7 +9,6 @@ import time
 import logging
 from pathlib import Path
 from datetime import datetime
-from typing import Optional
 
 try:
     import pdfplumber

@@ -4,10 +4,8 @@
 Organiza los PDFs existentes en estructura año/mes para mejor gestión
 """
 
-import os
 import shutil
 from pathlib import Path
-from datetime import datetime
 from collections import defaultdict
 
 # Directorios
@@ -59,7 +57,7 @@ def create_directory_structure(base_dir: Path, years: list):
             dir_path = base_dir / year / month
             dir_path.mkdir(parents=True, exist_ok=True)
     
-    print(f"✅ Estructura creada con formato 01-12")
+    print("✅ Estructura creada con formato 01-12")
 
 def analyze_existing_files(source_dir: Path):
     """Analiza archivos existentes y genera reporte"""
@@ -102,21 +100,21 @@ def analyze_existing_files(source_dir: Path):
             print(f"⚠️ Archivo inválido: {pdf_file.name}")
     
     # Imprimir reporte
-    print(f"\n📈 REPORTE DE ARCHIVOS:")
+    print("\n📈 REPORTE DE ARCHIVOS:")
     print(f"  Total archivos: {stats['total']}")
     print(f"  Válidos: {stats['valid']}")
     print(f"  Inválidos: {stats['invalid']}")
     print(f"  Tamaño total: {stats['size_mb']:.2f} MB")
     
-    print(f"\n📅 Por año:")
+    print("\n📅 Por año:")
     for year in sorted(stats['by_year'].keys()):
         print(f"  {year}: {stats['by_year'][year]} archivos")
     
-    print(f"\n📆 Por mes:")
+    print("\n📆 Por mes:")
     for month in sorted(stats['by_month'].keys()):
         print(f"  {month}: {stats['by_month'][month]} archivos")
     
-    print(f"\n📑 Por sección:")
+    print("\n📑 Por sección:")
     for section in sorted(stats['by_section'].keys()):
         print(f"  Sección {section}: {stats['by_section'][section]} archivos")
     
@@ -127,7 +125,7 @@ def backup_existing_files(source_dir: Path, backup_dir: Path):
     print(f"\n💾 Creando backup en: {backup_dir}")
     
     if backup_dir.exists():
-        print(f"⚠️ El backup ya existe. ¿Sobrescribir? (y/n): ", end='')
+        print("⚠️ El backup ya existe. ¿Sobrescribir? (y/n): ", end='')
         response = input().lower()
         if response != 'y':
             print("❌ Backup cancelado")
@@ -190,7 +188,7 @@ def move_files_to_structure(files_to_move: list, target_dir: Path, dry_run: bool
             print(f"📋 [DRY RUN] Movería: {filename} → {year}/{month}/")
             moved += 1
     
-    print(f"\n📊 RESUMEN:")
+    print("\n📊 RESUMEN:")
     print(f"  Movidos: {moved}")
     print(f"  Omitidos (ya existen): {skipped}")
     print(f"  Errores: {errors}")
@@ -215,7 +213,7 @@ def verify_organization(target_dir: Path):
                     structure[year][month] = pdf_count
                     total_files += pdf_count
     
-    print(f"\n📊 ESTRUCTURA FINAL:")
+    print("\n📊 ESTRUCTURA FINAL:")
     for year in sorted(structure.keys()):
         print(f"\n📅 {year}:")
         for month in sorted(structure[year].keys()):
@@ -243,7 +241,7 @@ def main():
     
     # 2. Confirmar acción
     print(f"\n⚠️  Se moverán {len(files_to_move)} archivos")
-    print(f"¿Continuar? (y/n): ", end='')
+    print("¿Continuar? (y/n): ", end='')
     response = input().lower()
     
     if response != 'y':
@@ -265,7 +263,7 @@ def main():
     print("=" * 60)
     move_files_to_structure(files_to_move, TARGET_DIR, dry_run=True)
     
-    print(f"\n¿Proceder con el movimiento real? (y/n): ", end='')
+    print("\n¿Proceder con el movimiento real? (y/n): ", end='')
     response = input().lower()
     
     if response != 'y':
@@ -287,18 +285,18 @@ def main():
     print("=" * 60)
     print(f"Archivos organizados: {total_organized}")
     print(f"Backup disponible en: {BACKUP_DIR}")
-    print(f"\nEstructura:")
+    print("\nEstructura:")
     print(f"  {TARGET_DIR}/")
-    print(f"    ├── 2025/")
-    print(f"    │   ├── 01/")
+    print("    ├── 2025/")
+    print("    │   ├── 01/")
     print(f"    │   ├── 08/  ← {stats['by_month'].get('2025-08', 0)} archivos")
-    print(f"    │   └── ...")
-    print(f"    └── ...")
+    print("    │   └── ...")
+    print("    └── ...")
     
-    print(f"\n💡 Próximos pasos:")
+    print("\n💡 Próximos pasos:")
     print(f"  1. Verificar archivos en {TARGET_DIR}")
-    print(f"  2. Actualizar downloader para usar nueva estructura")
-    print(f"  3. Ejecutar análisis con DS Lab")
+    print("  2. Actualizar downloader para usar nueva estructura")
+    print("  3. Ejecutar análisis con DS Lab")
 
 if __name__ == "__main__":
     main()

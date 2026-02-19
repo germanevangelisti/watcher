@@ -55,7 +55,7 @@ def start_download(start_date: str, end_date: str, month_name: str):
         
         task_id = result.get("task_id")
         if not task_id:
-            print(f"❌ Error: No se obtuvo task_id")
+            print("❌ Error: No se obtuvo task_id")
             return None
         
         print(f"✅ Descarga iniciada - Task ID: {task_id}")
@@ -135,7 +135,7 @@ def main():
     print("="*60)
     print(f"\nMeses a descargar: {', '.join([m['name'] for m in MONTHS])}")
     print(f"Secciones: {', '.join(str(s) for s in SECTIONS)}")
-    print(f"Omitir fines de semana: Sí")
+    print("Omitir fines de semana: Sí")
     print("\n" + "="*60 + "\n")
     
     total_months = len(MONTHS)
@@ -167,7 +167,7 @@ def main():
         
         # Pequeña pausa entre meses
         if i < total_months:
-            print(f"\n⏸️  Pausa de 2 segundos antes del próximo mes...\n")
+            print("\n⏸️  Pausa de 2 segundos antes del próximo mes...\n")
             time.sleep(2)
     
     # Resumen final
@@ -188,7 +188,7 @@ def main():
             print(f"   Tamaño total: {summary.get('total_size_mb', 0):.2f} MB")
             print(f"   Meses con datos: {summary.get('months_with_data', 0)}")
             print()
-    except:
+    except Exception:
         pass
     
     return 0 if failed == 0 else 1

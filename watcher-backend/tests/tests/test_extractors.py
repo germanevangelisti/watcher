@@ -5,15 +5,12 @@ Tests para los extractores de PDF unificados.
 
 import pytest
 from pathlib import Path
-from datetime import datetime
-import asyncio
 
 from watcher_monolith.backend.app.services.extractors import (
     PyPDF2Extractor,
     PdfPlumberExtractor
 )
 from watcher_monolith.backend.app.schemas.extraction import (
-    ExtractedContent,
     ExtractionMethod,
     SectionType
 )
@@ -54,7 +51,6 @@ class TestPyPDF2Extractor:
         pdf_path = tmp_path / "test.pdf"
         
         # Crear un PDF simple con PyPDF2
-        from PyPDF2 import PdfWriter
         from reportlab.pdfgen import canvas
         from reportlab.lib.pagesizes import letter
         import io
@@ -89,7 +85,6 @@ class TestPyPDF2Extractor:
         # Crear un PDF con contenido que active detección de secciones
         pdf_path = tmp_path / "test_sections.pdf"
         
-        from PyPDF2 import PdfWriter
         from reportlab.pdfgen import canvas
         from reportlab.lib.pagesizes import letter
         import io

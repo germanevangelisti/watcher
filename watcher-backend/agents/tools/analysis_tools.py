@@ -3,7 +3,6 @@ Herramientas de análisis para los agentes
 """
 import logging
 from typing import List, Dict, Any, Optional
-from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func, desc, and_, or_, case, select
 from collections import defaultdict

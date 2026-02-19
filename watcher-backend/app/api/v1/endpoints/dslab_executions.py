@@ -15,7 +15,6 @@ from app.db.models import (
 )
 from app.schemas.dslab import (
     AnalysisExecutionCreate,
-    AnalysisExecutionUpdate,
     AnalysisExecutionResponse,
     ExecutionProgress,
     ExecutionSummary

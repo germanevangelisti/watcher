@@ -17,8 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "watcher-monolit
 from app.db.database import AsyncSessionLocal
 from app.db.models import Boletin
 from app.services.pdf_service import PDFProcessor
-from sqlalchemy import select, and_
-from sqlalchemy.orm import selectinload
+from sqlalchemy import select
 
 
 class ExtractorTextoMasivo:
@@ -142,7 +141,7 @@ class ExtractorTextoMasivo:
                 print(f"  [{idx}/{len(boletines)}] 🔄 Procesando: {boletin.filename}...", end=" ")
                 
                 inicio = datetime.now()
-                txt_result = await self.pdf_processor.process_pdf(pdf_path)
+                _txt_result = await self.pdf_processor.process_pdf(pdf_path)
                 duracion = (datetime.now() - inicio).total_seconds()
                 
                 # Actualizar estado

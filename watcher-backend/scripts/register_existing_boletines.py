@@ -5,7 +5,6 @@ Script para registrar todos los boletines existentes en el filesystem
 import sys
 import asyncio
 from pathlib import Path
-from datetime import datetime
 
 # Agregar el directorio raíz al path
 backend_dir = Path(__file__).parent.parent
@@ -41,7 +40,7 @@ def parse_filename(filename: str):
         day = int(date_str[6:8])
         
         return (year, month, day, section)
-    except:
+    except Exception:
         return None
 
 
@@ -81,7 +80,7 @@ async def register_boletines():
         # Calcular tamaño
         try:
             file_size = pdf_path.stat().st_size
-        except:
+        except Exception:
             file_size = None
         
         documents_to_register.append({
@@ -101,7 +100,7 @@ async def register_boletines():
         for s in skipped:
             print(f"   • {s}")
     elif skipped:
-        print(f"   Mostrando primeros 10:")
+        print("   Mostrando primeros 10:")
         for s in skipped[:10]:
             print(f"   • {s}")
         print(f"   ... y {len(skipped) - 10} más")

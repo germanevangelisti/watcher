@@ -11,7 +11,6 @@ from typing import Dict, List, Optional, Any
 from enum import Enum
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
 logger = logging.getLogger(__name__)
 
@@ -379,7 +378,7 @@ class AlertDispatcher:
                         )
                         alerts_created.append(alert)
                         break  # Only one alert per document
-                except:
+                except Exception:
                     pass
         
         logger.info(f"✅ Processed {len(analysis_results)} results, created {len(alerts_created)} alerts")

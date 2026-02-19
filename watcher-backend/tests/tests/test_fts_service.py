@@ -281,7 +281,7 @@ def test_fts_trigger_update(test_db, sample_chunks):
         ChunkRecord.text.contains("Ministerio")
     ).first()
     
-    old_text = chunk.text
+    _old_text = chunk.text
     chunk.text = "Texto completamente actualizado con palabras únicas xyz123"
     test_db.commit()
     

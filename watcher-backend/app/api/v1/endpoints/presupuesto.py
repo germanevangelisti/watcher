@@ -4,13 +4,13 @@ API endpoints for Presupuesto
 
 import json
 from pathlib import Path
-from typing import Optional, List, Dict
+from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, or_
 
 from app.db.session import get_db
-from app.db.models import PresupuestoBase, EjecucionPresupuestaria, MetricasGestion
+from app.db.models import PresupuestoBase, EjecucionPresupuestaria
 from app.schemas.presupuesto import (
     ProgramaResponse,
     ProgramasListResponse,

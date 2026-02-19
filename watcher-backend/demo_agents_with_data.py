@@ -34,7 +34,7 @@ async def demo_statistics():
         print(f"🔴 Red flags de alta severidad: {stats['high_severity_flags']}")
         print(f"📈 Score promedio de transparencia: {stats['avg_transparency_score']:.2f}")
         
-        print(f"\n📅 Documentos por período (últimos 5 meses):")
+        print("\n📅 Documentos por período (últimos 5 meses):")
         for period in stats['documents_by_period'][-5:]:
             print(f"   {period['year']}-{period['month']:02d}: {period['count']} documentos")
             

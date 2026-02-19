@@ -14,7 +14,6 @@ import asyncio
 import sys
 from pathlib import Path
 from sqlalchemy import select, func
-from sqlalchemy.ext.asyncio import AsyncSession
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "watcher-monolith" / "backend"))
@@ -38,7 +37,7 @@ async def backfill_hashes():
         boletines = result.scalars().all()
         
         print(f"\n{'='*80}")
-        print(f"BACKFILL FILE HASHES")
+        print("BACKFILL FILE HASHES")
         print(f"{'='*80}")
         print(f"Found {len(boletines)} boletines without file_hash\n")
         
@@ -78,7 +77,7 @@ async def backfill_hashes():
                         break
                 
                 if not filepath:
-                    print(f"⚠️  File not found in any location")
+                    print("⚠️  File not found in any location")
                     missing += 1
                     continue
                 
@@ -105,7 +104,7 @@ async def backfill_hashes():
         
         # Summary
         print(f"\n{'='*80}")
-        print(f"SUMMARY")
+        print("SUMMARY")
         print(f"{'='*80}")
         print(f"✅ Updated: {updated}")
         print(f"⚠️  Missing files: {missing}")

@@ -6,7 +6,6 @@ import sys
 import asyncio
 import httpx
 from pathlib import Path
-from datetime import date
 
 # Agregar el directorio raíz al path
 backend_dir = Path(__file__).parent.parent

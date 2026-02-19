@@ -10,7 +10,6 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent))
 
 from sqlalchemy import create_engine
-from app.db.database import Base
 from app.db.sync_session import SQLALCHEMY_DATABASE_URL
 from app.db.models import AgentWorkflow, AgentTask, WorkflowLog
 import logging

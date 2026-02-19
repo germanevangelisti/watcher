@@ -36,7 +36,7 @@ async def vincular_actos():
     matcher = SemanticMatcher(vocabulario_path=VOCABULARIO_PATH if VOCABULARIO_PATH.exists() else None)
     
     print(f"\n{'#'*80}")
-    print(f"# VINCULACIÓN DE ACTOS CON PROGRAMAS PRESUPUESTARIOS")
+    print("# VINCULACIÓN DE ACTOS CON PROGRAMAS PRESUPUESTARIOS")
     print(f"{'#'*80}\n")
     
     async with async_session() as session:
@@ -46,7 +46,7 @@ async def vincular_actos():
         
         if existing > 0:
             print(f"⚠ Ya existen {existing} vínculos en la base de datos")
-            print(f"✓ Eliminando para recargar...")
+            print("✓ Eliminando para recargar...")
             await session.execute(delete(VinculoActoPresupuesto))
             await session.commit()
         
@@ -57,8 +57,8 @@ async def vincular_actos():
         print(f"📄 Total actos: {len(actos)}")
         
         if len(actos) == 0:
-            print(f"\n⚠ No hay actos para vincular")
-            print(f"   Primero ejecute: python scripts/process_boletines_actos.py")
+            print("\n⚠ No hay actos para vincular")
+            print("   Primero ejecute: python scripts/process_boletines_actos.py")
             return
         
         # Obtener todos los programas
@@ -68,8 +68,8 @@ async def vincular_actos():
         print(f"💼 Total programas: {len(programas_db)}")
         
         if len(programas_db) == 0:
-            print(f"\n⚠ No hay programas presupuestarios")
-            print(f"   Primero ejecute: python scripts/populate_budget.py")
+            print("\n⚠ No hay programas presupuestarios")
+            print("   Primero ejecute: python scripts/populate_budget.py")
             return
         
         # Convertir programas a diccionarios
@@ -86,7 +86,7 @@ async def vincular_actos():
         
         # Vincular cada acto
         print(f"\n{'='*80}")
-        print(f"PROCESANDO VINCULACIONES")
+        print("PROCESANDO VINCULACIONES")
         print(f"{'='*80}")
         
         total_vinculos = 0
@@ -137,7 +137,7 @@ async def vincular_actos():
         
         # Estadísticas finales
         print(f"\n{'='*80}")
-        print(f"RESUMEN DE VINCULACIÓN")
+        print("RESUMEN DE VINCULACIÓN")
         print(f"{'='*80}")
         print(f"✓ Total actos procesados: {len(actos)}")
         print(f"✓ Actos vinculados: {actos_vinculados} ({actos_vinculados/len(actos)*100:.1f}%)")
@@ -153,7 +153,7 @@ async def vincular_actos():
             ).group_by(VinculoActoPresupuesto.metodo_matching).order_by(func.count(VinculoActoPresupuesto.id).desc())
         )
         
-        print(f"\n📊 VÍNCULOS POR MÉTODO:")
+        print("\n📊 VÍNCULOS POR MÉTODO:")
         for metodo, count in result:
             print(f"   • {metodo:<30} {count:>4} vínculos")
         
@@ -164,7 +164,7 @@ async def vincular_actos():
         top_vinculos = result.scalars().all()
         
         if top_vinculos:
-            print(f"\n🏆 TOP 10 VÍNCULOS POR CONFIANZA:")
+            print("\n🏆 TOP 10 VÍNCULOS POR CONFIANZA:")
             for vinculo in top_vinculos:
                 print(f"   • Acto {vinculo.acto_id} → Programa {vinculo.programa_id} (score: {vinculo.score_confianza:.3f}, {vinculo.metodo_matching})")
         
@@ -173,7 +173,7 @@ async def vincular_actos():
         scores = [row[0] for row in result.all()]
         
         if scores:
-            print(f"\n📈 DISTRIBUCIÓN DE SCORES:")
+            print("\n📈 DISTRIBUCIÓN DE SCORES:")
             print(f"   • Promedio: {sum(scores)/len(scores):.3f}")
             print(f"   • Mínimo: {min(scores):.3f}")
             print(f"   • Máximo: {max(scores):.3f}")
@@ -184,7 +184,7 @@ async def vincular_actos():
         await engine.dispose()
     
     print(f"\n{'#'*80}")
-    print(f"# ✅ VINCULACIÓN COMPLETADA")
+    print("# ✅ VINCULACIÓN COMPLETADA")
     print(f"{'#'*80}\n")
 
 

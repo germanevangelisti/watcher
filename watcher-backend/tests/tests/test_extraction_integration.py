@@ -4,8 +4,6 @@ Tests de integración para el sistema de extracción unificado.
 """
 
 import pytest
-from pathlib import Path
-import asyncio
 
 from watcher_monolith.backend.app.services.extractors import (
     ExtractorRegistry,

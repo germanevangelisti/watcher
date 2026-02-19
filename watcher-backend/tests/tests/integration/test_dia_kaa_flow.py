@@ -6,7 +6,6 @@ Tests the flow from adapters to AI agents.
 
 import pytest
 from pathlib import Path
-from datetime import date
 import sys
 
 # Add backend to path

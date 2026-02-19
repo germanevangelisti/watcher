@@ -2,10 +2,9 @@
 Modelos de base de datos - Versión completa con historial acumulativo
 """
 
-from datetime import datetime, date
-from typing import Optional
+from datetime import datetime
 from enum import Enum
-from sqlalchemy import Column, Integer, String, DateTime, Text, JSON, ForeignKey, Float, Date, Boolean, Index, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, DateTime, Text, JSON, ForeignKey, Float, Date, Boolean, Index
 from sqlalchemy.orm import relationship
 from .database import Base
 

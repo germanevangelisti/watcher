@@ -4,10 +4,10 @@ Procesa boletines para extraer y almacenar menciones jurisdiccionales.
 """
 
 import logging
-from typing import List, Dict, Optional
+from typing import Dict, Optional
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_
+from sqlalchemy import select
 
 from app.db.models import Boletin, MencionJurisdiccional
 from app.services.mencion_extractor import get_mencion_extractor
@@ -157,7 +157,7 @@ class MencionProcessor:
             
             posibles_paths = [
                 pdf_path,
-                Path(f"/Users/germanevangelisti/watcher-agent/boletines") / pdf_path.name,
+                Path("/Users/germanevangelisti/watcher-agent/boletines") / pdf_path.name,
             ]
             
             # Si tenemos la fecha, agregar path con estructura de directorios
@@ -168,13 +168,13 @@ class MencionProcessor:
                         from datetime import datetime as dt
                         date_obj = dt.fromisoformat(boletin.date.split()[0]).date()
                         posibles_paths.append(
-                            Path(f"/Users/germanevangelisti/watcher-agent/boletines") / str(date_obj.year) / f"{date_obj.month:02d}" / pdf_path.name
+                            Path("/Users/germanevangelisti/watcher-agent/boletines") / str(date_obj.year) / f"{date_obj.month:02d}" / pdf_path.name
                         )
-                    except:
+                    except Exception:
                         pass
                 else:
                     posibles_paths.append(
-                        Path(f"/Users/germanevangelisti/watcher-agent/boletines") / str(boletin.date.year) / f"{boletin.date.month:02d}" / pdf_path.name
+                        Path("/Users/germanevangelisti/watcher-agent/boletines") / str(boletin.date.year) / f"{boletin.date.month:02d}" / pdf_path.name
                     )
             
             pdf_encontrado = None

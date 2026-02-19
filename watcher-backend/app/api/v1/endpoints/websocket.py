@@ -4,7 +4,6 @@ WebSocket endpoints para actualizaciones en tiempo real
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from typing import List, Set, Dict
 import json
-import asyncio
 import logging
 
 from app.core.events import event_bus, EventType, Event

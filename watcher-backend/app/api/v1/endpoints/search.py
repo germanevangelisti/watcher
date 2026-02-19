@@ -1,7 +1,7 @@
 """
 Router para búsqueda semántica usando ChromaDB embeddings
 """
-from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any, List, Literal
 from sqlalchemy.orm import Session
@@ -453,7 +453,7 @@ async def search_semantic(request: SearchRequest):
                 detail=f"Modelo '{request.model}' no disponible. Usa: {list(AVAILABLE_MODELS.keys())}"
             )
         
-        model_info = AVAILABLE_MODELS[request.model]
+        _model_info = AVAILABLE_MODELS[request.model]
         
         # Obtener servicio con el modelo especificado
         # Nota: ChromaDB permite cambiar el embedding function dinámicamente

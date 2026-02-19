@@ -2,7 +2,6 @@
 Servicio para procesamiento de archivos PDF en lotes - Versión optimizada con historial acumulativo
 """
 
-import asyncio
 import logging
 import re
 import uuid
@@ -11,10 +10,10 @@ from typing import Dict, List, Optional
 from datetime import datetime, date
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, text
+from sqlalchemy import text
 
 from app.db import crud
-from app.db.models import Boletin, Analisis, EjecucionPresupuestaria, AlertasGestion, ProcesamientoBatch
+from app.db.models import ProcesamientoBatch
 from app.services.extractors import ExtractorRegistry
 from app.services.watcher_service import WatcherService
 
@@ -385,7 +384,7 @@ class BatchProcessor:
         # Crear fecha del boletín
         try:
             fecha_boletin = datetime.strptime(boletin_date, '%Y%m%d').date()
-        except:
+        except Exception:
             fecha_boletin = date.today()
         
         # Crear registro usando SQL directo

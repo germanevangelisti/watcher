@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 env_path = backend_path / ".env"
 load_dotenv(env_path)
 
-from app.services.llm_provider import get_llm_provider, LLMProviderType
+from app.services.llm_provider import get_llm_provider
 
 
 async def test_llm_provider():
@@ -46,13 +46,13 @@ async def test_llm_provider():
             temperature=0.1,
             max_tokens=50
         )
-        print(f"✅ Text generation with system prompt works")
+        print("✅ Text generation with system prompt works")
         print(f"   Response: {response[:100]}")
     except Exception as e:
         error_msg = str(e)
         if "429" in error_msg or "Resource exhausted" in error_msg:
-            print(f"⚠️  Rate limit hit (this is expected) - Provider is working correctly")
-            print(f"   The LLM provider is functional, just rate-limited temporarily")
+            print("⚠️  Rate limit hit (this is expected) - Provider is working correctly")
+            print("   The LLM provider is functional, just rate-limited temporarily")
         else:
             print(f"❌ Text generation failed: {e}")
             return False
@@ -66,7 +66,7 @@ async def test_llm_provider():
     print(f"   LLM_PROVIDER: {llm_provider}")
     print(f"   LLM_MODEL: {llm_model}")
     print(f"   GOOGLE_API_KEY: {'***' + google_key[-4:] if google_key != 'not set' else 'not set'}")
-    print(f"✅ Environment variables configured")
+    print("✅ Environment variables configured")
     
     print("\n" + "=" * 60)
     print("✅ All tests passed!")

@@ -60,7 +60,7 @@ async def list_configs(
     query = db.query(AnalysisConfig)
     
     if active_only:
-        query = query.filter(AnalysisConfig.is_active == True)
+        query = query.filter(AnalysisConfig.is_active.is_(True))
     
     if config_name:
         query = query.filter(AnalysisConfig.config_name == config_name)

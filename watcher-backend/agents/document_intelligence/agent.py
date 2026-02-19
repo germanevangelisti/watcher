@@ -6,12 +6,11 @@ Extrae información estructurada de PDFs y clasifica contenido
 import datetime
 import logging
 from typing import Dict, List, Any, Optional, Tuple
-from pathlib import Path
 import re
 from app.db.database import AsyncSessionLocal
 
 try:
-    import pdfplumber
+    import pdfplumber  # noqa: F401
     PDF_AVAILABLE = True
 except ImportError:
     PDF_AVAILABLE = False
@@ -279,7 +278,7 @@ class DocumentIntelligenceAgent:
                 return float(num_part.group(0))
             
             return None
-        except:
+        except Exception:
             return None
     
     def _extract_beneficiaries(self, text: str) -> List[str]:

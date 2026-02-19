@@ -666,7 +666,7 @@ async def process_batch_by_date(
         
         # Retornar inmediatamente sin esperar el procesamiento
         return {
-            "message": f"Procesamiento iniciado en segundo plano",
+            "message": "Procesamiento iniciado en segundo plano",
             "total": total_count,
             "session_id": session_id,
             "status": "processing",

@@ -87,9 +87,9 @@ class ProcessingLogger:
         """Finaliza una sesión de procesamiento"""
         with self.lock:
             if success:
-                self.success(f"Procesamiento completado exitosamente", session_id)
+                self.success("Procesamiento completado exitosamente", session_id)
             else:
-                self.error(f"Procesamiento finalizado con errores", session_id)
+                self.error("Procesamiento finalizado con errores", session_id)
             
             if self.current_session_id == session_id:
                 self.current_session_id = None

@@ -23,7 +23,6 @@ import {
   usePipelineProcessAll,
   usePipelineProcessOne,
   usePipelineResetAll,
-  usePipelineResetOne,
 } from "@/lib/api/hooks/use-pipeline"
 import { usePipelineStore } from "@/lib/store/pipeline-store"
 import { useWebSocket } from "@/lib/ws/use-websocket"
@@ -71,11 +70,11 @@ const PIPELINE_EVENTS = [
 
 // Stage info for task detail view
 const STAGE_INFO: Record<string, { label: string; icon: typeof FileSearch; color: string }> = {
-  extracting: { label: "Extracción", icon: FileSearch, color: "text-blue-400" },
+  extracting: { label: "Extracci?n", icon: FileSearch, color: "text-blue-400" },
   cleaning: { label: "Limpieza", icon: Sparkles, color: "text-purple-400" },
   chunking: { label: "Chunking", icon: Scissors, color: "text-yellow-400" },
-  indexing: { label: "Indexación", icon: Database, color: "text-orange-400" },
-  analyzing: { label: "Análisis IA", icon: Brain, color: "text-cyan-400" },
+  indexing: { label: "Indexaci?n", icon: Database, color: "text-orange-400" },
+  analyzing: { label: "An?lisis IA", icon: Brain, color: "text-cyan-400" },
   completed: { label: "Completado", icon: CheckCircle2, color: "text-green-400" },
   failed: { label: "Fallido", icon: AlertCircle, color: "text-red-400" },
 }
@@ -90,7 +89,6 @@ export function PipelineWorkflowPage() {
   const processAll = usePipelineProcessAll()
   const processOne = usePipelineProcessOne()
   const resetAll = usePipelineResetAll()
-  const resetOne = usePipelineResetOne()
 
   const store = usePipelineStore()
   const {
@@ -194,7 +192,6 @@ export function PipelineWorkflowPage() {
       setDocumentFailed,
       setProgress,
       setCompleted,
-      setStats,
       resetStore,
       refetchStatus,
     ]
@@ -293,7 +290,7 @@ export function PipelineWorkflowPage() {
           ) : (
             <Badge variant="outline" className="gap-1 text-red-400 border-red-500/20">
               <WifiOff className="h-3 w-3" />
-              Sin conexión
+              Sin conexi?n
             </Badge>
           )}
           <Button variant="outline" size="sm" onClick={() => refetchStatus()}>
@@ -307,7 +304,7 @@ export function PipelineWorkflowPage() {
         <CardHeader className="pb-4">
           <CardTitle className="text-sm flex items-center gap-2">
             <Settings2 className="h-4 w-4" />
-            Controles de Ejecución
+            Controles de Ejecuci?n
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -359,7 +356,7 @@ export function PipelineWorkflowPage() {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Activity className="h-4 w-4 text-blue-400 animate-pulse" />
-                <span className="font-medium text-sm">Sesión activa</span>
+                <span className="font-medium text-sm">Sesi?n activa</span>
               </div>
               <div className="flex items-center gap-3 text-xs text-muted-foreground">
                 {getETA() && <span>ETA: {getETA()}</span>}
@@ -480,7 +477,7 @@ export function PipelineWorkflowPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-sm">Estado de Documentos</CardTitle>
-          <CardDescription>Distribución por estado de procesamiento</CardDescription>
+          <CardDescription>Distribuci?n por estado de procesamiento</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -527,7 +524,7 @@ export function PipelineWorkflowPage() {
               Detalle de Tareas
             </CardTitle>
             <CardDescription>
-              Estado por documento en la sesión actual
+              Estado por documento en la sesi?n actual
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -720,16 +717,16 @@ export function PipelineWorkflowPage() {
             </DialogTitle>
             <DialogDescription className="space-y-2">
               <p>
-                Esta acción eliminará <strong>TODOS</strong> los datos procesados:
+                Esta acci?n eliminar? <strong>TODOS</strong> los datos procesados:
               </p>
               <ul className="list-disc list-inside text-sm space-y-1 text-muted-foreground">
                 <li>Todos los chunk records de SQLite</li>
                 <li>Todos los embeddings de ChromaDB</li>
-                <li>Todos los archivos .txt extraídos</li>
-                <li>El status de todos los documentos volverá a &quot;pending&quot;</li>
+                <li>Todos los archivos .txt extra?dos</li>
+                <li>El status de todos los documentos volver? a &quot;pending&quot;</li>
               </ul>
               <p className="font-semibold text-red-400">
-                Esta acción NO se puede deshacer.
+                Esta acci?n NO se puede deshacer.
               </p>
             </DialogDescription>
           </DialogHeader>

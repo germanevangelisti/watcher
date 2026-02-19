@@ -7,10 +7,8 @@ DEPRECADO: Este módulo se mantiene por compatibilidad.
 Usar ExtractorRegistry para extracción de texto.
 """
 
-import os
-import hashlib
 from pathlib import Path
-from typing import Optional, Dict, Any, List
+from typing import Dict, Any, List
 from datetime import datetime
 import warnings
 
@@ -50,7 +48,7 @@ class DocumentProcessor:
         try:
             # Ejecutar extracción async
             try:
-                loop = asyncio.get_running_loop()
+                _loop = asyncio.get_running_loop()
                 # Si llegamos aquí, hay un loop activo (ej. Jupyter)
                 raise RuntimeError(
                     "Este método no puede ejecutarse en un event loop activo. "

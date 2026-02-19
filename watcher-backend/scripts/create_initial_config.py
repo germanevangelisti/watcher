@@ -165,7 +165,7 @@ async def create_initial_config():
             print(f"   Versión: {config.version}")
             print(f"   Descripción: {config.description}")
             print(f"   Modelo: {config.model_version}")
-            print(f"   Activa: Sí")
+            print("   Activa: Sí")
             print("="*60)
             print()
             print("📊 PARÁMETROS PRINCIPALES:")
@@ -177,7 +177,7 @@ async def create_initial_config():
             print()
             print("💡 USO:")
             print("   Para iniciar un análisis con esta config:")
-            print(f"   POST /api/v1/dslab/analysis/executions")
+            print("   POST /api/v1/dslab/analysis/executions")
             print(f"   {{ \"config_id\": {config.id}, ... }}")
             print()
             

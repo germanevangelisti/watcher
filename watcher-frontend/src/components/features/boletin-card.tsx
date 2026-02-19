@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { FileText, Calendar, Building2, Play, RotateCcw, Loader2, FileWarning, Upload, Download, RefreshCw } from "lucide-react"
+import { FileText, Calendar, Building2, Play, RotateCcw, Loader2, FileWarning, Upload, RefreshCw } from "lucide-react"
 import dayjs from "dayjs"
 import { cn } from "@/lib/utils"
 import type { Boletin } from "@/types"

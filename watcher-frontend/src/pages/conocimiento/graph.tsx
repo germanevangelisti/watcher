@@ -11,11 +11,30 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useKnowledgeGraph, useEntityTimeline } from "@/lib/api"
 import { Network, User, Building2, Briefcase, FileText, Calendar, Filter, RefreshCw } from "lucide-react"
 
+interface GraphNode {
+  id: string
+  label: string
+  type: string
+  mentions: number
+  group: number
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ForceGraphHandle = any
+
+interface TimelineEvento {
+  fecha: string
+  documento_id: number
+  boletin_filename: string
+  contexto: string
+  tipo_evento: string
+}
+
 export function GraphPage() {
   const [maxNodes, setMaxNodes] = useState(50)
   const [minMentions, setMinMentions] = useState(3)
-  const [selectedNode, setSelectedNode] = useState<any>(null)
-  const graphRef = useRef<any>(null)
+  const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null)
+  const graphRef = useRef<ForceGraphHandle>(undefined)
 
   const { data: graphData, isLoading, error, refetch } = useKnowledgeGraph({
     max_nodes: maxNodes,
@@ -26,7 +45,7 @@ export function GraphPage() {
     selectedNode?.id || ""
   )
 
-  const handleNodeClick = useCallback((node: any) => {
+  const handleNodeClick = useCallback((node: GraphNode) => {
     setSelectedNode(node)
   }, [])
 
@@ -212,10 +231,10 @@ export function GraphPage() {
                   <ForceGraph2D
                     ref={graphRef}
                     graphData={graphData}
-                    nodeLabel={(node: any) => `${node.label} (${node.mentions} menciones)`}
-                    nodeColor={(node: any) => getNodeColor(node.type)}
+                    nodeLabel={(node: GraphNode) => `${node.label} (${node.mentions} menciones)`}
+                    nodeColor={(node: GraphNode) => getNodeColor(node.type)}
                     nodeRelSize={6}
-                    nodeVal={(node: any) => Math.sqrt(node.mentions) * 2}
+                    nodeVal={(node: GraphNode) => Math.sqrt(node.mentions) * 2}
                     onNodeClick={handleNodeClick}
                     linkColor={() => "#4b5563"}
                     linkWidth={1}
@@ -257,7 +276,7 @@ export function GraphPage() {
                     <div className="space-y-1">
                       <p className="text-sm text-muted-foreground">Menciones Totales</p>
                       <p className="text-2xl font-bold">
-                        {graphData.nodes.reduce((sum: number, n: any) => sum + n.mentions, 0)}
+                        {graphData.nodes.reduce((sum: number, n: GraphNode) => sum + n.mentions, 0)}
                       </p>
                     </div>
                     <div className="space-y-1">
@@ -274,9 +293,9 @@ export function GraphPage() {
                     <h3 className="text-sm font-medium mb-3">Top 10 Entidades</h3>
                     <div className="space-y-2">
                       {graphData.nodes
-                        .sort((a: any, b: any) => b.mentions - a.mentions)
+                        .sort((a: GraphNode, b: GraphNode) => b.mentions - a.mentions)
                         .slice(0, 10)
-                        .map((node: any, idx: number) => (
+                        .map((node: GraphNode, idx: number) => (
                           <div
                             key={node.id}
                             className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 cursor-pointer"
@@ -338,7 +357,7 @@ export function GraphPage() {
                   Timeline de apariciones
                 </h3>
                 <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {timeline.eventos.map((evento: any, idx: number) => (
+                  {timeline.eventos.map((evento: TimelineEvento, idx: number) => (
                     <div
                       key={idx}
                       className="border rounded-lg p-3 space-y-1 hover:bg-muted/50 transition-colors"

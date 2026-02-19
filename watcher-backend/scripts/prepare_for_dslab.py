@@ -4,7 +4,6 @@
 Genera metadata, índice y dataset inicial
 """
 
-import os
 import json
 from pathlib import Path
 from datetime import datetime
@@ -174,21 +173,21 @@ def print_summary(metadata: dict):
     """Imprime resumen de la preparación"""
     stats = metadata['statistics']
     
-    print(f"\n" + "=" * 60)
-    print(f"📊 RESUMEN DE DATASET")
-    print(f"=" * 60)
+    print("\n" + "=" * 60)
+    print("📊 RESUMEN DE DATASET")
+    print("=" * 60)
     print(f"Total archivos: {stats['total_files']}")
     print(f"✅ Únicos: {stats['unique_files']}")
     print(f"⚠️  Duplicados: {stats['duplicate_files']}")
     print(f"💾 Tamaño total: {stats['total_size_gb']:.2f} GB ({stats['total_size_mb']:.0f} MB)")
     
-    print(f"\n📅 Distribución por mes:")
+    print("\n📅 Distribución por mes:")
     for year_month, count in sorted(stats['by_year_month'].items()):
         year, month = year_month.split('-')
         month_name = datetime(int(year), int(month), 1).strftime('%B %Y')
         print(f"   {month_name}: {count} boletines")
     
-    print(f"\n📑 Distribución por sección:")
+    print("\n📑 Distribución por sección:")
     for section, count in sorted(stats['by_section'].items()):
         section_names = {
             '1': 'Designaciones y Decretos',
@@ -200,7 +199,7 @@ def print_summary(metadata: dict):
         section_name = section_names.get(section, f'Sección {section}')
         print(f"   {section_name}: {count} boletines")
     
-    print(f"=" * 60)
+    print("=" * 60)
 
 def check_dslab_availability():
     """Verifica que DS Lab esté disponible"""
@@ -221,7 +220,7 @@ def main():
     # Verificar directorio de boletines
     if not BOLETINES_DIR.exists():
         print(f"❌ Error: No existe directorio {BOLETINES_DIR}")
-        print(f"\n💡 Primero ejecuta: python scripts/reorganize_boletines.py")
+        print("\n💡 Primero ejecuta: python scripts/reorganize_boletines.py")
         return
     
     # Escanear boletines
@@ -244,20 +243,20 @@ def main():
     dslab_available = check_dslab_availability()
     
     # Próximos pasos
-    print(f"\n✅ Dataset preparado exitosamente")
-    print(f"\n📁 Archivos generados:")
+    print("\n✅ Dataset preparado exitosamente")
+    print("\n📁 Archivos generados:")
     print(f"   • Metadata: {METADATA_FILE}")
     print(f"   • Índice CSV: {INDEX_FILE}")
     
     if dslab_available:
-        print(f"\n🚀 Próximos pasos:")
+        print("\n🚀 Próximos pasos:")
         print(f"   1. Revisar metadata en: {METADATA_FILE}")
-        print(f"   2. Ejecutar análisis DS Lab:")
-        print(f"      cd watcher-lab/watcher_ds_lab")
-        print(f"      python scripts/analyze_boletines.py")
-        print(f"   3. Visualizar resultados en UI del DS Lab Manager")
+        print("   2. Ejecutar análisis DS Lab:")
+        print("      cd watcher-lab/watcher_ds_lab")
+        print("      python scripts/analyze_boletines.py")
+        print("   3. Visualizar resultados en UI del DS Lab Manager")
     else:
-        print(f"\n⚠️  DS Lab no encontrado. Configura primero.")
+        print("\n⚠️  DS Lab no encontrado. Configura primero.")
 
 if __name__ == "__main__":
     main()

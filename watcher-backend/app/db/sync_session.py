@@ -2,7 +2,7 @@
 Sesión síncrona para endpoints que necesitan SQLAlchemy tradicional
 """
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 from app.core.config import settings
 

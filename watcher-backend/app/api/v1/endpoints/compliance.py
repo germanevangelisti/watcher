@@ -5,13 +5,13 @@ Endpoints para sistema de Compliance
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
-from datetime import date, datetime
+from datetime import datetime
 import os
 from pathlib import Path
 
 from ....db.database import get_db
 from ....db.models import ComplianceCheck, CheckResult, Evidence, Jurisdiccion, RequiredDocument
-from sqlalchemy import select, desc, func
+from sqlalchemy import select, func
 from ....schemas.compliance import (
     ComplianceCheckResponse,
     CheckResultResponse,
@@ -20,7 +20,6 @@ from ....schemas.compliance import (
     ComplianceScorecardResponse,
     ChecksSyncResponse,
     RequiredDocumentResponse,
-    JurisdictionDocumentsSummary,
     DocumentsOverviewResponse,
     DocumentUpdateRequest
 )
@@ -57,7 +56,7 @@ async def get_compliance_checks(
     stmt = select(ComplianceCheck)
     
     if active_only:
-        stmt = stmt.filter(ComplianceCheck.is_active == True)
+        stmt = stmt.filter(ComplianceCheck.is_active.is_(True))
     
     if priority:
         stmt = stmt.filter(ComplianceCheck.priority == priority)
@@ -288,7 +287,7 @@ async def execute_compliance_checks(
     if check_codes:
         stmt = select(ComplianceCheck).filter(
             ComplianceCheck.check_code.in_(check_codes),
-            ComplianceCheck.is_active == True
+            ComplianceCheck.is_active.is_(True)
         )
         result = await db.execute(stmt)
         checks = result.scalars().all()
@@ -774,7 +773,6 @@ async def index_document_embeddings(
     Divide en chunks y crea vectores para búsqueda semántica.
     """
     import google.generativeai as genai
-    import os
     import logging
     
     logger = logging.getLogger(__name__)

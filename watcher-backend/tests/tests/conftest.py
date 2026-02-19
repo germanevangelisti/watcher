@@ -237,7 +237,6 @@ def sample_report_data():
 @pytest.fixture
 def mock_http_client():
     """Mock HTTP client for testing scrapers."""
-    import httpx
     from unittest.mock import PropertyMock
     
     # Create mock response with proper attribute access

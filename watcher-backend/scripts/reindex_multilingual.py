@@ -159,7 +159,7 @@ class MultilingualReindexer:
         print("✅ Re-indexación completada exitosamente")
         print(f"🤖 Modelo: {self.model_name}")
         print(f"📊 Documentos: {new_collection.count()}")
-        print(f"🎯 Optimizado para: Español 🇪🇸")
+        print("🎯 Optimizado para: Español 🇪🇸")
         print("\n💡 Mejora esperada en precisión: +20-30%")
         print("\n📝 Próximos pasos:")
         print("   1. Refrescar el frontend (Cmd+Shift+R)")

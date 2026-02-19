@@ -9,13 +9,13 @@ import asyncio
 import logging
 from datetime import date, datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 import re
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, desc
+from sqlalchemy import select
 
-from app.db.models import SyncState, Boletin
+from app.db.models import SyncState
 from app.api.v1.endpoints.downloader import download_boletines_task, download_status
 from app.services.batch_processor import BatchProcessor
 

@@ -15,7 +15,6 @@ from datetime import datetime
 from typing import List, Dict, Tuple
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import classification_report
 
 # Rutas
 BASE_DIR = Path(__file__).parent.parent.parent.parent
@@ -39,7 +38,7 @@ class BudgetMLTrainer:
     
     def extract_features(self) -> Tuple[np.ndarray, List[str], List[Dict]]:
         """Extrae features para training"""
-        print(f"\n🔧 Extrayendo features...")
+        print("\n🔧 Extrayendo features...")
         
         features = []
         feature_names = [
@@ -107,7 +106,7 @@ class BudgetMLTrainer:
     
     def train_isolation_forest(self, X: np.ndarray, contamination: float = 0.15) -> Tuple[IsolationForest, StandardScaler]:
         """Entrena Isolation Forest para detección de anomalías"""
-        print(f"\n🤖 Entrenando Isolation Forest...")
+        print("\n🤖 Entrenando Isolation Forest...")
         print(f"  Contamination rate: {contamination}")
         
         # Normalizar features
@@ -133,7 +132,7 @@ class BudgetMLTrainer:
         n_anomalies = np.sum(predictions == -1)
         anomaly_rate = n_anomalies / len(predictions) * 100
         
-        print(f"✓ Modelo entrenado")
+        print("✓ Modelo entrenado")
         print(f"  Anomalías detectadas: {n_anomalies}/{len(predictions)} ({anomaly_rate:.1f}%)")
         print(f"  Score promedio: {np.mean(anomaly_scores):.3f}")
         print(f"  Score min/max: {np.min(anomaly_scores):.3f} / {np.max(anomaly_scores):.3f}")
@@ -143,7 +142,7 @@ class BudgetMLTrainer:
     def calibrate_thresholds(self, model: IsolationForest, scaler: StandardScaler, 
                             X: np.ndarray, metadata: List[Dict]) -> Dict:
         """Calibra umbrales de anomalía basados en percentiles"""
-        print(f"\n📊 Calibrando umbrales...")
+        print("\n📊 Calibrando umbrales...")
         
         X_scaled = scaler.transform(X)
         scores = model.score_samples(X_scaled)
@@ -163,7 +162,7 @@ class BudgetMLTrainer:
         thresholds['MEDIO'] = float(np.percentile(scores, 25))    # 25% más extremo
         thresholds['BAJO'] = float(np.percentile(scores, 50))      # Mediana
         
-        print(f"✓ Umbrales calibrados:")
+        print("✓ Umbrales calibrados:")
         print(f"  CRITICO: score < {thresholds['CRITICO']:.3f}")
         print(f"  ALTO:    score < {thresholds['ALTO']:.3f}")
         print(f"  MEDIO:   score < {thresholds['MEDIO']:.3f}")
@@ -195,7 +194,7 @@ class BudgetMLTrainer:
             sev = c['severity']
             severity_counts[sev] = severity_counts.get(sev, 0) + 1
         
-        print(f"\n✓ Distribución de severidad:")
+        print("\n✓ Distribución de severidad:")
         for sev in ['CRITICO', 'ALTO', 'MEDIO', 'BAJO', 'NORMAL']:
             count = severity_counts.get(sev, 0)
             pct = count / len(classified) * 100
@@ -210,11 +209,11 @@ class BudgetMLTrainer:
     def validate_model(self, model: IsolationForest, scaler: StandardScaler, 
                       X: np.ndarray, tendencias_anomalies: List[Dict]) -> Dict:
         """Valida modelo contra anomalías detectadas por análisis de tendencias"""
-        print(f"\n✅ Validando modelo...")
+        print("\n✅ Validando modelo...")
         
         X_scaled = scaler.transform(X)
         ml_predictions = model.predict(X_scaled)
-        ml_scores = model.score_samples(X_scaled)
+        _ml_scores = model.score_samples(X_scaled)
         
         # Crear diccionario de anomalías de tendencias
         tendencias_anomaly_keys = set()
@@ -243,7 +242,7 @@ class BudgetMLTrainer:
         recall = true_positives / (true_positives + false_negatives) if (true_positives + false_negatives) > 0 else 0
         f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
         
-        print(f"✓ Métricas de validación:")
+        print("✓ Métricas de validación:")
         print(f"  Precision: {precision:.3f}")
         print(f"  Recall: {recall:.3f}")
         print(f"  F1-Score: {f1:.3f}")
@@ -261,7 +260,7 @@ class BudgetMLTrainer:
     def save_models(self, model: IsolationForest, scaler: StandardScaler, 
                    thresholds: Dict, validation: Dict, feature_names: List[str]):
         """Guarda modelos y configuración"""
-        print(f"\n💾 Guardando modelos...")
+        print("\n💾 Guardando modelos...")
         
         # Guardar modelo
         model_path = MODELS_DIR / "isolation_forest_budget.pkl"
@@ -307,7 +306,7 @@ class BudgetMLTrainer:
 
 def load_data():
     """Carga datos necesarios"""
-    print(f"📖 Cargando datos...")
+    print("📖 Cargando datos...")
     
     with open(ML_DATASET_PATH, 'r', encoding='utf-8') as f:
         ml_data = json.load(f)
@@ -315,14 +314,14 @@ def load_data():
     with open(TENDENCIAS_PATH, 'r', encoding='utf-8') as f:
         tendencias_data = json.load(f)
     
-    print(f"✓ Datos cargados")
+    print("✓ Datos cargados")
     return ml_data, tendencias_data
 
 
 def main():
     """Función principal"""
     print(f"\n{'#'*80}")
-    print(f"# ENTRENAMIENTO DE MODELOS ML - PRESUPUESTO")
+    print("# ENTRENAMIENTO DE MODELOS ML - PRESUPUESTO")
     print(f"{'#'*80}\n")
     
     try:
@@ -351,10 +350,10 @@ def main():
         trainer.save_models(model, scaler, thresholds, validation, feature_names)
         
         print(f"\n{'#'*80}")
-        print(f"# ✅ ENTRENAMIENTO COMPLETADO")
+        print("# ✅ ENTRENAMIENTO COMPLETADO")
         print(f"{'#'*80}\n")
-        print(f"✓ Modelo Isolation Forest entrenado y calibrado")
-        print(f"✓ Umbrales de severidad definidos")
+        print("✓ Modelo Isolation Forest entrenado y calibrado")
+        print("✓ Umbrales de severidad definidos")
         print(f"✓ {len(thresholds['classified_programs'])} programas clasificados")
         print(f"✓ F1-Score: {validation['f1_score']:.3f}")
         print(f"\n{'#'*80}\n")

@@ -10,7 +10,7 @@ from sqlalchemy import select, func, or_
 from app.db.database import get_db
 from app.db.models import EntidadExtraida, MencionEntidad, RelacionEntidad
 from agents.historical_intelligence import HistoricalIntelligenceAgent
-from agents.historical_intelligence.patterns import get_all_patterns, get_pattern
+from agents.historical_intelligence.patterns import get_all_patterns
 
 router = APIRouter()
 
@@ -257,7 +257,7 @@ async def detalle_entidad(
         MencionEntidad.entidad_id == entidad_id
     )
     menciones_result = await db.execute(menciones_query)
-    total_menciones_db = menciones_result.scalar()
+    _total_menciones_db = menciones_result.scalar()
     
     # Contar relaciones
     relaciones_query = select(func.count()).select_from(RelacionEntidad).where(

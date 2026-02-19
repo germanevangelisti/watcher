@@ -10,9 +10,8 @@ This module implements an API Gateway pattern that:
 """
 
 import logging
-from typing import Dict, Any, Optional, List
-from fastapi import APIRouter, HTTPException, Depends, Request
-from fastapi.responses import JSONResponse
+from typing import Dict, Any, Optional
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)

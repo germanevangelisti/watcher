@@ -19,7 +19,7 @@ export interface Vinculo {
   programa_id: number;
   score_confianza: number;
   metodo_matching: string;
-  detalles_json?: Record<string, any>;
+  detalles_json?: Record<string, unknown>;
   programa?: {
     id: number;
     organismo: string;

@@ -52,7 +52,7 @@ def view_with_sqlite():
                     created_formatted = dt.strftime('%Y-%m-%d %H:%M')
                 else:
                     created_formatted = "N/A"
-            except:
+            except Exception:
                 created_formatted = created_at or "N/A"
             
             formatted_data.append([
@@ -131,7 +131,7 @@ def view_with_sqlite():
                     fecha_formatted = dt.strftime('%Y-%m-%d')
                 else:
                     fecha_formatted = fecha
-            except:
+            except Exception:
                 fecha_formatted = fecha
             
             formatted_fechas.append([fecha_formatted, count])
@@ -165,14 +165,12 @@ async def view_with_api():
 
 def main():
     """Función principal."""
-    try:
-        # Verificar si tabulate está disponible
-        import tabulate
-    except ImportError:
+    import importlib.util
+    if importlib.util.find_spec("tabulate") is None:
         print("⚠️  Para una mejor visualización, instala tabulate:")
         print("pip install tabulate")
         print("\nUsando formato básico...\n")
-    
+
     # Ver datos con SQLite
     view_with_sqlite()
     

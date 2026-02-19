@@ -383,7 +383,6 @@ class AnomalyDetectionAgent:
             Análisis de documentos de alto riesgo
         """
         try:
-            from agents.tools.database_tools import DatabaseTools
             from agents.tools.analysis_tools import AnalysisTools
             
             async with AsyncSessionLocal() as db:

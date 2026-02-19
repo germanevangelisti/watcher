@@ -9,7 +9,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
 from app.schemas.batch import BatchProcessRequest
 from app.services.batch_processor import BatchProcessor
-from app.core.config import settings
 
 router = APIRouter()
 

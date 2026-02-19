@@ -5,7 +5,6 @@ Endpoints para descargar boletines oficiales de Córdoba de forma automatizada
 REFACTORED: Now uses the PDS (Portal Data Scrapers) layer for modular extraction.
 """
 
-import asyncio
 import logging
 from datetime import date, timedelta
 from pathlib import Path

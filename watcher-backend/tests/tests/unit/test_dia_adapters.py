@@ -5,7 +5,7 @@ Tests adapters and document schema normalization.
 """
 
 import pytest
-from datetime import date, datetime
+from datetime import date
 from pathlib import Path
 import sys
 
@@ -14,7 +14,6 @@ backend_path = Path(__file__).resolve().parent.parent.parent / "watcher-monolith
 sys.path.insert(0, str(backend_path))
 
 from app.adapters.base_adapter import (
-    BaseAdapter,
     AdapterResult,
     DocumentSchema,
     SourceType,

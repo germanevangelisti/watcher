@@ -19,7 +19,7 @@ sys.path.insert(0, str(agents_path))
 from app.scrapers.pds_prov import create_provincial_scraper
 from app.scrapers.base_scraper import DocumentType
 from app.adapters.sca_prov import create_provincial_adapter
-from app.services.alert_dispatcher import AlertDispatcher, AlertPriority
+from app.services.alert_dispatcher import AlertDispatcher
 from app.services.report_generator import ReportGenerator, ReportType, ReportFormat
 from app.api.v1.api_gateway import APIGateway, GatewayRequest
 

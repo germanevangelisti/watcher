@@ -8,12 +8,9 @@ Convierte PDFs a texto y gestiona los archivos procesados.
 """
 
 import os
-import shutil
 from pathlib import Path
-from typing import List, Dict, Tuple
+from typing import Dict
 import logging
-from datetime import datetime
-import json
 import aiofiles
 import asyncio
 import warnings
@@ -111,7 +108,7 @@ class PDFProcessor:
         # Intentar ejecutar async
         try:
             # Verificar si ya hay un loop corriendo
-            loop = asyncio.get_running_loop()
+            _loop = asyncio.get_running_loop()
             # Si llegamos aquí, hay un loop - no podemos usar run_until_complete
             # En notebooks, esto causará un error
             raise RuntimeError(

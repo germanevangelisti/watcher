@@ -3,13 +3,11 @@ Herramientas de base de datos para los agentes
 """
 import logging
 from typing import List, Dict, Any, Optional
-from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import func, desc, and_, select
+from sqlalchemy import func, desc, select
 
 from app.db.models import (
-    BoletinDocument, AnalysisResult, RedFlag, 
-    AnalysisConfig, AnalysisExecution
+    BoletinDocument, AnalysisResult, RedFlag
 )
 from app.db.database import AsyncSessionLocal
 

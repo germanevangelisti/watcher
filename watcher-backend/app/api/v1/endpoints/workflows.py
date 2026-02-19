@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, BackgroundTasks
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 
-from agents.orchestrator.state import TaskStatus, AgentType
+from agents.orchestrator.state import TaskStatus
 from .agents import orchestrator
 from app.core.events import event_bus, EventType
 

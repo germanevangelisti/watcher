@@ -3,8 +3,7 @@ Schemas for Métricas endpoints
 """
 
 from pydantic import BaseModel
-from typing import Optional, List, Dict, Any
-from datetime import date
+from typing import List, Dict, Any
 
 class MetricasGeneralesResponse(BaseModel):
     # Presupuestarias
