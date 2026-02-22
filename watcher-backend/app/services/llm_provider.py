@@ -63,7 +63,7 @@ class GoogleGeminiProvider(LLMProvider):
             if not self.api_key:
                 raise ValueError("GOOGLE_API_KEY not found in environment or parameters")
             
-            genai.configure(api_key=self.api_key)
+            # genai.configure() is called once at app startup in main.py
             self.model = genai.GenerativeModel(model)
             self.model_name = model
             

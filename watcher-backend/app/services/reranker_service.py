@@ -82,7 +82,7 @@ class GoogleReranker(BaseReranker):
     Uses Google Gemini to score each result's relevance to the query.
     """
     
-    def __init__(self, api_key: Optional[str] = None, model: str = "gemini-pro"):
+    def __init__(self, api_key: Optional[str] = None, model: str = "gemini-2.0-flash"):
         """
         Initialize Google re-ranker.
         
@@ -97,7 +97,7 @@ class GoogleReranker(BaseReranker):
         if not self.api_key:
             raise ValueError("Google API key required for GoogleReranker")
         
-        genai.configure(api_key=self.api_key)
+        # genai.configure() is called once at app startup in main.py
         self.model_name = model
     
     def rerank(

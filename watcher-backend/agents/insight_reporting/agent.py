@@ -56,7 +56,7 @@ class InsightReportingAgent:
                 api_key = DEFAULT_AGENT_CONFIG.google_api_key
             
             if api_key and api_key != "":
-                genai.configure(api_key=api_key)
+                # genai.configure() is called once at app startup in main.py
                 self.model = genai.GenerativeModel("gemini-2.0-flash")
                 logger.info("Google Gemini client inicializado correctamente")
             else:
@@ -176,7 +176,7 @@ class InsightReportingAgent:
                 self.conversation_history = self.conversation_history[-self.config.max_conversation_history * 2:]
             
             # Generar respuesta
-            if self.client:
+            if self.model:
                 response_text = await self._generate_ai_response(query, context)
             else:
                 response_text = self._generate_fallback_response(query, context)
@@ -284,7 +284,7 @@ class InsightReportingAgent:
     
     async def _create_narrative(self, metrics: Dict[str, Any]) -> str:
         """Crea narrativa basada en métricas"""
-        if self.client:
+        if self.model:
             return await self._generate_ai_narrative(metrics)
         else:
             return self._generate_template_narrative(metrics)
@@ -423,7 +423,10 @@ class InsightReportingAgent:
                     data_context['statistics'] = await DatabaseTools.get_statistics(db)
                 
                 # Generar respuesta usando IA con el contexto de datos
-                response_text = await self._generate_ai_response(query, data_context)
+                if self.model:
+                    response_text = await self._generate_ai_response(query, data_context)
+                else:
+                    response_text = self._generate_fallback_response(query, data_context)
                 
                 return {
                     "success": True,

@@ -13,8 +13,14 @@ backend_dir = Path(__file__).parent.parent / "watcher-monolith" / "backend"
 sys.path.insert(0, str(backend_dir))
 
 # Configurar environment
-os.environ["DATA_DIR"] = "/Users/germanevangelisti/watcher-agent"
-os.environ["GOOGLE_API_KEY"] = "AIzaSyBRpwGT4xlyVNhmgo7oxUywA8LMl-6CrzQ"
+os.environ.setdefault("DATA_DIR", str(Path(__file__).parent.parent.parent))
+
+from dotenv import load_dotenv
+load_dotenv(Path(__file__).parent.parent / ".env")
+
+if not os.getenv("GOOGLE_API_KEY"):
+    print("❌ GOOGLE_API_KEY not set. Add it to watcher-backend/.env")
+    sys.exit(1)
 
 print("\n" + "="*60)
 print("  EPIC 0 - Test Directo (Sin Servidor)")

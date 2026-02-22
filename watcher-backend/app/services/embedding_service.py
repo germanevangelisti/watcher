@@ -58,7 +58,7 @@ class GoogleEmbeddingFunction:
     """ChromaDB-compatible embedding function using Google gemini-embedding-001."""
 
     def __init__(self, api_key: str, model: str = EMBEDDING_MODEL):
-        genai.configure(api_key=api_key)
+        # genai.configure() is called once at app startup in main.py
         self.model = model
 
     def __call__(self, input: List[str]) -> List[List[float]]:

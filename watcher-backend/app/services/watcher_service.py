@@ -95,7 +95,7 @@ class WatcherService:
         self.model = None
         if api_key:
             try:
-                genai.configure(api_key=api_key)
+                # genai.configure() is called once at app startup in main.py
                 self.model = genai.GenerativeModel("gemini-2.0-flash")
                 logger.info("Google Gemini client inicializado correctamente")
             except Exception as e:

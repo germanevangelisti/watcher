@@ -806,13 +806,7 @@ async def index_document_embeddings(
     
     logger.info("✅ API key encontrada")
     
-    # Configurar Google AI
-    try:
-        genai.configure(api_key=api_key)
-        logger.info("✅ Google AI configurado")
-    except Exception as e:
-        logger.error(f"❌ Error configurando Google AI: {e}")
-        raise HTTPException(status_code=500, detail=f"Error configurando Google AI: {str(e)}")
+    # genai.configure() is called once at app startup in main.py
     
     # Extraer texto primero
     logger.info("📖 Extrayendo texto del PDF...")

@@ -249,7 +249,7 @@ class DocumentProcessor:
                     "error": "GOOGLE_API_KEY no configurada"
                 }
             
-            genai.configure(api_key=api_key)
+            # genai.configure() is called once at app startup in main.py
             logger.info("✅ Google AI configurado")
             
             # Dividir en chunks

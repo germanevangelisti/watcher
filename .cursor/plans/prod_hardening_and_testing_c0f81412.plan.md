@@ -134,8 +134,7 @@ Comandos:
 gcloud services enable secretmanager.googleapis.com
 
 # Crear secretos de produccion
-echo -n "AIzaSyBRpwGT4xlyVNhmgo7oxUywA8LMl-6CrzQ" | \
-  gcloud secrets create watcher-prod-google-api-key --data-file=- --replication-policy=automatic
+--
 
 echo -n "watcher_prod_S3cur3_2026" | \
   gcloud secrets create watcher-prod-db-password --data-file=- --replication-policy=automatic

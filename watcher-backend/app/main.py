@@ -5,6 +5,7 @@ FastAPI backend for the Watcher system - official bulletin analysis.
 """
 
 import logging
+import os
 import time
 
 from fastapi import FastAPI, Request
@@ -20,6 +21,20 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 logger = logging.getLogger("watcher")
+
+# ---------------------------------------------------------------------------
+# Google Generative AI — single global configuration
+# ---------------------------------------------------------------------------
+_google_api_key = settings.GOOGLE_API_KEY or os.getenv("GOOGLE_API_KEY")
+if _google_api_key:
+    try:
+        import google.generativeai as genai
+        genai.configure(api_key=_google_api_key)
+        logger.info("Google Generative AI configured globally (key …%s)", _google_api_key[-4:])
+    except ImportError:
+        logger.warning("google-generativeai not installed — skipping global configure")
+else:
+    logger.warning("GOOGLE_API_KEY not set — Google AI features will be unavailable")
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
