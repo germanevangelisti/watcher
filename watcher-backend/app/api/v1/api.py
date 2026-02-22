@@ -9,10 +9,11 @@ from app.api.v1.endpoints import (
     dslab_documents, dslab_configs, dslab_executions, dslab_results,
     agents, workflows, websocket, feedback, observability, workflow_history,
     sync, jurisdicciones, menciones, processing_logs, analisis, entidades,
-    search, documentos, compliance, upload, pipeline
+    search, documentos, compliance, upload, pipeline, health
 )
 
 api_router = APIRouter()
+api_router.include_router(health.router, tags=["health"])
 api_router.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])
 api_router.include_router(search.router, tags=["search"])
 api_router.include_router(documentos.router, tags=["documentos"])

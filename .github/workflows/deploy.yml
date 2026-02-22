@@ -1,0 +1,54 @@
+name: Deploy to GCE
+
+on:
+  workflow_run:
+    workflows: ["CI - Watcher Agent"]
+    branches: [main]
+    types: [completed]
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy via SSH
+        run: |
+          gcloud compute ssh watcher-prod --zone=us-central1-a --command="
+            cd ~/watcher &&
+            git fetch origin main &&
+            git reset --hard origin/main &&
+            bash scripts/deploy.sh
+          "
+
+      - name: Health check
+        run: |
+          echo "Waiting 30s for containers to start..."
+          sleep 30
+          for i in $(seq 1 5); do
+            if curl -sf http://34.170.135.94/api/v1/health; then
+              echo ""
+              echo "Health check passed!"
+              exit 0
+            fi
+            echo "Attempt $i failed, waiting 10s..."
+            sleep 10
+          done
+          echo "Health check failed after 5 attempts"
+          exit 1

@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException, Path
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from pathlib import Path as PathLib
+from app.core.config import settings
 
 router = APIRouter(prefix="/documentos", tags=["documentos"])
 
@@ -89,8 +90,7 @@ async def get_pdf_document(
     """
     Obtiene el PDF original (si está disponible)
     """
-    # Buscar en /boletines
-    boletines_dir = PathLib(__file__).parent.parent.parent.parent.parent.parent / "boletines"
+    boletines_dir = settings.BOLETINES_DIR
     
     # El filename puede venir como 20260203_1_Secc.pdf
     # Buscar por año/mes/dia en la estructura de directorios

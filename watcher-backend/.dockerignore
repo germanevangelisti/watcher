@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+sqlite.db
+sqlite.db-wal
+sqlite.db-shm
+*.db.backup*
+chroma_data/
+data/
+.pytest_cache/
+htmlcov/
+.coverage
+*.egg-info/
+.git/
+tests/
+scripts/

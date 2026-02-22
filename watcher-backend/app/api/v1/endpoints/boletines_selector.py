@@ -17,7 +17,8 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 # Configuración de directorios
-BOLETINES_DIR = Path("/Users/germanevangelisti/watcher-agent/boletines")
+from app.core.config import settings
+BOLETINES_DIR = settings.BOLETINES_DIR
 
 class BoletinInfo(BaseModel):
     """Información de un boletín"""

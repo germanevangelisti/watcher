@@ -1,0 +1,69 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: watcher
+      POSTGRES_USER: watcher
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-watcher_dev_2026}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U watcher"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  backend:
+    build: ./watcher-backend
+    env_file: .env.production
+    environment:
+      DATABASE_URL: postgresql+asyncpg://watcher:${DB_PASSWORD:-watcher_dev_2026}@db:5432/watcher
+      SYNC_DATABASE_URL: postgresql://watcher:${DB_PASSWORD:-watcher_dev_2026}@db:5432/watcher
+      BOLETINES_DIR: /app/boletines
+    volumes:
+      - chromadata:/root/.watcher/chromadb
+      - boletines:/app/boletines
+      - uploads:/app/data/uploads
+    ports:
+      - "8001:8001"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./watcher-frontend
+      args:
+        VITE_API_URL: /api/v1
+        VITE_WS_URL: /api/v1/ws
+    ports:
+      - "5173:80"
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    environment:
+      CADDY_DOMAIN: ${CADDY_DOMAIN:-:80}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+      - frontend
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  chromadata:
+  boletines:
+  uploads:
+  caddy_data:
+  caddy_config:

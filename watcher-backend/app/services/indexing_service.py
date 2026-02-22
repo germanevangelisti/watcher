@@ -334,13 +334,20 @@ class IndexingService:
             )
             sql_count = result.scalar() or 0
             
-            # 2. Count in FTS5
-            fts_sql = text("""
-                SELECT COUNT(*) 
-                FROM chunk_records_fts AS fts
-                JOIN chunk_records AS c ON c.id = fts.rowid
-                WHERE c.document_id = :document_id
-            """)
+            # 2. Count in FTS index
+            from app.core.config import settings as _cfg
+            if _cfg.is_postgres:
+                fts_sql = text("""
+                    SELECT COUNT(*) FROM chunk_records
+                    WHERE document_id = :document_id AND search_vector IS NOT NULL
+                """)
+            else:
+                fts_sql = text("""
+                    SELECT COUNT(*)
+                    FROM chunk_records_fts AS fts
+                    JOIN chunk_records AS c ON c.id = fts.rowid
+                    WHERE c.document_id = :document_id
+                """)
             fts_result = await self.db.execute(fts_sql, {"document_id": document_id})
             fts_count = fts_result.scalar() or 0
             

@@ -702,7 +702,22 @@ def _find_pdf(filename: str) -> Optional[Path]:
         if matches:
             return matches[0]
     
-    # 2. Flat directories
+    # 2. Search in uploads/{year}/{month}/ (uploaded via API)
+    if settings.UPLOADS_DIR.exists() and len(filename) >= 8:
+        try:
+            year = filename[:4]
+            month = filename[4:6]
+            candidate = settings.UPLOADS_DIR / year / month / filename
+            if candidate.exists():
+                return candidate
+        except (ValueError, IndexError):
+            pass
+
+        matches = list(settings.UPLOADS_DIR.rglob(filename))
+        if matches:
+            return matches[0]
+
+    # 3. Flat directories (legacy)
     for search_dir in [
         settings.DATA_DIR / "raw",
         settings.DATA_DIR / "uploaded_documents",

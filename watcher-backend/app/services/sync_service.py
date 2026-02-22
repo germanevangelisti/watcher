@@ -18,11 +18,11 @@ from sqlalchemy import select
 from app.db.models import SyncState
 from app.api.v1.endpoints.downloader import download_boletines_task, download_status
 from app.services.batch_processor import BatchProcessor
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Configuración
-BOLETINES_BASE_DIR = Path("/Users/germanevangelisti/watcher-agent/boletines")
+BOLETINES_BASE_DIR = settings.BOLETINES_DIR
 SECTIONS = [1, 2, 3, 4, 5]
 
 

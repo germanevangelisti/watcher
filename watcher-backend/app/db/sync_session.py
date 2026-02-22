@@ -1,37 +1,34 @@
 """
-Sesión síncrona para endpoints que necesitan SQLAlchemy tradicional
+Synchronous session for endpoints that require traditional SQLAlchemy.
+Supports both SQLite and PostgreSQL based on SYNC_DATABASE_URL.
 """
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
 from app.core.config import settings
 
-# URL de la base de datos SQLite (síncrona)
-SQLALCHEMY_DATABASE_URL = f"sqlite:///{settings.BASE_DIR}/sqlite.db"
+engine_kwargs: dict = {
+    "echo": False,
+}
 
-# Crear el motor de base de datos síncrono
-sync_engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
-)
+if not settings.is_postgres:
+    from sqlalchemy.pool import StaticPool
+    engine_kwargs["connect_args"] = {"check_same_thread": False}
+    engine_kwargs["poolclass"] = StaticPool
 
-# Crear sesión síncrona
+sync_engine = create_engine(settings.SYNC_DATABASE_URL, **engine_kwargs)
+
 SyncSessionLocal = sessionmaker(
     bind=sync_engine,
     expire_on_commit=False,
     autocommit=False,
-    autoflush=False
+    autoflush=False,
 )
 
+
 def get_sync_db():
-    """
-    Dependencia para obtener una sesión de base de datos síncrona.
-    Para usar con endpoints del DS Lab.
-    """
+    """Dependency for synchronous database sessions (DS Lab endpoints)."""
     db = SyncSessionLocal()
     try:
         yield db
     finally:
         db.close()
-

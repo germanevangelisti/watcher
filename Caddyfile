@@ -1,0 +1,24 @@
+# Default: ":80" (HTTP, no domain)
+# With domain: set CADDY_DOMAIN=watcher.yourdomain.com in .env.production
+# Caddy auto-provisions Let's Encrypt certificates when a domain is set
+{$CADDY_DOMAIN::80} {
+	handle /api/* {
+		reverse_proxy backend:8001
+	}
+
+	handle /ws/* {
+		reverse_proxy backend:8001
+	}
+
+	handle /docs {
+		reverse_proxy backend:8001
+	}
+
+	handle /openapi.json {
+		reverse_proxy backend:8001
+	}
+
+	handle {
+		reverse_proxy frontend:80
+	}
+}
