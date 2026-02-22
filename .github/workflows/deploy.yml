@@ -30,12 +30,9 @@ jobs:
 
       - name: Deploy via SSH
         run: |
-          gcloud compute ssh watcher-prod --zone=us-central1-a --command="
-            cd ~/watcher &&
-            git fetch origin main &&
-            git reset --hard origin/main &&
-            bash scripts/deploy.sh
-          "
+          gcloud compute ssh germanevangelisti@watcher-prod \
+            --zone=us-central1-a \
+            --command="cd ~/watcher && git fetch origin main && git reset --hard origin/main && bash scripts/deploy.sh"
 
       - name: Health check
         run: |
