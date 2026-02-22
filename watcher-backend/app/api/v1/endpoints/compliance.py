@@ -772,7 +772,6 @@ async def index_document_embeddings(
     Paso 2: Genera embeddings para el documento.
     Divide en chunks y crea vectores para búsqueda semántica.
     """
-    import google.generativeai as genai
     import logging
     
     logger = logging.getLogger(__name__)
