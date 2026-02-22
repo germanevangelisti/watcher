@@ -8,7 +8,6 @@ hasta hoy, los descarga y procesa automáticamente.
 import asyncio
 import logging
 from datetime import date, datetime, timedelta
-from pathlib import Path
 from typing import Dict, List, Optional
 import re
 

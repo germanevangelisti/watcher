@@ -5,19 +5,17 @@ Endpoints para listar y seleccionar boletines para análisis
 
 import json
 import logging
-from pathlib import Path
 from datetime import datetime
 from typing import List, Dict, Optional
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-# Configuración de directorios
-from app.core.config import settings
 BOLETINES_DIR = settings.BOLETINES_DIR
 
 class BoletinInfo(BaseModel):
@@ -159,7 +157,7 @@ async def enrich_with_red_flags(boletines: List[BoletinInfo]) -> List[BoletinInf
     """
     try:
         # Cargar datos reales del DS Lab
-        sync_file = Path("/Users/germanevangelisti/watcher-agent/watcher-lab/watcher_ds_lab/reports/monolith_sync.json")
+        sync_file = settings.DATA_DIR / "reports" / "monolith_sync.json"
         
         if not sync_file.exists():
             logger.warning(f"Archivo de sincronización no encontrado: {sync_file}")
