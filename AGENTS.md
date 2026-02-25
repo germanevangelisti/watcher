@@ -192,6 +192,39 @@ See [Makefile](Makefile) for unified development commands:
 
 ---
 
+## Cursor Cloud specific instructions
+
+### Services overview
+
+| Service | Directory | Dev command | Port |
+|---|---|---|---|
+| Backend (FastAPI) | `watcher-backend/` | `make start-backend` | 8001 |
+| Frontend v2 (Vite + React 19) | `watcher-frontend/` | `make start-frontend` | 5173 |
+
+### Running the dev environment
+
+- **No `.env` files are required** for local development. The backend defaults to SQLite (`watcher-backend/sqlite.db` ships pre-populated with 1300+ bulletins) and runs without API keys (AI features degrade gracefully).
+- The Vite dev server proxies `/api` and `/ws` to `localhost:8001`, so both servers must be running simultaneously.
+- Start the backend first, then the frontend. See `Makefile` for all available targets.
+
+### Lint / Test / Build commands
+
+All commands are documented in the `Makefile`. Key ones:
+
+- **Lint:** `make lint` (runs `ruff check` for Python + `eslint` for frontend)
+- **Backend tests:** `pytest watcher-backend/tests/ -v` (uses `pytest.ini` at repo root; `pythonpath = watcher-backend`)
+- **Frontend tests:** `cd watcher-frontend && npm run test -- --run`
+- **Build frontend:** `cd watcher-frontend && npm run build` (TypeScript check + Vite build)
+
+### Known caveats
+
+- Six test files under `watcher-backend/tests/tests/` import from the old `watcher_monolith` module path (pre-refactor). These fail to collect and should be ignored or migrated. They are: `test_extraction_schemas.py`, `test_extractors.py`, `test_extraction_integration.py`, `unit/test_kaa_agents.py`, `e2e/test_full_pipeline.py`, `integration/test_dia_kaa_flow.py`.
+- Six tests in `test_indexing_service.py` fail due to async mock issues (not environment-related).
+- The `.pre-commit-config.yaml` still references the old `watcher-monolith/` paths and is not functional with the current repo structure.
+- `pip install` places binaries in `~/.local/bin`; ensure this is on `PATH`.
+
+---
+
 **Document Version**: 1.0.0  
 **Last Updated**: Sprint 0  
 **Maintained By**: Opus 4.5 (Planning Agent)
