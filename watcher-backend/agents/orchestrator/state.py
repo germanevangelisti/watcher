@@ -15,6 +15,7 @@ class AgentType(str, Enum):
     INSIGHT_REPORTING = "insight_reporting"
     LEARNING_FEEDBACK = "learning_feedback"
     HISTORICAL_INTELLIGENCE = "historical_intelligence"
+    VERIFICATION = "verification"
 
 
 class TaskStatus(str, Enum):

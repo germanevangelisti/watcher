@@ -16,3 +16,4 @@ export {
   usePipelineProcessOne,
   usePipelineProcessAll,
 } from "./use-pipeline"
+export * from "./use-vcp-metrics"

@@ -83,6 +83,10 @@ class Analisis(Base):
     descripcion = Column(Text, nullable=True)  # Resumen del acto
     motivo_riesgo = Column(Text, nullable=True)  # Justificación del riesgo asignado
 
+    # Adversarial verification metadata (Fase II + IV)
+    aiu_summary_json = Column(JSON, nullable=True)   # {total_aius, by_type, verified, unverifiable, contradicted}
+    firewall_score = Column(Float, nullable=True)      # Reference Firewall score (0.0-1.0)
+
     # Relación con boletín
     boletin = relationship("Boletin", back_populates="analisis")
 

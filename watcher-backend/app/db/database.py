@@ -118,6 +118,24 @@ async def _create_pg_fts_infrastructure(conn):
     """))
 
 
+async def _ensure_sqlite_columns(conn) -> None:
+    """
+    Idempotent SQLite column migrations — runs on every startup, safe to re-run.
+    SQLite does not support IF NOT EXISTS in ALTER TABLE, so we check PRAGMA first.
+    """
+    result = await conn.execute(text("PRAGMA table_info(analisis)"))
+    existing = {row[1] for row in result.fetchall()}
+
+    new_cols = [
+        ("aiu_summary_json", "TEXT"),
+        ("firewall_score", "REAL"),
+    ]
+    for col_name, col_type in new_cols:
+        if col_name not in existing:
+            await conn.execute(text(f"ALTER TABLE analisis ADD COLUMN {col_name} {col_type}"))
+            logger.info(f"SQLite migration: added analisis.{col_name}")
+
+
 async def init_db():
     """Initialize SQL database and Vector DB."""
     async with engine.begin() as conn:
@@ -125,6 +143,8 @@ async def init_db():
 
         if settings.is_postgres:
             await _create_pg_fts_infrastructure(conn)
+        else:
+            await _ensure_sqlite_columns(conn)
 
     init_vector_db()
 

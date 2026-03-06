@@ -3,12 +3,14 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useDashboardStats } from "@/lib/api/hooks/use-dashboard-stats"
-import { FileText, Database, Network, Upload, Search, BarChart3, AlertCircle, Activity } from "lucide-react"
+import { useVCPMetrics } from "@/lib/api/hooks"
+import { FileText, Database, Network, Upload, Search, BarChart3, AlertCircle, Activity, Shield, AlertTriangle } from "lucide-react"
 import { Link } from "@tanstack/react-router"
 import { TransparencyMap } from "@/components/features/transparency-map"
 
 export function DashboardPage() {
   const { data: stats, isLoading, error } = useDashboardStats()
+  const { data: vcpData } = useVCPMetrics()
 
   return (
     <div className="space-y-8">
@@ -99,7 +101,7 @@ export function DashboardPage() {
       </Card>
 
       {/* System Status + Quick Stats - Second row */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-3">
         {/* System Status */}
         <Card>
           <CardHeader>
@@ -196,6 +198,36 @@ export function DashboardPage() {
                 )}
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* VCP Score Card */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Verificación Adversarial</CardTitle>
+            <Shield className="h-4 w-4 text-indigo-400" />
+          </CardHeader>
+          <CardContent>
+            {vcpData ? (
+              <>
+                <div className={`text-2xl font-bold ${
+                  vcpData.vcp_score >= 0.85 ? "text-green-400" :
+                  vcpData.vcp_score >= 0.70 ? "text-yellow-400" : "text-red-400"
+                }`}>
+                  {Math.round(vcpData.vcp_score * 100)}%
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  VCP · {vcpData.total_aius} AIUs
+                  {vcpData.requires_attention && (
+                    <span className="ml-1 text-yellow-400 inline-flex items-center gap-0.5">
+                      <AlertTriangle className="h-3 w-3" /> atención
+                    </span>
+                  )}
+                </p>
+              </>
+            ) : (
+              <div className="text-2xl font-bold text-muted-foreground">—</div>
+            )}
           </CardContent>
         </Card>
       </div>

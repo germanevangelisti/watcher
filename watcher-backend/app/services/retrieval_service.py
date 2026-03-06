@@ -138,7 +138,7 @@ class RetrievalService:
             List of SearchResult ordered by BM25 score
         """
         if not self.fts_service:
-            logger.warning("FTS service not initialized (no db_session)")
+            logger.debug("FTS service not initialized (no db_session), skipping keyword search")
             return []
         
         try:

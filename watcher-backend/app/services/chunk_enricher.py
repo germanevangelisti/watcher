@@ -94,37 +94,48 @@ class ChunkEnricher:
         chunk_text: str,
         chunk_index: int,
         document_id: str,
-        context: Optional[Dict[str, Any]] = None
+        context: Optional[Dict[str, Any]] = None,
+        anchored_entities=None,
     ) -> Dict[str, Any]:
         """
         Enriquecer un chunk con metadata.
-        
+
         Args:
             chunk_text: Texto del chunk
             chunk_index: Índice del chunk
             document_id: ID del documento
             context: Contexto adicional (ej: boletin_id, section info)
-            
+            anchored_entities: Lista opcional de EntityResult pre-mapeados para este chunk
+
         Returns:
             Dict con metadata enriquecida
         """
         context = context or {}
-        
+
         # Calcular hash del chunk
         chunk_hash = hashlib.sha256(chunk_text.encode('utf-8')).hexdigest()
-        
+
         # Detectar section_type
         section_type = self._detect_section_type(chunk_text)
-        
+
         # Detectar has_amounts
         has_amounts = self._detect_amounts(chunk_text)
-        
+
         # Detectar has_tables
         has_tables = self._detect_tables(chunk_text)
-        
-        # Extraer entidades básicas
-        entities = self._extract_basic_entities(chunk_text)
-        
+
+        # Extraer entidades: usar anchored_entities si están disponibles
+        if anchored_entities:
+            entities_data = {
+                "anchored": True,
+                "entities": [
+                    {"tipo": e.tipo, "nombre": e.nombre, "confianza": e.confianza}
+                    for e in anchored_entities
+                ],
+            }
+        else:
+            entities_data = self._extract_basic_entities(chunk_text)
+
         # Construir metadata
         metadata = {
             "document_id": document_id,
@@ -136,13 +147,14 @@ class ChunkEnricher:
             "language": "es",  # Por defecto español
             "has_amounts": has_amounts,
             "has_tables": has_tables,
-            "entities_json": entities if entities else None,
+            "entities_json": entities_data if entities_data else None,
+            "entity_anchored": bool(anchored_entities),
             # Context adicional
             "boletin_id": context.get("boletin_id"),
             "start_char": context.get("start_char"),
             "end_char": context.get("end_char"),
         }
-        
+
         return metadata
     
     def _detect_section_type(self, text: str) -> str:

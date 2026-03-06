@@ -8,13 +8,19 @@ from datetime import datetime
 from uuid import uuid4
 
 from .state import (
-    WorkflowState, 
-    TaskDefinition, 
-    TaskStatus, 
+    WorkflowState,
+    TaskDefinition,
+    TaskStatus,
     AgentType
 )
 from app.db.workflow_crud import workflow_crud, task_crud, log_crud
 from app.db.database import AsyncSessionLocal
+
+try:
+    from agents.verification.agent import VerificationAgent
+    _VERIFICATION_AGENT_AVAILABLE = True
+except ImportError:
+    _VERIFICATION_AGENT_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +49,20 @@ class AgentOrchestrator:
         self.agent_handlers: Dict[AgentType, Callable] = {}
         self.approval_callback: Optional[Callable] = None
         self.persist_enabled = config.get('persist_enabled', True) if config else True
-        
+
+        # Register VerificationAgent (Fase III) with retrieval_service if available
+        if _VERIFICATION_AGENT_AVAILABLE:
+            try:
+                from app.services.retrieval_service import get_retrieval_service
+                _retrieval = get_retrieval_service()
+                _verification_agent_instance = VerificationAgent(retrieval_service=_retrieval)
+            except Exception:
+                _verification_agent_instance = VerificationAgent()
+            self.register_agent_handler(
+                AgentType.VERIFICATION,
+                _verification_agent_instance.execute
+            )
+
         logger.info("AgentOrchestrator inicializado (persistencia: %s)", self.persist_enabled)
     
     def register_agent_handler(self, agent_type: AgentType, 

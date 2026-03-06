@@ -13,6 +13,7 @@ from agents.orchestrator.state import WorkflowState, TaskDefinition, AgentType
 from agents.tools.database_tools import DatabaseTools
 from agents.tools.analysis_tools import AnalysisTools
 from app.db.database import AsyncSessionLocal
+from app.services.reference_firewall import ReferenceFirewallService
 
 try:
     import google.generativeai as genai
@@ -74,7 +75,10 @@ class InsightReportingAgent:
         
         # Historial de conversación
         self.conversation_history: List[Dict[str, str]] = []
-        
+
+        # Reference Firewall (Fase IV) — set externally via set_firewall()
+        self._firewall: Optional[ReferenceFirewallService] = None
+
         logger.info("InsightReportingAgent inicializado")
     
     async def execute(self, workflow: WorkflowState, 
@@ -186,13 +190,31 @@ class InsightReportingAgent:
                 "role": "assistant",
                 "content": response_text
             })
-            
-            return {
+
+            result: Dict[str, Any] = {
                 "success": True,
                 "query": query,
                 "response": response_text,
                 "timestamp": datetime.utcnow().isoformat()
             }
+
+            # Reference Firewall — V1: flag only, never blocks
+            if self._firewall is not None:
+                try:
+                    validation = await self._firewall.validate_references(response_text)
+                    if validation.flagged:
+                        logger.warning(
+                            f"Reference Firewall: {validation.not_found_count} unverified refs in answer"
+                        )
+                    result['firewall_validation'] = {
+                        'flagged': validation.flagged,
+                        'score': validation.firewall_score,
+                        'not_found': validation.not_found_count,
+                    }
+                except Exception as e:
+                    logger.debug(f"Firewall check skipped: {e}")
+
+            return result
             
         except Exception as e:
             logger.error(f"Error respondiendo query: {e}", exc_info=True)
@@ -486,6 +508,10 @@ class InsightReportingAgent:
         """Genera respuesta fallback sin IA"""
         return f"He recibido tu consulta: '{query}'. En este momento, la funcionalidad de chat requiere configurar la API de Google. Por favor, consulta los datos directamente en el dashboard."
     
+    def set_firewall(self, fw: "ReferenceFirewallService") -> None:
+        """Attach a ReferenceFirewallService for answer validation (Fase IV)."""
+        self._firewall = fw
+
     def clear_conversation(self) -> None:
         """Limpia el historial de conversación"""
         self.conversation_history.clear()

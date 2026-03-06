@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useParams, Link } from "@tanstack/react-router"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -7,10 +7,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { useBoletin, useBoletinContent, useBoletinAnalisis } from "@/lib/api"
-import { ArrowLeft, FileText, Calendar, Database, CheckCircle2, Clock, ExternalLink, Maximize2, Upload, Download, RefreshCw, MapPin, AlertTriangle, Shield, Filter, Gavel, Building2, DollarSign } from "lucide-react"
+import apiClient from "@/lib/api/client"
+import { ArrowLeft, FileText, Calendar, Database, CheckCircle2, Clock, Maximize2, Upload, Download, RefreshCw, MapPin, AlertTriangle, Shield, Filter, Gavel, Building2, DollarSign, BookOpen, Loader2 } from "lucide-react"
 import dayjs from "dayjs"
 
 // Types for analysis items (supports both v1 and v2)
+interface AIUSummary {
+  total_aius: number
+  by_type: Record<string, number>
+}
+
 interface AnalisisItem {
   id: number
   fragmento: string
@@ -29,6 +35,9 @@ interface AnalisisItem {
   monto_numerico?: number | null
   descripcion?: string | null
   motivo_riesgo?: string | null
+  // Adversarial verification fields (Phases II + IV)
+  aiu_summary_json?: AIUSummary | null
+  firewall_score?: number | null
 }
 
 function formatCurrency(value: number): string {
@@ -85,9 +94,111 @@ export function BoletinDetail() {
   const [showFullText, setShowFullText] = useState(false)
   const [riesgoFilter, setRiesgoFilter] = useState<string>("all")
 
+  // PDF fragment modal state
+  const [pdfModal, setPdfModal] = useState<{
+    open: boolean
+    loading: boolean
+    pageNumber: number | null
+    totalPages: number
+    found: boolean
+    analisisId: number | null
+    blobUrl: string | null
+  }>({ open: false, loading: false, pageNumber: null, totalPages: 0, found: false, analisisId: null, blobUrl: null })
+
+  // Content tab PDF view state
+  const [contentView, setContentView] = useState<'text' | 'pdf'>('text')
+  const [contentPdfUrl, setContentPdfUrl] = useState<string | null>(null)
+  const [contentPdfLoading, setContentPdfLoading] = useState(false)
+
+  // Clean up blob URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (pdfModal.blobUrl) URL.revokeObjectURL(pdfModal.blobUrl)
+      if (contentPdfUrl) URL.revokeObjectURL(contentPdfUrl)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function closePdfModal() {
+    setPdfModal(s => {
+      if (s.blobUrl) URL.revokeObjectURL(s.blobUrl)
+      return { ...s, open: false, blobUrl: null }
+    })
+  }
+
   const { data: boletin, isLoading, error } = useBoletin(boletinId)
   const { data: content, isLoading: contentLoading } = useBoletinContent(boletin?.filename)
   const { data: analisis, isLoading: analisisLoading } = useBoletinAnalisis(boletinId)
+
+  // Relative API path for PDF — goes through Vite proxy (same-origin, no CORS)
+  const pdfApiPath = boletin?.filename ? `/api/v1/documentos/pdf/${boletin.filename}` : null
+
+  // Load PDF blob for the content tab viewer
+  async function switchToContentPdf() {
+    if (!pdfApiPath) return
+    setContentView('pdf')
+    if (contentPdfUrl) return // already loaded
+    setContentPdfLoading(true)
+    try {
+      const blob = await fetch(pdfApiPath).then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`)
+        return r.blob()
+      })
+      setContentPdfUrl(URL.createObjectURL(blob))
+    } catch (e) {
+      console.error('PDF viewer load failed:', e)
+      setContentView('text')
+    } finally {
+      setContentPdfLoading(false)
+    }
+  }
+
+  // Programmatic download via Vite proxy (same-origin blob)
+  async function downloadPdf() {
+    if (!pdfApiPath || !boletin?.filename) return
+    try {
+      const blob = await fetch(pdfApiPath).then(r => r.blob())
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(blob)
+      a.download = boletin.filename
+      a.click()
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000)
+    } catch (e) {
+      console.error('Download failed:', e)
+    }
+  }
+
+  // Open PDF modal at the page containing a specific analysis fragment
+  async function openPdfAtFragment(item: AnalisisItem) {
+    if (!pdfApiPath) return
+    setPdfModal({ open: true, loading: true, pageNumber: null, totalPages: 0, found: false, analisisId: item.id, blobUrl: null })
+
+    // Run both in parallel; either can fail without blocking the other
+    const [locationResult, pdfResult] = await Promise.allSettled([
+      apiClient.get<{ found: boolean; page_number: number | null; total_pages: number }>(
+        `/boletines/${boletinId}/analisis/${item.id}/fragment-location`
+      ),
+      fetch(pdfApiPath).then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`)
+        return r.blob()
+      }),
+    ])
+
+    if (locationResult.status === 'rejected') console.error('Fragment location:', locationResult.reason)
+    if (pdfResult.status === 'rejected') console.error('PDF fetch:', pdfResult.reason)
+
+    const location = locationResult.status === 'fulfilled' ? locationResult.value.data : null
+    const pdfBlob = pdfResult.status === 'fulfilled' ? pdfResult.value : null
+    const blobUrl = pdfBlob ? URL.createObjectURL(pdfBlob) : null
+
+    setPdfModal({
+      open: true, loading: false,
+      pageNumber: location?.page_number ?? null,
+      totalPages: location?.total_pages ?? 0,
+      found: location?.found ?? false,
+      analisisId: item.id,
+      blobUrl,
+    })
+  }
 
   // Filter and count analysis items by risk level, compute total montos
   const { filteredItems, riesgoCounts, totalMontoNumerico, actosConMonto } = useMemo(() => {
@@ -108,6 +219,28 @@ export function BoletinDetail() {
       : items.filter(item => (item.riesgo || "informativo").toLowerCase() === riesgoFilter)
     return { filteredItems: filtered, riesgoCounts: counts, totalMontoNumerico: montoSum, actosConMonto: conMonto }
   }, [analisis, riesgoFilter])
+
+  // Aggregate adversarial verification data from analisis items
+  const verificationData = useMemo(() => {
+    const items: AnalisisItem[] = analisis?.analisis || []
+    const itemsWithAIU = items.filter(item => item.aiu_summary_json != null)
+    const itemsWithFirewall = items.filter(item => item.firewall_score != null)
+
+    const totalAIUs = itemsWithAIU.reduce((sum, item) => sum + (item.aiu_summary_json!.total_aius), 0)
+    const byType: Record<string, number> = {}
+    for (const item of itemsWithAIU) {
+      for (const [type, count] of Object.entries(item.aiu_summary_json!.by_type)) {
+        byType[type] = (byType[type] || 0) + count
+      }
+    }
+    const avgFirewall = itemsWithFirewall.length
+      ? itemsWithFirewall.reduce((sum, item) => sum + item.firewall_score!, 0) / itemsWithFirewall.length
+      : null
+    const flaggedItems = itemsWithFirewall.filter(item => item.firewall_score! < 1.0)
+    const hasData = itemsWithAIU.length > 0 || itemsWithFirewall.length > 0
+
+    return { totalAIUs, byType, avgFirewall, flaggedItems, itemsWithAIU, hasData, allItems: items }
+  }, [analisis])
 
   if (isLoading) {
     return (
@@ -228,6 +361,10 @@ export function BoletinDetail() {
           <TabsTrigger value="contenido">Contenido</TabsTrigger>
           <TabsTrigger value="analisis">Análisis</TabsTrigger>
           <TabsTrigger value="metadata">Metadata</TabsTrigger>
+          <TabsTrigger value="verificacion" className="flex items-center gap-1">
+            <Shield className="h-4 w-4" />
+            Verificación
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="contenido" className="space-y-4">
@@ -240,33 +377,75 @@ export function BoletinDetail() {
                     {contentLoading ? "Cargando..." : `${content?.total_chars?.toLocaleString() || 0} caracteres`}
                   </CardDescription>
                 </div>
-                <Dialog open={showFullText} onOpenChange={setShowFullText}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="gap-2">
-                      <Maximize2 className="h-4 w-4" />
-                      Texto completo
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle>{boletin.filename}</DialogTitle>
-                      <DialogDescription>
-                        Texto completo del documento
-                      </DialogDescription>
-                    </DialogHeader>
-                    {contentLoading ? (
-                      <Skeleton className="h-96 w-full" />
-                    ) : (
-                      <pre className="text-xs font-mono whitespace-pre-wrap bg-muted p-4 rounded-lg">
-                        {content?.text || "No hay contenido disponible"}
-                      </pre>
-                    )}
-                  </DialogContent>
-                </Dialog>
+                <div className="flex items-center gap-2">
+                  {boletin.pdf_path && (
+                    <div className="flex items-center rounded-md border overflow-hidden">
+                      <Button
+                        variant={contentView === 'text' ? "default" : "ghost"}
+                        size="sm"
+                        className="rounded-none h-8 text-xs px-3"
+                        onClick={() => setContentView('text')}
+                      >
+                        <FileText className="h-3.5 w-3.5 mr-1.5" />
+                        Texto
+                      </Button>
+                      <Button
+                        variant={contentView === 'pdf' ? "default" : "ghost"}
+                        size="sm"
+                        className="rounded-none h-8 text-xs px-3 border-l"
+                        onClick={switchToContentPdf}
+                      >
+                        {contentPdfLoading ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <BookOpen className="h-3.5 w-3.5 mr-1.5" />}
+                        PDF
+                      </Button>
+                    </div>
+                  )}
+                  <Dialog open={showFullText} onOpenChange={setShowFullText}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm" className="gap-2">
+                        <Maximize2 className="h-4 w-4" />
+                        Texto completo
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>{boletin.filename}</DialogTitle>
+                        <DialogDescription>
+                          Texto completo del documento
+                        </DialogDescription>
+                      </DialogHeader>
+                      {contentLoading ? (
+                        <Skeleton className="h-96 w-full" />
+                      ) : (
+                        <pre className="text-xs font-mono whitespace-pre-wrap bg-muted p-4 rounded-lg">
+                          {content?.text || "No hay contenido disponible"}
+                        </pre>
+                      )}
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
-              {contentLoading ? (
+              {contentView === 'pdf' ? (
+                contentPdfLoading ? (
+                  <div className="flex items-center justify-center h-[600px] text-muted-foreground gap-2">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Cargando PDF…
+                  </div>
+                ) : contentPdfUrl ? (
+                  <iframe
+                    src={contentPdfUrl}
+                    className="w-full border-0 rounded-lg"
+                    style={{ height: "600px" }}
+                    title="PDF viewer"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-32 text-muted-foreground text-sm">
+                    No se pudo cargar el PDF.
+                  </div>
+                )
+              ) : contentLoading ? (
                 <div className="space-y-2">
                   <Skeleton className="h-4 w-full" />
                   <Skeleton className="h-4 w-full" />
@@ -282,13 +461,11 @@ export function BoletinDetail() {
                       </span>
                     )}
                   </pre>
-                  
+
                   {boletin.pdf_path && (
-                    <Button variant="outline" className="gap-2 w-full" asChild>
-                      <a href={boletin.pdf_path} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="h-4 w-4" />
-                        Abrir PDF original
-                      </a>
+                    <Button variant="outline" className="gap-2 w-full" onClick={downloadPdf}>
+                      <Download className="h-4 w-4" />
+                      Descargar archivo
                     </Button>
                   )}
                 </div>
@@ -473,16 +650,28 @@ export function BoletinDetail() {
                               </div>
                             )}
 
-                            {/* Expandable fragment */}
-                            <details className="text-xs">
-                              <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
-                                Ver fragmento original
-                              </summary>
-                              <pre className="mt-2 text-xs whitespace-pre-wrap bg-muted p-2 rounded max-h-40 overflow-y-auto">
-                                {item.fragmento?.substring(0, 500)}
-                                {item.fragmento && item.fragmento.length > 500 && "..."}
-                              </pre>
-                            </details>
+                            {/* Expandable fragment + Ver en PDF */}
+                            <div className="space-y-1.5">
+                              <details className="text-xs">
+                                <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                                  Ver fragmento original
+                                </summary>
+                                <pre className="mt-2 text-xs whitespace-pre-wrap bg-muted p-2 rounded max-h-64 overflow-y-auto">
+                                  {item.fragmento}
+                                </pre>
+                              </details>
+                              {boletin?.pdf_path && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 text-xs gap-1 text-muted-foreground hover:text-foreground px-1"
+                                  onClick={() => openPdfAtFragment(item)}
+                                >
+                                  <BookOpen className="h-3 w-3" />
+                                  Ver en PDF
+                                </Button>
+                              )}
+                            </div>
                           </CardContent>
                         </Card>
                       )
@@ -622,7 +811,171 @@ export function BoletinDetail() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="verificacion">
+          {analisisLoading ? (
+            <div className="space-y-3">
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-32 w-full" />
+            </div>
+          ) : !verificationData.hasData ? (
+            <div className="py-12 text-center text-muted-foreground text-sm">
+              Este boletín no tiene datos de verificación adversarial. Procesalo primero con el pipeline.
+            </div>
+          ) : (
+            <div className="space-y-5">
+              {/* Alert banner for flagged items */}
+              {verificationData.flaggedItems.length > 0 && (
+                <div className="flex items-center gap-2 p-3 rounded-md bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-sm">
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                  {verificationData.flaggedItems.length} acto(s) con referencias que no pudieron verificarse en la base de datos.
+                </div>
+              )}
+
+              {/* Summary cards */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="rounded-lg border p-3 text-center">
+                  <div className={`text-2xl font-bold ${
+                    verificationData.avgFirewall == null ? "text-muted-foreground" :
+                    verificationData.avgFirewall >= 0.85 ? "text-green-400" :
+                    verificationData.avgFirewall >= 0.70 ? "text-yellow-400" : "text-red-400"
+                  }`}>
+                    {verificationData.avgFirewall != null ? `${Math.round(verificationData.avgFirewall * 100)}%` : "—"}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">Firewall Score</div>
+                </div>
+                <div className="rounded-lg border p-3 text-center">
+                  <div className="text-2xl font-bold">{verificationData.totalAIUs}</div>
+                  <div className="text-xs text-muted-foreground mt-1">AIUs totales</div>
+                </div>
+                <div className="rounded-lg border p-3 text-center">
+                  <div className="text-2xl font-bold">{verificationData.itemsWithAIU.length}</div>
+                  <div className="text-xs text-muted-foreground mt-1">Actos analizados</div>
+                </div>
+                <div className="rounded-lg border p-3 text-center">
+                  <div className={`text-2xl font-bold ${verificationData.flaggedItems.length > 0 ? "text-yellow-400" : "text-green-400"}`}>
+                    {verificationData.flaggedItems.length}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">Con alertas</div>
+                </div>
+              </div>
+
+              {/* AIU by type breakdown */}
+              {Object.keys(verificationData.byType).length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium mb-2 text-muted-foreground uppercase tracking-wider">AIUs por tipo de afirmación</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.entries(verificationData.byType)
+                      .sort(([, a], [, b]) => b - a)
+                      .map(([type, count]) => (
+                        <div key={type} className="flex items-center gap-1.5 rounded-md border bg-muted/30 px-2.5 py-1.5 text-xs">
+                          <span className="capitalize text-muted-foreground">{type.replace("_", " ")}</span>
+                          <span className="font-bold text-foreground">{count}</span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Per-acto detail table */}
+              {verificationData.allItems.some(i => i.aiu_summary_json || i.firewall_score != null) && (
+                <div>
+                  <h3 className="text-sm font-medium mb-2 text-muted-foreground uppercase tracking-wider">Detalle por acto</h3>
+                  <div className="rounded-md border overflow-auto">
+                    <table className="w-full text-xs">
+                      <thead className="border-b bg-muted/30">
+                        <tr>
+                          <th className="px-3 py-2 text-left font-medium">Acto</th>
+                          <th className="px-3 py-2 text-center font-medium w-16">AIUs</th>
+                          <th className="px-3 py-2 text-center font-medium w-24">Firewall</th>
+                          <th className="px-3 py-2 text-left font-medium">Tipos de afirmaciones</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {verificationData.allItems
+                          .filter(item => item.aiu_summary_json || item.firewall_score != null)
+                          .map(item => {
+                            const score = item.firewall_score ?? 1.0
+                            const scoreColor = score >= 0.85 ? "text-green-400" : score >= 0.70 ? "text-yellow-400" : "text-red-400"
+                            const label = item.numero_acto
+                              ? `${TIPO_ACTO_LABELS[item.tipo_acto || ""] || item.tipo_acto || ""} ${item.numero_acto}`.trim()
+                              : item.descripcion?.slice(0, 55) || `Acto #${item.id}`
+                            return (
+                              <tr key={item.id} className="hover:bg-muted/20 transition-colors">
+                                <td className="px-3 py-2 max-w-[220px]">
+                                  <span className="line-clamp-2 leading-tight" title={label}>{label}</span>
+                                </td>
+                                <td className="px-3 py-2 text-center font-mono">
+                                  {item.aiu_summary_json?.total_aius ?? "—"}
+                                </td>
+                                <td className={`px-3 py-2 text-center font-mono font-medium ${scoreColor}`}>
+                                  {item.firewall_score != null ? `${Math.round(score * 100)}%` : "—"}
+                                </td>
+                                <td className="px-3 py-2">
+                                  <div className="flex flex-wrap gap-1">
+                                    {Object.entries(item.aiu_summary_json?.by_type || {}).map(([type, count]) => (
+                                      <span key={type} className="bg-muted rounded px-1 py-0.5 text-muted-foreground">
+                                        {type.replace("_", " ")}: <strong>{count}</strong>
+                                      </span>
+                                    ))}
+                                  </div>
+                                </td>
+                              </tr>
+                            )
+                          })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </TabsContent>
       </Tabs>
+
+      {/* PDF viewer modal */}
+      <Dialog open={pdfModal.open} onOpenChange={(open) => { if (!open) closePdfModal() }}>
+        <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-0">
+          <DialogHeader className="px-6 pt-5 pb-3 border-b shrink-0">
+            <DialogTitle className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4" />
+              {boletin?.filename}
+            </DialogTitle>
+            <DialogDescription>
+              {pdfModal.loading ? (
+                <span className="flex items-center gap-1.5">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Cargando PDF y buscando fragmento…
+                </span>
+              ) : pdfModal.found ? (
+                `Página ${pdfModal.pageNumber} de ${pdfModal.totalPages} — fragmento localizado`
+              ) : pdfModal.totalPages > 0 ? (
+                `Fragmento no localizado automáticamente — mostrando desde página 1 (${pdfModal.totalPages} pág. total)`
+              ) : (
+                "Visualizando PDF"
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 min-h-0">
+            {pdfModal.loading ? (
+              <div className="flex items-center justify-center h-full text-muted-foreground gap-2">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                Cargando…
+              </div>
+            ) : pdfModal.blobUrl ? (
+              <iframe
+                src={`${pdfModal.blobUrl}#page=${pdfModal.pageNumber ?? 1}`}
+                className="w-full h-full border-0"
+                title="PDF viewer"
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+                No se pudo cargar el PDF.
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

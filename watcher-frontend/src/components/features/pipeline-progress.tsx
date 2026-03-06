@@ -15,15 +15,19 @@ import {
   Scissors,
   Database,
   PartyPopper,
+  Network,
+  Brain,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-// Ordered pipeline stages
+// Ordered pipeline stages — must match backend TOTAL_STAGES=7
 const PIPELINE_STAGES = [
   { key: "extracting", label: "Extraccion", icon: FileSearch },
   { key: "cleaning", label: "Limpieza", icon: Sparkles },
+  { key: "entity_mapping", label: "Entidades", icon: Network },
   { key: "chunking", label: "Chunking", icon: Scissors },
   { key: "indexing", label: "Indexacion", icon: Database },
+  { key: "analyzing", label: "Análisis IA", icon: Brain },
   { key: "completed", label: "Completado", icon: PartyPopper },
 ] as const
 

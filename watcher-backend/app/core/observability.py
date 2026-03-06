@@ -109,12 +109,38 @@ class MetricsCollector:
     def cleanup_old_metrics(self):
         """Limpia métricas antiguas"""
         cutoff = datetime.utcnow() - timedelta(hours=self.retention_hours)
-        
+
         for name in list(self.metrics.keys()):
             self.metrics[name] = [
                 m for m in self.metrics[name]
                 if m['timestamp'] >= cutoff
             ]
+
+    def record_vcp_result(
+        self,
+        vcp_score: float,
+        total_aius: int,
+        verified: int,
+        unverifiable: int,
+        contradicted: int,
+        boletin_id: Optional[int] = None,
+        latency_ms: Optional[float] = None,
+    ) -> None:
+        """Record a complete VCP verification result into observability metrics."""
+        # Gauge: current VCP score
+        self.set_gauge("vcp.score", vcp_score)
+        if boletin_id is not None:
+            self.set_gauge(f"vcp.score.boletin_{boletin_id}", vcp_score)
+
+        # Counters: cumulative AIU tallies
+        self.increment_counter("vcp.aius_total", total_aius)
+        self.increment_counter("vcp.aius_verified", verified)
+        self.increment_counter("vcp.aius_unverifiable", unverifiable)
+        self.increment_counter("vcp.aius_contradicted", contradicted)
+
+        # Histogram: verification latency
+        if latency_ms is not None:
+            self.record_histogram("verification.latency_ms", latency_ms)
 
 
 class TraceSpan:
@@ -282,6 +308,30 @@ class ObservabilityManager:
 
 # Instancia global
 observability = ObservabilityManager()
+
+
+def record_vcp(
+    vcp_score: float,
+    total_aius: int,
+    verified: int,
+    unverifiable: int,
+    contradicted: int,
+    boletin_id: Optional[int] = None,
+    latency_ms: Optional[float] = None,
+) -> None:
+    """Module-level convenience function to record VCP metrics via global ObservabilityManager."""
+    try:
+        observability.metrics.record_vcp_result(
+            vcp_score=vcp_score,
+            total_aius=total_aius,
+            verified=verified,
+            unverifiable=unverifiable,
+            contradicted=contradicted,
+            boletin_id=boletin_id,
+            latency_ms=latency_ms,
+        )
+    except Exception:
+        pass
 
 
 def traced_operation(operation_name: str):

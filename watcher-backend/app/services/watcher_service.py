@@ -6,10 +6,12 @@ import asyncio
 import json
 import logging
 import re
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 import google.generativeai as genai
 import os
 from datetime import datetime
+
+from app.services.reference_firewall import ReferenceFirewallService
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +72,40 @@ FRAGMENT_ANALYSIS_SCHEMA = {
                     "accion_sugerida": {
                         "type": "string",
                         "description": "Accion recomendada para seguimiento"
+                    },
+                    "fecha_acto": {
+                        "type": "string",
+                        "description": "Fecha del acto tal como aparece en el encabezado. Ej: '15 de febrero de 2026', '2026-02-15'"
+                    },
+                    "expediente": {
+                        "type": "string",
+                        "description": "Numero de expediente que origina el acto. Ej: 'EX-2026-00001234-GCBA-MHGC', 'Expediente N° 1234/2026'"
+                    },
+                    "referencias_normativas": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Referencias del Visto/Considerando: leyes, decretos previos, resoluciones, contratos. Ej: ['Ley N° 2095', 'Decreto 114/GCBA/2016', 'Resolucion 4567/2025']"
+                    },
+                    "fechas_clave": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Fechas operativas del proceso: apertura de ofertas, vigencia, adjudicacion. Ej: ['apertura ofertas: 15/01/2026 10:00hs', 'vigencia desde: 01/02/2026']"
+                    },
+                    "relacion_principal": {
+                        "type": "string",
+                        "description": "Relacion principal del acto en formato 'SUJETO_A [verbo] SUJETO_B [complemento]'. Ej: 'Ministerio de Economia adjudica licitacion 001/2026 a TECH SRL por $3.200.000'"
+                    },
+                    "firmante": {
+                        "type": "string",
+                        "description": "Autoridad que firma el acto. Ej: 'Ing. Roberto Garcia, Ministro de Obras Publicas de Cordoba'"
+                    },
+                    "imputacion_presupuestaria": {
+                        "type": "string",
+                        "description": "Partida presupuestaria imputada. Ej: 'Programa 14 - Actividad 3 - Inciso 4 - ejercicio 2026'"
+                    },
+                    "presupuesto_oficial": {
+                        "type": "number",
+                        "description": "Presupuesto oficial declarado en licitaciones/concursos. 0 si no aplica. Ej: para 'pesos 3.010.523.733,29' devolver 3010523733.29"
                     }
                 },
                 "required": ["tipo_acto", "organismo", "descripcion", "riesgo", "monto_total_numerico", "texto_original"]
@@ -117,7 +153,13 @@ class WatcherService:
         self.request_timestamps: List[datetime] = []
         self.tokens_used_this_minute = 0
         self.last_minute_reset = datetime.now()
-        
+
+        # Reference Firewall (Fase IV) — set externally via set_firewall()
+        self._firewall: Optional[ReferenceFirewallService] = None
+
+        # AIU Decomposition Service (Fase II) — set externally via set_aiu_service()
+        self._aiu_service: Optional[Any] = None
+
         # System prompt v3: multi-acto, calibración de riesgo por montos, texto_original
         self.system_prompt = """Eres un analista experto en gobierno abierto y transparencia del sector público argentino.
 Trabajas para Watcher, una plataforma de monitoreo ciudadano que mapea el gasto público y detecta irregularidades.
@@ -132,6 +174,13 @@ Para CADA acto identificado, debes:
 5. Extraer TODOS los montos mencionados como texto Y calcular el monto_total_numerico en pesos
 6. Citar el texto_original: las primeras 2-3 líneas del acto tal como aparecen en el documento (max 300 chars, debe ser UNICA para cada acto)
 7. Resumir brevemente el contenido
+8. Extraer en fecha_acto la fecha del encabezado del acto (ej: "15 de febrero de 2026")
+9. Si el acto es una licitación o concurso, extraer en presupuesto_oficial el monto estimado declarado, y en fechas_clave la fecha/hora de apertura de ofertas y la duración del contrato
+10. Listar en referencias_normativas TODAS las citas del Visto: leyes (ej: "Ley N° 2095"), decretos anteriores (ej: "Decreto 114/GCBA/2016"), resoluciones previas, contratos referenciados
+11. Extraer en expediente el número de expediente que origina el acto (ej: "EX-2026-00001234-GCBA-MHGC")
+12. Capturar en firmante la autoridad que suscribe el acto
+13. Formular relacion_principal como una sola oración que conecte organismo → acción → beneficiario → monto (con todos los elementos disponibles)
+14. Capturar en imputacion_presupuestaria la partida presupuestaria citada (ej: "Programa 14 - Actividad 3 - Inciso 4")
 
 EVALUACION DE RIESGO - Reglas obligatorias:
 
@@ -165,6 +214,25 @@ EJEMPLOS de calibración:
 
 Siempre incluye motivo_riesgo y accion_sugerida, incluso para riesgo "bajo" (ej: "Verificar ejecución del contrato").
 """
+
+    def set_firewall(self, firewall_service: "ReferenceFirewallService") -> None:
+        """
+        Attach a ReferenceFirewallService instance.
+
+        The actual async validation must be awaited by the pipeline caller;
+        this service only stores the reference so callers can retrieve it.
+        """
+        self._firewall = firewall_service
+
+    def set_aiu_service(self, aiu_service: Any) -> None:
+        """
+        Attach an AIUService instance (Fase II).
+
+        Called once at application startup after both services are constructed.
+        The AIU decomposition hook in analyze_fragment() is non-blocking and
+        will silently skip if this is never called.
+        """
+        self._aiu_service = aiu_service
 
     def count_tokens_estimate(self, text: str) -> int:
         """Estima el número de tokens en un texto."""
@@ -226,20 +294,20 @@ Siempre incluye motivo_riesgo y accion_sugerida, incluso para riesgo "bajo" (ej:
         now = datetime.now()
         
         # Reset contador cada minuto
-        if (now - self.last_minute_reset).seconds >= 60:
+        if (now - self.last_minute_reset).total_seconds() >= 60:
             self.request_timestamps = []
             self.tokens_used_this_minute = 0
             self.last_minute_reset = now
-        
-        recent_requests = [ts for ts in self.request_timestamps if (now - ts).seconds < 60]
-        
+
+        recent_requests = [ts for ts in self.request_timestamps if (now - ts).total_seconds() < 60]
+
         if len(recent_requests) >= self.requests_per_minute:
-            wait_time = 60 - (now - recent_requests[0]).seconds + 1
+            wait_time = 60 - (now - recent_requests[0]).total_seconds() + 1
             logger.info(f"Rate limit alcanzado, esperando {wait_time} segundos...")
             await asyncio.sleep(wait_time)
         
         if self.tokens_used_this_minute + estimated_tokens > self.max_tokens_per_minute:
-            wait_time = 60 - (now - self.last_minute_reset).seconds + 1
+            wait_time = 60 - (now - self.last_minute_reset).total_seconds() + 1
             logger.info(f"Límite de tokens por minuto alcanzado, esperando {wait_time} segundos...")
             await asyncio.sleep(wait_time)
             self.tokens_used_this_minute = 0
@@ -318,69 +386,129 @@ Siempre incluye motivo_riesgo y accion_sugerida, incluso para riesgo "bajo" (ej:
         
         estimated_tokens = self.count_tokens_estimate(content) + self.count_tokens_estimate(self.system_prompt)
         await self.wait_for_rate_limit(estimated_tokens)
-        
-        try:
-            prompt = self._build_contextual_prompt(content, metadata)
-            
-            # Llamar a Gemini con structured output (JSON mode)
-            response = await asyncio.to_thread(
-                self.model.generate_content,
-                prompt,
-                generation_config=genai.types.GenerationConfig(
-                    temperature=0.1,
-                    max_output_tokens=4000,  # More tokens for multi-acto output
-                    response_mime_type="application/json",
-                    response_schema=FRAGMENT_ANALYSIS_SCHEMA,
+
+        _GEMINI_CALL_TIMEOUT = 120  # seconds before declaring a hung Gemini call dead
+        _MAX_FRAGMENT_RETRIES = 3   # attempts per fragment before giving up
+
+        def _empty_result(error_msg: str) -> Dict:
+            return {
+                "actos": [],
+                "resumen_general": f"Error en análisis: {error_msg[:100]}",
+                "metadata": metadata,
+                "fragment_tokens": estimated_tokens,
+                "model_used": self.model_name,
+                "error": error_msg,
+            }
+
+        prompt = self._build_contextual_prompt(content, metadata)
+        gen_config = genai.types.GenerationConfig(
+            temperature=0.1,
+            max_output_tokens=8192,
+            response_mime_type="application/json",
+            response_schema=FRAGMENT_ANALYSIS_SCHEMA,
+        )
+        frag_num = metadata.get("fragment_number", "?")
+
+        for attempt in range(_MAX_FRAGMENT_RETRIES):
+            try:
+                response = await asyncio.wait_for(
+                    asyncio.to_thread(
+                        self.model.generate_content,
+                        prompt,
+                        generation_config=gen_config,
+                    ),
+                    timeout=_GEMINI_CALL_TIMEOUT,
                 )
-            )
-            
-            result_text = response.text.strip()
-            result = json.loads(result_text)
-            
-            # Validate basic structure
-            if "actos" not in result:
-                result["actos"] = []
-            if "resumen_general" not in result:
-                result["resumen_general"] = "Resumen no disponible"
-            
-            # Ensure each acto has required fields
-            for acto in result["actos"]:
-                acto.setdefault("tipo_acto", "otro")
-                acto.setdefault("organismo", "No especificado")
-                acto.setdefault("descripcion", "Sin descripción")
-                acto.setdefault("riesgo", "informativo")
-                acto.setdefault("beneficiarios", [])
-                acto.setdefault("montos", [])
-                acto.setdefault("monto_total_numerico", 0)
-                acto.setdefault("texto_original", "")
-            
-            # Add processing metadata
-            result["metadata"] = metadata
-            result["fragment_tokens"] = estimated_tokens
-            result["model_used"] = self.model_name
-            
-            return result
-                
-        except json.JSONDecodeError as e:
-            logger.warning(f"Respuesta no es JSON válido: {e}")
-            return {
-                "actos": [],
-                "resumen_general": "Error al parsear respuesta del modelo",
-                "metadata": metadata,
-                "fragment_tokens": estimated_tokens,
-                "model_used": self.model_name,
-                "error": f"JSON parsing failed: {e}"
-            }
-        except Exception as e:
-            logger.error(f"Error en análisis de fragmento: {e}")
-            return {
-                "actos": [],
-                "resumen_general": f"Error en análisis: {str(e)[:100]}",
-                "metadata": metadata,
-                "fragment_tokens": estimated_tokens,
-                "model_used": self.model_name,
-                "error": str(e)
-            }
+
+                result_text = response.text.strip()
+                result = json.loads(result_text)
+
+                # Validate basic structure
+                if "actos" not in result:
+                    result["actos"] = []
+                if "resumen_general" not in result:
+                    result["resumen_general"] = "Resumen no disponible"
+
+                # Ensure each acto has required fields
+                for acto in result["actos"]:
+                    acto.setdefault("tipo_acto", "otro")
+                    acto.setdefault("organismo", "No especificado")
+                    acto.setdefault("descripcion", "Sin descripción")
+                    acto.setdefault("riesgo", "informativo")
+                    acto.setdefault("beneficiarios", [])
+                    acto.setdefault("montos", [])
+                    acto.setdefault("monto_total_numerico", 0)
+                    acto.setdefault("texto_original", "")
+                    acto.setdefault("fecha_acto", None)
+                    acto.setdefault("expediente", None)
+                    acto.setdefault("referencias_normativas", [])
+                    acto.setdefault("fechas_clave", [])
+                    acto.setdefault("relacion_principal", None)
+                    acto.setdefault("firmante", None)
+                    acto.setdefault("imputacion_presupuestaria", None)
+                    acto.setdefault("presupuesto_oficial", 0)
+
+                # Add processing metadata
+                result["metadata"] = metadata
+                result["fragment_tokens"] = estimated_tokens
+                result["model_used"] = self.model_name
+
+                # Reference Firewall hook (non-blocking, informative only).
+                if self._firewall is not None:
+                    try:
+                        result['_firewall_pending'] = True
+                    except Exception:
+                        pass
+
+                # AIU Decomposition hook (Fase II) — non-blocking, never propagates.
+                if self._aiu_service is not None:
+                    try:
+                        actos = result.get('actos', [])
+                        if actos:
+                            aiu_svc = cast(Any, self._aiu_service)
+                            decomposition = aiu_svc.decompose_actos(actos)
+                            result['aiu_decomposition'] = {
+                                'total_aius': decomposition.total_aius,
+                                'by_type': decomposition.by_type,
+                                'aius': [aiu.model_dump() for aiu in decomposition.aius]
+                            }
+                    except Exception as e:
+                        logger.debug(f"AIU decomposition skipped: {e}")
+
+                return result
+
+            except asyncio.TimeoutError:
+                logger.warning(
+                    f"Gemini timeout en fragmento {frag_num} "
+                    f"(intento {attempt + 1}/{_MAX_FRAGMENT_RETRIES}, {_GEMINI_CALL_TIMEOUT}s)"
+                )
+                if attempt < _MAX_FRAGMENT_RETRIES - 1:
+                    await asyncio.sleep(15)
+                    continue
+                return _empty_result(f"Gemini timeout: sin respuesta en {_GEMINI_CALL_TIMEOUT}s")
+
+            except json.JSONDecodeError as e:
+                logger.warning(f"Respuesta no es JSON válido en fragmento {frag_num}: {e}")
+                # JSON errors are not transient — don't retry
+                return _empty_result(f"JSON parsing failed: {e}")
+
+            except Exception as e:
+                err_str = str(e).lower()
+                if "429" in str(e) or "resource exhausted" in err_str or "quota" in err_str:
+                    backoff = 30 * (2 ** attempt)  # 30s → 60s → 120s
+                    logger.warning(
+                        f"Rate limit 429 en fragmento {frag_num}, esperando {backoff}s "
+                        f"(intento {attempt + 1}/{_MAX_FRAGMENT_RETRIES})"
+                    )
+                    await asyncio.sleep(backoff)
+                    if attempt < _MAX_FRAGMENT_RETRIES - 1:
+                        continue
+                    return _empty_result("Rate limit: 429 Resource Exhausted")
+                else:
+                    logger.error(f"Error en análisis de fragmento {frag_num}: {e}")
+                    return _empty_result(str(e))
+
+        return _empty_result("Max retries exceeded")
 
     async def analyze_content(self, content: str, metadata: Dict) -> List[Dict]:
         """

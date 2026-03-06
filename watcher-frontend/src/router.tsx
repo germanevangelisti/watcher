@@ -12,6 +12,7 @@ import AlertasPage from "./pages/analisis/alertas"
 import AlertaDetailPage from "./pages/analisis/alerta-detail"
 import { PipelineStatusPage } from "./pages/analisis/pipeline-status"
 import { PipelineWorkflowPage } from "./pages/pipeline"
+import { VerificacionPage } from "./pages/analisis/verificacion"
 
 function RootComponent() {
   const router = useRouter()
@@ -104,6 +105,12 @@ const pipelineStatusRoute = createRoute({
   component: PipelineStatusPage,
 })
 
+const verificacionRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/analisis/verificacion",
+  component: VerificacionPage,
+})
+
 // Pipeline workflow route (top-level)
 const pipelineWorkflowRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -124,6 +131,7 @@ const routeTree = rootRoute.addChildren([
   alertasRoute,
   alertaDetailRoute,
   pipelineStatusRoute,
+  verificacionRoute,
   pipelineWorkflowRoute,
 ])
 

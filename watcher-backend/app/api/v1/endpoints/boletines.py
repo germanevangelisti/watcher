@@ -170,7 +170,7 @@ async def list_boletines(
                 "section": boletin.section,
                 "status": boletin.status,
                 "has_file": pdf_path is not None,
-                "file_path": str(pdf_path) if pdf_path else None,
+                "file_path": f"/api/v1/documentos/pdf/{boletin.filename}" if pdf_path else None,
                 "created_at": boletin.created_at.isoformat() if boletin.created_at else None,
                 "updated_at": boletin.updated_at.isoformat() if boletin.updated_at else None,
                 "error_message": boletin.error_message,
@@ -231,7 +231,7 @@ async def get_boletin(
             "section": boletin.section,
             "status": boletin.status,
             "has_file": pdf_path is not None,
-            "file_path": str(pdf_path) if pdf_path else None,
+            "file_path": f"/api/v1/documentos/pdf/{boletin.filename}" if pdf_path else None,
             "created_at": boletin.created_at.isoformat() if boletin.created_at else None,
             "updated_at": boletin.updated_at.isoformat() if boletin.updated_at else None,
             "error_message": boletin.error_message,
@@ -543,6 +543,9 @@ async def get_boletin_analisis(
                 "monto_numerico": getattr(analisis, 'monto_numerico', None),
                 "descripcion": getattr(analisis, 'descripcion', None),
                 "motivo_riesgo": getattr(analisis, 'motivo_riesgo', None),
+                # Adversarial verification fields (Phases II + IV)
+                "aiu_summary_json": getattr(analisis, 'aiu_summary_json', None),
+                "firewall_score": getattr(analisis, 'firewall_score', None),
             }
             analisis_data.append(item)
         
@@ -562,6 +565,57 @@ async def get_boletin_analisis(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/{boletin_id}/analisis/{analisis_id}/fragment-location")
+async def get_fragment_location(
+    boletin_id: int,
+    analisis_id: int,
+    db: AsyncSession = Depends(get_db)
+) -> Dict:
+    """Find the PDF page where a specific analysis fragment appears."""
+    from app.db.models import Analisis
+
+    result = await db.execute(
+        select(Analisis).where(Analisis.id == analisis_id, Analisis.boletin_id == boletin_id)
+    )
+    analisis = result.scalar_one_or_none()
+    if not analisis:
+        raise HTTPException(status_code=404, detail="Análisis no encontrado")
+
+    boletin = await crud.get_boletin(db, boletin_id)
+    if not boletin:
+        raise HTTPException(status_code=404, detail="Boletín no encontrado")
+
+    pdf_path = _find_pdf_path(boletin.filename)
+    if not pdf_path:
+        raise HTTPException(status_code=404, detail="PDF no encontrado en disco")
+
+    fragment = analisis.fragmento or ""
+    # Use first 80 chars as search needle (robust to minor OCR variations)
+    search_needle = fragment[:80].strip()
+    found_page: Optional[int] = None
+    total_pages = 0
+
+    try:
+        import pdfplumber
+        with pdfplumber.open(str(pdf_path)) as pdf:
+            total_pages = len(pdf.pages)
+            for page_num, page in enumerate(pdf.pages, start=1):
+                page_text = page.extract_text() or ""
+                if search_needle[:50] in page_text:
+                    found_page = page_num
+                    break
+    except Exception:
+        pass  # Return found=False if pdfplumber fails
+
+    return {
+        "found": found_page is not None,
+        "page_number": found_page,
+        "total_pages": total_pages,
+        "boletin_id": boletin_id,
+        "analisis_id": analisis_id,
+    }
 
 
 @router.post("/process-batch")

@@ -36,6 +36,37 @@ router = APIRouter()
 # In-memory session tracking for active pipeline runs
 _active_sessions: Dict[str, Dict[str, Any]] = {}
 
+# ---------------------------------------------------------------------------
+# Lazy singletons for expensive services (BUG-1: wire firewall + AIU once)
+# ---------------------------------------------------------------------------
+_watcher_singleton: Optional[Any] = None
+_aiu_singleton: Optional[Any] = None
+_svc_init_lock: Optional[Any] = None
+
+
+def _get_svc_lock():
+    global _svc_init_lock
+    import asyncio
+    if _svc_init_lock is None:
+        _svc_init_lock = asyncio.Lock()
+    return _svc_init_lock
+
+
+async def _get_watcher_and_aiu():
+    """Return (WatcherService, AIUService) singletons, initialised lazily."""
+    global _watcher_singleton, _aiu_singleton
+    if _watcher_singleton is None:
+        async with _get_svc_lock():
+            if _watcher_singleton is None:
+                from app.services.watcher_service import WatcherService
+                from app.services.aiu_service import AIUService
+                ws = WatcherService()
+                aiu_svc = AIUService(gemini_model=getattr(ws, "model", None))
+                ws.set_aiu_service(aiu_svc)
+                _aiu_singleton = aiu_svc
+                _watcher_singleton = ws
+    return _watcher_singleton, _aiu_singleton
+
 
 # =============================================================================
 # RESET ENDPOINTS
@@ -477,7 +508,7 @@ async def _process_document_pipeline(
     """Background task: process a single document through the full pipeline."""
     from app.db.database import BackgroundSessionLocal
     
-    TOTAL_STAGES = 6  # extract, clean, chunk, index, analyze, completed
+    TOTAL_STAGES = 7  # extract, clean, entity_mapping, chunk, index, analyze, completed
     
     # Track active session globally so /status can report it
     _active_sessions[session_id] = {
@@ -491,56 +522,64 @@ async def _process_document_pipeline(
     
     async with BackgroundSessionLocal() as db:
         try:
-            # Stage 1/6: EXTRACTION
+            # Stage 1/7: EXTRACTION
             _active_sessions[session_id]["stage"] = "extracting"
             _active_sessions[session_id]["stages_done"] = 0
             await _emit_stage(session_id, boletin_id, filename, "extracting", 1, TOTAL_STAGES)
             await _update_status(db, boletin_id, "extracting")
-            
+
             text = await _extract_text(boletin_id, filename, config.extraction, db)
-            
-            # Stage 2/6: CLEANING
+
+            # Stage 2/7: CLEANING
             _active_sessions[session_id]["stage"] = "cleaning"
             _active_sessions[session_id]["stages_done"] = 1
             await _emit_stage(session_id, boletin_id, filename, "cleaning", 2, TOTAL_STAGES)
-            
+
             if config.cleaning.enabled:
                 text = _clean_text(text, config.cleaning)
-            
-            # Stage 3/6: CHUNKING
-            _active_sessions[session_id]["stage"] = "chunking"
+
+            # Stage 3/7: ENTITY_MAPPING
+            _active_sessions[session_id]["stage"] = "entity_mapping"
             _active_sessions[session_id]["stages_done"] = 2
-            await _emit_stage(session_id, boletin_id, filename, "chunking", 3, TOTAL_STAGES)
-            await _update_status(db, boletin_id, "chunking")
-            
-            chunks = _chunk_text(text, config.chunking)
-            
-            # Stage 4/6: ENRICHMENT + INDEXING
-            _active_sessions[session_id]["stage"] = "indexing"
+            await _emit_stage(session_id, boletin_id, filename, "entity_mapping", 3, TOTAL_STAGES)
+            from app.services.entity_service import get_entity_service
+            entity_service = get_entity_service()
+            pre_entities, entity_map = await _build_entity_map(session_id, boletin_id, text, entity_service)
+
+            # Stage 4/7: CHUNKING
+            _active_sessions[session_id]["stage"] = "chunking"
             _active_sessions[session_id]["stages_done"] = 3
-            await _emit_stage(session_id, boletin_id, filename, "indexing", 4, TOTAL_STAGES, 
+            await _emit_stage(session_id, boletin_id, filename, "chunking", 4, TOTAL_STAGES)
+            await _update_status(db, boletin_id, "chunking")
+
+            chunks = _chunk_text(text, config.chunking, entity_map=entity_map)
+
+            # Stage 5/7: ENRICHMENT + INDEXING
+            _active_sessions[session_id]["stage"] = "indexing"
+            _active_sessions[session_id]["stages_done"] = 4
+            await _emit_stage(session_id, boletin_id, filename, "indexing", 5, TOTAL_STAGES,
                             details={"chunks_created": len(chunks)})
             await _update_status(db, boletin_id, "indexing")
-            
+
             indexed = await _index_chunks(
                 db, boletin_id, filename, chunks, config.enrichment, config.indexing
             )
-            
-            # Stage 5/6: GEMINI ANALYSIS
+
+            # Stage 6/7: GEMINI ANALYSIS + ADVERSARIAL VERIFICATION
             _active_sessions[session_id]["stage"] = "analyzing"
-            _active_sessions[session_id]["stages_done"] = 4
-            await _emit_stage(session_id, boletin_id, filename, "analyzing", 5, TOTAL_STAGES,
+            _active_sessions[session_id]["stages_done"] = 5
+            await _emit_stage(session_id, boletin_id, filename, "analyzing", 6, TOTAL_STAGES,
                             details={"chunks_indexed": indexed})
             await _update_status(db, boletin_id, "analyzing")
-            
+
             actos_count = await _analyze_document(db, boletin_id, filename, text)
-            
-            # Stage 6/6: COMPLETED
+
+            # Stage 7/7: COMPLETED
             _active_sessions[session_id]["stage"] = "completed"
-            _active_sessions[session_id]["stages_done"] = 6
+            _active_sessions[session_id]["stages_done"] = 7
             _active_sessions[session_id]["status"] = "completed"
             await _update_status(db, boletin_id, "completed")
-            await _emit_stage(session_id, boletin_id, filename, "completed", 6, TOTAL_STAGES,
+            await _emit_stage(session_id, boletin_id, filename, "completed", 7, TOTAL_STAGES,
                             details={"chunks_created": len(chunks), "chunks_indexed": indexed, "actos_extracted": actos_count})
             
             await event_bus.emit(
@@ -671,6 +710,7 @@ async def _process_all_pipeline(
     )
     
     logger.info(f"Batch pipeline {session_id} complete: {completed}/{total} successful, {failed} failed")
+    _active_sessions.pop(session_id, None)
 
 
 # =============================================================================
@@ -828,10 +868,10 @@ def _clean_text(text: str, config) -> str:
     return cleaner.clean(text)
 
 
-def _chunk_text(text: str, config) -> list:
+def _chunk_text(text: str, config, entity_map=None) -> list:
     """Chunk text using ChunkingService."""
     from app.services.chunking_service import ChunkingService, ChunkingConfig
-    
+
     chunking_config = ChunkingConfig(
         chunk_size=config.chunk_size,
         chunk_overlap=config.chunk_overlap,
@@ -839,7 +879,21 @@ def _chunk_text(text: str, config) -> list:
         strategy=config.strategy,
     )
     service = ChunkingService(config=chunking_config)
-    return service.chunk(text, config=chunking_config)
+    return service.chunk(text, config=chunking_config, entity_map=entity_map)
+
+
+async def _build_entity_map(
+    session_id: str, boletin_id: int, cleaned_text: str, entity_service
+):
+    """Pre-scan entities before chunking to build spatial EntityMap."""
+    try:
+        entities = entity_service.extract_entities(cleaned_text)
+        entity_map = entity_service.build_entity_map(entities, cleaned_text)
+        logger.info(f"[{session_id}] Entity pre-scan: {len(entities)} entities mapped")
+        return entities, entity_map
+    except Exception as e:
+        logger.warning(f"[{session_id}] Entity pre-scan failed (non-fatal): {e}")
+        return [], None
 
 
 async def _index_chunks(
@@ -884,6 +938,7 @@ async def _index_chunks(
             # Enrich
             enrichment = {}
             if enricher:
+                anchored_entities = chunk.entity_anchors if hasattr(chunk, "entity_anchors") else None
                 enrichment = enricher.enrich(
                     chunk_text=chunk.text,
                     chunk_index=chunk.chunk_index,
@@ -893,6 +948,7 @@ async def _index_chunks(
                         "start_char": chunk.start_char,
                         "end_char": chunk.end_char,
                     },
+                    anchored_entities=anchored_entities,
                 )
             
             # Create ChunkRecord in SQLite
@@ -965,19 +1021,38 @@ async def _analyze_document(
 ) -> int:
     """
     Run Gemini analysis on extracted text and save individual actos to the database.
-    
-    Returns the number of actos extracted.
+
+    Phases wired here:
+    - Phase I/IV: WatcherService singleton (avoids re-loading the Gemini model).
+    - Phase II: AIUService singleton decomposes each acto into AIUs.
+    - Phase IV: ReferenceFirewallService validates references per acto (per-request
+      so it uses the live DB session; fts_service=None is safe — acto-ref lookups
+      fall through to UNVERIFIABLE via internal try/except).
+    - Phase V: record_vcp() emits VCP metrics for the ObservabilityManager.
+
+    Returns the number of actos saved.
     """
-    from app.services.watcher_service import WatcherService
+    import time
     from app.db.crud import create_analisis
-    
-    watcher = WatcherService()
-    
+    from app.services.reference_firewall import ReferenceFirewallService
+    from app.core.observability import record_vcp
+
+    # BUG-1: use singletons instead of fresh WatcherService() each call
+    watcher, aiu_service = await _get_watcher_and_aiu()
+
+    # Per-request firewall wired with current db session and fts_service
+    try:
+        from app.services.fts_service import get_fts_service
+        _fts_svc = get_fts_service()
+    except Exception:
+        _fts_svc = None
+    firewall = ReferenceFirewallService(db, _fts_svc)
+
     # Build metadata for contextual prompt
     metadata = {
         "boletin": filename.replace(".pdf", ""),
     }
-    
+
     # Try to get jurisdiccion info from the boletin record
     try:
         from sqlalchemy.orm import selectinload
@@ -990,22 +1065,33 @@ async def _analyze_document(
                 metadata["jurisdiccion_nombre"] = boletin.jurisdiccion.nombre
             metadata["fuente"] = getattr(boletin, "fuente", "provincial")
             metadata["section_type"] = str(boletin.section) if boletin.section else ""
-            # Pass readable section name for better contextual prompt
             seccion_nombre = getattr(boletin, "seccion_nombre", None)
             if seccion_nombre:
                 metadata["seccion_nombre"] = seccion_nombre
     except Exception as e:
         logger.warning(f"Could not load boletin metadata for analysis: {e}")
-    
+
     # Run Gemini analysis
     try:
         actos = await watcher.analyze_content(content=text, metadata=metadata)
     except Exception as e:
         logger.error(f"Gemini analysis failed for {filename}: {e}")
         return 0
-    
-    # Save each acto individually
+
+    # Save each acto — adversarial pipeline (Fases II, III, IV)
+    t_start = time.monotonic()
     total_saved = 0
+    total_aius = 0
+    vcp_results: List[Any] = []  # VerificationResult per acto (for aggregate VCP)
+
+    from agents.verification.agent import VerificationAgent
+    try:
+        from app.services.retrieval_service import get_retrieval_service
+        _retrieval_svc = get_retrieval_service()
+    except Exception:
+        _retrieval_svc = None
+    verifier = VerificationAgent(retrieval_service=_retrieval_svc, firewall_service=firewall)
+
     for acto in actos:
         try:
             # Extract internal fields before saving
@@ -1013,17 +1099,94 @@ async def _analyze_document(
             acto.pop("_fragment_index", None)
             acto.pop("_resumen_fragmento", None)
             acto.pop("_model_used", None)
-            
-            await create_analisis(
+
+            # Phase IV: firewall validation on fragment text
+            fw_result = None
+            try:
+                fw_result = await firewall.validate_references(fragment_text)
+            except Exception as fw_e:
+                logger.debug(f"Firewall skipped for {filename}: {fw_e}")
+
+            # Phase II: AIU decomposition per acto
+            aiu_result = None
+            aiu_summary = None
+            try:
+                aiu_result = aiu_service.decompose_actos([acto])
+                total_aius += aiu_result.total_aius
+            except Exception as aiu_e:
+                logger.debug(f"AIU decomposition skipped for {filename}: {aiu_e}")
+
+            # Phase III: Adversarial Verification (VerificationAgent)
+            verification_result = None
+            if aiu_result is not None and aiu_result.total_aius > 0:
+                try:
+                    verification_result = await verifier.verify_aius(
+                        aiu_result.aius, boletin_id=boletin_id
+                    )
+                    vcp_results.append(verification_result)
+                    aiu_summary = {
+                        "total_aius": verification_result.total_aius,
+                        "verified": verification_result.verified,
+                        "unverifiable": verification_result.unverifiable,
+                        "contradicted": verification_result.contradicted,
+                        "vcp_score": verification_result.vcp_score,
+                        "requires_human_review": verification_result.requires_human_review,
+                        "by_type": aiu_result.by_type,
+                    }
+                except Exception as ve:
+                    logger.debug(f"VerificationAgent skipped for {filename}: {ve}")
+                    aiu_summary = {
+                        "total_aius": aiu_result.total_aius,
+                        "by_type": aiu_result.by_type,
+                    }
+            elif aiu_result is not None:
+                aiu_summary = {
+                    "total_aius": aiu_result.total_aius,
+                    "by_type": aiu_result.by_type,
+                }
+
+            # Persist adversarial fields onto the Analisis record
+            db_analisis = await create_analisis(
                 db,
                 boletin_id=boletin_id,
                 fragmento=fragment_text,
                 analisis_data=acto,
             )
+            if aiu_summary is not None:
+                db_analisis.aiu_summary_json = aiu_summary
+            if fw_result is not None:
+                db_analisis.firewall_score = fw_result.firewall_score
+            if verification_result is not None:
+                db_analisis.firewall_score = verification_result.vcp_score
+
             total_saved += 1
         except Exception as e:
             logger.error(f"Failed to save acto for {filename}: {e}")
-    
+
     await db.commit()
+
+    # Emit VCP metrics using real VerificationAgent data
+    if total_saved > 0:
+        if vcp_results:
+            total_verified = sum(vr.verified for vr in vcp_results)
+            total_unverifiable = sum(vr.unverifiable for vr in vcp_results)
+            total_contradicted = sum(vr.contradicted for vr in vcp_results)
+            avg_vcp = sum(vr.vcp_score for vr in vcp_results) / len(vcp_results)
+        else:
+            total_verified = 0
+            total_unverifiable = total_aius
+            total_contradicted = 0
+            avg_vcp = 1.0
+        latency_ms = (time.monotonic() - t_start) * 1000
+        record_vcp(
+            vcp_score=avg_vcp,
+            total_aius=total_aius,
+            verified=total_verified,
+            unverifiable=total_unverifiable,
+            contradicted=total_contradicted,
+            boletin_id=boletin_id,
+            latency_ms=latency_ms,
+        )
+
     logger.info(f"Analysis complete for {filename}: {total_saved} actos saved")
     return total_saved

@@ -5,9 +5,9 @@ Consolida lógica dispersa en múltiples archivos para un sistema centralizado
 
 import re
 import unicodedata
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional, Any, Tuple
 from datetime import datetime
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -40,6 +40,27 @@ class RelationshipResult:
     contexto: str
     confianza: float
     metadata: Dict[str, Any]
+
+
+@dataclass
+class EntityMap:
+    """Spatial index: maps char positions to entities for boundary-aware chunking."""
+    _entries: List[Tuple[int, int, "EntityResult"]] = field(default_factory=list)
+
+    def add(self, start: int, end: int, entity: "EntityResult") -> None:
+        self._entries.append((start, end, entity))
+
+    def get_entities_in_range(self, start: int, end: int) -> List["EntityResult"]:
+        return [e for (s, en, e) in self._entries if s >= start and en <= end]
+
+    def entity_crosses_boundary(self, boundary: int, window: int = 50) -> bool:
+        """Returns True if any entity spans across boundary ± window chars."""
+        for (s, en, _) in self._entries:
+            if s < boundary and en > boundary:
+                return True
+            if (boundary - window) <= s <= boundary <= en <= (boundary + window):
+                return True
+        return False
 
 
 class EntityService:
@@ -345,6 +366,21 @@ class EntityService:
         
         return relationships
     
+    def build_entity_map(self, entities: List[EntityResult], text: str) -> EntityMap:
+        """Build a spatial EntityMap by locating each entity's position in text."""
+        entity_map = EntityMap()
+        text_lower = text.lower()
+        for entity in entities:
+            name = entity.nombre.lower()
+            pos = 0
+            while True:
+                idx = text_lower.find(name, pos)
+                if idx == -1:
+                    break
+                entity_map.add(idx, idx + len(name), entity)
+                pos = idx + 1
+        return entity_map
+
     async def persist_entities(
         self,
         entities: List[EntityResult],

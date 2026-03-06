@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import apiClient from "../client"
+import apiClient, { API_BASE_URL } from "../client"
 import type { Boletin, BoletinBackend, BoletinesFilters } from "@/types"
 
 // Helper to parse date "YYYYMMDD" to year/month
@@ -22,7 +22,7 @@ function transformBoletin(backend: BoletinBackend): Boletin {
     section: backend.section,
     processed: backend.status === "completed",
     has_file: backend.has_file ?? true,
-    pdf_path: backend.file_path || undefined,
+    pdf_path: backend.file_path ? `${API_BASE_URL}${backend.file_path}` : undefined,
     created_at: backend.created_at,
     updated_at: backend.updated_at,
     status: backend.status,
