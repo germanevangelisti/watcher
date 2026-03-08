@@ -129,6 +129,7 @@ export function usePipelineResetOne() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pipeline"] })
       queryClient.invalidateQueries({ queryKey: ["boletines"] })
+      queryClient.invalidateQueries({ queryKey: ["boletin-calendar"] })
     },
   })
 }
