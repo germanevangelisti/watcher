@@ -11,15 +11,19 @@ Provides endpoints for:
 
 import logging
 import uuid
+import calendar as _cal_module
+from datetime import date as _date
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 
 from fastapi import APIRouter, HTTPException, Depends, Header, BackgroundTasks
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, update, delete
 
 from app.db.session import get_db
-from app.db.models import Boletin, ChunkRecord, Analisis
+from app.db.models import Boletin, ChunkRecord, Analisis, FuenteDato
+from app.services.url_fetcher import build_url_from_template
 from app.core.config import settings
 from app.core.events import event_bus, EventType
 from app.schemas.pipeline import (
@@ -35,6 +39,15 @@ router = APIRouter()
 
 # In-memory session tracking for active pipeline runs
 _active_sessions: Dict[str, Dict[str, Any]] = {}
+
+# Section names — duplicated here to avoid circular import with boletines.py
+_PIPELINE_SECTION_NAMES = {
+    "1": "Designaciones y Decretos",
+    "2": "Compras y Contrataciones",
+    "3": "Subsidios y Transferencias",
+    "4": "Obras Públicas",
+    "5": "Notificaciones Judiciales",
+}
 
 # ---------------------------------------------------------------------------
 # Lazy singletons for expensive services (BUG-1: wire firewall + AIU once)
@@ -432,6 +445,207 @@ async def process_all_pending(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# =============================================================================
+# CALENDAR TRIGGER ENDPOINTS
+# =============================================================================
+
+class TriggerFromDateRequest(BaseModel):
+    jurisdiccion_id: int
+    date: str    # "YYYYMMDD"
+    section: str # "1" … "5"
+
+
+class TriggerMonthRequest(BaseModel):
+    jurisdiccion_id: int
+    year: int
+    month: int
+    sections: List[str] = ["1", "2", "3", "4", "5"]
+
+
+@router.post("/trigger-from-date")
+async def trigger_from_date(
+    req: TriggerFromDateRequest,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Create (or reuse) a Boletin for a given date+section and trigger the pipeline.
+    Fetches the PDF from the configured FuenteDato URL — no file on disk required.
+    """
+    # 1. Look up active FuenteDato for this jurisdiccion
+    fuente_result = await db.execute(
+        select(FuenteDato).where(
+            FuenteDato.jurisdiccion_id == req.jurisdiccion_id,
+            FuenteDato.tipo == "boletin_diario",
+            FuenteDato.activa == True,
+        )
+    )
+    fuente = fuente_result.scalar_one_or_none()
+    if not fuente or not fuente.url_template:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No hay fuente de datos activa para jurisdiccion_id={req.jurisdiccion_id}",
+        )
+
+    # 2. Build filename + source URL
+    filename = f"{req.date}_{req.section}_Secc.pdf"
+    source_url = build_url_from_template(fuente.url_template, filename)
+
+    # 3. Upsert Boletin
+    boletin_result = await db.execute(select(Boletin).where(Boletin.filename == filename))
+    boletin = boletin_result.scalar_one_or_none()
+
+    if boletin is None:
+        boletin = Boletin(
+            filename=filename,
+            date=req.date,
+            section=req.section,
+            seccion_nombre=_PIPELINE_SECTION_NAMES.get(req.section),
+            status="pending",
+            jurisdiccion_id=req.jurisdiccion_id,
+            source_url=source_url,
+        )
+        db.add(boletin)
+        await db.flush()  # populate boletin.id
+    elif boletin.status == "completed":
+        return {
+            "success": True,
+            "boletin_id": boletin.id,
+            "filename": filename,
+            "source_url": source_url,
+            "message": "Ya procesado — ver resultados",
+            "already_completed": True,
+        }
+
+    if not boletin.source_url:
+        boletin.source_url = source_url
+    boletin.status = "extracting"
+    await db.commit()
+
+    session_id = str(uuid.uuid4())[:8]
+    await event_bus.emit(
+        EventType.PIPELINE_STARTED,
+        data={"session_id": session_id, "total": 1, "config": PipelineConfig().model_dump()},
+        source="pipeline",
+    )
+    background_tasks.add_task(
+        _process_document_pipeline,
+        boletin.id,
+        filename,
+        session_id,
+        PipelineConfig(),
+    )
+
+    return {
+        "success": True,
+        "boletin_id": boletin.id,
+        "session_id": session_id,
+        "filename": filename,
+        "source_url": source_url,
+        "message": "Procesamiento iniciado",
+    }
+
+
+@router.post("/trigger-month")
+async def trigger_month(
+    req: TriggerMonthRequest,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Bulk-trigger pipeline for all pending/not-found sections in a month.
+    Creates Boletin records for missing weekday+section combos and queues them.
+    """
+    # 1. Look up active FuenteDato
+    fuente_result = await db.execute(
+        select(FuenteDato).where(
+            FuenteDato.jurisdiccion_id == req.jurisdiccion_id,
+            FuenteDato.tipo == "boletin_diario",
+            FuenteDato.activa == True,
+        )
+    )
+    fuente = fuente_result.scalar_one_or_none()
+    if not fuente or not fuente.url_template:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No hay fuente de datos activa para jurisdiccion_id={req.jurisdiccion_id}",
+        )
+
+    # 2. Compute weekdays in the requested month
+    _, days_in_month = _cal_module.monthrange(req.year, req.month)
+    weekdays: List[str] = []
+    for d in range(1, days_in_month + 1):
+        dt = _date(req.year, req.month, d)
+        if dt.weekday() < 5:  # Mon=0 … Fri=4
+            weekdays.append(dt.strftime("%Y%m%d"))
+
+    # 3. Fetch existing Boletines for this month+jurisdiccion
+    prefix = f"{req.year}{str(req.month).zfill(2)}"
+    existing_result = await db.execute(
+        select(Boletin).where(
+            Boletin.jurisdiccion_id == req.jurisdiccion_id,
+            Boletin.filename.like(f"{prefix}%"),
+        )
+    )
+    existing_by_filename: Dict[str, Any] = {b.filename: b for b in existing_result.scalars().all()}
+
+    # 4. Upsert + queue each not-yet-completed section
+    triggered = 0
+    skipped = 0
+    for day_str in weekdays:
+        for section in req.sections:
+            filename = f"{day_str}_{section}_Secc.pdf"
+            boletin = existing_by_filename.get(filename)
+            if boletin and boletin.status == "completed":
+                skipped += 1
+                continue
+            source_url = build_url_from_template(fuente.url_template, filename)
+            if boletin is None:
+                boletin = Boletin(
+                    filename=filename,
+                    date=day_str,
+                    section=section,
+                    seccion_nombre=_PIPELINE_SECTION_NAMES.get(section),
+                    status="extracting",
+                    jurisdiccion_id=req.jurisdiccion_id,
+                    source_url=source_url,
+                )
+                db.add(boletin)
+                await db.flush()
+            else:
+                if not boletin.source_url:
+                    boletin.source_url = source_url
+                if not boletin.date:
+                    boletin.date = day_str
+                if not boletin.section:
+                    boletin.section = section
+                if not boletin.seccion_nombre:
+                    boletin.seccion_nombre = _PIPELINE_SECTION_NAMES.get(section)
+                boletin.status = "extracting"
+
+            session_id = str(uuid.uuid4())[:8]
+            background_tasks.add_task(
+                _process_document_pipeline,
+                boletin.id,
+                filename,
+                session_id,
+                PipelineConfig(),
+            )
+            triggered += 1
+
+    await db.commit()
+
+    return {
+        "success": True,
+        "year": req.year,
+        "month": req.month,
+        "jurisdiccion_id": req.jurisdiccion_id,
+        "triggered": triggered,
+        "skipped_completed": skipped,
+        "message": f"{triggered} secciones encoladas para procesamiento",
+    }
+
+
 @router.get("/status")
 async def get_pipeline_status():
     """
@@ -529,6 +743,9 @@ async def _process_document_pipeline(
             await _update_status(db, boletin_id, "extracting")
 
             text = await _extract_text(boletin_id, filename, config.extraction, db)
+
+            # Stage 1.5: SUMARIO PARSING (solo boletines provinciales de Córdoba)
+            await _parse_and_store_sumario(db, boletin_id, filename, text)
 
             # Stage 2/7: CLEANING
             _active_sessions[session_id]["stage"] = "cleaning"
@@ -821,36 +1038,147 @@ async def _update_status(db: AsyncSession, boletin_id: int, status: str, error: 
 
 
 async def _extract_text(
-    boletin_id: int, 
-    filename: str, 
+    boletin_id: int,
+    filename: str,
     config: ExtractionConfig,
     db: AsyncSession,
 ) -> str:
-    """Extract text from PDF or read existing .txt file."""
-    # Check for existing .txt first
+    """
+    Extrae texto de un boletín usando la siguiente jerarquía de fuentes:
+
+    1. .txt cacheado en data/processed/ (más rápido, evita re-extracción)
+    2. PDF local en boletines/ o uploads/ (pipeline clásico)
+    3. URL remota (Opción A: URL-first, sin almacenar PDF en disco)
+
+    Cuando se usa la URL, el PDF se descarga a un tempfile, se extrae el texto,
+    y el tempfile se elimina. Solo el .txt queda guardado en disco.
+    """
+    # 1. .txt cacheado
     txt_filename = filename.replace(".pdf", ".txt")
     txt_path = settings.DATA_DIR / "processed" / txt_filename
-    
+
     if txt_path.exists():
         logger.info(f"Reading existing text file: {txt_path}")
         return txt_path.read_text(encoding="utf-8", errors="replace")
-    
-    # Extract from PDF - search all known directories
+
+    # 2. PDF local
     pdf_path = _find_pdf(filename)
-    
-    
-    if not pdf_path:
-        raise FileNotFoundError(f"No PDF or text file found for {filename}")
-    
-    # Use ExtractorRegistry
-    from app.services.extractors.registry import ExtractorRegistry
-    content = await ExtractorRegistry.extract(pdf_path, method=config.extractor)
-    
-    # Save the extracted text
+
+    if pdf_path:
+        from app.services.extractors.registry import ExtractorRegistry
+        content = await ExtractorRegistry.extract(pdf_path, method=config.extractor)
+        txt_path.parent.mkdir(parents=True, exist_ok=True)
+        txt_path.write_text(content.full_text, encoding="utf-8")
+        return content.full_text
+
+    # 3. URL remota (Opción A)
+    source_url = await _get_source_url(boletin_id, filename, db)
+    if not source_url:
+        raise FileNotFoundError(
+            f"No se encontró PDF local ni URL de origen para {filename}"
+        )
+
+    logger.info(f"[Option A] Extrayendo desde URL: {source_url}")
+    from app.services.url_fetcher import fetch_and_extract_text
+    text = await fetch_and_extract_text(source_url, extractor_method=config.extractor)
+
+    # Guardar .txt para evitar re-descarga en futuros reprocesos
     txt_path.parent.mkdir(parents=True, exist_ok=True)
-    txt_path.write_text(content.full_text, encoding="utf-8")
-    
-    return content.full_text
+    txt_path.write_text(text, encoding="utf-8")
+    logger.info(f"[Option A] Texto guardado en {txt_path} ({len(text)} chars)")
+
+    return text
+
+
+async def _get_source_url(
+    boletin_id: int,
+    filename: str,
+    db: AsyncSession,
+) -> Optional[str]:
+    """
+    Resuelve la URL de origen de un boletín.
+
+    Orden de búsqueda:
+    1. Boletin.source_url (guardada en DB en el momento del registro)
+    2. Construir desde JurisdiccionSyncConfig.source_url_template
+    """
+    from sqlalchemy import select
+    from app.db.models import Boletin, JurisdiccionSyncConfig
+
+    # 1. URL ya guardada en el registro del boletín
+    result = await db.execute(
+        select(Boletin.source_url, Boletin.jurisdiccion_id)
+        .where(Boletin.id == boletin_id)
+    )
+    row = result.first()
+    if row and row.source_url:
+        return row.source_url
+
+    # 2. Construir desde template de la jurisdicción
+    if row and row.jurisdiccion_id:
+        cfg_result = await db.execute(
+            select(JurisdiccionSyncConfig.source_url_template)
+            .where(JurisdiccionSyncConfig.jurisdiccion_id == row.jurisdiccion_id)
+        )
+        cfg_row = cfg_result.first()
+        if cfg_row and cfg_row.source_url_template:
+            from app.services.url_fetcher import build_url_from_template
+            return build_url_from_template(cfg_row.source_url_template, filename)
+
+    return None
+
+
+async def _parse_and_store_sumario(
+    db: AsyncSession,
+    boletin_id: int,
+    filename: str,
+    text: str,
+) -> None:
+    """
+    Parsea el sumario del boletín y lo persiste en sumarios_parseados.
+    Solo actúa sobre boletines provinciales de Córdoba (fuente=PROVINCIAL, jurisdiccion_id=1).
+    No-bloqueante: cualquier fallo se loguea como warning sin interrumpir el pipeline.
+    """
+    import json
+    try:
+        from sqlalchemy import select
+        from app.db.models import Boletin, FuenteBoletin, SumarioParseado
+        from app.services.sumario_parser import SumarioParser
+
+        # Verificar que es un boletín provincial de Córdoba
+        result = await db.execute(
+            select(Boletin.fuente, Boletin.jurisdiccion_id).where(Boletin.id == boletin_id)
+        )
+        row = result.first()
+        if not row or row.fuente != FuenteBoletin.PROVINCIAL or row.jurisdiccion_id != 1:
+            return
+
+        # Skip si ya tiene sumario parseado
+        existing = await db.execute(
+            select(SumarioParseado.id).where(SumarioParseado.boletin_id == boletin_id)
+        )
+        if existing.first():
+            return
+
+        sumario = SumarioParser().parse_from_text(text)
+
+        record = SumarioParseado(
+            boletin_id=boletin_id,
+            format_type=sumario.format_type,
+            confidence=sumario.confidence,
+            pagina_sumario=sumario.sumario_page,
+            entries_json=json.dumps([e.__dict__ for e in sumario.entries], ensure_ascii=False),
+            raw_text=sumario.raw_text if sumario.found else None,
+        )
+        db.add(record)
+        await db.commit()
+
+        logger.info(
+            "[pipeline] Sumario boletin_id=%d: found=%s format=%s entries=%d confianza=%.2f",
+            boletin_id, sumario.found, sumario.format_type, len(sumario.entries), sumario.confidence
+        )
+    except Exception as exc:
+        logger.warning("[pipeline] Sumario parsing no-fatal error boletin_id=%d: %s", boletin_id, exc)
 
 
 def _clean_text(text: str, config) -> str:
