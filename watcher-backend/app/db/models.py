@@ -50,12 +50,30 @@ class Boletin(Base):
     
     # Origen del documento (v1.1 Phase 2)
     origin = Column(String(20), default="downloaded", nullable=False)  # downloaded, uploaded, synced
+    source_url = Column(Text, nullable=True, index=True)  # URL canónica de origen (Option A: URL-first)
 
     # Relaciones
     analisis = relationship("Analisis", back_populates="boletin", cascade="all, delete-orphan")
     ejecuciones = relationship("EjecucionPresupuestaria", back_populates="boletin", cascade="all, delete-orphan")
     jurisdiccion = relationship("Jurisdiccion", back_populates="boletines", lazy="joined")
     menciones_jurisdiccionales = relationship("MencionJurisdiccional", back_populates="boletin", cascade="all, delete-orphan", lazy="select")
+    sumario = relationship("SumarioParseado", back_populates="boletin", uselist=False, cascade="all, delete-orphan")
+
+class SumarioParseado(Base):
+    """Sumario parseado de la primera página de un boletín provincial."""
+    __tablename__ = "sumarios_parseados"
+
+    id             = Column(Integer, primary_key=True, autoincrement=True)
+    boletin_id     = Column(Integer, ForeignKey("boletines.id", ondelete="CASCADE"), nullable=False, unique=True, index=True)
+    format_type    = Column(String(50), nullable=False, index=True)  # organismo_jerarquia | categorias_simples | categorias_judiciales | unknown
+    confidence     = Column(Float, nullable=False, default=0.0, index=True)
+    pagina_sumario = Column(Integer, nullable=True)
+    entries_json   = Column(JSON, nullable=False, default=list)
+    raw_text       = Column(Text, nullable=True)
+    created_at     = Column(DateTime, default=datetime.utcnow)
+
+    boletin = relationship("Boletin", back_populates="sumario")
+
 
 class Analisis(Base):
     """Modelo para almacenar análisis de actos administrativos individuales."""
@@ -718,7 +736,8 @@ class Jurisdiccion(Base):
     # Relaciones
     boletines = relationship("Boletin", back_populates="jurisdiccion")
     menciones = relationship("MencionJurisdiccional", back_populates="jurisdiccion")
-    
+    fuentes_dato = relationship("FuenteDato", back_populates="jurisdiccion", cascade="all, delete-orphan")
+
     def __repr__(self):
         return f"<Jurisdiccion(nombre={self.nombre}, tipo={self.tipo})>"
 
@@ -835,6 +854,35 @@ class SyncState(Base):
     
     def __repr__(self):
         return f"<SyncState(status={self.status}, last_synced={self.last_synced_date})>"
+
+
+class FuenteDato(Base):
+    """
+    Fuentes de datos públicos configuradas por jurisdicción.
+
+    Tipos soportados:
+      - boletin_diario       : URL template para boletines diarios
+      - presupuesto_anual    : URL del presupuesto oficial del ejercicio
+      - ejecucion_trimestral : URL de los informes de ejecución presupuestaria
+
+    Separada de JurisdiccionSyncConfig (que es config operativa del sync).
+    """
+    __tablename__ = "fuentes_dato"
+
+    id              = Column(Integer, primary_key=True, autoincrement=True)
+    jurisdiccion_id = Column(Integer, ForeignKey("jurisdicciones.id", ondelete="CASCADE"), nullable=False, index=True)
+    tipo            = Column(String(50), nullable=False)    # boletin_diario | presupuesto_anual | ejecucion_trimestral
+    nombre          = Column(String(200), nullable=False)
+    url_template    = Column(Text, nullable=True)           # URL directa o template {year}/{month}/…
+    activa          = Column(Boolean, default=True, nullable=False)
+    descripcion     = Column(Text, nullable=True)
+    created_at      = Column(DateTime, default=datetime.utcnow)
+    updated_at      = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    jurisdiccion = relationship("Jurisdiccion", back_populates="fuentes_dato")
+
+    def __repr__(self):
+        return f"<FuenteDato(jurisdiccion_id={self.jurisdiccion_id}, tipo={self.tipo})>"
 
 
 # =============================================================================

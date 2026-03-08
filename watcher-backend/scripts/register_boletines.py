@@ -8,10 +8,11 @@ import sys
 from pathlib import Path
 
 # Añadir el directorio raíz del proyecto al sys.path
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "watcher-monolith" / "backend"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.db.database import AsyncSessionLocal
 from app.db.models import Boletin, FuenteBoletin
+from app.services.url_fetcher import build_url_cordoba_provincial
 from sqlalchemy import select, update
 
 async def register_boletines():
@@ -74,7 +75,9 @@ async def register_boletines():
                     status='pending',
                     fuente=FuenteBoletin.PROVINCIAL,
                     jurisdiccion_id=1,  # Provincia de Córdoba
-                    seccion_nombre=section_names.get(section_num)
+                    seccion_nombre=section_names.get(section_num),
+                    source_url=build_url_cordoba_provincial(filename),
+                    origin='synced',
                 )
                 
                 db.add(boletin)

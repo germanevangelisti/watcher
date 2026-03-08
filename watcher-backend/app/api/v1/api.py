@@ -4,12 +4,12 @@ Router principal de la API v1
 
 from fastapi import APIRouter
 from app.api.v1.endpoints import (
-    watcher, boletines, batch, boletines_selector, alertas, actos, 
+    watcher, boletines, batch, boletines_selector, alertas, actos,
     presupuesto, metricas, redflags, downloader, dashboard,
     dslab_documents, dslab_configs, dslab_executions, dslab_results,
     agents, workflows, websocket, feedback, observability, workflow_history,
     sync, jurisdicciones, menciones, processing_logs, analisis, entidades,
-    search, documentos, compliance, upload, pipeline, health
+    search, documentos, compliance, upload, pipeline, health, fuentes_dato
 )
 
 api_router = APIRouter()
@@ -51,3 +51,4 @@ api_router.include_router(workflows.router, prefix="/workflows", tags=["workflow
 api_router.include_router(websocket.router, tags=["websocket"])
 api_router.include_router(feedback.router, prefix="/feedback", tags=["feedback"])
 api_router.include_router(observability.router, prefix="/observability", tags=["observability"])
+api_router.include_router(fuentes_dato.router, prefix="/fuentes-dato", tags=["fuentes-dato"])

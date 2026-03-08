@@ -2,6 +2,8 @@
 API endpoints para gestión de boletines
 """
 
+import calendar as cal_module
+from datetime import date
 from typing import List, Dict, Optional
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends, Query
 from pathlib import Path
@@ -15,7 +17,7 @@ from app.services.batch_processor import BatchProcessor
 from app.services.processing_logger import processing_logger
 from app.db.session import get_db
 from app.db import crud
-from app.db.models import Boletin
+from app.db.models import Boletin, Jurisdiccion
 import uuid
 
 
@@ -188,6 +190,137 @@ async def list_boletines(
         print(f"Error in list_boletines: {str(e)}")
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
+
+# Normaliza status internos del pipeline → statuses del calendario (conjunto cerrado)
+_CALENDAR_STATUS_MAP = {
+    "completed": "completed",
+    "failed": "error",
+    "extracting": "processing",
+    "chunking": "processing",
+    "indexing": "processing",
+    "analyzing": "processing",
+    "pending": "pending",
+}
+
+
+def _calendar_status(raw: str) -> str:
+    return _CALENDAR_STATUS_MAP.get(raw, "pending")
+
+
+# Mapeo de número de sección → nombre legible
+_SECTION_NAMES = {
+    "1": "Designaciones y Decretos",
+    "2": "Compras y Contrataciones",
+    "3": "Subsidios y Transferencias",
+    "4": "Obras Públicas",
+    "5": "Notificaciones Judiciales",
+}
+
+
+@router.get("/calendar")
+async def get_boletines_calendar(
+    year: int = Query(default=None, description="Año (YYYY). Por defecto: año actual."),
+    month: int = Query(default=None, description="Mes (1-12). Por defecto: mes actual."),
+    jurisdiccion_id: Optional[int] = Query(default=None, description="ID de jurisdicción. Sin valor: todas."),
+    db: AsyncSession = Depends(get_db),
+) -> Dict:
+    """
+    Vista calendario de boletines agrupada por jurisdicción, día y sección.
+
+    Retorna para cada jurisdicción un mapa de días hábiles del mes con el
+    estado de cada sección (completed/pending/error/not_found).
+    """
+    today = date.today()
+    year = year or today.year
+    month = month or today.month
+
+    if not (1 <= month <= 12):
+        raise HTTPException(status_code=400, detail="Mes inválido (1-12)")
+
+    # Generar set de días hábiles (lunes-viernes) del mes
+    _, days_in_month = cal_module.monthrange(year, month)
+    weekdays: set[str] = set()
+    for day in range(1, days_in_month + 1):
+        d = date(year, month, day)
+        if d.weekday() < 5:  # 0=lun … 4=vie
+            weekdays.add(d.strftime("%Y%m%d"))
+
+    # Prefijo de fecha para LIKE (YYYYMM)
+    date_prefix = f"{year:04d}{month:02d}"
+
+    # Query boletines del mes
+    query = select(Boletin).where(Boletin.date.like(f"{date_prefix}%"))
+    if jurisdiccion_id is not None:
+        query = query.where(Boletin.jurisdiccion_id == jurisdiccion_id)
+    result = await db.execute(query)
+    boletines = result.scalars().all()
+
+    # Agrupar por jurisdiccion_id → date → section_num
+    from collections import defaultdict
+    by_jurisdiccion: dict = defaultdict(lambda: defaultdict(dict))
+    jurisdiccion_names: Dict[int, str] = {}
+
+    for b in boletines:
+        jid = b.jurisdiccion_id or 0
+        # Extraer número de sección del filename: YYYYMMDD_N_Secc.pdf → "N"
+        parts = b.filename.replace(".pdf", "").split("_")
+        sec_num = parts[1] if len(parts) >= 2 else "?"
+        by_jurisdiccion[jid][b.date][sec_num] = {
+            "numero": sec_num,
+            "nombre": b.seccion_nombre or _SECTION_NAMES.get(sec_num, f"Sección {sec_num}"),
+            "status": _calendar_status(b.status),
+            "boletin_id": b.id,
+        }
+        if b.jurisdiccion:
+            jurisdiccion_names[jid] = b.jurisdiccion.nombre
+
+    # Si se filtró por jurisdiccion_id y no hay boletines aún, obtener el nombre
+    if jurisdiccion_id is not None and jurisdiccion_id not in jurisdiccion_names:
+        j_result = await db.execute(select(Jurisdiccion).where(Jurisdiccion.id == jurisdiccion_id))
+        j = j_result.scalar_one_or_none()
+        if j:
+            jurisdiccion_names[jurisdiccion_id] = j.nombre
+            if jurisdiccion_id not in by_jurisdiccion:
+                by_jurisdiccion[jurisdiccion_id] = defaultdict(dict)
+
+    # Construir respuesta
+    jurisdicciones_out = []
+    for jid, dias_data in by_jurisdiccion.items():
+        dias_out: Dict[str, Dict] = {}
+
+        for day_str in weekdays:
+            secciones_found = dias_data.get(day_str, {})
+            expected_sections = list(_SECTION_NAMES.keys())
+
+            secciones_list = []
+            for sec_num in expected_sections:
+                if sec_num in secciones_found:
+                    secciones_list.append(secciones_found[sec_num])
+                else:
+                    secciones_list.append({
+                        "numero": sec_num,
+                        "nombre": _SECTION_NAMES[sec_num],
+                        "status": "not_found",
+                        "boletin_id": None,
+                    })
+
+            dias_out[day_str] = {
+                "es_habil": True,
+                "secciones": sorted(secciones_list, key=lambda s: s["numero"]),
+            }
+
+        jurisdicciones_out.append({
+            "id": jid,
+            "nombre": jurisdiccion_names.get(jid, f"Jurisdicción {jid}"),
+            "dias": dias_out,
+        })
+
+    return {
+        "year": year,
+        "month": month,
+        "jurisdicciones": sorted(jurisdicciones_out, key=lambda j: j["id"]),
+    }
+
 
 @router.get("/{boletin_id}")
 async def get_boletin(
@@ -486,9 +619,10 @@ async def get_monthly_stats(
             "monthly_stats": stats_list,
             "total_months": len(stats_list)
         }
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/{boletin_id}/analisis/")
 async def get_boletin_analisis(
