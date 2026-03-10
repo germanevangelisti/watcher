@@ -1,15 +1,17 @@
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import dayjs from "dayjs"
 import localizedFormat from "dayjs/plugin/localizedFormat"
 import "dayjs/locale/es"
-import { ChevronLeft, ChevronRight, Loader2, RotateCcw } from "lucide-react"
+import { ChevronLeft, ChevronRight, Loader2, RotateCcw, CheckCircle2, XCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useBoletinCalendar } from "@/lib/api/hooks/use-boletin-calendar"
-import { useTriggerFromDate, useTriggerMonth } from "@/lib/api/hooks/use-pipeline-trigger"
+import { useTriggerFromDate, useTriggerDay, useTriggerMonth } from "@/lib/api/hooks/use-pipeline-trigger"
 import { usePipelineResetOne } from "@/lib/api/hooks/use-pipeline"
 import { useWebSocket } from "@/lib/ws/use-websocket"
+import type { WebSocketEvent } from "@/lib/ws/use-websocket"
 import { usePipelineStore } from "@/lib/store/pipeline-store"
+import type { StageHistoryEntry } from "@/lib/store/pipeline-store"
 import { useQueryClient } from "@tanstack/react-query"
 import { useRouter } from "@tanstack/react-router"
 import type { SeccionDia, JurisdiccionCalendar } from "@/types"
@@ -40,6 +42,21 @@ const STAGE_LABELS: Record<string, string> = {
   chunking:      "Fragmentando",
   indexing:      "Indexando",
   analyzing:     "Analizando",
+}
+
+function stageMessage(entry: StageHistoryEntry): string {
+  const d = entry.details ?? {}
+  switch (entry.stage) {
+    case "extracting":     return "Extrayendo PDF"
+    case "cleaning":       return "Limpiando texto"
+    case "entity_mapping": return "Mapeando entidades"
+    case "chunking":       return "Fragmentando texto"
+    case "indexing":       return `Indexando${d.chunks_created != null ? ` ${d.chunks_created} chunks` : ""}`
+    case "analyzing":      return `Análisis Gemini${d.chunks_indexed != null ? ` (${d.chunks_indexed} chunks)` : ""}`
+    case "completed":      return `Completado${d.actos_extracted != null ? ` · ${d.actos_extracted} actos` : ""}`
+    case "failed":         return `Error: ${String(d.error ?? "desconocido")}`
+    default:               return entry.stage
+  }
 }
 
 function dotClass(status: string): string {
@@ -89,10 +106,11 @@ interface DayCellProps {
   secciones: SeccionDia[] | undefined
   isToday: boolean
   isSelected: boolean
+  isFuture: boolean
   onClick: () => void
 }
 
-function DayCell({ dateStr, secciones, isToday, isSelected, onClick }: DayCellProps) {
+function DayCell({ dateStr, secciones, isToday, isSelected, isFuture, onClick }: DayCellProps) {
   const day = dayjs(dateStr, "YYYYMMDD")
   const hasData = secciones && secciones.length > 0
 
@@ -100,7 +118,8 @@ function DayCell({ dateStr, secciones, isToday, isSelected, onClick }: DayCellPr
     <button
       onClick={onClick}
       className={`
-        w-full rounded-lg p-1.5 text-left transition-colors hover:bg-muted/60
+        w-full rounded-lg p-1.5 text-left transition-colors
+        ${isFuture ? "opacity-35 cursor-default" : "hover:bg-muted/60"}
         ${isSelected ? "ring-2 ring-primary bg-muted/40" : ""}
         ${isToday ? "bg-primary/5" : ""}
       `}
@@ -108,7 +127,13 @@ function DayCell({ dateStr, secciones, isToday, isSelected, onClick }: DayCellPr
       <div className={`text-xs font-medium mb-1 ${isToday ? "text-primary" : "text-muted-foreground"}`}>
         {day.date()}
       </div>
-      {hasData ? (
+      {isFuture ? (
+        <div className="flex flex-wrap gap-0.5">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <span key={n} className="w-2 h-2 rounded-full inline-block border border-muted-foreground/20" />
+          ))}
+        </div>
+      ) : hasData ? (
         <div className="flex flex-wrap gap-0.5">
           {secciones!.map((s) => (
             <span key={s.numero} className={dotClass(s.status)} title={`S${s.numero}: ${s.nombre}`} />
@@ -128,11 +153,13 @@ function DayCell({ dateStr, secciones, isToday, isSelected, onClick }: DayCellPr
 interface DayDetailPanelProps {
   dateStr: string
   jurisdiccion: JurisdiccionCalendar
+  isFuture: boolean
 }
 
-function DayDetailPanel({ dateStr, jurisdiccion }: DayDetailPanelProps) {
+function DayDetailPanel({ dateStr, jurisdiccion, isFuture }: DayDetailPanelProps) {
   const router = useRouter()
   const triggerFromDate = useTriggerFromDate()
+  const triggerDay = useTriggerDay()
   const resetOne = usePipelineResetOne()
   const documentStates = usePipelineStore((s) => s.documentStates)
   const dia = jurisdiccion.dias[dateStr]
@@ -143,19 +170,62 @@ function DayDetailPanel({ dateStr, jurisdiccion }: DayDetailPanelProps) {
     triggerFromDate.mutate({ jurisdiccion_id: jurisdiccion.id, date: dateStr, section })
   }
 
+  function handleTriggerDay() {
+    // Trigger all sections that are not currently processing
+    const processingIds = new Set(
+      secciones
+        .filter((s) => {
+          const live = s.boletin_id ? documentStates[s.boletin_id] : undefined
+          const stage = live?.stage
+          return stage && stage !== "completed" && stage !== "failed"
+        })
+        .map((s) => s.numero)
+    )
+    const sectionsToTrigger = secciones.length === 0
+      ? ["1", "2", "3", "4", "5"]
+      : secciones
+          .filter((s) => !processingIds.has(s.numero))
+          .map((s) => String(s.numero))
+    if (sectionsToTrigger.length > 0) {
+      triggerDay.mutate({ jurisdiccion_id: jurisdiccion.id, date: dateStr, sections: sectionsToTrigger })
+    }
+  }
+
   return (
     <Card className="mt-4">
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-medium capitalize">{dateLabel}</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm font-medium capitalize">{dateLabel}</CardTitle>
+          {!isFuture && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs"
+              disabled={triggerDay.isPending}
+              onClick={handleTriggerDay}
+            >
+              {triggerDay.isPending
+                ? <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                : null
+              }
+              Procesar día
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-2">
-        {secciones.length === 0 ? (
+        {isFuture ? (
+          <p className="text-sm text-muted-foreground italic">
+            Aún no publicado. Los boletines de este día no están disponibles.
+          </p>
+        ) : secciones.length === 0 ? (
           <p className="text-sm text-muted-foreground">Sin datos para este día.</p>
         ) : (
           secciones.map((s) => {
             // Real-time stage from pipeline store (updated via WebSocket events)
             const liveState = s.boletin_id ? documentStates[s.boletin_id] : undefined
             const liveStage = liveState?.stage
+            const history = liveState?.history ?? []
 
             // Resolve effective status: prefer live pipeline state over DB state
             const effectiveStatus = liveStage
@@ -169,66 +239,90 @@ function DayDetailPanel({ dateStr, jurisdiccion }: DayDetailPanelProps) {
             const isProcessing = effectiveStatus === "processing"
 
             return (
-              <div key={s.numero} className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 min-w-0">
-                  {isProcessing
-                    ? <Loader2 className="shrink-0 h-2 w-2 animate-spin text-blue-400" />
-                    : <span className={`shrink-0 ${dotClass(effectiveStatus)}`} />
-                  }
-                  <span className="text-sm truncate">
-                    <span className="font-medium text-muted-foreground mr-1">S{s.numero}</span>
-                    {s.nombre}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${style.badge}`}>
-                    {stageLabel ?? style.label}
-                  </span>
+              <div key={s.numero} className="space-y-0">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    {isProcessing
+                      ? <Loader2 className="shrink-0 h-2 w-2 animate-spin text-blue-400" />
+                      : <span className={`shrink-0 ${dotClass(effectiveStatus)}`} />
+                    }
+                    <span className="text-sm truncate">
+                      <span className="font-medium text-muted-foreground mr-1">S{s.numero}</span>
+                      {s.nombre}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${style.badge}`}>
+                      {stageLabel ?? style.label}
+                    </span>
 
-                  {/* Ver análisis — sección completada */}
-                  {effectiveStatus === "completed" && s.boletin_id && (
-                    <>
+                    {/* Ver análisis — sección completada */}
+                    {effectiveStatus === "completed" && s.boletin_id && (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-6 text-xs"
+                          onClick={() =>
+                            router.navigate({ to: "/documentos/$id", params: { id: String(s.boletin_id) } })
+                          }
+                        >
+                          Ver
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                          disabled={resetOne.isPending}
+                          title="Resetear y reprocesar"
+                          onClick={() => resetOne.mutate(s.boletin_id!)}
+                        >
+                          <RotateCcw className="h-3 w-3" />
+                        </Button>
+                      </>
+                    )}
+
+                    {/* Acción para secciones no procesadas o con error */}
+                    {(effectiveStatus === "not_found" || effectiveStatus === "pending" || effectiveStatus === "error") && (
                       <Button
                         size="sm"
                         variant="outline"
                         className="h-6 text-xs"
-                        onClick={() =>
-                          router.navigate({ to: "/documentos/$id", params: { id: String(s.boletin_id) } })
+                        disabled={triggerFromDate.isPending}
+                        onClick={() => handleTrigger(s.numero)}
+                      >
+                        {triggerFromDate.isPending
+                          ? <Loader2 className="h-3 w-3 animate-spin" />
+                          : effectiveStatus === "not_found" ? "Descargar"
+                          : effectiveStatus === "error" ? "Reintentar"
+                          : "Procesar"
                         }
-                      >
-                        Ver
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                        disabled={resetOne.isPending}
-                        title="Resetear y reprocesar"
-                        onClick={() => resetOne.mutate(s.boletin_id!)}
-                      >
-                        <RotateCcw className="h-3 w-3" />
-                      </Button>
-                    </>
-                  )}
-
-                  {/* Acción para secciones no procesadas o con error */}
-                  {(effectiveStatus === "not_found" || effectiveStatus === "pending" || effectiveStatus === "error") && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-6 text-xs"
-                      disabled={triggerFromDate.isPending}
-                      onClick={() => handleTrigger(s.numero)}
-                    >
-                      {triggerFromDate.isPending
-                        ? <Loader2 className="h-3 w-3 animate-spin" />
-                        : effectiveStatus === "not_found" ? "Descargar"
-                        : effectiveStatus === "error" ? "Reintentar"
-                        : "Procesar"
-                      }
-                    </Button>
-                  )}
+                    )}
+                  </div>
                 </div>
+
+                {/* Log panel: visible while processing or when history exists */}
+                {history.length > 0 && (
+                  <div className="ml-4 mt-1 mb-1 pl-3 border-l border-border/50 space-y-0.5">
+                    {history.map((entry, i) => (
+                      <div key={i} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        {entry.stage === "completed"
+                          ? <CheckCircle2 className="h-3 w-3 text-green-500 shrink-0" />
+                          : entry.stage === "failed"
+                          ? <XCircle className="h-3 w-3 text-red-500 shrink-0" />
+                          : i === history.length - 1
+                          ? <Loader2 className="h-3 w-3 animate-spin text-blue-400 shrink-0" />
+                          : <CheckCircle2 className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+                        }
+                        <span>{stageMessage(entry)}</span>
+                        <span className="ml-auto text-muted-foreground/30 tabular-nums">
+                          {dayjs(entry.timestamp).format("HH:mm:ss")}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )
           })
@@ -266,12 +360,55 @@ export function BoletinCalendar({ jurisdiccionId }: BoletinCalendarProps) {
   const { data, isLoading, error } = useBoletinCalendar(current.year, current.month, jurisdiccionId)
   const triggerMonth = useTriggerMonth()
 
-  // Invalidate calendar data when pipeline finishes (or fails) any document
-  useWebSocket({
-    eventTypes: ["pipeline.document.completed", "pipeline.document.failed", "pipeline.completed"],
-    onEvent: () => {
-      qc.invalidateQueries({ queryKey: ["boletin-calendar"] })
+  const { updateDocumentState, setDocumentCompleted, setDocumentFailed } = usePipelineStore()
+
+  // Handle pipeline events: update store for live UI + invalidate query when needed
+  const handleWsEvent = useCallback(
+    (event: WebSocketEvent) => {
+      const d = event.data as Record<string, unknown>
+      switch (event.event_type) {
+        case "pipeline.document.started":
+          // Nuevo boletin_id asignado → refrescar para que secciones tengan el ID
+          qc.invalidateQueries({ queryKey: ["boletin-calendar"] })
+          break
+        case "pipeline.document.stage":
+          updateDocumentState(
+            d.boletin_id as number,
+            d.filename as string,
+            d.stage as string,
+            d.details as Record<string, unknown> | undefined,
+          )
+          break
+        case "pipeline.document.completed":
+          setDocumentCompleted(d.boletin_id as number)
+          qc.invalidateQueries({ queryKey: ["boletin-calendar"] })
+          break
+        case "pipeline.document.failed":
+          setDocumentFailed(
+            d.boletin_id as number,
+            d.filename as string,
+            d.error as string,
+            "unknown",
+          )
+          qc.invalidateQueries({ queryKey: ["boletin-calendar"] })
+          break
+        case "pipeline.completed":
+          qc.invalidateQueries({ queryKey: ["boletin-calendar"] })
+          break
+      }
     },
+    [updateDocumentState, setDocumentCompleted, setDocumentFailed, qc],
+  )
+
+  useWebSocket({
+    eventTypes: [
+      "pipeline.document.started",
+      "pipeline.document.stage",
+      "pipeline.document.completed",
+      "pipeline.document.failed",
+      "pipeline.completed",
+    ],
+    onEvent: handleWsEvent,
   })
 
   const prevMonth = () => {
@@ -397,6 +534,7 @@ export function BoletinCalendar({ jurisdiccionId }: BoletinCalendarProps) {
                       secciones={jurisdiccion?.dias[dateStr]?.secciones}
                       isToday={dateStr === todayStr}
                       isSelected={dateStr === selectedDay}
+                      isFuture={dateStr > todayStr}
                       onClick={() => setSelectedDay(dateStr === selectedDay ? null : dateStr)}
                     />
                   ) : (
@@ -409,7 +547,7 @@ export function BoletinCalendar({ jurisdiccionId }: BoletinCalendarProps) {
 
           {/* Day detail panel */}
           {selectedDay && jurisdiccion && (
-            <DayDetailPanel dateStr={selectedDay} jurisdiccion={jurisdiccion} />
+            <DayDetailPanel dateStr={selectedDay} jurisdiccion={jurisdiccion} isFuture={selectedDay > todayStr} />
           )}
 
           {data && data.jurisdicciones.length === 0 && (

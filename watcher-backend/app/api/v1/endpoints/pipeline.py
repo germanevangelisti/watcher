@@ -763,6 +763,14 @@ async def _process_document_pipeline(
             entity_service = get_entity_service()
             pre_entities, entity_map = await _build_entity_map(session_id, boletin_id, text, entity_service)
 
+            # Persist entities + relationships to PostgreSQL and Neo4j (dual-write)
+            try:
+                await entity_service.persist_entities(pre_entities, boletin_id, db)
+                relationships = entity_service.detect_relationships(pre_entities, text)
+                await entity_service.persist_relationships(relationships, boletin_id, pre_entities, db)
+            except Exception as _ep:
+                logger.warning("Entity persistence failed (non-fatal): %s", _ep)
+
             # Stage 4/7: CHUNKING
             _active_sessions[session_id]["stage"] = "chunking"
             _active_sessions[session_id]["stages_done"] = 3
@@ -790,6 +798,22 @@ async def _process_document_pipeline(
             await _update_status(db, boletin_id, "analyzing")
 
             actos_count = await _analyze_document(db, boletin_id, filename, text)
+
+            # Stage 6b: ENRIQUECIMIENTO POST-ANÁLISIS (non-fatal)
+            try:
+                _actos_para_enriquecer = await _get_actos_for_enrichment(db, boletin_id)
+                if _actos_para_enriquecer:
+                    _enrich_stats = await _enrich_entities_from_actos(
+                        db, boletin_id, _actos_para_enriquecer, entity_service
+                    )
+                    logger.info(
+                        "[%s] Post-analysis enrichment: +%d entidades, +%d relaciones",
+                        session_id,
+                        _enrich_stats.get("entities_created", 0),
+                        _enrich_stats.get("relationships_created", 0),
+                    )
+            except Exception as _enrich_exc:
+                logger.warning("[%s] Post-analysis enrichment falló (non-fatal): %s", session_id, _enrich_exc)
 
             # Stage 7/7: COMPLETED
             _active_sessions[session_id]["stage"] = "completed"
@@ -1366,7 +1390,11 @@ async def _analyze_document(
     from app.core.observability import record_vcp
 
     # BUG-1: use singletons instead of fresh WatcherService() each call
-    watcher, aiu_service = await _get_watcher_and_aiu()
+    try:
+        watcher, aiu_service = await _get_watcher_and_aiu()
+    except Exception as _e:
+        logger.warning("Análisis Gemini no disponible (%s) — etapa omitida", _e)
+        return 0
 
     # Per-request firewall wired with current db session and fts_service
     try:
@@ -1518,3 +1546,123 @@ async def _analyze_document(
 
     logger.info(f"Analysis complete for {filename}: {total_saved} actos saved")
     return total_saved
+
+
+async def _get_actos_for_enrichment(db: AsyncSession, boletin_id: int) -> list:
+    """Devuelve los actos Gemini guardados como dicts para enriquecimiento post-análisis."""
+    from app.db.crud import get_analisis_by_boletin
+    rows = await get_analisis_by_boletin(db, boletin_id, skip=0, limit=500)
+    out = []
+    for row in rows:
+        extra = row.datos_extra or {}
+        out.append({
+            "organismo":     row.organismo or "",
+            "beneficiarios": row.beneficiarios_json or [],
+            "tipo_acto":     row.tipo_acto or "otro",
+            "descripcion":   row.descripcion or "",
+            "firmante":      extra.get("firmante", "") if isinstance(extra, dict) else "",
+        })
+    return out
+
+
+async def _enrich_entities_from_actos(
+    db: AsyncSession,
+    boletin_id: int,
+    actos: list,
+    entity_svc,
+) -> dict:
+    """
+    Crea entidades y relaciones adicionales a partir de los actos estructurados de Gemini.
+    Retroalimenta el grafo con datos de alta precisión extraídos por el LLM.
+    """
+    from app.services.entity_service import EntityResult, RelationshipResult
+
+    created_entities = 0
+    created_rels = 0
+
+    for acto in actos:
+        org_nombre = (acto.get("organismo") or "").strip()
+        tipo_acto = acto.get("tipo_acto", "otro")
+        beneficiarios = acto.get("beneficiarios") or []
+        firmante = (acto.get("firmante") or "").strip()
+
+        new_entities: list = []
+
+        # Organismo como entidad
+        if org_nombre and len(org_nombre) >= 5:
+            new_entities.append(EntityResult(
+                tipo="organismo",
+                nombre=org_nombre,
+                nombre_normalizado=entity_svc.normalize_entity(org_nombre, "organismo"),
+                confianza=0.95,
+                posicion=0,
+                metadata={},
+            ))
+
+        # Beneficiarios (personas o empresas)
+        for benef in beneficiarios:
+            nombre = (benef if isinstance(benef, str) else str(benef)).strip()
+            if not nombre or len(nombre) < 4:
+                continue
+            # Heurística: ALL-CAPS con sufijo societario → empresa, sino → persona
+            import re as _re
+            if _re.search(r'S\.A\.|S\.R\.L\.|S\.A\.S\.|COOPERATIVA|CONSORCIO|FUNDACI', nombre, _re.IGNORECASE):
+                tipo_e = "empresa"
+            else:
+                tipo_e = "persona"
+            new_entities.append(EntityResult(
+                tipo=tipo_e,
+                nombre=nombre,
+                nombre_normalizado=entity_svc.normalize_entity(nombre, tipo_e),
+                confianza=0.90,
+                posicion=0,
+                metadata={},
+            ))
+
+        # Firmante como persona
+        if firmante and len(firmante) >= 5:
+            new_entities.append(EntityResult(
+                tipo="persona",
+                nombre=firmante,
+                nombre_normalizado=entity_svc.normalize_entity(firmante, "persona"),
+                confianza=0.90,
+                posicion=0,
+                metadata={},
+            ))
+
+        if new_entities:
+            stats = await entity_svc.persist_entities(new_entities, boletin_id, db)
+            created_entities += stats.get("created", 0)
+
+        # Relaciones organismo → beneficiario
+        if org_nombre and beneficiarios:
+            tipo_rel_map = {
+                "designacion": "designa",
+                "contratacion": "contrata",
+                "subsidio": "recibe_subsidio",
+                "adjudicacion": "adjudica",
+            }
+            tipo_rel = "se_relaciona_con"
+            for k, v in tipo_rel_map.items():
+                if k in tipo_acto.lower():
+                    tipo_rel = v
+                    break
+
+            rels: list = []
+            for benef in beneficiarios:
+                nombre = (benef if isinstance(benef, str) else str(benef)).strip()
+                if nombre and len(nombre) >= 4:
+                    rels.append(RelationshipResult(
+                        entidad_origen=org_nombre,
+                        entidad_destino=nombre,
+                        tipo_relacion=tipo_rel,
+                        contexto=(acto.get("descripcion") or "")[:300],
+                        confianza=0.90,
+                        metadata={},
+                    ))
+
+            if rels:
+                n = await entity_svc.persist_relationships(rels, boletin_id, new_entities, db)
+                created_rels += n
+
+    return {"entities_created": created_entities, "relationships_created": created_rels}

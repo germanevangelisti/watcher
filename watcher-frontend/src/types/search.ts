@@ -96,6 +96,7 @@ export interface GraphData {
     weight: number;
     confidence: number;
   }>;
+  source?: "neo4j" | "sqlite";
 }
 
 export interface PatternDetection {

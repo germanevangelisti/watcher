@@ -17,6 +17,7 @@ class PatternRule:
     query_template: str
     threshold: Dict[str, Any]
     categoria: str
+    cypher_template: str = ""  # Versión Cypher para Neo4j (fallback a query_template si vacío)
 
 
 # Patrones predefinidos
@@ -41,9 +42,17 @@ PATRONES_SOSPECHOSOS = {
             ORDER BY total_contratos DESC
         """,
         threshold={"dias": 30, "min_contratos": 5},
-        categoria="fiscal"
+        categoria="fiscal",
+        cypher_template="""
+            MATCH (emp:Entidad {tipo: 'empresa'})<-[r:CONTRATA|ADJUDICA]-()
+            WHERE r.fecha >= date() - duration({days: $dias})
+            WITH emp, count(r) AS total_contratos
+            WHERE total_contratos >= $min_contratos
+            RETURN emp.nombre_display AS empresa, total_contratos
+            ORDER BY total_contratos DESC
+        """
     ),
-    
+
     "monto_anomalo": PatternRule(
         id="monto_anomalo",
         nombre="Monto Anómalamente Alto",
@@ -73,9 +82,24 @@ PATRONES_SOSPECHOSOS = {
             ORDER BY ratio DESC
         """,
         threshold={"ratio_threshold": 3.0, "dias_recientes": 90},
-        categoria="fiscal"
+        categoria="fiscal",
+        cypher_template="""
+            MATCH ()-[r:CONTRATA|ADJUDICA]->()
+            WHERE r.fecha >= date() - duration({days: 365})
+            WITH type(r) AS tipo_rel, avg(toFloat(r.monto)) AS avg_monto
+            WITH collect({tipo: tipo_rel, avg: avg_monto}) AS averages
+            MATCH ()-[r2:CONTRATA|ADJUDICA]->()
+            WHERE r2.fecha >= date() - duration({days: $dias_recientes})
+            WITH r2, averages, [a IN averages WHERE a.tipo = type(r2) | a.avg][0] AS avg_for_type
+            WHERE avg_for_type IS NOT NULL
+              AND (toFloat(r2.monto) / avg_for_type) >= $ratio_threshold
+            RETURN r2.pg_id AS relacion_id, type(r2) AS tipo,
+                   toFloat(r2.monto) AS monto, avg_for_type AS promedio,
+                   (toFloat(r2.monto) / avg_for_type) AS ratio
+            ORDER BY ratio DESC
+        """
     ),
-    
+
     "designacion_contrato_rapido": PatternRule(
         id="designacion_contrato_rapido",
         nombre="Designación Seguida de Contrato",
@@ -114,9 +138,23 @@ PATRONES_SOSPECHOSOS = {
             ORDER BY dias_diferencia ASC
         """,
         threshold={"max_dias": 60},
-        categoria="conflicto_interes"
+        categoria="conflicto_interes",
+        cypher_template="""
+            MATCH ()-[d:DESIGNA]->(persona:Entidad {tipo: 'persona'})
+            MATCH (persona)-[m:MENCIONADO_EN]->(b:Boletin)
+            WHERE m.fragmento CONTAINS 'contrat'
+               OR m.fragmento CONTAINS 'licitac'
+               OR m.fragmento CONTAINS 'adjudica'
+            WITH persona, d.fecha AS fecha_designacion, min(date(b.date)) AS fecha_contrato
+            WHERE duration.between(fecha_designacion, fecha_contrato).days BETWEEN 0 AND $max_dias
+            RETURN persona.nombre_display AS persona,
+                   toString(fecha_designacion) AS fecha_designacion,
+                   toString(fecha_contrato) AS fecha_primer_contrato,
+                   duration.between(fecha_designacion, fecha_contrato).days AS dias_diferencia
+            ORDER BY dias_diferencia ASC
+        """
     ),
-    
+
     "proveedor_unico": PatternRule(
         id="proveedor_unico",
         nombre="Proveedor Único Dominante",
@@ -159,7 +197,22 @@ PATRONES_SOSPECHOSOS = {
             ORDER BY porcentaje DESC
         """,
         threshold={"dias": 365, "min_contratos_total": 5, "porcentaje_threshold": 70.0},
-        categoria="competencia"
+        categoria="competencia",
+        cypher_template="""
+            MATCH (org:Entidad {tipo: 'organismo'})-[r:CONTRATA|ADJUDICA]->(emp:Entidad {tipo: 'empresa'})
+            WHERE r.fecha >= date() - duration({days: $dias})
+            WITH org, emp, count(r) AS contratos_pair
+            WITH org, sum(contratos_pair) AS total_org,
+                 collect({empresa: emp.nombre_display, contratos: contratos_pair}) AS por_empresa
+            WHERE total_org >= $min_contratos_total
+            UNWIND por_empresa AS pair
+            WITH org.nombre_display AS organismo, pair.empresa AS empresa,
+                 pair.contratos AS contratos, total_org,
+                 round(100.0 * pair.contratos / total_org, 2) AS porcentaje
+            WHERE porcentaje >= $porcentaje_threshold
+            RETURN organismo, empresa, contratos, total_org, porcentaje
+            ORDER BY porcentaje DESC
+        """
     ),
     
     "fragmentacion_sospechosa": PatternRule(
@@ -201,7 +254,18 @@ PATRONES_SOSPECHOSOS = {
             "dias_ventana": 90,
             "min_contratos": 3
         },
-        categoria="evasion"
+        categoria="evasion",
+        cypher_template="""
+            MATCH (emp:Entidad {tipo: 'empresa'})<-[r:CONTRATA|ADJUDICA]-()
+            WHERE r.fecha >= date() - duration({days: $dias_ventana})
+              AND toFloat(r.monto) < $umbral_licitacion
+              AND toFloat(r.monto) >= $umbral_licitacion * 0.7
+            WITH emp, count(r) AS num_contratos, sum(toFloat(r.monto)) AS suma_total,
+                 min(toFloat(r.monto)) AS monto_minimo, max(toFloat(r.monto)) AS monto_maximo
+            WHERE num_contratos >= $min_contratos AND suma_total >= $umbral_licitacion
+            RETURN emp.nombre_display AS empresa, num_contratos, suma_total, monto_minimo, monto_maximo
+            ORDER BY num_contratos DESC, suma_total DESC
+        """
     ),
     
     "recurrencia_temporal": PatternRule(
@@ -234,7 +298,15 @@ PATRONES_SOSPECHOSOS = {
             ORDER BY apariciones DESC, empresa
         """,
         threshold={"min_recurrencias": 2},
-        categoria="patron_temporal"
+        categoria="patron_temporal",
+        cypher_template="""
+            MATCH (emp:Entidad {tipo: 'empresa'})<-[r:CONTRATA|ADJUDICA]-()
+            WITH emp, r.fecha.month AS mes, r.fecha.day AS dia, r.fecha.year AS anio
+            WITH emp, mes, dia, count(DISTINCT anio) AS apariciones, collect(DISTINCT toString(anio)) AS anios
+            WHERE apariciones >= $min_recurrencias
+            RETURN emp.nombre_display AS empresa, mes, dia, anios, apariciones
+            ORDER BY apariciones DESC, empresa
+        """
     ),
     
     "vinculo_cruzado": PatternRule(
@@ -262,7 +334,17 @@ PATRONES_SOSPECHOSOS = {
             ORDER BY num_relaciones DESC
         """,
         threshold={"dias": 365, "min_tipos_relacion": 2},
-        categoria="red_relaciones"
+        categoria="red_relaciones",
+        cypher_template="""
+            MATCH (e1:Entidad)-[r]-(e2:Entidad)
+            WHERE r.fecha >= date() - duration({days: $dias})
+              AND id(e1) < id(e2)
+            WITH e1, e2, collect(DISTINCT type(r)) AS tipos_relacion, count(r) AS num_relaciones
+            WHERE size(tipos_relacion) >= $min_tipos_relacion
+            RETURN e1.nombre_display AS entidad1, e2.nombre_display AS entidad2,
+                   tipos_relacion, num_relaciones
+            ORDER BY num_relaciones DESC
+        """
     )
 }
 

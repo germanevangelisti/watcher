@@ -17,14 +17,20 @@ logger = logging.getLogger(__name__)
 
 class ChunkingConfig(BaseModel):
     """Configuración de chunking."""
-    chunk_size: int = Field(default=1000, gt=0, description="Tamaño del chunk en caracteres")
-    chunk_overlap: int = Field(default=200, ge=0, description="Overlap entre chunks")
+    chunk_size: int = Field(default=1500, gt=0, description="Tamaño del chunk en caracteres")
+    chunk_overlap: int = Field(default=300, ge=0, description="Overlap entre chunks")
     min_chunk_size: int = Field(default=100, gt=0, description="Tamaño mínimo de chunk")
     strategy: str = Field(default="recursive", description="Estrategia de chunking")
-    
+
     # Separadores jerárquicos (de mayor a menor prioridad)
     separators: List[str] = Field(
         default=[
+            # Actos administrativos individuales (máxima prioridad)
+            "\nDECRETO N",
+            "\nRESOLUCION N",
+            "\nDISPOSICION N",
+            "\nORDENANZA N",
+            "\nCONVENIO N",
             # Separadores estructurales de boletines oficiales
             "\nARTICULO ",
             "\nDECRETO ",
