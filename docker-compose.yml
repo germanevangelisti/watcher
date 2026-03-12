@@ -16,6 +16,28 @@ services:
       retries: 5
     restart: unless-stopped
 
+  neo4j:
+    image: neo4j:5-community
+    environment:
+      NEO4J_AUTH: neo4j/${NEO4J_PASSWORD:-watcher_neo4j_2026}
+      NEO4J_PLUGINS: '["apoc"]'
+      NEO4J_dbms_security_procedures_unrestricted: apoc.*
+      NEO4J_server_memory_heap_initial__size: 512m
+      NEO4J_server_memory_heap_max__size: 1G
+    volumes:
+      - neo4jdata:/data
+      - neo4jlogs:/logs
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:7474 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
   backend:
     build: ./watcher-backend
     env_file: .env.production
@@ -23,6 +45,9 @@ services:
       DATABASE_URL: postgresql+asyncpg://watcher:${DB_PASSWORD:-watcher_dev_2026}@db:5432/watcher
       SYNC_DATABASE_URL: postgresql://watcher:${DB_PASSWORD:-watcher_dev_2026}@db:5432/watcher
       BOLETINES_DIR: /app/boletines
+      NEO4J_URI: bolt://neo4j:7687
+      NEO4J_USER: neo4j
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD:-watcher_neo4j_2026}
     volumes:
       - chromadata:/root/.watcher/chromadb
       - boletines:/app/boletines
@@ -31,6 +56,8 @@ services:
       - "8001:8001"
     depends_on:
       db:
+        condition: service_healthy
+      neo4j:
         condition: service_healthy
     restart: unless-stopped
 
@@ -62,6 +89,8 @@ services:
 
 volumes:
   pgdata:
+  neo4jdata:
+  neo4jlogs:
   chromadata:
   boletines:
   uploads:

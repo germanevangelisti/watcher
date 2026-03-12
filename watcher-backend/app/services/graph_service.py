@@ -25,6 +25,8 @@ from typing import List, Dict, Any, Optional
 import networkx as nx
 from neo4j import AsyncSession as Neo4jAsyncSession
 
+from app.db.graph_driver import run_query
+
 logger = logging.getLogger(__name__)
 
 # Mapeo de tipo_relacion (PostgreSQL) → tipo Neo4j
@@ -66,27 +68,20 @@ async def upsert_entity(
     metadata_extra: Optional[Dict],
 ) -> None:
     """MERGE un nodo :Entidad por nombre_normalizado, actualiza todas las propiedades."""
-    await session.run(
-        """
-        MERGE (e:Entidad {nombre_normalizado: $nombre_normalizado})
-        SET e.pg_id             = $pg_id,
-            e.tipo              = $tipo,
-            e.nombre_display    = $nombre_display,
-            e.variantes         = $variantes,
-            e.total_menciones   = $total_menciones,
-            e.primera_aparicion = date($primera_aparicion),
-            e.ultima_aparicion  = date($ultima_aparicion),
-            e.metadata_extra    = $metadata_extra
-        """,
-        pg_id=pg_id,
-        tipo=tipo,
-        nombre_normalizado=nombre_normalizado,
-        nombre_display=nombre_display,
-        variantes=variantes or [],
-        total_menciones=total_menciones,
-        primera_aparicion=primera_aparicion or "1900-01-01",
-        ultima_aparicion=ultima_aparicion or "1900-01-01",
-        metadata_extra=json.dumps(metadata_extra or {}),
+    await run_query(
+        session,
+        "upsert_entity",
+        {
+            "pg_id": pg_id,
+            "tipo": tipo,
+            "nombre_normalizado": nombre_normalizado,
+            "nombre_display": nombre_display,
+            "variantes": variantes or [],
+            "total_menciones": total_menciones,
+            "primera_aparicion": primera_aparicion or "1900-01-01",
+            "ultima_aparicion": ultima_aparicion or "1900-01-01",
+            "metadata_extra": json.dumps(metadata_extra or {}),
+        },
     )
 
 
@@ -98,16 +93,7 @@ async def upsert_boletin(
     date: str,
 ) -> None:
     """MERGE un nodo :Boletin liviano (para provenance de aristas)."""
-    await session.run(
-        """
-        MERGE (b:Boletin {pg_id: $pg_id})
-        SET b.filename = $filename,
-            b.date     = $date
-        """,
-        pg_id=pg_id,
-        filename=filename,
-        date=date,
-    )
+    await run_query(session, "upsert_boletin", {"pg_id": pg_id, "filename": filename, "date": date})
 
 
 async def upsert_relationship(
@@ -165,19 +151,16 @@ async def upsert_mention_edge(
     confianza: float,
 ) -> None:
     """MERGE una arista :MENCIONADO_EN entre :Entidad y :Boletin."""
-    await session.run(
-        """
-        MATCH (e:Entidad {nombre_normalizado: $nombre_normalizado})
-        MATCH (b:Boletin {pg_id: $boletin_pg_id})
-        MERGE (e)-[r:MENCIONADO_EN {pg_id: $pg_id}]->(b)
-        SET r.fragmento = $fragmento,
-            r.confianza = $confianza
-        """,
-        nombre_normalizado=entidad_nombre_normalizado,
-        boletin_pg_id=boletin_pg_id,
-        pg_id=pg_id,
-        fragmento=fragmento[:500],
-        confianza=confianza,
+    await run_query(
+        session,
+        "upsert_mention_edge",
+        {
+            "nombre_normalizado": entidad_nombre_normalizado,
+            "boletin_pg_id": boletin_pg_id,
+            "pg_id": pg_id,
+            "fragmento": fragmento[:500],
+            "confianza": confianza,
+        },
     )
 
 
@@ -195,19 +178,27 @@ async def get_graph_overview(
     Grafo de conocimiento para visualización.
     Mantiene el mismo response shape que el endpoint PostgreSQL existente.
     """
-    type_filter = "AND e.tipo IN $types" if entity_types else ""
+    # graph_overview_nodes.cypher doesn't support the optional type filter
+    # (dynamic WHERE clause), so we keep the f-string for that case only.
+    if entity_types:
+        nodes_result = await session.run(
+            """
+            MATCH (e:Entidad)
+            WHERE e.total_menciones >= $min_mentions AND e.tipo IN $types
+            WITH e ORDER BY e.total_menciones DESC LIMIT $max_nodes
+            RETURN collect(e) AS nodes
+            """,
+            min_mentions=min_mentions,
+            max_nodes=max_nodes,
+            types=entity_types,
+        )
+    else:
+        nodes_result = await run_query(
+            session,
+            "graph_overview_nodes",
+            {"min_mentions": min_mentions, "max_nodes": max_nodes},
+        )
 
-    nodes_result = await session.run(
-        f"""
-        MATCH (e:Entidad)
-        WHERE e.total_menciones >= $min_mentions {type_filter}
-        WITH e ORDER BY e.total_menciones DESC LIMIT $max_nodes
-        RETURN collect(e) AS nodes
-        """,
-        min_mentions=min_mentions,
-        max_nodes=max_nodes,
-        types=entity_types or [],
-    )
     nodes_record = await nodes_result.single()
     if not nodes_record:
         return {"nodes": [], "links": []}
@@ -227,15 +218,7 @@ async def get_graph_overview(
     ]
 
     # Aristas solo entre nodos seleccionados
-    links_result = await session.run(
-        """
-        MATCH (o:Entidad)-[r]->(d:Entidad)
-        WHERE o.pg_id IN $ids AND d.pg_id IN $ids
-        RETURN o.pg_id AS source, d.pg_id AS target,
-               type(r) AS rel_type, r.confianza AS confidence
-        """,
-        ids=node_pg_ids,
-    )
+    links_result = await run_query(session, "graph_overview_links", {"ids": node_pg_ids})
     links = []
     async for rec in links_result:
         links.append({
@@ -257,21 +240,10 @@ async def get_entity_relationships(
     Vecindad de 1 salto de una entidad.
     Mismo response shape que el endpoint PostgreSQL existente.
     """
-    result = await session.run(
-        """
-        MATCH (main:Entidad {pg_id: $pg_id})
-        OPTIONAL MATCH (main)-[r]-(neighbor:Entidad)
-        RETURN main,
-               collect(DISTINCT neighbor) AS neighbors,
-               collect({
-                 from_id:   startNode(r).pg_id,
-                 to_id:     endNode(r).pg_id,
-                 rel_type:  type(r),
-                 fecha:     toString(r.fecha),
-                 confianza: r.confianza
-               }) AS edges
-        """,
-        pg_id=pg_id,
+    result = await run_query(
+        session,
+        "entity_relationships",
+        {"pg_id": pg_id},
     )
     record = await result.single()
     if not record:
@@ -354,23 +326,7 @@ async def get_neighborhood(
     depth: int = 2,
 ) -> Dict[str, Any]:
     """Subgrafo de vecinos a N saltos (multi-hop nativo Neo4j)."""
-    result = await session.run(
-        """
-        MATCH path = (center:Entidad {pg_id: $pg_id})-[*1..$depth]-(neighbor:Entidad)
-        WITH nodes(path) AS ns, relationships(path) AS rs
-        UNWIND ns AS n
-        WITH collect(DISTINCT n) AS all_nodes, rs
-        UNWIND rs AS r
-        RETURN all_nodes,
-               collect(DISTINCT {
-                 from_id:  startNode(r).pg_id,
-                 to_id:    endNode(r).pg_id,
-                 rel_type: type(r)
-               }) AS all_rels
-        """,
-        pg_id=pg_id,
-        depth=depth,
-    )
+    result = await run_query(session, "neighborhood", {"pg_id": pg_id, "depth": depth})
     record = await result.single()
     if not record:
         return {"nodes": [], "links": [], "center_id": pg_id, "depth": depth}
@@ -410,14 +366,10 @@ async def load_graph_into_networkx(
     """
     G = nx.DiGraph()
 
-    nodes_result = await session.run(
-        """
-        MATCH (e:Entidad)
-        WHERE e.total_menciones >= $min_mentions
-        RETURN e ORDER BY e.total_menciones DESC LIMIT $max_nodes
-        """,
-        min_mentions=min_mentions,
-        max_nodes=max_nodes,
+    nodes_result = await run_query(
+        session,
+        "load_for_networkx",
+        {"min_mentions": min_mentions, "max_nodes": max_nodes},
     )
     async for record in nodes_result:
         n = record["e"]
