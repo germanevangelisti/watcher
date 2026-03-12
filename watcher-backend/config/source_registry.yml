@@ -1,0 +1,67 @@
+# source_registry.yml — Registry of data sources monitored by Watcher
+#
+# Each source entry defines:
+#   id          — Unique slug (matches pipeline source_id)
+#   name        — Human-readable display name
+#   type        — provincial_boletin | national_boletin | uploaded | api_feed
+#   url         — Source URL (for reference / manual verification)
+#   jurisdiccion — Jurisdiction code
+#   schedule    — Cron-like description of polling frequency
+#   enabled     — Whether the source is actively polled
+#   notes       — Optional description or known issues
+
+sources:
+
+  - id: boletinoficial.cba.gov.ar
+    name: Boletín Oficial de Córdoba
+    type: provincial_boletin
+    url: https://boletinoficial.cba.gov.ar
+    jurisdiccion: CBA
+    schedule: "daily at 08:00 ART"
+    enabled: true
+    notes: "Primary source — PDF downloads via sync_service"
+
+  - id: manual_upload
+    name: Documentos Subidos Manualmente
+    type: uploaded
+    url: null
+    jurisdiccion: null
+    schedule: "on-demand"
+    enabled: true
+    notes: "User-uploaded PDFs processed via UploadedPipeline"
+
+  - id: boletinoficial.gob.ar
+    name: Boletín Oficial Nacional
+    type: national_boletin
+    url: https://www.boletinoficial.gob.ar
+    jurisdiccion: NAC
+    schedule: "daily at 09:00 ART"
+    enabled: false
+    notes: "Planned — national feed not yet integrated"
+
+  - id: buenosaires.gob.ar
+    name: Boletín Oficial CABA
+    type: provincial_boletin
+    url: https://boletinoficial.buenosaires.gob.ar
+    jurisdiccion: CABA
+    schedule: "daily at 08:30 ART"
+    enabled: false
+    notes: "Planned — CABA feed not yet integrated"
+
+  - id: mendoza.gob.ar
+    name: Boletín Oficial Mendoza
+    type: provincial_boletin
+    url: https://boletinoficial.mendoza.gov.ar
+    jurisdiccion: MZA
+    schedule: "daily at 09:00 ART"
+    enabled: false
+    notes: "Planned"
+
+  - id: santafe.gob.ar
+    name: Boletín Oficial Santa Fe
+    type: provincial_boletin
+    url: https://www.santafe.gov.ar/boletinoficial
+    jurisdiccion: SF
+    schedule: "daily at 09:00 ART"
+    enabled: false
+    notes: "Planned"

@@ -1,5 +1,8 @@
 """
 Servicio para análisis de contenido usando Google Gemini - v2 con structured output y multi-acto
+
+Integra IntelligenceProvider: usa ProProvider cuando GOOGLE_API_KEY está disponible,
+FreeProvider (rule-based) como fallback cuando no hay API key.
 """
 
 import asyncio
@@ -12,6 +15,7 @@ import os
 from datetime import datetime
 
 from app.services.reference_firewall import ReferenceFirewallService
+from app.services.intelligence_provider import get_default_provider, IntelligenceProvider
 
 logger = logging.getLogger(__name__)
 
@@ -159,6 +163,9 @@ class WatcherService:
 
         # AIU Decomposition Service (Fase II) — set externally via set_aiu_service()
         self._aiu_service: Optional[Any] = None
+
+        # Intelligence tier provider — FreeProvider when no API key, ProProvider otherwise
+        self._provider: IntelligenceProvider = get_default_provider(api_key)
 
         # System prompt v3: multi-acto, calibración de riesgo por montos, texto_original
         self.system_prompt = """Eres un analista experto en gobierno abierto y transparencia del sector público argentino.
@@ -366,23 +373,14 @@ Siempre incluye motivo_riesgo y accion_sugerida, incluso para riesgo "bajo" (ej:
         Returns:
             Dict con formato FragmentAnalysis: {"actos": [...], "resumen_general": "..."}
         """
-        # Fallback si no hay modelo Gemini
+        # Delegar a FreeProvider cuando no hay modelo Gemini disponible
         if self.model is None:
-            logger.warning("Cliente Gemini no disponible, usando respuesta fallback")
-            return {
-                "actos": [{
-                    "tipo_acto": "otro",
-                    "organismo": "No analizado (sin API key)",
-                    "beneficiarios": [],
-                    "montos": [],
-                    "descripcion": "Análisis no disponible - configurar GOOGLE_API_KEY",
-                    "riesgo": "informativo",
-                }],
-                "resumen_general": "Análisis no disponible - sin API key configurada",
-                "metadata": metadata,
-                "fragment_tokens": 0,
-                "model_used": "fallback",
-            }
+            logger.warning(
+                "Cliente Gemini no disponible, delegando a %s (tier=%s)",
+                type(self._provider).__name__,
+                self._provider.tier,
+            )
+            return await self._provider.analyze_fragment(content, metadata)
         
         estimated_tokens = self.count_tokens_estimate(content) + self.count_tokens_estimate(self.system_prompt)
         await self.wait_for_rate_limit(estimated_tokens)

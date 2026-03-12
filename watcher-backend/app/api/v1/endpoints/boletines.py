@@ -209,11 +209,11 @@ def _calendar_status(raw: str) -> str:
 
 # Mapeo de número de sección → nombre legible
 _SECTION_NAMES = {
-    "1": "Designaciones y Decretos",
-    "2": "Compras y Contrataciones",
-    "3": "Subsidios y Transferencias",
-    "4": "Obras Públicas",
-    "5": "Notificaciones Judiciales",
+    "1": "Legislación y Normativas",
+    "2": "Judiciales",
+    "3": "Sociedades y Personas Jurídicas",
+    "4": "Notificaciones, Licitaciones y Contrataciones",
+    "5": "Municipalidades y Comunas",
 }
 
 

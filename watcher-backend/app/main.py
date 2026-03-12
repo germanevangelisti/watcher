@@ -15,6 +15,7 @@ from app.core.config import settings
 from app.api.v1.api import api_router
 from app.db.database import init_db
 from app.core.scheduler import start_scheduler, stop_scheduler, configure_scheduler_from_db
+from app.middleware import CUITMaskingMiddleware, SecurityHeadersMiddleware
 
 logging.basicConfig(
     level=logging.INFO,
@@ -75,6 +76,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(CUITMaskingMiddleware)
 
 
 # ---------------------------------------------------------------------------
