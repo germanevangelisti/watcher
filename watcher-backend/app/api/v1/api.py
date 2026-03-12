@@ -9,7 +9,8 @@ from app.api.v1.endpoints import (
     dslab_documents, dslab_configs, dslab_executions, dslab_results,
     agents, workflows, websocket, feedback, observability, workflow_history,
     sync, jurisdicciones, menciones, processing_logs, analisis, entidades,
-    search, documentos, compliance, upload, pipeline, health, fuentes_dato
+    search, documentos, compliance, upload, pipeline, health, fuentes_dato,
+    pipeline_runs, sources,
 )
 
 api_router = APIRouter()
@@ -52,3 +53,9 @@ api_router.include_router(websocket.router, tags=["websocket"])
 api_router.include_router(feedback.router, prefix="/feedback", tags=["feedback"])
 api_router.include_router(observability.router, prefix="/observability", tags=["observability"])
 api_router.include_router(fuentes_dato.router, prefix="/fuentes-dato", tags=["fuentes-dato"])
+
+# Pipeline runs (Fase 1.6)
+api_router.include_router(pipeline_runs.router, prefix="/pipelines", tags=["pipeline-runs"])
+
+# Source registry (Fase 3.6)
+api_router.include_router(sources.router, prefix="/sources", tags=["sources"])

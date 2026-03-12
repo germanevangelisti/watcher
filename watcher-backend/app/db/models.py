@@ -1315,3 +1315,27 @@ class ChunkRecord(Base):
     
     def __repr__(self):
         return f"<ChunkRecord(document_id={self.document_id}, chunk_index={self.chunk_index}, section_type={self.section_type})>"
+
+
+class IngestionRun(Base):
+    """Tracks a single execution of a BoletinPipeline (extract → transform → load)."""
+    __tablename__ = "ingestion_runs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    pipeline_name = Column(String(100), nullable=False)
+    source_id = Column(String(100), nullable=False)
+    status = Column(String(20), nullable=False, default="running")  # running | loaded | failed
+    rows_in = Column(Integer, default=0)
+    rows_loaded = Column(Integer, default=0)
+    error = Column(Text, nullable=True)
+    started_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    finished_at = Column(DateTime, nullable=True)
+
+    __table_args__ = (
+        Index("idx_ingestion_run_pipeline", "pipeline_name"),
+        Index("idx_ingestion_run_status", "status"),
+        Index("idx_ingestion_run_started", "started_at"),
+    )
+
+    def __repr__(self):
+        return f"<IngestionRun(id={self.id}, pipeline={self.pipeline_name}, status={self.status})>"

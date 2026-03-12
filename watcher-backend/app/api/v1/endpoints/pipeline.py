@@ -9,6 +9,7 @@ Provides endpoints for:
 - Getting default pipeline configuration
 """
 
+import asyncio
 import logging
 import uuid
 import calendar as _cal_module
@@ -40,13 +41,19 @@ router = APIRouter()
 # In-memory session tracking for active pipeline runs
 _active_sessions: Dict[str, Dict[str, Any]] = {}
 
+# SQLite allows only one writer at a time. This semaphore serialises all DB
+# write phases across concurrently-running background pipeline tasks so that
+# sections never race on the same SQLite file.  Under PostgreSQL this lock is
+# never acquired (see usage sites below).
+_sqlite_write_lock = asyncio.Semaphore(1)
+
 # Section names — duplicated here to avoid circular import with boletines.py
 _PIPELINE_SECTION_NAMES = {
-    "1": "Designaciones y Decretos",
-    "2": "Compras y Contrataciones",
-    "3": "Subsidios y Transferencias",
-    "4": "Obras Públicas",
-    "5": "Notificaciones Judiciales",
+    "1": "Legislación y Normativas",
+    "2": "Judiciales",
+    "3": "Sociedades y Personas Jurídicas",
+    "4": "Notificaciones, Licitaciones y Contrataciones",
+    "5": "Municipalidades y Comunas",
 }
 
 # ---------------------------------------------------------------------------
@@ -786,9 +793,10 @@ async def _process_document_pipeline(
                             details={"chunks_created": len(chunks)})
             await _update_status(db, boletin_id, "indexing")
 
-            indexed = await _index_chunks(
-                db, boletin_id, filename, chunks, config.enrichment, config.indexing
-            )
+            async with _sqlite_write_lock:
+                indexed = await _index_chunks(
+                    db, boletin_id, filename, chunks, config.enrichment, config.indexing
+                )
 
             # Stage 6/7: GEMINI ANALYSIS + ADVERSARIAL VERIFICATION
             _active_sessions[session_id]["stage"] = "analyzing"
@@ -797,6 +805,8 @@ async def _process_document_pipeline(
                             details={"chunks_indexed": indexed})
             await _update_status(db, boletin_id, "analyzing")
 
+            # Lock is managed inside _analyze_document — only the DB writes are
+            # serialised; the Gemini API call runs concurrently across sections.
             actos_count = await _analyze_document(db, boletin_id, filename, text)
 
             # Stage 6b: ENRIQUECIMIENTO POST-ANÁLISIS (non-fatal)
@@ -1260,9 +1270,43 @@ async def _index_chunks(
     from datetime import datetime
     import hashlib
     
+    from sqlalchemy.exc import IntegrityError, OperationalError
+
     document_id = filename.replace(".pdf", "").replace(".txt", "")
     indexed_count = 0
-    
+
+    # Remove existing chunks to avoid UNIQUE constraint violations on re-processing.
+    # Wrapped in try/except: if the DB is locked, roll back and continue — the
+    # on_conflict_do_nothing inserts below will silently skip existing rows.
+    try:
+        count_result = await db.execute(
+            select(func.count()).select_from(ChunkRecord).where(
+                ChunkRecord.document_id == document_id
+            )
+        )
+        existing_count = count_result.scalar() or 0
+        if existing_count > 0:
+            logger.info(
+                "Re-indexing %s: removing %d existing chunks first",
+                document_id, existing_count
+            )
+            await db.execute(
+                delete(ChunkRecord).where(ChunkRecord.document_id == document_id)
+            )
+            await db.commit()
+    except (IntegrityError, OperationalError) as cleanup_err:
+        logger.warning(
+            "Cleanup failed for %s (%s). Proceeding — inserts will skip duplicates.",
+            document_id, cleanup_err,
+        )
+        await db.rollback()
+
+    # Dialect-specific insert for on_conflict_do_nothing support
+    if settings.is_postgres:
+        from sqlalchemy.dialects.postgresql import insert as _dialect_insert
+    else:
+        from sqlalchemy.dialects.sqlite import insert as _dialect_insert
+
     # Optional enricher
     enricher = None
     if enrichment_config.enabled:
@@ -1303,10 +1347,11 @@ async def _index_chunks(
                     anchored_entities=anchored_entities,
                 )
             
-            # Create ChunkRecord in SQLite
+            # Insert ChunkRecord using on_conflict_do_nothing to safely handle
+            # duplicates when cleanup was skipped due to a locked database.
             record = None
             if indexing_config.use_sqlite:
-                record = ChunkRecord(
+                stmt = _dialect_insert(ChunkRecord).values(
                     document_id=document_id,
                     boletin_id=boletin_id,
                     chunk_index=chunk.chunk_index,
@@ -1325,8 +1370,10 @@ async def _index_chunks(
                     embedding_dimensions=3072 if indexing_config.use_chromadb else None,
                     created_at=datetime.utcnow(),
                     updated_at=datetime.utcnow(),
+                ).on_conflict_do_nothing(
+                    index_elements=["document_id", "chunk_index"]
                 )
-                db.add(record)
+                await db.execute(stmt)
             
             # Index in ChromaDB
             if indexing_config.use_chromadb and embedding_service and embedding_service.collection:
@@ -1343,10 +1390,6 @@ async def _index_chunks(
                             "filename": filename,
                         }],
                     )
-                    
-                    # Update indexed_at
-                    if record is not None:
-                        record.indexed_at = datetime.utcnow()
                     
                 except Exception as e:
                     logger.warning(f"ChromaDB indexing failed for chunk {chunk.chunk_index}: {e}")
@@ -1434,11 +1477,11 @@ async def _analyze_document(
         logger.error(f"Gemini analysis failed for {filename}: {e}")
         return 0
 
-    # Save each acto — adversarial pipeline (Fases II, III, IV)
+    # Adversarial pipeline (Fases II, III, IV) — run concurrently across sections.
+    # DB writes happen AFTER all computation, under the write lock.
     t_start = time.monotonic()
-    total_saved = 0
     total_aius = 0
-    vcp_results: List[Any] = []  # VerificationResult per acto (for aggregate VCP)
+    vcp_results: List[Any] = []
 
     from agents.verification.agent import VerificationAgent
     try:
@@ -1448,22 +1491,23 @@ async def _analyze_document(
         _retrieval_svc = None
     verifier = VerificationAgent(retrieval_service=_retrieval_svc, firewall_service=firewall)
 
+    # Phase 1: compute — Gemini results + adversarial pipeline (no DB writes here)
+    prepared: List[Dict[str, Any]] = []
     for acto in actos:
         try:
-            # Extract internal fields before saving
             fragment_text = acto.pop("_fragment_content", text[:500])
             acto.pop("_fragment_index", None)
             acto.pop("_resumen_fragmento", None)
             acto.pop("_model_used", None)
 
-            # Phase IV: firewall validation on fragment text
+            # Phase IV: firewall (DB reads only)
             fw_result = None
             try:
                 fw_result = await firewall.validate_references(fragment_text)
             except Exception as fw_e:
                 logger.debug(f"Firewall skipped for {filename}: {fw_e}")
 
-            # Phase II: AIU decomposition per acto
+            # Phase II: AIU decomposition (pure computation)
             aiu_result = None
             aiu_summary = None
             try:
@@ -1472,7 +1516,7 @@ async def _analyze_document(
             except Exception as aiu_e:
                 logger.debug(f"AIU decomposition skipped for {filename}: {aiu_e}")
 
-            # Phase III: Adversarial Verification (VerificationAgent)
+            # Phase III: Adversarial Verification (DB reads only)
             verification_result = None
             if aiu_result is not None and aiu_result.total_aius > 0:
                 try:
@@ -1501,25 +1545,40 @@ async def _analyze_document(
                     "by_type": aiu_result.by_type,
                 }
 
-            # Persist adversarial fields onto the Analisis record
-            db_analisis = await create_analisis(
-                db,
-                boletin_id=boletin_id,
-                fragmento=fragment_text,
-                analisis_data=acto,
-            )
-            if aiu_summary is not None:
-                db_analisis.aiu_summary_json = aiu_summary
+            firewall_score = None
             if fw_result is not None:
-                db_analisis.firewall_score = fw_result.firewall_score
+                firewall_score = fw_result.firewall_score
             if verification_result is not None:
-                db_analisis.firewall_score = verification_result.vcp_score
+                firewall_score = verification_result.vcp_score
 
-            total_saved += 1
+            prepared.append({
+                "acto": acto,
+                "fragment_text": fragment_text,
+                "aiu_summary": aiu_summary,
+                "firewall_score": firewall_score,
+            })
         except Exception as e:
-            logger.error(f"Failed to save acto for {filename}: {e}")
+            logger.error(f"Failed to prepare acto for {filename}: {e}")
 
-    await db.commit()
+    # Phase 2: save — serialised so concurrent sections never write simultaneously
+    total_saved = 0
+    async with _sqlite_write_lock:
+        for item in prepared:
+            try:
+                db_analisis = await create_analisis(
+                    db,
+                    boletin_id=boletin_id,
+                    fragmento=item["fragment_text"],
+                    analisis_data=item["acto"],
+                )
+                if item["aiu_summary"] is not None:
+                    db_analisis.aiu_summary_json = item["aiu_summary"]
+                if item["firewall_score"] is not None:
+                    db_analisis.firewall_score = item["firewall_score"]
+                total_saved += 1
+            except Exception as e:
+                logger.error(f"Failed to save acto for {filename}: {e}")
+        await db.commit()
 
     # Emit VCP metrics using real VerificationAgent data
     if total_saved > 0:
