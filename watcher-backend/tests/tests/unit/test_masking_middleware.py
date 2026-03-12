@@ -10,7 +10,6 @@ Tests validate:
 
 from __future__ import annotations
 
-import pytest
 
 from app.middleware.masking import CUIT_RE, CUIT_MASK, mask_cuit, mask_value
 

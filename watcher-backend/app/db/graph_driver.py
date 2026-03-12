@@ -22,7 +22,7 @@ from typing import Any, AsyncGenerator, Dict, List, Optional
 from neo4j import AsyncGraphDatabase, AsyncDriver, AsyncSession as Neo4jAsyncSession
 
 from app.core.config import settings
-from app.db.query_loader import load_query, QueryNotFoundError
+from app.db.query_loader import load_query
 
 logger = logging.getLogger(__name__)
 

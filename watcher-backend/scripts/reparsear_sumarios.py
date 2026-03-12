@@ -26,7 +26,7 @@ from typing import Optional
 # Añadir raíz del proyecto al path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from sqlalchemy import select, func
+from sqlalchemy import select
 from app.db.database import AsyncSessionLocal
 from app.db.models import Boletin, FuenteBoletin, SumarioParseado
 from app.core.config import settings

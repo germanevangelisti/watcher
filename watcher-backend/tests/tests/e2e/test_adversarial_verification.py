@@ -6,10 +6,9 @@ Objetivo: VCP > 0.85 procesando datos reales de los boletines base.
 Mocks: Gemini/VertexAI (CI cost limits). Servicios de dominio: reales.
 """
 import pytest
-import asyncio
 import sys
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 # ── path setup ────────────────────────────────────────────────────────────────
 BACKEND = Path(__file__).resolve().parent.parent.parent
@@ -81,7 +80,7 @@ def _make_mock_search_result(text: str, score: float = 0.85):
 
 class TestEntityAnchoring:
     def test_build_entity_map_finds_positions(self):
-        from app.services.entity_service import EntityService, EntityResult
+        from app.services.entity_service import EntityService
         svc = EntityService()
         entities = svc.extract_entities(SAMPLE_BOLETIN_TEXT)
         assert len(entities) > 0, "Should extract at least one entity"
@@ -91,8 +90,7 @@ class TestEntityAnchoring:
         assert len(entity_map._entries) > 0, "EntityMap should have positional entries"
 
     def test_entity_map_get_in_range(self):
-        from app.services.entity_service import EntityService, EntityMap, EntityResult
-        from dataclasses import dataclass
+        from app.services.entity_service import EntityService
 
         svc = EntityService()
         text = SAMPLE_BOLETIN_TEXT
@@ -340,7 +338,7 @@ class TestVCPMetrics:
         assert "vcp.score.boletin_42" in gauges
 
     def test_record_vcp_result_increments_counters(self):
-        from app.core.observability import observability, MetricsCollector
+        from app.core.observability import MetricsCollector
 
         # Fresh collector to isolate counter state
         fresh = MetricsCollector()

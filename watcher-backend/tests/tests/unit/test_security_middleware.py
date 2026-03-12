@@ -9,7 +9,6 @@ Tests validate:
 
 from __future__ import annotations
 
-import pytest
 
 from app.middleware.security import SECURITY_HEADERS, SecurityHeadersMiddleware
 
@@ -46,7 +45,6 @@ class TestSecurityHeadersMiddleware:
         """dispatch() must inject all SECURITY_HEADERS into a plain response."""
         import asyncio
         from unittest.mock import AsyncMock, MagicMock
-        from starlette.datastructures import MutableHeaders
 
         response = self._make_response()
         call_next = AsyncMock(return_value=response)

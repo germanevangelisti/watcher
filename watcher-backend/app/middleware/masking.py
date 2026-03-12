@@ -11,13 +11,12 @@ Only applies to JSON responses (Content-Type: application/json).
 
 from __future__ import annotations
 
-import json
 import re
-from typing import Any, Callable, Dict
+from typing import Any, Callable
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
-from starlette.responses import Response, StreamingResponse
+from starlette.responses import Response
 
 # CUIT pattern: two digits, hyphen (optional), eight digits, hyphen (optional), one digit
 # Matches: 20-12345678-9 / 20123456789 / 20-123456789 etc.

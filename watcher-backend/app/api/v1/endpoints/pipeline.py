@@ -484,7 +484,7 @@ async def trigger_from_date(
         select(FuenteDato).where(
             FuenteDato.jurisdiccion_id == req.jurisdiccion_id,
             FuenteDato.tipo == "boletin_diario",
-            FuenteDato.activa == True,
+            FuenteDato.activa,
         )
     )
     fuente = fuente_result.scalar_one_or_none()
@@ -568,7 +568,7 @@ async def trigger_month(
         select(FuenteDato).where(
             FuenteDato.jurisdiccion_id == req.jurisdiccion_id,
             FuenteDato.tipo == "boletin_diario",
-            FuenteDato.activa == True,
+            FuenteDato.activa,
         )
     )
     fuente = fuente_result.scalar_one_or_none()
@@ -1349,7 +1349,6 @@ async def _index_chunks(
             
             # Insert ChunkRecord using on_conflict_do_nothing to safely handle
             # duplicates when cleanup was skipped due to a locked database.
-            record = None
             if indexing_config.use_sqlite:
                 stmt = _dialect_insert(ChunkRecord).values(
                     document_id=document_id,

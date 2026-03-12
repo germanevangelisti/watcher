@@ -5,7 +5,7 @@ Adversarial mindset: rol de INVALIDAR, no de confirmar.
 """
 import logging
 import asyncio
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import List, Optional, Dict, Any
 
 logger = logging.getLogger(__name__)

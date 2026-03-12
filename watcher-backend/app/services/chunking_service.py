@@ -201,15 +201,12 @@ class ChunkingService:
                         candidate_boundary = current_size
                         if entity_map is not None and entity_map.entity_crosses_boundary(candidate_boundary):
                             # Try adjusting split point by +/- 50 chars
-                            adjusted = False
                             for delta in range(1, 51):
                                 if not entity_map.entity_crosses_boundary(candidate_boundary + delta):
                                     candidate_boundary += delta
-                                    adjusted = True
                                     break
                                 if not entity_map.entity_crosses_boundary(candidate_boundary - delta):
                                     candidate_boundary -= delta
-                                    adjusted = True
                                     break
                             # If adjustment failed, proceed with original boundary (non-blocking)
 

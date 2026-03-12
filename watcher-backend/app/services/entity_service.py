@@ -725,7 +725,6 @@ class EntityService:
 
             # Bug fix: destino puede ser persona, empresa u organismo según el tipo
             destino_db = None
-            destino_norm = None
             for guess_tipo in ('persona', 'empresa', 'organismo'):
                 _norm = self.normalize_entity(rel.entidad_destino, guess_tipo)
                 _res = await db.execute(
@@ -736,7 +735,6 @@ class EntityService:
                 _db = _res.scalar_one_or_none()
                 if _db:
                     destino_db = _db
-                    destino_norm = _norm
                     break
 
             if origen_db and destino_db:

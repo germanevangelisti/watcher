@@ -4,9 +4,7 @@ Unit tests for the IngestionRun SQLAlchemy model.
 Tests the model fields, defaults, and __repr__ without hitting a database.
 """
 
-from datetime import datetime
 
-import pytest
 
 from app.db.models import IngestionRun
 

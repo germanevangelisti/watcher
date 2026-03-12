@@ -19,7 +19,7 @@ import argparse
 import logging
 import uuid
 import sys
-from datetime import date, datetime
+from datetime import date
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -53,7 +53,7 @@ async def get_url_template(jurisdiccion_id: int) -> str | None:
             select(FuenteDato).where(
                 FuenteDato.jurisdiccion_id == jurisdiccion_id,
                 FuenteDato.tipo == "boletin_diario",
-                FuenteDato.activa == True,
+                FuenteDato.activa,
             )
         )
         fuente = result.scalar_one_or_none()

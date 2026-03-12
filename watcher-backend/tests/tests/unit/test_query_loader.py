@@ -2,8 +2,6 @@
 Tests for the query_loader module.
 """
 
-import tempfile
-from pathlib import Path
 from unittest.mock import patch
 
 import pytest

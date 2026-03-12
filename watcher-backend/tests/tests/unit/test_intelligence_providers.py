@@ -18,7 +18,6 @@ import pytest
 from app.services.intelligence_provider import (
     FreeProvider,
     ProProvider,
-    IntelligenceProvider,
     get_default_provider,
     _free_risk_level,
     _parse_max_amount,

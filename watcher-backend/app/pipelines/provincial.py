@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -116,7 +116,6 @@ class ProvincialPipeline(BoletinPipeline):
 
         Creates or updates a Boletin record and triggers analysis via BatchProcessor.
         """
-        from app.db import crud
         from app.db.models import Boletin
         from sqlalchemy import select
 
