@@ -1,0 +1,108 @@
+[project]
+name = "watcher-backend"
+version = "2.0.0"
+description = "Watcher Agent — Automated analysis of official government bulletins"
+requires-python = ">=3.11"
+license = "proprietary"
+dependencies = [
+    # Web Framework
+    "fastapi>=0.104.1",
+    "uvicorn[standard]>=0.24.0",
+    "python-multipart>=0.0.6",
+    "pydantic>=2.5.2,<3.0.0",
+
+    # Environment & Config
+    "python-dotenv>=1.0.0",
+
+    # Database (SQL)
+    "sqlalchemy>=2.0.27",
+    "alembic>=1.13.1",
+    "aiosqlite>=0.19.0",
+    "greenlet>=3.0.3",
+    "asyncpg>=0.30.0",
+    "psycopg2-binary>=2.9.9",
+
+    # Graph Database
+    "neo4j>=5.18.0",
+    "networkx>=2.8",
+    "python-louvain>=0.16",
+
+    # Vector Store
+    "chromadb>=0.4.18",
+
+    # PDF Processing
+    "PyPDF2>=3.0.1",
+    "pdfplumber>=0.10.3",
+    "ftfy>=6.1.3",
+
+    # HTTP Client
+    "httpx>=0.25.1",
+
+    # Async File I/O
+    "aiofiles>=23.2.1",
+
+    # Scheduling
+    "apscheduler>=3.10.4",
+
+    # WebSocket
+    "python-socketio>=5.11.0",
+    "websockets>=12.0",
+
+    # Utils
+    "tqdm>=4.66.1",
+]
+
+[project.optional-dependencies]
+ai = [
+    "google-generativeai>=0.8.0",
+    "anthropic>=0.40.0",
+    "langchain-core>=0.3.29",
+    "langchain>=0.3.13",
+    "langchain-google-genai>=2.0.8",
+    "langgraph>=0.2.62",
+]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0",
+    "httpx>=0.28.0",
+    "ruff>=0.9.0",
+    "mypy>=1.14.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app", "agents"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["app", "agents", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/*.py" = ["E402"]
+"tests/**/*.py" = ["E402"]
+
+[tool.mypy]
+python_version = "3.11"
+mypy_path = "."
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-v --tb=short --strict-markers"
+markers = [
+    "pds: PDS layer tests",
+    "dia: DIA layer tests",
+    "kaa: KAA layer tests",
+    "oex: OEx layer tests",
+    "integration: Integration tests",
+    "e2e: End-to-end tests",
+    "slow: Slow running tests",
+]
