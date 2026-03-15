@@ -239,7 +239,8 @@ class EjecucionPresupuestaria(Base):
     es_modificacion_presupuestaria = Column(Boolean, default=False)
     requiere_revision = Column(Boolean, default=False)
     observaciones = Column(Text, nullable=True)
-    
+    is_duplicate = Column(Integer, default=0)  # 1 = repeated publication of same acto
+
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relaciones
