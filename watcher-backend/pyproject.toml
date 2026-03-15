@@ -3,7 +3,7 @@ name = "watcher-backend"
 version = "2.0.0"
 description = "Watcher Agent — Automated analysis of official government bulletins"
 requires-python = ">=3.11"
-license = "proprietary"
+license = {text = "Proprietary"}
 dependencies = [
     # Web Framework
     "fastapi>=0.104.1",
