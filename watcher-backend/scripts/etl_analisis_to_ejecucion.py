@@ -58,6 +58,24 @@ def build_presupuesto_index(cur) -> list[tuple[int, str, str, str | None]]:
 # Generic placeholder names in analisis that must not match any presupuesto_base organism
 _ANALISIS_NO_MATCH = {"UNIDAD EJECUTORA", "N/A", "NO IDENTIFICADO", "DESCONOCIDO"}
 
+# Explicit alias table: maps normalized analisis organismo → canonical presupuesto_base
+# organismo name to use for matching.  Extend this dict whenever a new known variant
+# appears in analisis that fuzzy matching fails or mis-routes.
+#   str value  → use that name for matching against pb_index / pb_exact
+#   None value → entity is outside the provincial central budget; skip matching
+_ORGANISMO_ALIASES: dict[str, str | None] = {
+    # ── Poder Judicial ────────────────────────────────────────────────────────
+    # "PODER JUDICIAL" (len=14) scores 0.34 on substring against the longer
+    # analisis forms — below the 0.40 threshold.  Force canonical form.
+    "PODER JUDICIAL DE LA PROVINCIA DE CORDOBA": "PODER JUDICIAL",
+    "PODER JUDICIAL DE CORDOBA": "PODER JUDICIAL",
+    # Tribunal Superior de Justicia is part of the Poder Judicial branch and
+    # was incorrectly matched to "TRIBUNAL DE CUENTAS" via Jaccard (score 0.40).
+    "TRIBUNAL SUPERIOR DE JUSTICIA": "PODER JUDICIAL",
+    "TRIBUNAL SUPERIOR DE JUSTICIA DE CORDOBA": "PODER JUDICIAL",
+    "TSJ": "PODER JUDICIAL",
+}
+
 
 def match_organismo(
     org_norm: str,  # pre-normalized by caller
@@ -67,16 +85,26 @@ def match_organismo(
 ) -> tuple[int | None, float, str | None, str | None, str | None]:
     """
     Returns (pb_id, score, method, programa, partida) or (None, 0, None, None, None).
-    Methods: exact > substring > jaccard
+    Methods: alias > exact > substring > jaccard
     pb_exact is a pre-built dict for O(1) exact lookups.
     """
     if not org_norm or org_norm in _ANALISIS_NO_MATCH:
         return None, 0.0, None, None, None
 
+    # Alias override — applied before any fuzzy logic
+    aliased = False
+    if org_norm in _ORGANISMO_ALIASES:
+        canonical = _ORGANISMO_ALIASES[org_norm]
+        if canonical is None:
+            return None, 0.0, None, None, None  # explicitly non-matchable
+        org_norm = canonical
+        aliased = True
+
     # O(1) exact match
     if org_norm in pb_exact:
         pb_id, programa, partida = pb_exact[org_norm]
-        return pb_id, 1.0, "exact", programa, partida
+        method = "alias+exact" if aliased else "exact"
+        return pb_id, 1.0, method, programa, partida
 
     best = (None, 0.0, None, None, None)
 

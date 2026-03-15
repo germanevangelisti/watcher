@@ -26,6 +26,7 @@ from etl_analisis_to_ejecucion import (
     _token_jaccard,
     _normalize_acto,
     _dedup_key,
+    _ORGANISMO_ALIASES,
     build_presupuesto_index,
     match_organismo,
     parse_date,
@@ -187,6 +188,37 @@ class TestMatchOrganismo:
         pb_index, pb_exact = self._make_index([(7, "Ministerio de Salud", "P7", None)])
         pb_id, *_ = match_organismo("", pb_index, pb_exact)
         assert pb_id is None
+
+    def test_alias_redirects_to_canonical(self):
+        # "PODER JUDICIAL DE LA PROVINCIA DE CORDOBA" aliases to "PODER JUDICIAL"
+        pb_index, pb_exact = self._make_index([(8, "Poder Judicial", "P8", None)])
+        pb_id, score, method, _, _ = match_organismo(
+            "PODER JUDICIAL DE LA PROVINCIA DE CORDOBA", pb_index, pb_exact
+        )
+        assert pb_id == 8
+        assert score == 1.0
+        assert method == "alias+exact"
+
+    def test_alias_tsj_to_poder_judicial(self):
+        # TSJ should no longer incorrectly match TRIBUNAL DE CUENTAS
+        pb_index, pb_exact = self._make_index([
+            (9, "Tribunal de Cuentas", "P9", None),
+            (10, "Poder Judicial", "P10", None),
+        ])
+        pb_id, _, method, _, _ = match_organismo(
+            "TRIBUNAL SUPERIOR DE JUSTICIA", pb_index, pb_exact
+        )
+        assert pb_id == 10
+        assert method == "alias+exact"
+
+    def test_alias_table_integrity(self):
+        # All str values in _ORGANISMO_ALIASES are themselves not in the alias table
+        # (no chains that could cause issues)
+        for value in _ORGANISMO_ALIASES.values():
+            if value is not None:
+                assert value not in _ORGANISMO_ALIASES, (
+                    f"Alias chain detected: {value!r} is both a value and a key"
+                )
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
