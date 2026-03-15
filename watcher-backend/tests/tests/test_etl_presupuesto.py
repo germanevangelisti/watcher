@@ -24,6 +24,8 @@ sys.path.insert(0, str(_BACKEND / "scripts"))
 from etl_analisis_to_ejecucion import (
     _normalize,
     _token_jaccard,
+    _normalize_acto,
+    _dedup_key,
     build_presupuesto_index,
     match_organismo,
     parse_date,
@@ -384,12 +386,14 @@ def _setup_test_db(path: str):
             es_modificacion_presupuestaria INTEGER DEFAULT 0,
             requiere_revision INTEGER DEFAULT 0,
             observaciones TEXT,
+            is_duplicate INTEGER NOT NULL DEFAULT 0,
             created_at TEXT
         );
 
         -- seed data
         INSERT INTO boletines VALUES (1, '20260201', 'b1.pdf', 'S1', 'completed', 'provincial', 'downloaded');
         INSERT INTO boletines VALUES (2, '20260215', 'b2.pdf', 'S4', 'completed', 'provincial', 'downloaded');
+        INSERT INTO boletines VALUES (3, '20260202', 'b3.pdf', 'S1', 'completed', 'provincial', 'downloaded');
 
         INSERT INTO presupuesto_base VALUES (
             1, 2026, 'MINISTERIO DE SEGURIDAD', '10 - Programa Policia', NULL,
@@ -406,7 +410,11 @@ def _setup_test_db(path: str):
              NULL, 'Municipalidad Córdoba', 'Monto elevado'),
             (3, 1, 'resolucion', 'RES 003', NULL,
              'Acto sin organismo', 'frag3', 2000000.0, 'otro', 'informativo',
-             NULL, NULL, NULL);
+             NULL, NULL, NULL),
+            -- duplicate of analisis_id=1: same org + acto + monto, published day after
+            (4, 3, 'licitacion', 'RES 001', 'MINISTERIO DE SEGURIDAD',
+             'Compra de patrulleros (republica)', 'frag4', 5000000.0, 'gasto', 'bajo',
+             '["Empresa ABC"]', NULL, NULL);
     """)
     conn.commit()
     conn.close()
@@ -438,12 +446,13 @@ class TestETLIntegration:
     def test_inserts_rows_with_montos(self):
         run_etl(dry_run=False)
         rows = self._query("SELECT * FROM ejecucion_presupuestaria ORDER BY id")
-        assert len(rows) == 3
+        assert len(rows) == 4  # 3 original + 1 duplicate seed row
 
     def test_organismo_matched_to_presupuesto_base(self):
         run_etl(dry_run=False)
         matched = self._query(
-            "SELECT * FROM ejecucion_presupuestaria WHERE organismo = 'MINISTERIO DE SEGURIDAD'"
+            "SELECT * FROM ejecucion_presupuestaria "
+            "WHERE organismo = 'MINISTERIO DE SEGURIDAD' AND is_duplicate = 0"
         )
         assert len(matched) == 1
         assert matched[0]["presupuesto_base_id"] == 1
@@ -477,8 +486,9 @@ class TestETLIntegration:
         rows = self._query(
             "SELECT requiere_revision FROM ejecucion_presupuestaria WHERE riesgo_watcher = 'bajo'"
         )
-        assert len(rows) == 1
-        assert rows[0]["requiere_revision"] == 0
+        # Both canonical and duplicate analisis_id=1/4 have riesgo=bajo → 2 rows
+        assert len(rows) == 2
+        assert all(r["requiere_revision"] == 0 for r in rows)
 
     def test_accumulated_monthly_total(self):
         run_etl(dry_run=False)
@@ -495,11 +505,109 @@ class TestETLIntegration:
         run_etl(dry_run=False)
         run_etl(dry_run=False)
         rows = self._query("SELECT COUNT(*) as n FROM ejecucion_presupuestaria")
-        assert rows[0]["n"] == 3  # second run clears and re-inserts
+        assert rows[0]["n"] == 4  # second run clears and re-inserts same 4 rows
 
     def test_monto_stored_correctly(self):
         run_etl(dry_run=False)
         rows = self._query("SELECT monto FROM ejecucion_presupuestaria ORDER BY monto DESC")
         assert rows[0]["monto"] == 5_000_000.0
-        assert rows[1]["monto"] == 2_000_000.0
-        assert rows[2]["monto"] == 1_000_000.0
+        assert rows[1]["monto"] == 5_000_000.0  # duplicate row stored but flagged
+        assert rows[2]["monto"] == 2_000_000.0
+        assert rows[3]["monto"] == 1_000_000.0
+
+    def test_duplicate_row_is_flagged(self):
+        run_etl(dry_run=False)
+        # analisis_id=4 is a re-publication of analisis_id=1 (same org+acto+monto)
+        rows = self._query(
+            "SELECT is_duplicate FROM ejecucion_presupuestaria "
+            "ORDER BY fecha_boletin, id"
+        )
+        # Row 1 (2026-02-01, canonical), Row 3 (2026-02-01, different acto),
+        # Row 4 (2026-02-02, duplicate), Row 2 (2026-02-15, canonical)
+        is_dup_values = [r["is_duplicate"] for r in rows]
+        assert is_dup_values.count(1) == 1   # exactly one duplicate
+        assert is_dup_values.count(0) == 3   # three canonical rows
+
+    def test_duplicate_excluded_from_accumulator(self):
+        run_etl(dry_run=False)
+        # Only the canonical RES 001 (2026-02-01) should be in the monthly accumulator
+        # for MINISTERIO DE SEGURIDAD. The duplicate (2026-02-02) must not add 5M again.
+        rows = self._query(
+            "SELECT monto_acumulado_mes, is_duplicate FROM ejecucion_presupuestaria "
+            "WHERE organismo = 'MINISTERIO DE SEGURIDAD' ORDER BY fecha_boletin, id"
+        )
+        assert len(rows) == 2
+        canonical = next(r for r in rows if r["is_duplicate"] == 0)
+        duplicate = next(r for r in rows if r["is_duplicate"] == 1)
+        assert canonical["monto_acumulado_mes"] == 5_000_000.0
+        # Duplicate row carries its snapshot of the accumulator at insertion time
+        # (still 5M — accumulator was NOT incremented again)
+        assert duplicate["monto_acumulado_mes"] == 5_000_000.0
+
+    def test_canonical_row_not_flagged(self):
+        run_etl(dry_run=False)
+        rows = self._query(
+            "SELECT is_duplicate FROM ejecucion_presupuestaria "
+            "WHERE organismo = 'MUNICIPALIDAD DE CORDOBA'"
+        )
+        assert len(rows) == 1
+        assert rows[0]["is_duplicate"] == 0
+
+    def test_total_rows_includes_duplicates(self):
+        run_etl(dry_run=False)
+        # All 4 analisis rows (including the duplicate) should be stored
+        rows = self._query("SELECT COUNT(*) as n FROM ejecucion_presupuestaria")
+        assert rows[0]["n"] == 4
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# _normalize_acto and _dedup_key — unit tests
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class TestNormalizeActo:
+    def test_strips_whitespace(self):
+        assert _normalize_acto("RES 001") == "RES001"
+
+    def test_uppercases(self):
+        assert _normalize_acto("res 001") == "RES001"
+
+    def test_none_returns_none(self):
+        assert _normalize_acto(None) is None
+
+    def test_empty_returns_none(self):
+        assert _normalize_acto("") is None
+        assert _normalize_acto("   ") is None
+
+    def test_na_returns_none(self):
+        assert _normalize_acto("N/A") is None
+        assert _normalize_acto("NA") is None
+
+    def test_no_especificado_returns_none(self):
+        assert _normalize_acto("NO ESPECIFICADO") is None
+        assert _normalize_acto("SIN NUMERO") is None
+
+    def test_valid_acto_number(self):
+        assert _normalize_acto("DECRETO 056/2026") == "DECRETO056/2026"
+
+
+class TestDedupKey:
+    def test_same_inputs_same_key(self):
+        k1 = _dedup_key("EPEC", 5_000_000.0, "RES001")
+        k2 = _dedup_key("EPEC", 5_000_000.0, "RES001")
+        assert k1 == k2
+
+    def test_monto_rounded_to_1m(self):
+        # 5.1M and 5.4M both round to 5 (below the .5 threshold)
+        k1 = _dedup_key("EPEC", 5_100_000.0, "RES001")
+        k2 = _dedup_key("EPEC", 5_400_000.0, "RES001")
+        assert k1 == k2
+
+    def test_different_org_different_key(self):
+        k1 = _dedup_key("EPEC", 5_000_000.0, "RES001")
+        k2 = _dedup_key("MINISTERIO", 5_000_000.0, "RES001")
+        assert k1 != k2
+
+    def test_none_acto_included_in_key(self):
+        k1 = _dedup_key("EPEC", 5_000_000.0, None)
+        k2 = _dedup_key("EPEC", 5_000_000.0, None)
+        assert k1 == k2  # keys are equal, but ETL won't add None-acto rows to seen_set

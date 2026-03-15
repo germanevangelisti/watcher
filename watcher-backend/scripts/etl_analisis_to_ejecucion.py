@@ -3,6 +3,9 @@ ETL: analisis → ejecucion_presupuestaria
 
 Populates the budget execution table from analyzed administrative acts.
 Attempts fuzzy organismo matching against presupuesto_base (ejercicio=2026).
+Detects duplicate publications of the same acto (same tender published on
+consecutive days) and marks them with is_duplicate=1; their monto is excluded
+from the cumulative accumulators.
 
 Usage:
     cd watcher-backend
@@ -19,6 +22,7 @@ import sqlite3
 from datetime import datetime, date
 from pathlib import Path
 from collections import defaultdict
+
 DB_PATH = Path(__file__).parent.parent / "sqlite.db"
 
 # ── Normalización ──────────────────────────────────────────────────────────────
@@ -94,6 +98,32 @@ def match_organismo(
     return None, 0.0, None, None, None
 
 
+# ── Deduplicación ─────────────────────────────────────────────────────────────
+
+# Placeholder acto numbers that carry no dedup information
+# After whitespace removal, these become: N/A, NA, NOESPECIFICADO, SINNUMERO, NINGUNO
+_ACTO_NO_DEDUP = {"N/A", "NA", "NOESPECIFICADO", "SINNUMERO", "NINGUNO"}
+
+
+def _normalize_acto(s: str | None) -> str | None:
+    """Normalize acto number for deduplication key. Returns None for empty/generic values."""
+    if not s:
+        return None
+    norm = re.sub(r"\s+", "", s.upper().strip())
+    if norm in _ACTO_NO_DEDUP or not norm:
+        return None
+    return norm
+
+
+def _dedup_key(org_norm: str, monto: float, acto_norm: str | None) -> tuple:
+    """
+    Returns a hashable deduplication key.
+    Rounds monto to nearest 1M to absorb floating-point noise between publications.
+    acto_norm=None means we can't deduplicate this row by acto number.
+    """
+    return (org_norm, round(monto / 1e6), acto_norm)
+
+
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
 def parse_date(date_str: str) -> date | None:
@@ -121,12 +151,24 @@ def first_beneficiario(analisis_row: dict) -> str | None:
     return analisis_row.get("entidad_beneficiaria") or None
 
 
+def _ensure_is_duplicate_column(cur) -> None:
+    """Add is_duplicate column if the table was created before this feature."""
+    cur.execute("PRAGMA table_info(ejecucion_presupuestaria)")
+    cols = {r[1] for r in cur.fetchall()}
+    if "is_duplicate" not in cols:
+        cur.execute(
+            "ALTER TABLE ejecucion_presupuestaria ADD COLUMN is_duplicate INTEGER NOT NULL DEFAULT 0"
+        )
+
+
 # ── ETL main ───────────────────────────────────────────────────────────────────
 
 def run_etl(dry_run: bool = False) -> None:
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
+
+    _ensure_is_duplicate_column(cur)
 
     # Load presupuesto_base index + exact-match dict for O(1) lookups
     pb_index = build_presupuesto_index(cur)
@@ -159,19 +201,23 @@ def run_etl(dry_run: bool = False) -> None:
     print(f"analisis rows with monto > 0: {len(rows)}")
 
     # Build cumulative monthly / quarterly / annual totals per organismo
-    # We iterate in date order, accumulating per (organismo_norm, year, month/quarter)
-    monthly_acc: dict[tuple, float] = defaultdict(float)   # (org, year, month) → cumulative
-    quarterly_acc: dict[tuple, float] = defaultdict(float)  # (org, year, quarter)
-    annual_acc: dict[tuple, float] = defaultdict(float)     # (org, year)
+    # Only canonical (non-duplicate) rows contribute to accumulators.
+    monthly_acc: dict[tuple, float] = defaultdict(float)
+    quarterly_acc: dict[tuple, float] = defaultdict(float)
+    annual_acc: dict[tuple, float] = defaultdict(float)
+
+    # Deduplication: track seen (org_norm, monto_rounded, acto_norm) keys.
+    # acto_norm=None rows are never deduplicated (can't identify reliably).
+    seen_dedup_keys: set = set()
 
     if not dry_run:
-        # Clear previous data
         cur.execute("DELETE FROM ejecucion_presupuestaria")
         conn.commit()
         print("Cleared ejecucion_presupuestaria")
 
     inserted = 0
     matched = 0
+    duplicates = 0
     match_stats: dict[str, int] = defaultdict(int)
     now_iso = datetime.utcnow().isoformat()
 
@@ -184,16 +230,28 @@ def run_etl(dry_run: bool = False) -> None:
         org = row["organismo"] or ""
         org_norm = _normalize(org)
 
-        # Accumulate before storing (cumulative up to and INCLUDING this record)
+        # Deduplication check
+        acto_norm = _normalize_acto(row.get("numero_acto"))
+        key = _dedup_key(org_norm, monto, acto_norm)
+        is_duplicate = 0
+        if acto_norm is not None:
+            if key in seen_dedup_keys:
+                is_duplicate = 1
+                duplicates += 1
+            else:
+                seen_dedup_keys.add(key)
+
+        # Accumulate only for canonical rows — duplicates don't add to totals
         year = fecha.year
         month = fecha.month
         quarter = (month - 1) // 3 + 1
 
-        monthly_acc[(org_norm, year, month)] += monto
-        quarterly_acc[(org_norm, year, quarter)] += monto
-        annual_acc[(org_norm, year)] += monto
+        if not is_duplicate:
+            monthly_acc[(org_norm, year, month)] += monto
+            quarterly_acc[(org_norm, year, quarter)] += monto
+            annual_acc[(org_norm, year)] += monto
 
-        # Match to presupuesto_base (pass pre-normalized form, no double normalization)
+        # Match to presupuesto_base
         pb_id, score, method, programa, partida = match_organismo(org_norm, pb_index, pb_exact)
         if pb_id:
             matched += 1
@@ -225,8 +283,8 @@ def run_etl(dry_run: bool = False) -> None:
                 categoria_watcher, riesgo_watcher,
                 monto_acumulado_mes, monto_acumulado_trimestre, monto_acumulado_anual,
                 es_modificacion_presupuestaria, requiere_revision, observaciones,
-                created_at
-            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                is_duplicate, created_at
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """, (
             row["boletin_id"],
             pb_id,
@@ -246,6 +304,7 @@ def run_etl(dry_run: bool = False) -> None:
             0,  # es_modificacion_presupuestaria
             1 if requiere_revision else 0,
             observaciones,
+            is_duplicate,
             now_iso,
         ))
         inserted += 1
@@ -259,12 +318,15 @@ def run_etl(dry_run: bool = False) -> None:
 
     conn.close()
 
+    canonical = inserted - duplicates
     mode = "[DRY RUN] " if dry_run else ""
     print(f"\n{mode}RESUMEN ETL")
-    print(f"  Rows procesados : {len(rows)}")
-    print(f"  Insertados      : {inserted}")
-    print(f"  Con match PB    : {matched} ({matched/max(inserted,1)*100:.1f}%)")
-    print(f"  Sin match       : {inserted - matched}")
+    print(f"  Rows procesados    : {len(rows)}")
+    print(f"  Insertados         : {inserted}")
+    print(f"  Duplicados         : {duplicates}")
+    print(f"  Canónicos          : {canonical}")
+    print(f"  Con match PB       : {matched} ({matched/max(inserted,1)*100:.1f}%)")
+    print(f"  Sin match          : {inserted - matched}")
     print("  Match por método:")
     for method, count in sorted(match_stats.items(), key=lambda x: -x[1]):
         print(f"    {method:<12} {count}")
