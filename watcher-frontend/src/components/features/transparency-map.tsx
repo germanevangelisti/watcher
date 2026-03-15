@@ -126,7 +126,7 @@ function JurisdictionCard({ jurisdiction }: { jurisdiction: JurisdictionSummary 
           </div>
 
           {/* Laws */}
-          {jurisdiction.applicable_laws.length > 0 && (
+          {(jurisdiction.applicable_laws?.length ?? 0) > 0 && (
             <div>
               <p className="text-xs font-medium text-muted-foreground mb-1.5">Leyes aplicables:</p>
               <div className="flex flex-wrap gap-1.5">
@@ -193,7 +193,7 @@ export function TransparencyMap() {
     )
   }
 
-  if (!data || data.jurisdictions.length === 0) {
+  if (!data || !data.jurisdictions || data.jurisdictions.length === 0) {
     return (
       <Card>
         <CardHeader>

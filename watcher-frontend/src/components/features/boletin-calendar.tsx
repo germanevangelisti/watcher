@@ -433,7 +433,7 @@ export function BoletinCalendar({ jurisdiccionId }: BoletinCalendarProps) {
   const monthLabel = dayjs(`${current.year}-${String(current.month).padStart(2, "0")}-01`).format("MMMM YYYY")
 
   // Use the first jurisdiccion from response (or the requested one)
-  const jurisdiccion = data?.jurisdicciones[0]
+  const jurisdiccion = data?.jurisdicciones?.[0]
 
   return (
     <div className="space-y-4">
@@ -550,7 +550,7 @@ export function BoletinCalendar({ jurisdiccionId }: BoletinCalendarProps) {
             <DayDetailPanel dateStr={selectedDay} jurisdiccion={jurisdiccion} isFuture={selectedDay > todayStr} />
           )}
 
-          {data && data.jurisdicciones.length === 0 && (
+          {data && (data.jurisdicciones?.length ?? 0) === 0 && (
             <p className="text-sm text-muted-foreground text-center py-6">
               No hay datos para este mes.
             </p>

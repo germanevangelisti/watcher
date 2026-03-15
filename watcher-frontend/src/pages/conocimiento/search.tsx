@@ -253,7 +253,7 @@ export function SearchPage() {
             </div>
           </CardHeader>
           <CardContent>
-            {searchMutation.data.results.length === 0 ? (
+            {(searchMutation.data.results?.length ?? 0) === 0 ? (
               <div className="text-center py-12">
                 <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <p className="text-lg font-medium">No se encontraron resultados</p>
@@ -263,7 +263,7 @@ export function SearchPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {searchMutation.data.results.map((result: SearchResult, idx: number) => {
+                {(searchMutation.data.results ?? []).map((result: SearchResult, idx: number) => {
                   const docId = result.metadata?.boletin_id || result.metadata?.document_id
                   const displayText = result.highlight || result.text || result.document || ""
                   const hasHighlight = !!result.highlight

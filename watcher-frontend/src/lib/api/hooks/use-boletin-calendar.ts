@@ -27,11 +27,11 @@ export function useBoletinCalendar(
     refetchInterval: (query) => {
       const data = query.state.data
       if (!data) return 12_000
-      const hasProcessing = data.jurisdicciones.some((j) =>
-        Object.values(j.dias).some((d) =>
-          d.secciones.some((s) => s.status === "processing")
+      const hasProcessing = data.jurisdicciones?.some((j) =>
+        Object.values(j.dias ?? {}).some((d) =>
+          d.secciones?.some((s) => s.status === "processing") ?? false
         )
-      )
+      ) ?? false
       return hasProcessing ? 8_000 : 60_000
     },
   })
