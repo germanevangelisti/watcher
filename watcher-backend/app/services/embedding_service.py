@@ -61,6 +61,10 @@ class GoogleEmbeddingFunction:
         # genai.configure() is called once at app startup in main.py
         self.model = model
 
+    def name(self) -> str:
+        """Required by ChromaDB 1.x."""
+        return "google-gemini-embedding"
+
     def __call__(self, input: List[str]) -> List[List[float]]:
         """Generate embeddings for a list of texts."""
         embeddings = []
@@ -175,11 +179,20 @@ class EmbeddingService:
                 if self.embedding_fn:
                     collection_kwargs["embedding_function"] = self.embedding_fn
 
-                self.collection = self.client.get_or_create_collection(**collection_kwargs)
-                
+                try:
+                    self.collection = self.client.get_or_create_collection(**collection_kwargs)
+                except Exception as conflict_err:
+                    if "embedding function" in str(conflict_err).lower():
+                        # Persisted collection has a different embedding config — reset it
+                        logger.warning(f"Embedding function conflict, resetting collection '{collection_name}'")
+                        self.client.delete_collection(collection_name)
+                        self.collection = self.client.create_collection(**collection_kwargs)
+                    else:
+                        raise
+
                 logger.info(f"ChromaDB initialized at {self.persist_directory}")
                 logger.info(f"Collection '{collection_name}' ready with {self.collection.count()} documents")
-            
+
             except Exception as e:
                 logger.error(f"Error initializing ChromaDB: {e}")
                 self.client = None
