@@ -10,7 +10,6 @@ Run from watcher-backend/:
 import json
 import sqlite3
 import sys
-import tempfile
 from datetime import date
 from pathlib import Path
 
@@ -27,12 +26,10 @@ from etl_analisis_to_ejecucion import (
     _normalize_acto,
     _dedup_key,
     _ORGANISMO_ALIASES,
-    build_presupuesto_index,
     match_organismo,
     parse_date,
     first_beneficiario,
     run_etl,
-    DB_PATH,
 )
 
 from parse_pdf_presupuesto_2026 import (

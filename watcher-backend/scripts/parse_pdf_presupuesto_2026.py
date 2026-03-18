@@ -189,7 +189,6 @@ def parse_pdf(pdf_path: Path) -> List[Dict]:
     records: List[Dict] = []
     current_jurisdiccion: str = ""
     current_programa: str = ""
-    current_programa_cod: str = ""
     current_unidad_org: str = ""
     current_unidad_ejec: str = ""
 
@@ -237,7 +236,6 @@ def parse_pdf(pdf_path: Path) -> List[Dict]:
                 unidad_ejec = row.get("unidad_ejecutora", "").strip()
 
                 if naturaleza in ("PROGRAMA", "ACTIVIDADES CENTRALES") and codigo:
-                    current_programa_cod = codigo
                     current_programa = (
                         f"{codigo} - {denominacion}" if codigo else denominacion
                     )
@@ -358,11 +356,11 @@ async def verify(n_loaded: int, engine: Any) -> None:
         count, total = result.one()
 
         print(f"\n{'='*60}")
-        print(f"VERIFICACIÓN presupuesto_base (ejercicio=2026)")
+        print("VERIFICACIÓN presupuesto_base (ejercicio=2026)")
         print(f"{'='*60}")
         print(f"  Registros:    {count:,}")
         print(f"  Total ARS:    {(total or 0):>20,.0f}")
-        print(f"  (Ley 11088 aprueba ~11.4T ARS de gasto total)")
+        print("  (Ley 11088 aprueba ~11.4T ARS de gasto total)")
 
         # Top 10 organismos
         result = await session.execute(
@@ -376,7 +374,7 @@ async def verify(n_loaded: int, engine: Any) -> None:
             .order_by(func.sum(PresupuestoBase.monto_vigente).desc())
             .limit(10)
         )
-        print(f"\n  Top 10 organismos:")
+        print("\n  Top 10 organismos:")
         for org, n, tot in result:
             print(f"    {org[:45]:<45} ${(tot or 0):>15,.0f}  ({n} prog)")
 
@@ -419,7 +417,7 @@ async def main() -> None:
         return
 
     # Step 3: Load into DB (single engine shared with verify)
-    print(f"[3/3] Cargando en presupuesto_base (ejercicio=2026) ...")
+    print("[3/3] Cargando en presupuesto_base (ejercicio=2026) ...")
     engine = create_async_engine(DATABASE_URL, echo=False)
     try:
         n_loaded = await load_into_db(records, engine, force=force)
@@ -434,7 +432,7 @@ async def main() -> None:
 
 
 def _print_sample(records: List[Dict]) -> None:
-    print(f"\nMuestra de primeros 5 registros:")
+    print("\nMuestra de primeros 5 registros:")
     for r in records[:5]:
         print(f"  organismo:   {r['organismo']}")
         print(f"  programa:    {r['programa']}")
