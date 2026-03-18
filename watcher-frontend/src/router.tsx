@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createRouter, createRoute, createRootRoute, redirect, Outlet, useRouter } from "@tanstack/react-router"
+import { createRouter, createRoute, createRootRoute, redirect, Outlet, useRouter, useRouterState } from "@tanstack/react-router"
 import { AppShell } from "./components/layout/app-shell"
 import { DashboardPage } from "./pages/dashboard"
 import { DocumentosHub } from "./pages/documentos"
@@ -13,13 +13,14 @@ import AlertaDetailPage from "./pages/analisis/alerta-detail"
 import { PipelineStatusPage } from "./pages/analisis/pipeline-status"
 import { PipelineWorkflowPage } from "./pages/pipeline"
 import { VerificacionPage } from "./pages/analisis/verificacion"
+import { EjecucionPresupuestariaPage } from "./pages/presupuesto/ejecucion"
 
 function RootComponent() {
   const router = useRouter()
-  const currentPath = router.state.location.pathname
+  const currentPath = useRouterState({ select: (s) => s.location.pathname })
 
   return (
-    <AppShell 
+    <AppShell
       currentPath={currentPath}
       onNavigate={(path) => router.navigate({ to: path })}
     >
@@ -111,6 +112,21 @@ const verificacionRoute = createRoute({
   component: VerificacionPage,
 })
 
+// Presupuesto routes
+const presupuestoRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/presupuesto",
+  beforeLoad: () => {
+    throw redirect({ to: "/presupuesto/ejecucion" })
+  },
+})
+
+const ejecucionRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/presupuesto/ejecucion",
+  component: EjecucionPresupuestariaPage,
+})
+
 // Pipeline workflow route (top-level)
 const pipelineWorkflowRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -133,6 +149,8 @@ const routeTree = rootRoute.addChildren([
   pipelineStatusRoute,
   verificacionRoute,
   pipelineWorkflowRoute,
+  presupuestoRoute,
+  ejecucionRoute,
 ])
 
 // Create router

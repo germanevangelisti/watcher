@@ -247,24 +247,27 @@ async def get_ejecucion_resumen(
     Returns canonical vs duplicate totals, top 10 organisms, and monthly breakdown.
     """
     try:
-        base_filters = []
+        date_filters = []
         if fecha_desde:
-            base_filters.append(EjecucionPresupuestaria.fecha_boletin >= fecha_desde)
+            date_filters.append(EjecucionPresupuestaria.fecha_boletin >= fecha_desde)
         if fecha_hasta:
-            base_filters.append(EjecucionPresupuestaria.fecha_boletin <= fecha_hasta)
+            date_filters.append(EjecucionPresupuestaria.fecha_boletin <= fecha_hasta)
 
-        where = and_(*base_filters) if base_filters else True
+        # Filters for canonical-only queries (always includes is_duplicate == 0)
+        canon_filters = [EjecucionPresupuestaria.is_duplicate == 0] + date_filters
 
         # Canonical vs duplicate totals
-        result = await db.execute(
+        group_q = (
             select(
                 EjecucionPresupuestaria.is_duplicate,
                 func.count(EjecucionPresupuestaria.id).label("cnt"),
                 func.coalesce(func.sum(EjecucionPresupuestaria.monto), 0).label("total"),
             )
-            .where(where)
             .group_by(EjecucionPresupuestaria.is_duplicate)
         )
+        if date_filters:
+            group_q = group_q.where(and_(*date_filters))
+        result = await db.execute(group_q)
         canon_count = dup_count = 0
         canon_monto = dup_monto = 0.0
         for row in result.all():
@@ -280,7 +283,7 @@ async def get_ejecucion_resumen(
                 func.count(EjecucionPresupuestaria.id).label("cnt"),
                 func.coalesce(func.sum(EjecucionPresupuestaria.monto), 0).label("total"),
             )
-            .where(and_(EjecucionPresupuestaria.is_duplicate == 0, where))
+            .where(and_(*canon_filters))
             .group_by(EjecucionPresupuestaria.organismo)
             .order_by(func.sum(EjecucionPresupuestaria.monto).desc())
             .limit(15)
@@ -297,7 +300,7 @@ async def get_ejecucion_resumen(
                 func.count(EjecucionPresupuestaria.id).label("cnt"),
                 func.coalesce(func.sum(EjecucionPresupuestaria.monto), 0).label("total"),
             )
-            .where(and_(EjecucionPresupuestaria.is_duplicate == 0, where))
+            .where(and_(*canon_filters))
             .group_by("mes")
             .order_by("mes")
         )
@@ -353,21 +356,23 @@ async def get_ejecucion(
         if requiere_revision is not None:
             filters.append(EjecucionPresupuestaria.requiere_revision == requiere_revision)
 
-        where = and_(*filters) if filters else True
+        base_q = select(EjecucionPresupuestaria)
+        count_q = select(
+            func.count(EjecucionPresupuestaria.id),
+            func.coalesce(func.sum(EjecucionPresupuestaria.monto), 0),
+        )
+        if filters:
+            where = and_(*filters)
+            base_q = base_q.where(where)
+            count_q = count_q.where(where)
 
         # Total count and monto for current filters
-        count_result = await db.execute(
-            select(
-                func.count(EjecucionPresupuestaria.id),
-                func.coalesce(func.sum(EjecucionPresupuestaria.monto), 0),
-            ).where(where)
-        )
+        count_result = await db.execute(count_q)
         total, total_monto = count_result.one()
 
         # Paginated rows
         result = await db.execute(
-            select(EjecucionPresupuestaria)
-            .where(where)
+            base_q
             .order_by(
                 EjecucionPresupuestaria.fecha_boletin.desc(),
                 EjecucionPresupuestaria.monto.desc(),
