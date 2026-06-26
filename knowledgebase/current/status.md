@@ -1,29 +1,36 @@
 # Estado Actual — Watcher Agent
 
-**Última actualización:** 2026-05-24  
-**Snapshot del momento.** Se pisa al avanzar. La historia completa está en `sprints/`.
+**Última actualización:** 2026-06-26
+**Snapshot del momento.** Se pisa al avanzar. La historia completa está en `docs/changelog.md` y el historial de git.
+
+> Sincronizado a partir de los commits hasta `da098b7` (changelog v2.0.0 + vertical de presupuesto 2026).
 
 ---
 
-## 🏃 Sprint en curso
+## 🏃 Foco actual
 
 | Campo | Valor |
 |---|---|
-| Sprint | Épica 0 — Migración OpenAI → Google Gemini |
-| Objetivo | Migrar todo el stack de LLM + embeddings de OpenAI a Google, re-indexar ChromaDB |
-| Inicio | 2026-02 |
-| Estado | 🟡 En progreso (ticket 0.7: config en curso) |
-| Historias completadas | 1/7 (0.1: SDK instalado) |
+| Release | v2.0.0 — Architecture Overhaul (Fases 0–4 completas) + vertical Presupuesto 2026 |
+| Estado | 🟢 Núcleo funcional end-to-end (ingesta → extracción → indexación → retrieval → agentes) |
+| Stack LLM | Google Gemini (migración desde OpenAI **completada** en código) |
+| Pendiente inmediato | Normalizar modelo de embeddings y re-indexar ChromaDB de forma consistente |
 
 ---
 
-## 📊 Backlog activo
+## 📊 Estado por épica (vs. código real)
 
-| Épica | Estado | Próxima historia |
+| Épica | Estado | Notas |
 |---|---|---|
-| Épica 0: Migración Gemini | 🟡 En curso | 0.7 → 0.3 → 0.4 → 0.5 → 0.6 → 0.9 |
-| Épica 1: Ingesta | ⬜ Pendiente | — |
-| Épicas 2-7 | ⬜ Pendiente | — |
+| Épica 0: Migración Gemini | 🟢 Hecho (1 ajuste) | OpenAI eliminado del backend; falta unificar modelo de embeddings |
+| Épica 1: Ingesta | 🟢 Hecho (1 parcial) | ABC + `IngestionRun` + upload SHA256; descarga provincial vive en `sync_service` |
+| Épica 2: Extracción / Análisis | 🟢 Hecho | `IntelligenceProvider` (Free/Pro) + `DocumentIntelligenceAgent` |
+| Épica 3: Feature Engineering | 🟡 Parcial | Chunking/enricher/transparency repartidos en servicios; sin auditoría detallada |
+| Épica 4: Indexación / Búsqueda | 🟢 Hecho | Neo4j (`Entidad`/`Boletin`/`MENCIONADO_EN`) + ChromaDB + FTS5 (triple index) |
+| Épica 5: Retrieval / Consulta | 🟢 Hecho | Semantic + Hybrid (RRF) + re-ranking + graph traversal |
+| Épica 6: Sistema multi-agente | 🟢 Hecho | Orchestrator + Anomaly + Learning + Insight + Verification |
+| Épica 7: Producción / Hardening | 🟢 Mayormente hecho | Suite de tests (~181 pasando), APScheduler, frontend v2 shadcn/ui |
+| Presupuesto 2026 (fuera de plan) | 🟢 Hecho | Parser PDF + ETL análisis→ejecución + dedup + API + UI |
 
 ---
 
@@ -33,10 +40,17 @@
 
 ---
 
+## ⚠️ Deuda técnica conocida
+
+1. **Modelo de embeddings inconsistente:** producción usa `gemini-embedding-001` (3072 dims) mientras `scripts/reindex_google_embeddings.py` usa `text-embedding-004` (768 dims). Hay que unificar y re-indexar ChromaDB.
+2. **Comentarios desactualizados** en `embedding_service.py` (aún mencionan `text-embedding-004`).
+3. **`ProvincialPipeline.extract()`** descubre PDFs locales; la descarga remota está en `sync_service.download_boletines_task` (no dentro del pipeline).
+
+---
+
 ## 🔮 Próximos pasos
 
-1. Completar ticket 0.7 (config GOOGLE_API_KEY)
-2. Migrar EmbeddingService (0.3)
-3. Migrar DocumentProcessor (0.4)
-4. Migrar WatcherService e InsightAgent (0.5 + 0.6)
-5. Re-indexar ChromaDB (0.9)
+1. Unificar el modelo de embeddings y ejecutar re-indexación consistente de ChromaDB.
+2. Auditar y formalizar Épica 3 (Feature Engineering): transparency scoring, red flags, normalización de entidades.
+3. Documentar formalmente la vertical de Presupuesto 2026 en el backlog/arquitectura.
+4. Medir cobertura de tests para cerrar Épica 7.
