@@ -1,6 +1,6 @@
 # Visión de Producto — Watcher Agent
 
-**Documento vivo** · Última actualización: 2026-05-24
+**Documento vivo** · Última actualización: 2026-06-26
 
 ---
 
@@ -54,8 +54,9 @@ No reemplaza al periodismo de investigación — **lo potencia** eliminando el t
 | Fase | Épicas | Estado |
 |---|---|---|
 | Fase 0 | Setup + tooling | ✅ Completado |
-| Fase 1 | Épica 0: Migración OpenAI → Gemini | 🟡 En curso |
-| Fase 2 | Épicas 1-5: Pipeline (Ingesta, Extracción, Features, Indexación, Retrieval) | ⬜ Pendiente |
-| Fase 3 | Épica 6: Sistema agentico multi-agente | ⬜ Pendiente |
-| Fase 4 | Épica 7: Producción, hardening, testing | ⬜ Pendiente |
-| Fase 5 | UI v2: shadcn/ui + TanStack | ⬜ Pendiente |
+| Fase 1 | Épica 0: Migración OpenAI → Gemini | ✅ Completado (queda re-indexado consistente) |
+| Fase 2 | Épicas 1-5: Pipeline (Ingesta, Extracción, Features, Indexación, Retrieval) | 🟢 Mayormente completado (Feature Eng. parcial) |
+| Fase 3 | Épica 6: Sistema agentico multi-agente | ✅ Completado |
+| Fase 4 | Épica 7: Producción, hardening, testing | 🟢 Mayormente completado |
+| Fase 5 | UI v2: shadcn/ui + TanStack | ✅ Completado |
+| Extra | Vertical Presupuesto/Ejecución 2026 | ✅ Completado |
