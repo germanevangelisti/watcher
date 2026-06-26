@@ -53,3 +53,8 @@ langchain-core>=0.3.29
 langchain>=0.3.13
 langchain-google-genai>=2.0.8
 langgraph>=0.2.62
+
+# Graph Database
+neo4j>=5.18.0
+networkx>=2.8
+python-louvain>=0.16

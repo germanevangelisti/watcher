@@ -54,6 +54,7 @@ import {
   Scissors,
   ArrowRight,
   Brain,
+  Network,
 } from "lucide-react"
 
 // Pipeline event types to subscribe to
@@ -72,6 +73,7 @@ const PIPELINE_EVENTS = [
 const STAGE_INFO: Record<string, { label: string; icon: typeof FileSearch; color: string }> = {
   extracting: { label: "Extracci?n", icon: FileSearch, color: "text-blue-400" },
   cleaning: { label: "Limpieza", icon: Sparkles, color: "text-purple-400" },
+  entity_mapping: { label: "Mapeando entidades", icon: Network, color: "text-indigo-400" },
   chunking: { label: "Chunking", icon: Scissors, color: "text-yellow-400" },
   indexing: { label: "Indexaci?n", icon: Database, color: "text-orange-400" },
   analyzing: { label: "An?lisis IA", icon: Brain, color: "text-cyan-400" },
@@ -134,7 +136,8 @@ export function PipelineWorkflowPage() {
           updateDocumentState(
             d.boletin_id as number,
             d.filename as string,
-            d.stage as string
+            d.stage as string,
+            d.details as Record<string, unknown> | undefined
           )
           addStageToHistory(
             d.stage as string,
@@ -212,16 +215,30 @@ export function PipelineWorkflowPage() {
         totalIndexed: status.total_indexed,
       })
 
-      // Recover active session if frontend lost it
+      // Recover active session if frontend lost state (e.g. after page refresh)
       if (status.active_session && !isProcessing) {
         const s = status.active_session as Record<string, unknown>
-        setProcessing(s.session_id as string, (s.stages_total as number) || 4)
+        const stageName = s.stage as string
+        const stagesTotal = (s.stages_total as number) || 7
+        setProcessing(s.session_id as string, stagesTotal)
         setProgress(
           (s.stages_done as number) || 0,
-          (s.stages_total as number) || 4,
+          stagesTotal,
           s.filename as string,
-          s.stage as string
+          stageName
         )
+        // Reconstruct stage history so checkmarks appear correctly after refresh
+        const STAGE_ORDER = [
+          "extracting", "cleaning", "entity_mapping",
+          "chunking", "indexing", "analyzing", "completed",
+        ]
+        const currentIdx = STAGE_ORDER.indexOf(stageName)
+        for (let i = 0; i <= currentIdx; i++) {
+          addStageToHistory(STAGE_ORDER[i])
+        }
+        if (stageName && s.boletin_id) {
+          updateDocumentState(s.boletin_id as number, s.filename as string, stageName)
+        }
       }
     }
   }, [status, setStats, isProcessing, setProcessing, setProgress])

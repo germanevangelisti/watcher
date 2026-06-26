@@ -8,7 +8,9 @@ from typing import Optional, List
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
-load_dotenv()
+# Busca .env desde el directorio actual hacia arriba (cubre tanto watcher-backend/ como watcher/)
+_env_path = Path(__file__).resolve().parent.parent.parent.parent / ".env"
+load_dotenv(dotenv_path=_env_path if _env_path.exists() else None)
 
 
 def _parse_origins(raw: Optional[str]) -> List[str]:
@@ -35,6 +37,11 @@ class Settings(BaseModel):
         "SYNC_DATABASE_URL",
         "sqlite:///sqlite.db",
     )
+
+    # Neo4j Graph Database
+    NEO4J_URI: Optional[str] = os.getenv("NEO4J_URI", None)
+    NEO4J_USER: str = os.getenv("NEO4J_USER", "neo4j")
+    NEO4J_PASSWORD: str = os.getenv("NEO4J_PASSWORD", "watcher_neo4j_2026")
 
     # CORS
     ALLOWED_ORIGINS: List[str] = _parse_origins(os.getenv("ALLOWED_ORIGINS"))
@@ -72,6 +79,10 @@ class Settings(BaseModel):
     @property
     def is_postgres(self) -> bool:
         return "postgresql" in self.DATABASE_URL
+
+    @property
+    def neo4j_enabled(self) -> bool:
+        return self.NEO4J_URI is not None
 
 settings = Settings()
 

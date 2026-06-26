@@ -9,7 +9,7 @@ import { FadeTransition } from "@/components/ui/fade-transition"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useKnowledgeGraph, useEntityTimeline } from "@/lib/api"
-import { Network, User, Building2, Briefcase, FileText, Calendar, Filter, RefreshCw } from "lucide-react"
+import { Network, User, Building2, Briefcase, FileText, Calendar, Filter, RefreshCw, DatabaseZap, Database } from "lucide-react"
 
 interface GraphNode {
   id: string
@@ -32,7 +32,7 @@ interface TimelineEvento {
 
 export function GraphPage() {
   const [maxNodes, setMaxNodes] = useState(50)
-  const [minMentions, setMinMentions] = useState(3)
+  const [minMentions, setMinMentions] = useState(1)
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null)
   const graphRef = useRef<ForceGraphHandle>(undefined)
 
@@ -212,6 +212,26 @@ export function GraphPage() {
                 </CardHeader>
               </Card>
             ) : graphData ? (
+              graphData.nodes.length === 0 ? (
+                <Card>
+                  <CardContent className="flex flex-col items-center justify-center py-16 gap-4">
+                    <Network className="h-12 w-12 text-muted-foreground/40" />
+                    <div className="text-center space-y-1">
+                      <p className="font-medium">Sin datos en el grafo</p>
+                      <p className="text-sm text-muted-foreground max-w-sm">
+                        No hay entidades con {minMentions}+ menciones.
+                        {minMentions > 1 && " Probá reduciendo las Menciones mínimas a 1."}
+                        {graphData.source === "neo4j" && (
+                          <> La base de datos Neo4j está vacía — ejecutá la migración:<br />
+                          <code className="text-xs bg-muted px-1 py-0.5 rounded mt-1 inline-block">
+                            python scripts/migrate_to_neo4j.py
+                          </code></>
+                        )}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -224,6 +244,12 @@ export function GraphPage() {
                       {graphData.nodes.length} nodos • {graphData.links.length} conexiones
                     </CardDescription>
                   </div>
+                  <Badge variant="outline" className="gap-1 text-xs">
+                    {graphData.source === "neo4j"
+                      ? <><DatabaseZap className="h-3 w-3 text-green-500" /> Neo4j</>
+                      : <><Database className="h-3 w-3 text-amber-500" /> SQLite</>
+                    }
+                  </Badge>
                 </div>
               </CardHeader>
               <CardContent className="p-0">
@@ -249,6 +275,7 @@ export function GraphPage() {
                 </div>
               </CardContent>
             </Card>
+              )
             ) : null}
           </FadeTransition>
         </TabsContent>

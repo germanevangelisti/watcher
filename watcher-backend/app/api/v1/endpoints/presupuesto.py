@@ -3,6 +3,7 @@ API endpoints for Presupuesto
 """
 
 import json
+from datetime import date
 from pathlib import Path
 from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends, Query
@@ -16,7 +17,11 @@ from app.schemas.presupuesto import (
     ProgramasListResponse,
     ProgramaDetailResponse,
     EjecucionResponse,
-    OrganismoResponse
+    EjecucionListResponse,
+    EjecucionResumenResponse,
+    OrgResumenItem,
+    MesResumenItem,
+    OrganismoResponse,
 )
 
 # Paths for analysis data
@@ -225,6 +230,166 @@ async def get_organismos(
         
         return sorted(organismos, key=lambda x: x.monto_vigente_total, reverse=True)
         
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ===== EJECUCIÓN PRESUPUESTARIA =====
+
+@router.get("/ejecucion/resumen/", response_model=EjecucionResumenResponse)
+async def get_ejecucion_resumen(
+    fecha_desde: Optional[date] = Query(None),
+    fecha_hasta: Optional[date] = Query(None),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Aggregated stats for ejecucion_presupuestaria.
+    Returns canonical vs duplicate totals, top 10 organisms, and monthly breakdown.
+    """
+    try:
+        date_filters = []
+        if fecha_desde:
+            date_filters.append(EjecucionPresupuestaria.fecha_boletin >= fecha_desde)
+        if fecha_hasta:
+            date_filters.append(EjecucionPresupuestaria.fecha_boletin <= fecha_hasta)
+
+        # Filters for canonical-only queries (always includes is_duplicate == 0)
+        canon_filters = [EjecucionPresupuestaria.is_duplicate == 0] + date_filters
+
+        # Canonical vs duplicate totals
+        group_q = (
+            select(
+                EjecucionPresupuestaria.is_duplicate,
+                func.count(EjecucionPresupuestaria.id).label("cnt"),
+                func.coalesce(func.sum(EjecucionPresupuestaria.monto), 0).label("total"),
+            )
+            .group_by(EjecucionPresupuestaria.is_duplicate)
+        )
+        if date_filters:
+            group_q = group_q.where(and_(*date_filters))
+        result = await db.execute(group_q)
+        canon_count = dup_count = 0
+        canon_monto = dup_monto = 0.0
+        for row in result.all():
+            if row.is_duplicate == 0:
+                canon_count, canon_monto = row.cnt, float(row.total)
+            else:
+                dup_count, dup_monto = row.cnt, float(row.total)
+
+        # Top 15 organisms by canonical monto
+        result = await db.execute(
+            select(
+                EjecucionPresupuestaria.organismo,
+                func.count(EjecucionPresupuestaria.id).label("cnt"),
+                func.coalesce(func.sum(EjecucionPresupuestaria.monto), 0).label("total"),
+            )
+            .where(and_(*canon_filters))
+            .group_by(EjecucionPresupuestaria.organismo)
+            .order_by(func.sum(EjecucionPresupuestaria.monto).desc())
+            .limit(15)
+        )
+        por_organismo = [
+            OrgResumenItem(organismo=r.organismo, count=r.cnt, monto_total=float(r.total))
+            for r in result.all()
+        ]
+
+        # Monthly breakdown (canonical only)
+        result = await db.execute(
+            select(
+                func.strftime("%Y-%m", EjecucionPresupuestaria.fecha_boletin).label("mes"),
+                func.count(EjecucionPresupuestaria.id).label("cnt"),
+                func.coalesce(func.sum(EjecucionPresupuestaria.monto), 0).label("total"),
+            )
+            .where(and_(*canon_filters))
+            .group_by("mes")
+            .order_by("mes")
+        )
+        por_mes = [
+            MesResumenItem(mes=r.mes, count=r.cnt, monto_total=float(r.total))
+            for r in result.all()
+        ]
+
+        return EjecucionResumenResponse(
+            total_canonical=canon_count,
+            total_duplicates=dup_count,
+            monto_canonical=canon_monto,
+            monto_duplicates=dup_monto,
+            por_organismo=por_organismo,
+            por_mes=por_mes,
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/ejecucion/", response_model=EjecucionListResponse)
+async def get_ejecucion(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=200),
+    fecha_desde: Optional[date] = Query(None),
+    fecha_hasta: Optional[date] = Query(None),
+    organismo: Optional[str] = Query(None, description="Partial match (case-insensitive)"),
+    riesgo: Optional[str] = Query(None, description="alto | medio | bajo | informativo"),
+    solo_canonicos: bool = Query(True, description="Exclude duplicate publications"),
+    presupuesto_base_id: Optional[int] = Query(None),
+    requiere_revision: Optional[bool] = Query(None),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Paginated list of ejecucion_presupuestaria rows with optional filters.
+    By default excludes duplicate publications (solo_canonicos=true).
+    """
+    try:
+        filters = []
+        if fecha_desde:
+            filters.append(EjecucionPresupuestaria.fecha_boletin >= fecha_desde)
+        if fecha_hasta:
+            filters.append(EjecucionPresupuestaria.fecha_boletin <= fecha_hasta)
+        if organismo:
+            filters.append(EjecucionPresupuestaria.organismo.ilike(f"%{organismo}%"))
+        if riesgo:
+            filters.append(EjecucionPresupuestaria.riesgo_watcher == riesgo)
+        if solo_canonicos:
+            filters.append(EjecucionPresupuestaria.is_duplicate == 0)
+        if presupuesto_base_id is not None:
+            filters.append(EjecucionPresupuestaria.presupuesto_base_id == presupuesto_base_id)
+        if requiere_revision is not None:
+            filters.append(EjecucionPresupuestaria.requiere_revision == requiere_revision)
+
+        base_q = select(EjecucionPresupuestaria)
+        count_q = select(
+            func.count(EjecucionPresupuestaria.id),
+            func.coalesce(func.sum(EjecucionPresupuestaria.monto), 0),
+        )
+        if filters:
+            where = and_(*filters)
+            base_q = base_q.where(where)
+            count_q = count_q.where(where)
+
+        # Total count and monto for current filters
+        count_result = await db.execute(count_q)
+        total, total_monto = count_result.one()
+
+        # Paginated rows
+        result = await db.execute(
+            base_q
+            .order_by(
+                EjecucionPresupuestaria.fecha_boletin.desc(),
+                EjecucionPresupuestaria.monto.desc(),
+            )
+            .offset(skip)
+            .limit(limit)
+        )
+        rows = result.scalars().all()
+
+        return EjecucionListResponse(
+            ejecuciones=[EjecucionResponse.model_validate(r) for r in rows],
+            total=total or 0,
+            total_monto=float(total_monto or 0),
+            page=skip // limit + 1,
+            page_size=limit,
+        )
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -15,6 +15,7 @@ from app.core.config import settings
 from app.api.v1.api import api_router
 from app.db.database import init_db
 from app.core.scheduler import start_scheduler, stop_scheduler, configure_scheduler_from_db
+from app.middleware import CUITMaskingMiddleware, SecurityHeadersMiddleware
 
 logging.basicConfig(
     level=logging.INFO,
@@ -76,6 +77,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(CUITMaskingMiddleware)
+
 
 # ---------------------------------------------------------------------------
 # Lifecycle
@@ -85,14 +89,55 @@ app.add_middleware(
 async def startup_event():
     logger.info("Starting Watcher API [env=%s]", settings.ENVIRONMENT)
     await init_db()
+    await _reset_stale_documents()
+    from app.db.neo4j_client import init_neo4j
+    neo4j_ok = await init_neo4j()
+    if neo4j_ok:
+        logger.info("Neo4j inicializado correctamente")
+    else:
+        logger.warning("Neo4j no disponible — funciones de grafo deshabilitadas")
     start_scheduler()
     await configure_scheduler_from_db()
     logger.info("Watcher API ready")
 
 
+async def _reset_stale_documents():
+    """
+    Resetea boletines que quedaron en estados intermedios por un corte de server.
+    Los statuses 'extracting', 'cleaning', 'chunking', 'indexing', 'analyzing'
+    son transitorios — si el server arranca y los encuentra, significa que el
+    proceso fue interrumpido. Se resetean a 'pending' para que puedan reprocesarse.
+    """
+    from sqlalchemy import update as sa_update
+    from app.db.models import Boletin
+    from app.db.database import AsyncSessionLocal
+
+    _STALE_STATUSES = ("extracting", "cleaning", "entity_mapping", "chunking", "indexing", "analyzing")
+
+    try:
+        async with AsyncSessionLocal() as db:
+            result = await db.execute(
+                sa_update(Boletin)
+                .where(Boletin.status.in_(_STALE_STATUSES))
+                .values(status="pending")
+                .execution_options(synchronize_session=False)
+            )
+            await db.commit()
+            count = result.rowcount
+            if count:
+                logger.warning(
+                    "Startup cleanup: %d boletín(es) con status intermedio reseteados a 'pending'",
+                    count,
+                )
+    except Exception as e:
+        logger.error("Error en startup cleanup de boletines: %s", e)
+
+
 @app.on_event("shutdown")
 async def shutdown_event():
     stop_scheduler()
+    from app.db.neo4j_client import close_neo4j
+    await close_neo4j()
     logger.info("Watcher API stopped")
 
 

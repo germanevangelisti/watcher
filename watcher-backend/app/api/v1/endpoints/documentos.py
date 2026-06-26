@@ -111,8 +111,8 @@ async def get_pdf_document(
             if pdf_path.exists():
                 return FileResponse(
                     path=str(pdf_path),
-                    filename=filename,
-                    media_type='application/pdf'
+                    media_type='application/pdf',
+                    headers={"Content-Disposition": "inline"},
                 )
     
     raise HTTPException(

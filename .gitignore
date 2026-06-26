@@ -77,3 +77,8 @@ RESUMEN_*.md
 
 watcher-backend/data/processed/
 watcher-backend/data/raw/
+
+# SQLite databases (runtime artifacts)
+*.db
+*.db-shm
+*.db-wal

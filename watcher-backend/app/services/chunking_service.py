@@ -9,7 +9,7 @@ Este servicio maneja:
 """
 
 import logging
-from typing import List, Optional
+from typing import List, Optional, Any
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -17,14 +17,20 @@ logger = logging.getLogger(__name__)
 
 class ChunkingConfig(BaseModel):
     """Configuración de chunking."""
-    chunk_size: int = Field(default=1000, gt=0, description="Tamaño del chunk en caracteres")
-    chunk_overlap: int = Field(default=200, ge=0, description="Overlap entre chunks")
+    chunk_size: int = Field(default=1500, gt=0, description="Tamaño del chunk en caracteres")
+    chunk_overlap: int = Field(default=300, ge=0, description="Overlap entre chunks")
     min_chunk_size: int = Field(default=100, gt=0, description="Tamaño mínimo de chunk")
     strategy: str = Field(default="recursive", description="Estrategia de chunking")
-    
+
     # Separadores jerárquicos (de mayor a menor prioridad)
     separators: List[str] = Field(
         default=[
+            # Actos administrativos individuales (máxima prioridad)
+            "\nDECRETO N",
+            "\nRESOLUCION N",
+            "\nDISPOSICION N",
+            "\nORDENANZA N",
+            "\nCONVENIO N",
             # Separadores estructurales de boletines oficiales
             "\nARTICULO ",
             "\nDECRETO ",
@@ -51,7 +57,8 @@ class ChunkResult(BaseModel):
     start_char: int = Field(description="Posición inicial en el texto original")
     end_char: int = Field(description="Posición final en el texto original")
     num_chars: int = Field(description="Número de caracteres en el chunk")
-    
+    entity_anchors: Optional[List[Any]] = None  # List[EntityResult] from entity_service
+
     class Config:
         frozen = False  # Allow modification
 
@@ -73,91 +80,95 @@ class ChunkingService:
         """
         self.config = config or ChunkingConfig()
     
-    def chunk(self, text: str, config: Optional[ChunkingConfig] = None) -> List[ChunkResult]:
+    def chunk(self, text: str, config: Optional[ChunkingConfig] = None, document_id: str = "", entity_map=None) -> List[ChunkResult]:
         """
         Dividir texto en chunks usando estrategia recursiva.
-        
+
         Args:
             text: Texto a dividir
             config: Configuración opcional (override del constructor)
-            
+            document_id: Identificador del documento (opcional)
+            entity_map: EntityMap opcional para boundary-aware chunking
+
         Returns:
             Lista de ChunkResult con metadata
         """
         if not text:
             return []
-        
+
         cfg = config or self.config
-        
+
         # Dividir usando estrategia recursiva
-        chunks_text = self._recursive_split(text, cfg)
-        
+        chunks_text = self._recursive_split(text, cfg, entity_map=entity_map)
+
         # Crear ChunkResult con metadata
         results = []
         current_pos = 0
-        
+
         for i, chunk_text in enumerate(chunks_text):
             # Encontrar la posición del chunk en el texto original
             # (necesario porque hay overlap)
             start_pos = text.find(chunk_text, current_pos)
-            
+
             if start_pos == -1:
                 # Fallback: usar posición actual
                 start_pos = current_pos
-            
+
             end_pos = start_pos + len(chunk_text)
-            
+
             result = ChunkResult(
                 text=chunk_text,
                 chunk_index=i,
                 start_char=start_pos,
                 end_char=end_pos,
-                num_chars=len(chunk_text)
+                num_chars=len(chunk_text),
+                entity_anchors=entity_map.get_entities_in_range(start_pos, end_pos) if entity_map else None,
             )
             results.append(result)
-            
+
             # Actualizar posición para el próximo chunk
             # Restar el overlap para que la búsqueda empiece en el área correcta
             current_pos = end_pos - cfg.chunk_overlap
             if current_pos < 0:
                 current_pos = 0
-        
+
         logger.info(f"Texto dividido en {len(results)} chunks")
         return results
     
-    def _recursive_split(self, text: str, config: ChunkingConfig) -> List[str]:
+    def _recursive_split(self, text: str, config: ChunkingConfig, entity_map=None) -> List[str]:
         """
         Divide texto recursivamente usando separadores jerárquicos.
-        
+
         Args:
             text: Texto a dividir
             config: Configuración de chunking
-            
+            entity_map: EntityMap opcional para boundary-aware chunking
+
         Returns:
             Lista de chunks como strings
         """
         chunks = []
-        
+
         # Si el texto es suficientemente pequeño, retornarlo directamente
         if len(text) <= config.chunk_size:
             if len(text) >= config.min_chunk_size:
                 return [text]
             else:
                 return []
-        
+
         # Intentar con cada separador en orden
         for separator in config.separators:
             if separator in text:
-                splits = self._split_text_by_separator(text, separator)
-                
+                splits = self._split_text_by_separator(text, separator, entity_map=entity_map)
+
                 # Procesar cada split
                 temp_chunks = []
                 current_chunk = []
                 current_size = 0
-                
+
                 for split in splits:
                     split_size = len(split)
-                    
+
                     # Si un solo split es muy grande, dividirlo recursivamente
                     if split_size > config.chunk_size:
                         # Primero, guardar el chunk actual si existe
@@ -165,7 +176,7 @@ class ChunkingService:
                             temp_chunks.append(separator.join(current_chunk))
                             current_chunk = []
                             current_size = 0
-                        
+
                         # Dividir recursivamente con el siguiente separador
                         remaining_seps = config.separators[config.separators.index(separator) + 1:]
                         if remaining_seps:
@@ -176,18 +187,31 @@ class ChunkingService:
                                 strategy=config.strategy,
                                 separators=remaining_seps
                             )
-                            sub_chunks = self._recursive_split(split, sub_config)
+                            sub_chunks = self._recursive_split(split, sub_config, entity_map=entity_map)
                             temp_chunks.extend(sub_chunks)
                         else:
                             # Último separador: dividir por tamaño fijo
                             temp_chunks.extend(self._split_by_size(split, config.chunk_size))
-                        
+
                         continue
-                    
+
                     # Si agregar este split excede el tamaño, guardar chunk actual
                     if current_chunk and current_size + split_size > config.chunk_size:
+                        # Compute the boundary position within the original text
+                        candidate_boundary = current_size
+                        if entity_map is not None and entity_map.entity_crosses_boundary(candidate_boundary):
+                            # Try adjusting split point by +/- 50 chars
+                            for delta in range(1, 51):
+                                if not entity_map.entity_crosses_boundary(candidate_boundary + delta):
+                                    candidate_boundary += delta
+                                    break
+                                if not entity_map.entity_crosses_boundary(candidate_boundary - delta):
+                                    candidate_boundary -= delta
+                                    break
+                            # If adjustment failed, proceed with original boundary (non-blocking)
+
                         temp_chunks.append(separator.join(current_chunk))
-                        
+
                         # Mantener overlap: incluir el último split del chunk anterior
                         if config.chunk_overlap > 0 and current_chunk:
                             current_chunk = [current_chunk[-1], split]
@@ -199,21 +223,21 @@ class ChunkingService:
                         # Agregar split al chunk actual
                         current_chunk.append(split)
                         current_size += split_size
-                
+
                 # Agregar el último chunk
                 if current_chunk:
                     temp_chunks.append(separator.join(current_chunk))
-                
+
                 # Filtrar chunks muy pequeños
                 chunks = [c for c in temp_chunks if len(c) >= config.min_chunk_size]
-                
+
                 if chunks:
                     return chunks
-        
+
         # Si no se pudo dividir con separadores, dividir por tamaño fijo
         return self._split_by_size(text, config.chunk_size)
     
-    def _split_text_by_separator(self, text: str, separator: str) -> List[str]:
+    def _split_text_by_separator(self, text: str, separator: str, entity_map=None) -> List[str]:
         """
         Divide texto por separador, manteniendo el separador.
         

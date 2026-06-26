@@ -3,6 +3,7 @@ WebSocket endpoints para actualizaciones en tiempo real
 """
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from typing import List, Set, Dict
+from datetime import datetime
 import json
 import logging
 
@@ -106,31 +107,39 @@ for event_type in EventType:
 async def websocket_endpoint(websocket: WebSocket):
     """
     Endpoint WebSocket principal
-    
+
     Los clientes pueden enviar mensajes con el formato:
     {
         "action": "subscribe" | "unsubscribe" | "ping",
         "event_types": ["workflow.created", "task.completed", ...]
     }
+
+    The pipeline runs as an independent asyncio background task.
+    Closing or refreshing this connection does NOT interrupt processing —
+    clients can reconnect at any time and recover state via GET /pipeline/status.
     """
     await manager.connect(websocket)
-    
+
     try:
-        # Enviar mensaje de bienvenida
-        await websocket.send_json({
-            "type": "connected",
-            "message": "Conectado al sistema de eventos en tiempo real",
-            "available_events": [e.value for e in EventType]
-        })
-        
+        # Welcome message — may fail immediately if the client disconnected
+        # between connect() and here (e.g. rapid browser refresh).
+        try:
+            await websocket.send_json({
+                "type": "connected",
+                "message": "Conectado al sistema de eventos en tiempo real",
+                "available_events": [e.value for e in EventType]
+            })
+        except Exception:
+            manager.disconnect(websocket)
+            return
+
         while True:
-            # Recibir mensaje del cliente
             data = await websocket.receive_text()
-            
+
             try:
                 message = json.loads(data)
                 action = message.get("action")
-                
+
                 if action == "subscribe":
                     event_types = message.get("event_types", [])
                     manager.subscribe(websocket, event_types)
@@ -138,7 +147,7 @@ async def websocket_endpoint(websocket: WebSocket):
                         "type": "subscribed",
                         "event_types": event_types
                     })
-                
+
                 elif action == "unsubscribe":
                     event_types = message.get("event_types", [])
                     manager.unsubscribe(websocket, event_types)
@@ -146,35 +155,41 @@ async def websocket_endpoint(websocket: WebSocket):
                         "type": "unsubscribed",
                         "event_types": event_types
                     })
-                
+
                 elif action == "ping":
                     await websocket.send_json({
                         "type": "pong",
-                        "timestamp": EventType
+                        "timestamp": datetime.utcnow().isoformat()
                     })
-                
+
                 else:
                     await websocket.send_json({
                         "type": "error",
                         "message": f"Acción desconocida: {action}"
                     })
-                    
+
             except json.JSONDecodeError:
                 await websocket.send_json({
                     "type": "error",
                     "message": "Formato JSON inválido"
                 })
             except Exception as e:
-                logger.error(f"Error procesando mensaje: {e}")
-                await websocket.send_json({
-                    "type": "error",
-                    "message": str(e)
-                })
-    
+                logger.error(f"Error procesando mensaje WebSocket: {e}")
+
     except WebSocketDisconnect:
         manager.disconnect(websocket)
         logger.info("Cliente desconectado")
     except Exception as e:
+        # ConnectionClosed* is expected whenever the browser refreshes or the tab
+        # closes without a clean close-frame handshake — not a server error.
+        try:
+            from websockets.exceptions import ConnectionClosed
+            if isinstance(e, ConnectionClosed):
+                logger.debug(f"WebSocket cerrado abruptamente (refresh?): {e}")
+                manager.disconnect(websocket)
+                return
+        except ImportError:
+            pass
         logger.error(f"Error en WebSocket: {e}", exc_info=True)
         manager.disconnect(websocket)
 

@@ -18,7 +18,7 @@ import logging
 from typing import List, Dict, Optional, Any, Tuple
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, text, func
+from sqlalchemy import select, text, func, delete as sa_delete
 
 logger = logging.getLogger(__name__)
 
@@ -264,8 +264,37 @@ class IndexingService:
         """
         indexed_chunks = []
         indexed_chromadb_ids = []
-        
+
         try:
+            # Remove any existing chunks for this document before re-indexing
+            # to avoid UNIQUE constraint violations on (document_id, chunk_index).
+            count_result = await self.db.execute(
+                select(func.count()).select_from(ChunkRecord).where(
+                    ChunkRecord.document_id == document_id
+                )
+            )
+            existing_count = count_result.scalar() or 0
+            if existing_count > 0:
+                logger.info(
+                    "Re-indexing %s: removing %d existing chunks first",
+                    document_id, existing_count
+                )
+                await self.db.execute(
+                    sa_delete(ChunkRecord).where(ChunkRecord.document_id == document_id)
+                )
+                await self.db.commit()
+                # Mirror cleanup in ChromaDB
+                if self.embedding_service and self.embedding_service.collection:
+                    try:
+                        self.embedding_service.collection.delete(
+                            where={"document_id": document_id}
+                        )
+                    except Exception as chroma_err:
+                        logger.warning(
+                            "Could not remove existing ChromaDB entries for %s: %s",
+                            document_id, chroma_err
+                        )
+
             for i, chunk in enumerate(chunks):
                 success, chunk_record, error = await self.index_chunk(
                     document_id,

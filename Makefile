@@ -42,19 +42,33 @@ install: install-backend install-frontend install-lab
 	@echo "✅ All dependencies installed"
 
 install-backend:
-	@echo "📦 Installing backend dependencies..."
-	@echo "⏱️  This may take several minutes for AI libraries (langgraph, langchain)..."
-	cd watcher-backend && pip install --timeout 100 --retries 10 -r requirements.txt
-	@echo "✅ Backend dependencies installed"
+	@echo "📦 Installing backend dependencies (core)..."
+	@if command -v uv >/dev/null 2>&1; then \
+		echo "Using uv (fast mode)..."; \
+		cd watcher-backend && uv pip install --system "."; \
+	else \
+		echo "Using pip..."; \
+		cd watcher-backend && pip install --timeout 100 --retries 10 "."; \
+	fi
+	@echo "✅ Backend core dependencies installed"
 
-install-backend-fast:
-	@echo "📦 Installing backend dependencies in phases (more reliable)..."
-	cd watcher-backend && \
-		pip install fastapi uvicorn python-dotenv pydantic pytest httpx && \
-		pip install PyPDF2 pdfplumber sqlalchemy alembic aiosqlite greenlet aiofiles && \
-		pip install openai tqdm python-multipart python-socketio websockets && \
-		pip install --timeout 100 --no-cache-dir langgraph langchain langchain-core langchain-openai
-	@echo "✅ Backend dependencies installed (phased approach)"
+install-backend-ai:
+	@echo "📦 Installing backend AI dependencies..."
+	@if command -v uv >/dev/null 2>&1; then \
+		cd watcher-backend && uv pip install --system ".[ai]"; \
+	else \
+		cd watcher-backend && pip install --timeout 100 ".[ai]"; \
+	fi
+	@echo "✅ Backend AI dependencies installed"
+
+install-backend-dev:
+	@echo "📦 Installing backend dev dependencies..."
+	@if command -v uv >/dev/null 2>&1; then \
+		cd watcher-backend && uv pip install --system ".[dev]"; \
+	else \
+		cd watcher-backend && pip install ".[dev]"; \
+	fi
+	@echo "✅ Backend dev dependencies installed"
 
 install-frontend:
 	@echo "📦 Installing frontend dependencies..."
@@ -102,49 +116,91 @@ test: test-backend test-frontend
 
 test-backend:
 	@echo "🧪 Running backend tests..."
-	@./watcher-backend/tests/run_tests.sh -v || echo "⚠️  Some tests failed"
+	@if command -v uv >/dev/null 2>&1; then \
+		cd watcher-backend && uv run pytest tests/ -v --tb=short || echo "⚠️  Some tests failed"; \
+	else \
+		./watcher-backend/tests/run_tests.sh -v || echo "⚠️  Some tests failed"; \
+	fi
 
 test-frontend:
 	@echo "🧪 Running frontend tests..."
 	cd watcher-frontend && npm run test -- --run || echo "⚠️  Some frontend tests failed"
 
-# New architecture test commands
+# New architecture test commands (uv run when available)
+_PYTEST = $(shell command -v uv >/dev/null 2>&1 && echo "cd watcher-backend && uv run pytest" || echo "pytest watcher-backend")
+
 test-unit:
 	@echo "🧪 Running unit tests..."
-	pytest watcher-backend/tests/unit/ -v
+	@if command -v uv >/dev/null 2>&1; then \
+		cd watcher-backend && uv run pytest tests/tests/unit/ -v; \
+	else \
+		pytest watcher-backend/tests/tests/unit/ -v; \
+	fi
 
 test-integration:
 	@echo "🧪 Running integration tests..."
-	pytest watcher-backend/tests/integration/ -v
+	@if command -v uv >/dev/null 2>&1; then \
+		cd watcher-backend && uv run pytest tests/tests/integration/ -v -m integration; \
+	else \
+		pytest watcher-backend/tests/tests/integration/ -v -m integration; \
+	fi
 
 test-e2e:
 	@echo "🧪 Running end-to-end tests..."
-	pytest watcher-backend/tests/e2e/ -v
+	@if command -v uv >/dev/null 2>&1; then \
+		cd watcher-backend && uv run pytest tests/tests/e2e/ -v -m e2e; \
+	else \
+		pytest watcher-backend/tests/tests/e2e/ -v -m e2e; \
+	fi
 
 test-coverage:
 	@echo "🧪 Running tests with coverage..."
-	pytest watcher-backend/tests/ --cov=watcher-backend/app --cov=watcher-backend/agents --cov-report=html --cov-report=term-missing -v
+	@if command -v uv >/dev/null 2>&1; then \
+		cd watcher-backend && uv run pytest tests/ --cov=app --cov=agents --cov-report=html --cov-report=term-missing -v; \
+	else \
+		pytest watcher-backend/tests/ --cov=watcher-backend/app --cov=watcher-backend/agents --cov-report=html --cov-report=term-missing -v; \
+	fi
 	@echo "📊 Coverage report generated in htmlcov/"
 
 test-fast:
 	@echo "🧪 Running fast tests only..."
-	pytest -m "not slow" watcher-backend/tests/ -v
+	@if command -v uv >/dev/null 2>&1; then \
+		cd watcher-backend && uv run pytest -m "not slow" tests/ -v; \
+	else \
+		pytest -m "not slow" watcher-backend/tests/ -v; \
+	fi
 
 test-pds:
 	@echo "🧪 Running PDS layer tests..."
-	pytest -m pds watcher-backend/tests/ -v
+	@if command -v uv >/dev/null 2>&1; then \
+		cd watcher-backend && uv run pytest -m pds tests/ -v; \
+	else \
+		pytest -m pds watcher-backend/tests/ -v; \
+	fi
 
 test-dia:
 	@echo "🧪 Running DIA layer tests..."
-	pytest -m dia watcher-backend/tests/ -v
+	@if command -v uv >/dev/null 2>&1; then \
+		cd watcher-backend && uv run pytest -m dia tests/ -v; \
+	else \
+		pytest -m dia watcher-backend/tests/ -v; \
+	fi
 
 test-kaa:
 	@echo "🧪 Running KAA layer tests..."
-	pytest -m kaa watcher-backend/tests/ -v
+	@if command -v uv >/dev/null 2>&1; then \
+		cd watcher-backend && uv run pytest -m kaa tests/ -v; \
+	else \
+		pytest -m kaa watcher-backend/tests/ -v; \
+	fi
 
 test-oex:
 	@echo "🧪 Running OEx layer tests..."
-	pytest -m oex watcher-backend/tests/ -v
+	@if command -v uv >/dev/null 2>&1; then \
+		cd watcher-backend && uv run pytest -m oex tests/ -v; \
+	else \
+		pytest -m oex watcher-backend/tests/ -v; \
+	fi
 
 # Linting
 lint: lint-backend lint-frontend

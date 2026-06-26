@@ -1,4 +1,4 @@
-import { Home, FileText, Brain, BarChart3, Workflow } from "lucide-react"
+import { Home, FileText, Brain, BarChart3, Workflow, Landmark } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface MainNavProps {
@@ -31,6 +31,11 @@ const navItems = [
     title: "Análisis",
     href: "/analisis",
     icon: BarChart3,
+  },
+  {
+    title: "Presupuesto",
+    href: "/presupuesto",
+    icon: Landmark,
   },
 ]
 

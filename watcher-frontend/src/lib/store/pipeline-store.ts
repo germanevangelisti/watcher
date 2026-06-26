@@ -21,6 +21,7 @@ export interface PipelineDocumentState {
   stage: string
   error?: string
   updatedAt: string
+  history: StageHistoryEntry[]
 }
 
 export interface PipelineError {
@@ -90,7 +91,7 @@ interface PipelineStore {
 
   // Actions
   setProcessing: (sessionId: string, total: number) => void
-  updateDocumentState: (boletinId: number, filename: string, stage: string) => void
+  updateDocumentState: (boletinId: number, filename: string, stage: string, details?: Record<string, unknown>) => void
   addStageToHistory: (stage: string, details?: Record<string, unknown>) => void
   setDocumentCompleted: (boletinId: number) => void
   setDocumentFailed: (boletinId: number, filename: string, error: string, stage: string) => void
@@ -163,20 +164,28 @@ export const usePipelineStore = create<PipelineStore>((set) => ({
       errors: [],
     }),
 
-  updateDocumentState: (boletinId, filename, stage) =>
-    set((state) => ({
-      currentFilename: filename,
-      currentStage: stage,
-      documentStates: {
-        ...state.documentStates,
-        [boletinId]: {
-          boletinId,
-          filename,
-          stage,
-          updatedAt: new Date().toISOString(),
+  updateDocumentState: (boletinId, filename, stage, details) =>
+    set((state) => {
+      const prev = state.documentStates[boletinId]
+      const history = prev?.history ?? []
+      const alreadyHas = history.some((h) => h.stage === stage)
+      return {
+        currentFilename: filename,
+        currentStage: stage,
+        documentStates: {
+          ...state.documentStates,
+          [boletinId]: {
+            boletinId,
+            filename,
+            stage,
+            updatedAt: new Date().toISOString(),
+            history: alreadyHas
+              ? history
+              : [...history, { stage, timestamp: new Date().toISOString(), details }],
+          },
         },
-      },
-    })),
+      }
+    }),
 
   addStageToHistory: (stage, details) =>
     set((state) => {
@@ -191,40 +200,50 @@ export const usePipelineStore = create<PipelineStore>((set) => ({
     }),
 
   setDocumentCompleted: (boletinId) =>
-    set((state) => ({
-      documentStates: {
-        ...state.documentStates,
-        [boletinId]: {
-          ...state.documentStates[boletinId],
-          stage: "completed",
-          updatedAt: new Date().toISOString(),
+    set((state) => {
+      const prev = state.documentStates[boletinId]
+      const history = prev?.history ?? []
+      const alreadyHas = history.some((h) => h.stage === "completed")
+      return {
+        documentStates: {
+          ...state.documentStates,
+          [boletinId]: {
+            ...prev,
+            stage: "completed",
+            updatedAt: new Date().toISOString(),
+            history: alreadyHas
+              ? history
+              : [...history, { stage: "completed", timestamp: new Date().toISOString() }],
+          },
         },
-      },
-    })),
+      }
+    }),
 
   setDocumentFailed: (boletinId, filename, error, stage) =>
-    set((state) => ({
-      documentStates: {
-        ...state.documentStates,
-        [boletinId]: {
-          boletinId,
-          filename,
-          stage: "failed",
-          error,
-          updatedAt: new Date().toISOString(),
+    set((state) => {
+      const prev = state.documentStates[boletinId]
+      const history = prev?.history ?? []
+      const alreadyHas = history.some((h) => h.stage === "failed")
+      return {
+        documentStates: {
+          ...state.documentStates,
+          [boletinId]: {
+            boletinId,
+            filename,
+            stage: "failed",
+            error,
+            updatedAt: new Date().toISOString(),
+            history: alreadyHas
+              ? history
+              : [...history, { stage: "failed", timestamp: new Date().toISOString(), details: { error } }],
+          },
         },
-      },
-      errors: [
-        ...state.errors,
-        {
-          boletinId,
-          filename,
-          error,
-          stage,
-          timestamp: new Date().toISOString(),
-        },
-      ],
-    })),
+        errors: [
+          ...state.errors,
+          { boletinId, filename, error, stage, timestamp: new Date().toISOString() },
+        ],
+      }
+    }),
 
   setProgress: (current, total, filename, stage) =>
     set({

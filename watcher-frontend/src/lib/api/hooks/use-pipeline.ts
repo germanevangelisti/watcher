@@ -59,7 +59,8 @@ export interface ProcessResponse {
 // =============================================================================
 
 /**
- * Get pipeline status (auto-refetch every 5 seconds)
+ * Get pipeline status.
+ * Polls at 5s when a pipeline session is active, 30s otherwise.
  */
 export function usePipelineStatus(enabled = true) {
   return useQuery({
@@ -68,8 +69,10 @@ export function usePipelineStatus(enabled = true) {
       const { data } = await apiClient.get<PipelineStatusResponse>("/pipeline/status")
       return data
     },
-    refetchInterval: enabled ? 5000 : false,
-    staleTime: 3000,
+    refetchInterval: enabled
+      ? (query) => (query.state.data?.active_session ? 5000 : 30000)
+      : false,
+    staleTime: 4000,
   })
 }
 
@@ -126,6 +129,7 @@ export function usePipelineResetOne() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pipeline"] })
       queryClient.invalidateQueries({ queryKey: ["boletines"] })
+      queryClient.invalidateQueries({ queryKey: ["boletin-calendar"] })
     },
   })
 }

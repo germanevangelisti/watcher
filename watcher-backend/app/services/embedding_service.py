@@ -4,7 +4,7 @@ Embedding Service - Vector embeddings for semantic search
 This service handles:
 - Text cleaning and normalization
 - Text chunking and preprocessing
-- Generating embeddings using Google text-embedding-004
+- Generating embeddings using Google gemini-embedding-001 (3072 dims)
 - Integration with ChromaDB for vector storage
 - Semantic search capabilities
 """
@@ -61,6 +61,10 @@ class GoogleEmbeddingFunction:
         # genai.configure() is called once at app startup in main.py
         self.model = model
 
+    def name(self) -> str:
+        """Required by ChromaDB 1.x."""
+        return "google-gemini-embedding"
+
     def __call__(self, input: List[str]) -> List[List[float]]:
         """Generate embeddings for a list of texts."""
         embeddings = []
@@ -88,7 +92,7 @@ class EmbeddingService:
     Service for generating and managing document embeddings.
     
     Supports multiple embedding providers:
-    - Google AI (text-embedding-004) - default
+    - Google AI (gemini-embedding-001, 3072 dims) - default
     - Local models (sentence-transformers)
     """
     
@@ -175,11 +179,20 @@ class EmbeddingService:
                 if self.embedding_fn:
                     collection_kwargs["embedding_function"] = self.embedding_fn
 
-                self.collection = self.client.get_or_create_collection(**collection_kwargs)
-                
+                try:
+                    self.collection = self.client.get_or_create_collection(**collection_kwargs)
+                except Exception as conflict_err:
+                    if "embedding function" in str(conflict_err).lower():
+                        # Persisted collection has a different embedding config — reset it
+                        logger.warning(f"Embedding function conflict, resetting collection '{collection_name}'")
+                        self.client.delete_collection(collection_name)
+                        self.collection = self.client.create_collection(**collection_kwargs)
+                    else:
+                        raise
+
                 logger.info(f"ChromaDB initialized at {self.persist_directory}")
                 logger.info(f"Collection '{collection_name}' ready with {self.collection.count()} documents")
-            
+
             except Exception as e:
                 logger.error(f"Error initializing ChromaDB: {e}")
                 self.client = None
@@ -238,7 +251,7 @@ class EmbeddingService:
         
         try:
             if self.embedding_provider == "google" and GOOGLE_AI_AVAILABLE:
-                # Google's text-embedding-004 produces 768-dimensional vectors
+                # Google's gemini-embedding-001 produces 3072-dimensional vectors
                 result = genai.embed_content(
                     model=self.google_model,
                     content=text,

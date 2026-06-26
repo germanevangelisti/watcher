@@ -2,6 +2,9 @@ import axios, { AxiosError } from "axios"
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8001/api/v1"
 
+// Backend base URL without the /api/v1 suffix — use this for direct file links
+export const API_BASE_URL = API_URL.replace(/\/api\/v1\/?$/, "")
+
 export const apiClient = axios.create({
   baseURL: API_URL,
   headers: {

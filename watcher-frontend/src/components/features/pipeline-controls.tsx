@@ -89,7 +89,8 @@ export function PipelineControls() {
           updateDocumentState(
             d.boletin_id as number,
             d.filename as string,
-            d.stage as string
+            d.stage as string,
+            d.details as Record<string, unknown> | undefined
           )
           addStageToHistory(
             d.stage as string,

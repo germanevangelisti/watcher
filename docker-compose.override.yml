@@ -1,0 +1,9 @@
+# Override for local development: uses the sqlite.db from the repo instead of PostgreSQL.
+# docker compose automatically merges this file — no extra flags needed.
+services:
+  backend:
+    environment:
+      DATABASE_URL: sqlite+aiosqlite:////app/sqlite.db
+      SYNC_DATABASE_URL: sqlite:////app/sqlite.db
+    volumes:
+      - ./watcher-backend/sqlite.db:/app/sqlite.db

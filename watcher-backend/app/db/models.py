@@ -50,12 +50,30 @@ class Boletin(Base):
     
     # Origen del documento (v1.1 Phase 2)
     origin = Column(String(20), default="downloaded", nullable=False)  # downloaded, uploaded, synced
+    source_url = Column(Text, nullable=True, index=True)  # URL canónica de origen (Option A: URL-first)
 
     # Relaciones
     analisis = relationship("Analisis", back_populates="boletin", cascade="all, delete-orphan")
     ejecuciones = relationship("EjecucionPresupuestaria", back_populates="boletin", cascade="all, delete-orphan")
     jurisdiccion = relationship("Jurisdiccion", back_populates="boletines", lazy="joined")
     menciones_jurisdiccionales = relationship("MencionJurisdiccional", back_populates="boletin", cascade="all, delete-orphan", lazy="select")
+    sumario = relationship("SumarioParseado", back_populates="boletin", uselist=False, cascade="all, delete-orphan")
+
+class SumarioParseado(Base):
+    """Sumario parseado de la primera página de un boletín provincial."""
+    __tablename__ = "sumarios_parseados"
+
+    id             = Column(Integer, primary_key=True, autoincrement=True)
+    boletin_id     = Column(Integer, ForeignKey("boletines.id", ondelete="CASCADE"), nullable=False, unique=True, index=True)
+    format_type    = Column(String(50), nullable=False, index=True)  # organismo_jerarquia | categorias_simples | categorias_judiciales | unknown
+    confidence     = Column(Float, nullable=False, default=0.0, index=True)
+    pagina_sumario = Column(Integer, nullable=True)
+    entries_json   = Column(JSON, nullable=False, default=list)
+    raw_text       = Column(Text, nullable=True)
+    created_at     = Column(DateTime, default=datetime.utcnow)
+
+    boletin = relationship("Boletin", back_populates="sumario")
+
 
 class Analisis(Base):
     """Modelo para almacenar análisis de actos administrativos individuales."""
@@ -82,6 +100,10 @@ class Analisis(Base):
     montos_json = Column(JSON, nullable=True)  # ["$1.000.000", "$500.000"]
     descripcion = Column(Text, nullable=True)  # Resumen del acto
     motivo_riesgo = Column(Text, nullable=True)  # Justificación del riesgo asignado
+
+    # Adversarial verification metadata (Fase II + IV)
+    aiu_summary_json = Column(JSON, nullable=True)   # {total_aius, by_type, verified, unverifiable, contradicted}
+    firewall_score = Column(Float, nullable=True)      # Reference Firewall score (0.0-1.0)
 
     # Relación con boletín
     boletin = relationship("Boletin", back_populates="analisis")
@@ -217,7 +239,8 @@ class EjecucionPresupuestaria(Base):
     es_modificacion_presupuestaria = Column(Boolean, default=False)
     requiere_revision = Column(Boolean, default=False)
     observaciones = Column(Text, nullable=True)
-    
+    is_duplicate = Column(Integer, default=0)  # 1 = repeated publication of same acto
+
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relaciones
@@ -714,7 +737,8 @@ class Jurisdiccion(Base):
     # Relaciones
     boletines = relationship("Boletin", back_populates="jurisdiccion")
     menciones = relationship("MencionJurisdiccional", back_populates="jurisdiccion")
-    
+    fuentes_dato = relationship("FuenteDato", back_populates="jurisdiccion", cascade="all, delete-orphan")
+
     def __repr__(self):
         return f"<Jurisdiccion(nombre={self.nombre}, tipo={self.tipo})>"
 
@@ -831,6 +855,35 @@ class SyncState(Base):
     
     def __repr__(self):
         return f"<SyncState(status={self.status}, last_synced={self.last_synced_date})>"
+
+
+class FuenteDato(Base):
+    """
+    Fuentes de datos públicos configuradas por jurisdicción.
+
+    Tipos soportados:
+      - boletin_diario       : URL template para boletines diarios
+      - presupuesto_anual    : URL del presupuesto oficial del ejercicio
+      - ejecucion_trimestral : URL de los informes de ejecución presupuestaria
+
+    Separada de JurisdiccionSyncConfig (que es config operativa del sync).
+    """
+    __tablename__ = "fuentes_dato"
+
+    id              = Column(Integer, primary_key=True, autoincrement=True)
+    jurisdiccion_id = Column(Integer, ForeignKey("jurisdicciones.id", ondelete="CASCADE"), nullable=False, index=True)
+    tipo            = Column(String(50), nullable=False)    # boletin_diario | presupuesto_anual | ejecucion_trimestral
+    nombre          = Column(String(200), nullable=False)
+    url_template    = Column(Text, nullable=True)           # URL directa o template {year}/{month}/…
+    activa          = Column(Boolean, default=True, nullable=False)
+    descripcion     = Column(Text, nullable=True)
+    created_at      = Column(DateTime, default=datetime.utcnow)
+    updated_at      = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    jurisdiccion = relationship("Jurisdiccion", back_populates="fuentes_dato")
+
+    def __repr__(self):
+        return f"<FuenteDato(jurisdiccion_id={self.jurisdiccion_id}, tipo={self.tipo})>"
 
 
 # =============================================================================
@@ -1263,3 +1316,27 @@ class ChunkRecord(Base):
     
     def __repr__(self):
         return f"<ChunkRecord(document_id={self.document_id}, chunk_index={self.chunk_index}, section_type={self.section_type})>"
+
+
+class IngestionRun(Base):
+    """Tracks a single execution of a BoletinPipeline (extract → transform → load)."""
+    __tablename__ = "ingestion_runs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    pipeline_name = Column(String(100), nullable=False)
+    source_id = Column(String(100), nullable=False)
+    status = Column(String(20), nullable=False, default="running")  # running | loaded | failed
+    rows_in = Column(Integer, default=0)
+    rows_loaded = Column(Integer, default=0)
+    error = Column(Text, nullable=True)
+    started_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    finished_at = Column(DateTime, nullable=True)
+
+    __table_args__ = (
+        Index("idx_ingestion_run_pipeline", "pipeline_name"),
+        Index("idx_ingestion_run_status", "status"),
+        Index("idx_ingestion_run_started", "started_at"),
+    )
+
+    def __repr__(self):
+        return f"<IngestionRun(id={self.id}, pipeline={self.pipeline_name}, status={self.status})>"
