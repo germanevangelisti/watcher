@@ -1429,7 +1429,10 @@ async def _analyze_document(
     import time
     from app.db.crud import create_analisis
     from app.services.reference_firewall import ReferenceFirewallService
+    from app.services.feature_engineering import get_feature_engineer
     from app.core.observability import record_vcp
+
+    _feature_engineer = get_feature_engineer()
 
     # BUG-1: use singletons instead of fresh WatcherService() each call
     try:
@@ -1549,6 +1552,15 @@ async def _analyze_document(
                 firewall_score = fw_result.firewall_score
             if verification_result is not None:
                 firewall_score = verification_result.vcp_score
+
+            # Épica 3: feature engineering per acto (transparencia + red flags)
+            try:
+                features = _feature_engineer.engineer(acto)
+                acto["transparency_score"] = round(features.transparency_score, 2)
+                acto["red_flags_json"] = [rf.to_dict() for rf in features.red_flags]
+                acto["num_red_flags"] = features.num_red_flags
+            except Exception as fe_e:
+                logger.debug(f"Feature engineering skipped for {filename}: {fe_e}")
 
             prepared.append({
                 "acto": acto,

@@ -130,6 +130,13 @@ class EntityService:
             r'MONTO\s+(?:TOTAL\s+)?DE\s+\$?\s*(\d{1,3}(?:\.\d{3})*)',
             r'POR\s+UN\s+IMPORTE\s+DE\s+\$?\s*(\d{1,3}(?:\.\d{3})*)'
         ]
+
+        # CUIT/CUIL: 11 dígitos, con o sin guiones (XX-XXXXXXXX-X).
+        # Prefijo opcional CUIT/CUIL/C.U.I.T. para subir la confianza.
+        self.cuit_patterns = [
+            r'(?i:C\.?U\.?I\.?[TL]\.?\s*(?:N[°º]?\s*)?[:\s]?)(\d{2}[\-\s]?\d{8}[\-\s]?\d)',
+            r'\b(\d{2}-\d{8}-\d)\b',
+        ]
     
     def extract_entities(self, text: str) -> List[EntityResult]:
         """
@@ -149,6 +156,7 @@ class EntityService:
         entities.extend(self._extract_empresas(text))
         entities.extend(self._extract_contratos(text))
         entities.extend(self._extract_montos(text))
+        entities.extend(self._extract_cuits(text))
         
         return entities
     
@@ -325,6 +333,64 @@ class EntityService:
             return float(clean)
         except Exception:
             return 0.0
+
+    @staticmethod
+    def normalize_cuit(raw: str) -> Optional[str]:
+        """Normaliza un CUIT/CUIL al formato canónico ``XX-XXXXXXXX-X``.
+
+        Devuelve ``None`` si no contiene exactamente 11 dígitos.
+        """
+        digits = re.sub(r'\D', '', raw or '')
+        if len(digits) != 11:
+            return None
+        return f"{digits[:2]}-{digits[2:10]}-{digits[10]}"
+
+    @staticmethod
+    def is_valid_cuit(raw: str) -> bool:
+        """Valida el dígito verificador de un CUIT/CUIL argentino (módulo 11)."""
+        digits = re.sub(r'\D', '', raw or '')
+        if len(digits) != 11:
+            return False
+        weights = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2]
+        total = sum(int(d) * w for d, w in zip(digits[:10], weights))
+        check = 11 - (total % 11)
+        if check == 11:
+            check = 0
+        elif check == 10:
+            check = 9
+        return check == int(digits[10])
+
+    def _extract_cuits(self, text: str) -> List[EntityResult]:
+        """Extrae CUIT/CUIL del texto y los normaliza a ``XX-XXXXXXXX-X``.
+
+        El dígito verificador inválido baja la confianza pero no descarta la
+        entidad (los PDF oficiales tienen ruido de OCR). El masking en la capa
+        HTTP sigue protegiendo el valor en las respuestas de la API.
+        """
+        results: List[EntityResult] = []
+        seen: set = set()
+
+        for pattern in self.cuit_patterns:
+            for match in re.finditer(pattern, text):
+                raw = match.group(1)
+                normalizado = self.normalize_cuit(raw)
+                if not normalizado or normalizado in seen:
+                    continue
+                seen.add(normalizado)
+                valido = self.is_valid_cuit(normalizado)
+                contexto = self._get_context(text, match.start(), match.end())
+                results.append(EntityResult(
+                    tipo='cuit',
+                    nombre=normalizado,
+                    nombre_normalizado=normalizado,
+                    variantes=[raw.strip(), normalizado.replace('-', '')],
+                    contexto=contexto,
+                    posicion=match.start(),
+                    confianza=0.95 if valido else 0.6,
+                    metadata={"valido": valido},
+                ))
+
+        return results
     
     def _clean_name(self, nombre: str, max_len: int = 80) -> str:
         """Limpia un nombre de entidad extraído de PDF: quita saltos de línea y texto basura."""

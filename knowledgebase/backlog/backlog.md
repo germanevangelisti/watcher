@@ -48,13 +48,15 @@ Ordenado por valor de negocio. Estatus: `idea` | `refinado` | `en progreso` | `h
 ---
 
 ## Épica 3 — Feature Engineering
-> Parcial
+> Hecho
 
 | # | Historia | Criterio de aceptación | Estado |
 |---|---|---|---|
-| 3.1 | Transparency scoring (0–100) | Score numérico por acto administrativo | 🟡 parcial (lógica repartida en servicios) |
-| 3.2 | Red flag classification | Clasificación de irregularidades con tipología | 🟡 parcial |
-| 3.3 | Entidad extraction + normalization | Nombres normalizados, CUIT masked | 🟡 parcial (CUIT masking ✅) |
+| 3.1 | Transparency scoring (0–100) | Score numérico por acto administrativo | ✅ hecho (`TransparencyScorer` per-acto, cableado en pipeline) |
+| 3.2 | Red flag classification | Clasificación de irregularidades con tipología | ✅ hecho (`RedFlagClassifier` con tipología canónica `RedFlagType`) |
+| 3.3 | Entidad extraction + normalization | Nombres normalizados, CUIT masked | ✅ hecho (extracción + normalización + validación de CUIT en `EntityService`) |
+
+> **E3 (resuelto):** `app/services/feature_engineering.py` centraliza scoring de transparencia (0–100) y clasificación de red flags **por acto administrativo**, cableado en `_analyze_document`. Persiste en `Analisis.transparency_score`, `Analisis.red_flags_json` y `Analisis.num_red_flags` (migración `add_acto_feature_engineering`). `EntityService` ahora extrae y normaliza CUIT/CUIL (`XX-XXXXXXXX-X`) con validación de dígito verificador. 54 tests unitarios nuevos.
 
 ---
 

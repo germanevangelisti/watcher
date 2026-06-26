@@ -232,6 +232,10 @@ async def create_analisis(
         montos_json=montos if is_v2 else None,
         descripcion=analisis_data.get("descripcion"),
         motivo_riesgo=analisis_data.get("motivo_riesgo"),
+        # Épica 3 — Feature Engineering per acto (si fue calculado upstream)
+        transparency_score=analisis_data.get("transparency_score"),
+        red_flags_json=analisis_data.get("red_flags_json"),
+        num_red_flags=analisis_data.get("num_red_flags"),
     )
     db.add(db_analisis)
     return db_analisis

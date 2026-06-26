@@ -105,6 +105,11 @@ class Analisis(Base):
     aiu_summary_json = Column(JSON, nullable=True)   # {total_aius, by_type, verified, unverifiable, contradicted}
     firewall_score = Column(Float, nullable=True)      # Reference Firewall score (0.0-1.0)
 
+    # Épica 3 — Feature Engineering per acto
+    transparency_score = Column(Float, nullable=True)  # 0-100, mayor = más transparente
+    red_flags_json = Column(JSON, nullable=True)       # [{type, severity, title, description, evidence, confidence}]
+    num_red_flags = Column(Integer, nullable=True)     # cantidad de red flags detectadas
+
     # Relación con boletín
     boletin = relationship("Boletin", back_populates="analisis")
 
