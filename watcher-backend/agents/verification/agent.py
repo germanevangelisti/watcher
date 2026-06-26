@@ -122,9 +122,15 @@ class VerificationAgent:
             if status in counts:
                 counts[status] += 1
 
+        all_unverifiable = (
+            len(result_aius) > 0 and
+            counts.get(VerificationStatus.VERIFIED, 0) == 0 and
+            counts.get(VerificationStatus.UNVERIFIABLE, 0) == len(result_aius)
+        )
         requires_review = (
             vcp < VCP_HUMAN_REVIEW_THRESHOLD or
-            counts.get(VerificationStatus.CONTRADICTED, 0) > 0
+            counts.get(VerificationStatus.CONTRADICTED, 0) > 0 or
+            all_unverifiable
         )
 
         return VerificationResult(
@@ -305,13 +311,28 @@ class VerificationAgent:
             return aiu.model_copy(update={'verification_status': VerificationStatus.UNVERIFIABLE})
 
     def _calculate_vcp(self, aius: List[Any]) -> float:
-        """VCP = verified / total (excluding pending from denominator for strict mode)."""
+        """VCP = verified / verifiable_total.
+
+        AIUs marked UNVERIFIABLE (e.g. SUBJECT, TEMPORAL, ACTION, RELATIONSHIP
+        that cannot be checked against the corpus) are excluded from both
+        numerator and denominator so they don't artificially depress the score.
+        """
         from app.services.aiu_service import VerificationStatus
 
         if not aius:
             return 1.0
 
-        verified = sum(1 for a in aius if getattr(a, 'verification_status', None) == VerificationStatus.VERIFIED)
-        total = len(aius)
+        verifiable = [
+            a for a in aius
+            if getattr(a, 'verification_status', None) != VerificationStatus.UNVERIFIABLE
+        ]
 
-        return round(verified / total, 4)
+        if not verifiable:
+            return 1.0
+
+        verified = sum(
+            1 for a in verifiable
+            if a.verification_status == VerificationStatus.VERIFIED
+        )
+
+        return round(verified / len(verifiable), 4)
