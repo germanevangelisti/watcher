@@ -17,9 +17,9 @@ Ordenado por valor de negocio. Estatus: `idea` | `refinado` | `en progreso` | `h
 | 0.4 | Migrar DocumentProcessor y compliance endpoint | Embeddings de Google en pipeline de documentos | ✅ hecho |
 | 0.5 | Migrar WatcherService | Gemini reemplaza `gpt-3.5-turbo` | ✅ hecho |
 | 0.6 | Migrar InsightReportingAgent | Gemini en reporting agent | ✅ hecho |
-| 0.7 | Re-indexar ChromaDB con Google embeddings | Script de re-indexación funcional | 🟡 en progreso* |
+| 0.7 | Re-indexar ChromaDB con Google embeddings | Script de re-indexación funcional y consistente | ✅ hecho* |
 
-> *Deuda: el modelo de embeddings difiere entre producción (`gemini-embedding-001`, 3072 dims) y `scripts/reindex_google_embeddings.py` (`text-embedding-004`, 768 dims). Falta unificar y re-indexar de forma consistente.
+> *A1 (resuelto): `scripts/reindex_google_embeddings.py` reutiliza el modelo canónico (`gemini-embedding-001`, 3072 dims), re-indexa la colección in-place con backup y tiene tests. Queda como paso **operativo** correr el re-indexado contra ChromaDB con datos reales.
 
 ---
 
@@ -123,6 +123,7 @@ Ordenado por valor de negocio. Estatus: `idea` | `refinado` | `en progreso` | `h
 
 | ID | Descripción | Épica | Estado |
 |---|---|---|---|
-| DT-1 | Modelo de embeddings inconsistente (`gemini-embedding-001` vs `text-embedding-004`) | 0 | ⬜ abierto |
+| DT-1 | Modelo de embeddings inconsistente (`gemini-embedding-001` vs `text-embedding-004`) | 0 | ✅ resuelto (A1) |
+| DT-2 | Tests de `indexing_service` hacen `await` sobre sesión SQLAlchemy síncrona del fixture | 7 | ⬜ abierto |
 
 > Sincronizado con commits hasta `da098b7` — 2026-06-26

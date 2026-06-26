@@ -14,7 +14,7 @@
 | Release | v2.0.0 — Architecture Overhaul (Fases 0–4 completas) + vertical Presupuesto 2026 |
 | Estado | 🟢 Núcleo funcional end-to-end (ingesta → extracción → indexación → retrieval → agentes) |
 | Stack LLM | Google Gemini (migración desde OpenAI **completada** en código) |
-| Pendiente inmediato | Normalizar modelo de embeddings y re-indexar ChromaDB de forma consistente |
+| Pendiente inmediato | Ejecutar el re-indexado operativo de ChromaDB en el entorno con datos reales |
 
 ---
 
@@ -42,15 +42,15 @@
 
 ## ⚠️ Deuda técnica conocida
 
-1. **Modelo de embeddings inconsistente:** producción usa `gemini-embedding-001` (3072 dims) mientras `scripts/reindex_google_embeddings.py` usa `text-embedding-004` (768 dims). Hay que unificar y re-indexar ChromaDB.
-2. **Comentarios desactualizados** en `embedding_service.py` (aún mencionan `text-embedding-004`).
-3. **`ProvincialPipeline.extract()`** descubre PDFs locales; la descarga remota está en `sync_service.download_boletines_task` (no dentro del pipeline).
+1. ~~**Modelo de embeddings inconsistente** (`gemini-embedding-001` vs `text-embedding-004`).~~ ✅ **Resuelto (A1):** `scripts/reindex_google_embeddings.py` ahora reutiliza el modelo canónico (`gemini-embedding-001`, 3072 dims), re-indexa la colección in-place con backup, y comentarios de `embedding_service.py` corregidos. Queda como paso **operativo** correr el re-indexado contra ChromaDB con datos reales.
+2. **`ProvincialPipeline.extract()`** descubre PDFs locales; la descarga remota está en `sync_service.download_boletines_task` (no dentro del pipeline).
+3. **`indexing_service` tests** fallan por usar `await` sobre una sesión SQLAlchemy síncrona en el fixture (bug de test, no de producción).
 
 ---
 
 ## 🔮 Próximos pasos
 
-1. Unificar el modelo de embeddings y ejecutar re-indexación consistente de ChromaDB.
+1. Ejecutar el re-indexado operativo de ChromaDB (A1 ya unificó el modelo en código).
 2. Auditar y formalizar Épica 3 (Feature Engineering): transparency scoring, red flags, normalización de entidades.
 3. Documentar formalmente la vertical de Presupuesto 2026 en el backlog/arquitectura.
-4. Medir cobertura de tests para cerrar Épica 7.
+4. Medir cobertura de tests y arreglar el fixture async de `indexing_service` para cerrar Épica 7.
