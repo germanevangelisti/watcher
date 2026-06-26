@@ -122,9 +122,15 @@ class VerificationAgent:
             if status in counts:
                 counts[status] += 1
 
+        all_unverifiable = (
+            len(result_aius) > 0 and
+            counts.get(VerificationStatus.VERIFIED, 0) == 0 and
+            counts.get(VerificationStatus.UNVERIFIABLE, 0) == len(result_aius)
+        )
         requires_review = (
             vcp < VCP_HUMAN_REVIEW_THRESHOLD or
-            counts.get(VerificationStatus.CONTRADICTED, 0) > 0
+            counts.get(VerificationStatus.CONTRADICTED, 0) > 0 or
+            all_unverifiable
         )
 
         return VerificationResult(
