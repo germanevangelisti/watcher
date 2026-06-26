@@ -4,7 +4,7 @@ Embedding Service - Vector embeddings for semantic search
 This service handles:
 - Text cleaning and normalization
 - Text chunking and preprocessing
-- Generating embeddings using Google text-embedding-004
+- Generating embeddings using Google gemini-embedding-001 (3072 dims)
 - Integration with ChromaDB for vector storage
 - Semantic search capabilities
 """
@@ -92,7 +92,7 @@ class EmbeddingService:
     Service for generating and managing document embeddings.
     
     Supports multiple embedding providers:
-    - Google AI (text-embedding-004) - default
+    - Google AI (gemini-embedding-001, 3072 dims) - default
     - Local models (sentence-transformers)
     """
     
@@ -251,7 +251,7 @@ class EmbeddingService:
         
         try:
             if self.embedding_provider == "google" and GOOGLE_AI_AVAILABLE:
-                # Google's text-embedding-004 produces 768-dimensional vectors
+                # Google's gemini-embedding-001 produces 3072-dimensional vectors
                 result = genai.embed_content(
                     model=self.google_model,
                     content=text,
