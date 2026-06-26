@@ -194,34 +194,54 @@ See [Makefile](Makefile) for unified development commands:
 
 ## Cursor Cloud specific instructions
 
-### Services overview
+### Services overview (v2.0)
 
-| Service | Directory | Dev command | Port |
-|---|---|---|---|
-| Backend (FastAPI) | `watcher-backend/` | `make start-backend` | 8001 |
-| Frontend v2 (Vite + React 19) | `watcher-frontend/` | `make start-frontend` | 5173 |
+| Service | Directory | Dev command | Port | Notes |
+|---|---|---|---|---|
+| Backend (FastAPI) | `watcher-backend/` | `make start-backend` | 8001 | SQLite by default; Neo4j optional |
+| Frontend v2 (Vite + React 19) | `watcher-frontend/` | `make start-frontend` | 5173 | Proxies `/api` to backend |
+| Neo4j (graph DB) | docker-compose | `docker compose up neo4j` | 7474/7687 | Optional for dev; graph features disabled when absent |
+| PostgreSQL | docker-compose | `docker compose up db` | 5433 | Production only; dev uses SQLite |
 
 ### Running the dev environment
 
-- **No `.env` files are required** for local development. The backend defaults to SQLite (`watcher-backend/sqlite.db` ships pre-populated with 1300+ bulletins) and runs without API keys (AI features degrade gracefully).
+- **No `.env` files are required** for local development. The backend defaults to SQLite (`watcher-backend/sqlite.db` ships pre-populated with 1300+ bulletins) and runs without API keys (AI features degrade gracefully with `FreeProvider`).
+- Neo4j is **optional** locally; the backend logs a warning and disables graph features if `NEO4J_URI` is unset.
 - The Vite dev server proxies `/api` and `/ws` to `localhost:8001`, so both servers must be running simultaneously.
 - Start the backend first, then the frontend. See `Makefile` for all available targets.
+- The canonical dependency manifest is `watcher-backend/pyproject.toml`. Install with `pip install ".[ai,dev]"` from `watcher-backend/`. The legacy `requirements.txt` is still present for CI.
 
 ### Lint / Test / Build commands
 
 All commands are documented in the `Makefile`. Key ones:
 
 - **Lint:** `make lint` (runs `ruff check` for Python + `eslint` for frontend)
-- **Backend tests:** `pytest watcher-backend/tests/ -v` (uses `pytest.ini` at repo root; `pythonpath = watcher-backend`)
+- **Backend tests (from watcher-backend/):** `pytest tests/ -v --no-cov` (uses `pyproject.toml` config)
+- **Backend tests (from repo root):** `pytest watcher-backend/tests/ -v` (uses `pytest.ini`; `pythonpath = watcher-backend`)
 - **Frontend tests:** `cd watcher-frontend && npm run test -- --run`
 - **Build frontend:** `cd watcher-frontend && npm run build` (TypeScript check + Vite build)
+- Use `watcher-backend/tests/run_tests.sh` to auto-ignore stale legacy tests (requires `python3` alias or edit to use `python3`).
+
+### Testing tiers
+
+| Tier | Command | External deps | What it covers |
+|---|---|---|---|
+| Unit | `pytest tests/tests/unit/ -v` | None | Pipelines, providers, middleware, query loaders, schemas |
+| Integration | `pytest tests/tests/integration/ -v -m integration` | Neo4j, PostgreSQL | Cross-service flows |
+| E2E | `pytest tests/tests/e2e/ -v -m e2e` | Mocked LLM | Adversarial verification pipeline |
+| Frontend | `npm run test -- --run` | None | Component tests (Vitest + happy-dom) |
 
 ### Known caveats
 
-- Six test files under `watcher-backend/tests/tests/` import from the old `watcher_monolith` module path (pre-refactor). These fail to collect and should be ignored or migrated. They are: `test_extraction_schemas.py`, `test_extractors.py`, `test_extraction_integration.py`, `unit/test_kaa_agents.py`, `e2e/test_full_pipeline.py`, `integration/test_dia_kaa_flow.py`.
-- Six tests in `test_indexing_service.py` fail due to async mock issues (not environment-related).
-- The `.pre-commit-config.yaml` still references the old `watcher-monolith/` paths and is not functional with the current repo structure.
+- **Legacy test imports:** Six test files import from the old `watcher_monolith` module path. They are auto-ignored by `run_tests.sh`: `test_extraction_schemas.py`, `test_extractors.py`, `test_extraction_integration.py`, `unit/test_kaa_agents.py`, `e2e/test_full_pipeline.py`, `integration/test_dia_kaa_flow.py`.
+- **`test_indexing_service.py`:** 6 tests fail due to async mock fixture bug (known tech debt, not environment-related).
+- **`test_graph_query_loader.py`:** 9 tests fail when `watcher-backend` is pip-installed as a package because `.cypher` query files are not included in the wheel. Run tests from `watcher-backend/` working directory to avoid this.
+- **`test_intelligence_providers.py` and `test_security_middleware.py`:** Fail with "no current event loop" due to `pytest-asyncio` version mismatch. The `pyproject.toml` requires `>=0.24.0` but these tests need `asyncio_mode = auto` to be applied consistently.
+- **`test_adversarial_verification.py`:** 2 E2E tests fail with VCP below threshold (mocked LLM returns insufficient verification).
+- **`run_tests.sh`:** Uses `python` (not `python3`); will fail on systems without a `python` symlink.
+- The `.pre-commit-config.yaml` still references the old `watcher-monolith/` paths and is not functional.
 - `pip install` places binaries in `~/.local/bin`; ensure this is on `PATH`.
+- **Dual pytest config:** `pytest.ini` (repo root) enables coverage by default; `pyproject.toml` (watcher-backend) does not. Which is used depends on `cwd` when running pytest.
 
 ---
 
