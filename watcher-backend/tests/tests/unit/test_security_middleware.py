@@ -9,6 +9,10 @@ Tests validate:
 
 from __future__ import annotations
 
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
+from starlette.responses import Response
 
 from app.middleware.security import SECURITY_HEADERS, SecurityHeadersMiddleware
 
@@ -37,47 +41,33 @@ class TestSecurityHeadersMiddleware:
 
     def _make_response(self, extra_headers=None):
         """Build a minimal Starlette Response with optional preset headers."""
-        from starlette.responses import Response
         headers = extra_headers or {}
         return Response(content="OK", status_code=200, headers=headers)
 
-    def test_middleware_dispatch_adds_headers(self):
+    @pytest.mark.anyio
+    async def test_middleware_dispatch_adds_headers(self):
         """dispatch() must inject all SECURITY_HEADERS into a plain response."""
-        import asyncio
-        from unittest.mock import AsyncMock, MagicMock
-
         response = self._make_response()
         call_next = AsyncMock(return_value=response)
 
-        # SecurityHeadersMiddleware needs an `app` positional arg for BaseHTTPMiddleware
         mw = SecurityHeadersMiddleware(app=MagicMock())
         mw.dispatch = SecurityHeadersMiddleware.dispatch.__get__(mw, SecurityHeadersMiddleware)
 
         request = MagicMock()
-
-        async def run():
-            return await SecurityHeadersMiddleware.dispatch(mw, request, call_next)
-
-        result = asyncio.get_event_loop().run_until_complete(run())
+        result = await SecurityHeadersMiddleware.dispatch(mw, request, call_next)
 
         for header in SECURITY_HEADERS:
             assert header in result.headers, f"Missing header: {header}"
 
-    def test_middleware_does_not_overwrite_existing_header(self):
+    @pytest.mark.anyio
+    async def test_middleware_does_not_overwrite_existing_header(self):
         """dispatch() must skip headers already set in the response."""
-        import asyncio
-        from unittest.mock import AsyncMock, MagicMock
-
         response = self._make_response({"X-Frame-Options": "SAMEORIGIN"})
         call_next = AsyncMock(return_value=response)
         mw = SecurityHeadersMiddleware(app=MagicMock())
 
         request = MagicMock()
-
-        async def run():
-            return await SecurityHeadersMiddleware.dispatch(mw, request, call_next)
-
-        result = asyncio.get_event_loop().run_until_complete(run())
+        result = await SecurityHeadersMiddleware.dispatch(mw, request, call_next)
         assert result.headers["X-Frame-Options"] == "SAMEORIGIN"
 
     def test_middleware_class_is_importable(self):

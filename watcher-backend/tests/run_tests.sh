@@ -29,7 +29,7 @@ for test in "${IGNORE_TESTS[@]}"; do
 done
 
 # Ejecutar pytest
-python -m pytest watcher-backend/tests/ $IGNORE_ARGS "$@"
+python3 -m pytest watcher-backend/tests/ $IGNORE_ARGS "$@"
 
 echo ""
 echo -e "${GREEN}✅ Test run completed${NC}"

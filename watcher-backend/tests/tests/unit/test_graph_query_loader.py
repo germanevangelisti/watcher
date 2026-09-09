@@ -32,9 +32,15 @@ EXPECTED_CYPHER_QUERIES = {
 
 
 @pytest.fixture(autouse=True)
-def _clear():
+def _clear_and_patch_dirs():
+    """Clear cache and patch query dirs to source tree (pip install moves __file__)."""
     clear_cache()
-    yield
+    backend_root = Path(__file__).resolve().parents[3]
+    source_cypher_dir = backend_root / "graph" / "queries"
+    source_sql_dir = backend_root / "app" / "queries"
+    with patch("app.db.query_loader._CYPHER_QUERIES_DIR", source_cypher_dir), \
+         patch("app.db.query_loader._SQL_QUERIES_DIR", source_sql_dir):
+        yield
     clear_cache()
 
 

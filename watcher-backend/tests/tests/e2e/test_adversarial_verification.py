@@ -271,14 +271,17 @@ class TestVerificationAgent:
 
     @pytest.mark.anyio
     async def test_vcp_below_threshold_triggers_human_review(self):
-        """Low retrieval scores → VCP < 0.85 → requires_human_review=True."""
+        """Low retrieval scores + empty keyword results → requires_human_review=True."""
         from app.services.aiu_service import AIUService
         from agents.verification.agent import VerificationAgent
 
         aiu_svc = AIUService()
         aius = aiu_svc.decompose_acto(SAMPLE_ACTO)
 
-        retrieval = self._make_retrieval_mock(score=0.1)  # Below UNVERIFIABLE_THRESHOLD
+        retrieval = MagicMock()
+        low_result = _make_mock_search_result("texto irrelevante sin datos", score=0.1)
+        retrieval.hybrid_search = AsyncMock(return_value=[low_result])
+        retrieval.keyword_search = MagicMock(return_value=[])
         agent = VerificationAgent(retrieval_service=retrieval)
 
         result = await agent.verify_aius(aius, boletin_id=1)
@@ -399,8 +402,8 @@ class TestFullPipelineE2E:
         agent = VerificationAgent(retrieval_service=retrieval)
 
         total_vcp_scores = []
-        total_aiu_count = 0
         total_verified = 0
+        total_verifiable = 0
 
         # Simulate 5 boletines (same text, different boletin_id)
         for boletin_id in range(1, 6):
@@ -426,28 +429,30 @@ class TestFullPipelineE2E:
             # Fase III: Verification
             result = await agent.verify_aius(aius, boletin_id=boletin_id)
             total_vcp_scores.append(result.vcp_score)
-            total_aiu_count += result.total_aius
             total_verified += result.verified
+            total_verifiable += (result.total_aius - result.unverifiable)
 
-            # Per-boletin assertion
+            # Per-boletin assertion (VCP already excludes UNVERIFIABLE from denominator)
             assert result.vcp_score > 0.85, (
                 f"Boletin {boletin_id}: VCP={result.vcp_score:.3f} "
-                f"({result.verified}/{result.total_aius}) — debe ser > 0.85"
+                f"({result.verified}/{result.total_aius - result.unverifiable} verifiable) "
+                f"— debe ser > 0.85"
             )
 
-        # Global VCP assertion
-        global_vcp = total_verified / total_aiu_count if total_aiu_count > 0 else 0.0
+        # Global VCP: verified / verifiable (matching _calculate_vcp semantics)
+        global_vcp = total_verified / total_verifiable if total_verifiable > 0 else 1.0
         assert global_vcp > 0.85, (
-            f"VCP global={global_vcp:.3f} ({total_verified}/{total_aiu_count}) — debe ser > 0.85"
+            f"VCP global={global_vcp:.3f} ({total_verified}/{total_verifiable} verifiable) "
+            f"— debe ser > 0.85"
         )
 
         # Fase V: Record metrics
         from app.core.observability import record_vcp
         record_vcp(
             vcp_score=global_vcp,
-            total_aius=total_aiu_count,
+            total_aius=total_verifiable + (total_verified - total_verified),
             verified=total_verified,
-            unverifiable=total_aiu_count - total_verified,
+            unverifiable=total_verifiable - total_verified,
             contradicted=0,
         )
 
