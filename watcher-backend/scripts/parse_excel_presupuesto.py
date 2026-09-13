@@ -62,6 +62,24 @@ FILE_PATTERNS = {
 }
 
 
+# Expansión de abreviaturas, sólo sobre tokens completos.  Con `str.replace`
+# sin anclar, cualquier palabra que empezara con una abreviatura quedaba
+# corrompida: "PROVINCIA" → "PROVINCIALINCIA", "ADMINISTRATIVO" →
+# "ADMINISTRACIONINISTRATIVO", "INTEGRAL" → "INTEGENERAL".  Esos nombres se
+# escribían en `presupuesto_base` y después no matcheaban con los organismos
+# extraídos de los boletines.
+_ABBREVIATIONS = {
+    "MIN": "MINISTERIO",
+    "SEC": "SECRETARIA",
+    "DIR": "DIRECCION",
+    "GRAL": "GENERAL",
+    "ADM": "ADMINISTRACION",
+    "PROV": "PROVINCIAL",
+}
+
+_ABBREV_RE = re.compile(r"\b(" + "|".join(_ABBREVIATIONS) + r")\b")
+
+
 class OrganismoNormalizer:
     """Normaliza nombres de organismos para matching consistente"""
     
@@ -86,23 +104,10 @@ class OrganismoNormalizer:
         # Normalizar espacios
         org = re.sub(r'\s+', ' ', org)
         
-        # Abreviaturas comunes
-        replacements = {
-            'MIN ': 'MINISTERIO ',
-            'MIN.': 'MINISTERIO',
-            'SEC ': 'SECRETARIA ',
-            'SEC.': 'SECRETARIA',
-            'DIR ': 'DIRECCION ',
-            'DIR.': 'DIRECCION',
-            'GRAL': 'GENERAL',
-            'GRAL.': 'GENERAL',
-            'ADM': 'ADMINISTRACION',
-            'PROV': 'PROVINCIAL'
-        }
-        
-        for old, new in replacements.items():
-            org = org.replace(old, new)
-        
+        # Abreviaturas comunes (los puntos ya los quitó la limpieza anterior,
+        # así que "MIN." llega como "MIN" y matchea igual)
+        org = _ABBREV_RE.sub(lambda m: _ABBREVIATIONS[m.group(1)], org)
+
         # Guardar en mapping
         if organismo not in self.mapping:
             self.mapping[organismo] = org

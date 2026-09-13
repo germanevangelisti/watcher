@@ -21,6 +21,12 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Dict, List, Any
 
+# La consola de Windows usa cp1252 y este script imprime "→" y acentos, lo que
+# aborta la corrida con UnicodeEncodeError antes de parsear nada.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 # Backend on path for DB imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 

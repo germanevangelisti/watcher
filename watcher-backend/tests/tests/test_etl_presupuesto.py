@@ -41,6 +41,8 @@ from parse_pdf_presupuesto_2026 import (
     _words_to_rows,
 )
 
+from parse_excel_presupuesto import OrganismoNormalizer
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # etl_analisis_to_ejecucion — unit tests
@@ -243,6 +245,60 @@ class TestParseMonto:
 
     def test_non_numeric(self):
         assert _parse_monto("N/A") == 0.0
+
+
+class TestOrganismoNormalizer:
+    """Las abreviaturas sólo se expanden sobre tokens completos.
+
+    Los reemplazos sin anclar corrompían los nombres que van a
+    `presupuesto_base` ("PROVINCIA" → "PROVINCIALINCIA"), y eso rompía el match
+    contra los organismos extraídos de los boletines.
+    """
+
+    @pytest.fixture
+    def norm(self):
+        return OrganismoNormalizer()
+
+    @pytest.mark.parametrize(
+        "entrada",
+        [
+            "POLICIA DE LA PROVINCIA",
+            "PROVINCIA DE CORDOBA",
+            "DIRECCION PROVINCIAL DE VIALIDAD",
+            "SERVICIO ADMINISTRATIVO",
+            "ADMINISTRACION GENERAL",
+            "DESARROLLO INTEGRAL",
+            "MINISTERIO DE INFRAESTRUCTURA",
+            "SECRETARIA DE SALUD",
+        ],
+    )
+    def test_no_corrompe_palabras_largas(self, norm, entrada):
+        assert norm.normalize(entrada) == entrada
+
+    @pytest.mark.parametrize(
+        "entrada,esperado",
+        [
+            ("MIN DE SALUD", "MINISTERIO DE SALUD"),
+            ("SEC DE AMBIENTE", "SECRETARIA DE AMBIENTE"),
+            ("DIR DE RENTAS", "DIRECCION DE RENTAS"),
+            ("DIR GRAL DE RENTAS", "DIRECCION GENERAL DE RENTAS"),
+            ("ADM CENTRAL", "ADMINISTRACION CENTRAL"),
+            ("PROV DE CORDOBA", "PROVINCIAL DE CORDOBA"),
+        ],
+    )
+    def test_expande_abreviaturas_reales(self, norm, entrada, esperado):
+        assert norm.normalize(entrada) == esperado
+
+    def test_abreviatura_con_punto(self, norm):
+        # La limpieza de caracteres especiales quita el punto antes de expandir
+        assert norm.normalize("MIN. DE SALUD") == "MINISTERIO DE SALUD"
+
+    def test_uppercase_y_espacios(self, norm):
+        assert norm.normalize("  ministerio  de   salud ") == "MINISTERIO DE SALUD"
+
+    def test_vacio(self, norm):
+        assert norm.normalize("") == "DESCONOCIDO"
+        assert norm.normalize(None) == "DESCONOCIDO"
 
 
 class TestNormalizeFinFunDet:
