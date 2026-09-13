@@ -60,10 +60,59 @@ Services started:
 | `ALLOWED_ORIGINS` | Comma-separated CORS origins | `*` |
 | `MAX_UPLOAD_SIZE_MB` | Max PDF upload size | `50` |
 | `BOLETINES_DIR` | Path to PDF storage | `../boletines/` |
-| `LLM_PROVIDER` | `google` or `anthropic` | `google` |
-| `ANTHROPIC_API_KEY` | Anthropic API key (optional alternative) | — |
+| `LLM_PROVIDER` | `google`, `anthropic` o `ollama` (análisis de boletines usa `INTELLIGENCE_PROVIDER`) | `google` |
+| `HARDWARE_PROFILE` | `local` o `cloud`. Vacío: local en development, cloud en production | (auto) |
+| `INTELLIGENCE_PROVIDER` | `auto` \| `local` \| `google` \| `free` | `auto` |
+| `OLLAMA_BASE_URL` | Si está set y perfil local, auto usa LocalPro | (vacío) |
+| `OLLAMA_MODEL` | Modelo Ollama | `qwen2.5:14b` |
+| `EMBEDDING_PROVIDER` | `local` o `google` | local en perfil local |
+| `RERANK_STRATEGY` | `auto` \| `cross-encoder` \| `google` \| `noop` | `auto` |
+| `PIPELINE_WORKERS` | Concurrencia PDF. Vacío = nproc-2 | (auto) |
+| `LLM_MAX_CONCURRENT` | Tope de llamadas LLM simultáneas | `1` local / `4` cloud |
+
+Workstation local (no usar en GCE e2-medium). En PowerShell **no hay `make`**; usá Compose directo o el script:
+
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.local.yml up -d db neo4j
+# o: .\scripts\compose-local.ps1
+```
 
 ---
+
+## Workstation local (cooperledge)
+
+Prioriza CPU/GPU del host. Neo4j 8 GB **no** va en `docker-compose.yml` (GCE e2-medium ~4 GB).
+
+PowerShell (cooperledge / Windows):
+
+```powershell
+Copy-Item .env.example .env   # si todavía no existe
+.\scripts\start-backend-local.ps1   # SQLite + Ollama, sin Docker
+```
+
+Postgres/Neo4j vía Docker Desktop **requieren WSL2**. En cooperledge el hipervisor (VBS) ya corre, pero WSL no está instalado; por eso Docker muestra "Virtualization support not detected" (falso negativo de `VirtualizationFirmwareEnabled` con VBS activo).
+
+```powershell
+# PowerShell como Administrador, luego reiniciar:
+Set-ExecutionPolicy -Scope Process Bypass
+.\scripts\enable-wsl.ps1
+# Tras el reboot: abrir Docker Desktop y
+.\scripts\compose-local.ps1
+```
+
+Si tras el reboot Docker sigue igual: BIOS ASUS (Del/F2) → Advanced → CPU Configuration → Intel Virtualization Technology y VT-d = Enabled.
+
+Git Bash / Linux / macOS:
+
+```bash
+cp .env.example .env
+make compose-local
+make install-backend-local
+ollama pull qwen2.5:14b
+make start-backend
+```
+
+`GET /api/v1/health` incluye `hardware` (workers, CUDA, provider). Colección Chroma local: `watcher_documents_local` (no pisa Gemini 3072-d). Ver ADR-001.
 
 ## Local Development (without Docker)
 
@@ -71,7 +120,7 @@ Services started:
 
 ```bash
 cd watcher-backend
-uv sync --dev
+uv sync --extra dev --extra local
 uv run uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
 ```
 

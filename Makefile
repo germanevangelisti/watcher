@@ -1,4 +1,4 @@
-.PHONY: help install install-backend install-frontend install-frontend-legacy install-lab install-test start start-backend stop-backend start-frontend start-frontend-legacy test test-backend test-frontend test-unit test-integration test-e2e test-coverage test-fast test-pds test-dia test-kaa test-oex lint lint-backend lint-frontend build build-frontend clean
+.PHONY: help install install-backend install-frontend install-frontend-legacy install-lab install-test start start-backend stop-backend start-frontend start-frontend-legacy test test-backend test-frontend test-unit test-integration test-e2e test-coverage test-fast test-pds test-dia test-kaa test-oex lint lint-backend lint-frontend build build-frontend clean install-backend-local compose-local
 
 # Default target
 help:
@@ -9,6 +9,8 @@ help:
 	@echo "  make install              - Install all dependencies (backend + frontend + lab)"
 	@echo "  make install-backend      - Install backend Python dependencies"
 	@echo "  make install-backend-fast - Install backend deps in phases (more reliable)"
+	@echo "  make install-backend-ai   - Install Gemini/Anthropic extras"
+	@echo "  make install-backend-local - Install sentence-transformers + torch (GPU local)"
 	@echo "  make install-frontend     - Install frontend npm dependencies"
 	@echo "  make install-lab          - Install data science lab dependencies"
 	@echo "  make install-test         - Install test dependencies"
@@ -18,6 +20,7 @@ help:
 	@echo "  make start-backend     - Start backend server only"
 	@echo "  make stop-backend      - Stop backend server"
 	@echo "  make start-frontend    - Start frontend dev server"
+	@echo "  make compose-local     - Postgres + Neo4j with workstation RAM (cooperledge)"
 	@echo ""
 	@echo "Quality Commands:"
 	@echo "  make test              - Run all tests"
@@ -60,6 +63,19 @@ install-backend-ai:
 		cd watcher-backend && pip install --timeout 100 ".[ai]"; \
 	fi
 	@echo "✅ Backend AI dependencies installed"
+
+install-backend-local:
+	@echo "📦 Installing local GPU extras (sentence-transformers + torch)..."
+	@if command -v uv >/dev/null 2>&1; then \
+		cd watcher-backend && uv pip install --system ".[local]"; \
+	else \
+		cd watcher-backend && pip install --timeout 100 ".[local]"; \
+	fi
+	@echo "✅ Local embedding/rerank extras installed"
+
+compose-local:
+	@echo "🐳 Starting Postgres + Neo4j with workstation memory (cooperledge)..."
+	docker compose -f docker-compose.yml -f docker-compose.local.yml up -d db neo4j
 
 install-backend-dev:
 	@echo "📦 Installing backend dev dependencies..."

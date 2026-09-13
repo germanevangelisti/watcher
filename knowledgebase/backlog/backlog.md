@@ -2,7 +2,16 @@
 
 Ordenado por valor de negocio. Estatus: `idea` | `refinado` | `en progreso` | `hecho`.
 
-> **Sincronizado con el código el 2026-06-26** a partir del historial de git (hasta `da098b7`), `docs/changelog.md` (v2.0.0) y la auditoría del backend. El núcleo de las Épicas 0–2 y 4–6 está implementado; ver notas por historia.
+> **Sincronizado con el código el 2026-09-12** (rama `feature/H.1-pipeline-hardware-local`). El núcleo de las Épicas 0–6 está implementado; H.1 prioriza runtime local.
+
+---
+
+## H.1 — Pipeline en hardware local
+> Hecho · 8 pts · [detalle](H.1-pipeline-hardware-local.md)
+
+| # | Historia | Criterio de aceptación | Estado |
+|---|---|---|---|
+| H.1 | Pipeline en workstation local (cooperledge) | Workers nproc-2, Compose local 8 GB Neo4j, rerank/embed/LLM locales, tests | ✅ hecho |
 
 ---
 
@@ -108,7 +117,7 @@ Ordenado por valor de negocio. Estatus: `idea` | `refinado` | `en progreso` | `h
 ---
 
 ## Épica P — Presupuesto y Ejecución 2026 (fuera del plan original)
-> Hecho
+> P.1–P.6 hecho · P.7 idea (ledger no alimentado)
 
 | # | Historia | Criterio de aceptación | Estado |
 |---|---|---|---|
@@ -118,6 +127,9 @@ Ordenado por valor de negocio. Estatus: `idea` | `refinado` | `en progreso` | `h
 | P.4 | Detección de duplicados en ejecución | Columna `is_duplicate` + lógica en ETL | ✅ hecho |
 | P.5 | API `/presupuesto/ejecucion/*` | Endpoints con filtrado y agregación | ✅ hecho |
 | P.6 | Frontend "Ejecución Presupuestaria" | Página con métricas de deduplicación | ✅ hecho |
+| P.7 | Gasto acumulado vs presupuesto (ledger vivo) | `is_gasto_publico` + ETL al cerrar pipeline + `% monto_acumulado/monto_vigente` | 💡 idea |
+
+Corte empírico 2026-09-13: 5.667 actos, $458 mil M brutos; ledger vacío. Ver [gasto-publico-actos.md](../current/gasto-publico-actos.md), [P.7](P.7-gasto-acumulado-presupuesto.md) y [next-session.md](../current/next-session.md).
 
 ---
 

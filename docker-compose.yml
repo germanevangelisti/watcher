@@ -22,8 +22,8 @@ services:
       NEO4J_AUTH: neo4j/${NEO4J_PASSWORD:-watcher_neo4j_2026}
       NEO4J_PLUGINS: '["apoc"]'
       NEO4J_dbms_security_procedures_unrestricted: apoc.*
-      NEO4J_server_memory_heap_initial__size: 512m
-      NEO4J_server_memory_heap_max__size: 1G
+      NEO4J_server_memory_heap_initial__size: ${NEO4J_HEAP_INITIAL:-512m}
+      NEO4J_server_memory_heap_max__size: ${NEO4J_HEAP_MAX:-1G}
     volumes:
       - neo4jdata:/data
       - neo4jlogs:/logs

@@ -8,120 +8,27 @@ FreeProvider (rule-based) como fallback cuando no hay API key.
 import asyncio
 import json
 import logging
-import re
-from typing import Any, Dict, List, Optional, cast
-import google.generativeai as genai
 import os
+import re
 from datetime import datetime
+from typing import Any, cast
 
+try:
+    import google.generativeai as genai
+except ImportError:
+    genai = None  # type: ignore[assignment]
+
+from app.services.analysis_schema import (
+    ANALYSIS_SYSTEM_PROMPT,
+    FRAGMENT_ANALYSIS_SCHEMA,
+)
+from app.services.intelligence_provider import (
+    IntelligenceProvider,
+    get_default_provider,
+)
 from app.services.reference_firewall import ReferenceFirewallService
-from app.services.intelligence_provider import get_default_provider, IntelligenceProvider
 
 logger = logging.getLogger(__name__)
-
-# JSON Schema for Gemini structured output
-FRAGMENT_ANALYSIS_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "actos": {
-            "type": "array",
-            "description": "Lista de actos administrativos identificados en el fragmento",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "tipo_acto": {
-                        "type": "string",
-                        "enum": ["decreto", "resolucion", "licitacion", "designacion", "subsidio", "transferencia", "otro"],
-                        "description": "Tipo de acto administrativo"
-                    },
-                    "numero": {
-                        "type": "string",
-                        "description": "Numero o codigo del acto tal como aparece en el documento. Ej: '2025/RSIHG-00000737', 'Resolución N° 1813', 'Decreto 456/2025'"
-                    },
-                    "organismo": {
-                        "type": "string",
-                        "description": "Organismo emisor del acto"
-                    },
-                    "beneficiarios": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "description": "Personas, empresas o entidades beneficiarias"
-                    },
-                    "montos": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "description": "Montos mencionados en el acto, tal como aparecen en el texto"
-                    },
-                    "monto_total_numerico": {
-                        "type": "number",
-                        "description": "Suma total en pesos argentinos (valor numerico) de todos los montos del acto. 0 si no hay montos. Ej: para 'pesos 3.010.523.733,29' devolver 3010523733.29"
-                    },
-                    "descripcion": {
-                        "type": "string",
-                        "description": "Resumen breve del acto (max 200 caracteres)"
-                    },
-                    "texto_original": {
-                        "type": "string",
-                        "description": "Cita textual de las primeras 2-3 lineas del acto tal como aparecen en el documento original. Maximo 300 caracteres. Debe ser unica para cada acto."
-                    },
-                    "riesgo": {
-                        "type": "string",
-                        "enum": ["alto", "medio", "bajo", "informativo"],
-                        "description": "Nivel de riesgo segun las reglas de evaluacion del prompt"
-                    },
-                    "motivo_riesgo": {
-                        "type": "string",
-                        "description": "Justificacion del nivel de riesgo asignado"
-                    },
-                    "accion_sugerida": {
-                        "type": "string",
-                        "description": "Accion recomendada para seguimiento"
-                    },
-                    "fecha_acto": {
-                        "type": "string",
-                        "description": "Fecha del acto tal como aparece en el encabezado. Ej: '15 de febrero de 2026', '2026-02-15'"
-                    },
-                    "expediente": {
-                        "type": "string",
-                        "description": "Numero de expediente que origina el acto. Ej: 'EX-2026-00001234-GCBA-MHGC', 'Expediente N° 1234/2026'"
-                    },
-                    "referencias_normativas": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "description": "Referencias del Visto/Considerando: leyes, decretos previos, resoluciones, contratos. Ej: ['Ley N° 2095', 'Decreto 114/GCBA/2016', 'Resolucion 4567/2025']"
-                    },
-                    "fechas_clave": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "description": "Fechas operativas del proceso: apertura de ofertas, vigencia, adjudicacion. Ej: ['apertura ofertas: 15/01/2026 10:00hs', 'vigencia desde: 01/02/2026']"
-                    },
-                    "relacion_principal": {
-                        "type": "string",
-                        "description": "Relacion principal del acto en formato 'SUJETO_A [verbo] SUJETO_B [complemento]'. Ej: 'Ministerio de Economia adjudica licitacion 001/2026 a TECH SRL por $3.200.000'"
-                    },
-                    "firmante": {
-                        "type": "string",
-                        "description": "Autoridad que firma el acto. Ej: 'Ing. Roberto Garcia, Ministro de Obras Publicas de Cordoba'"
-                    },
-                    "imputacion_presupuestaria": {
-                        "type": "string",
-                        "description": "Partida presupuestaria imputada. Ej: 'Programa 14 - Actividad 3 - Inciso 4 - ejercicio 2026'"
-                    },
-                    "presupuesto_oficial": {
-                        "type": "number",
-                        "description": "Presupuesto oficial declarado en licitaciones/concursos. 0 si no aplica. Ej: para 'pesos 3.010.523.733,29' devolver 3010523733.29"
-                    }
-                },
-                "required": ["tipo_acto", "organismo", "descripcion", "riesgo", "monto_total_numerico", "texto_original"]
-            }
-        },
-        "resumen_general": {
-            "type": "string",
-            "description": "Resumen general del fragmento analizado (1-2 oraciones)"
-        }
-    },
-    "required": ["actos", "resumen_general"]
-}
 
 
 class WatcherService:
@@ -131,9 +38,9 @@ class WatcherService:
         """Inicializa el servicio con configuración optimizada."""
         api_key = os.getenv('GOOGLE_API_KEY')
         
-        # Inicializar cliente solo si hay API key, sino usar fallback
+        # Inicializar cliente solo si hay API key y el SDK, sino usar fallback
         self.model = None
-        if api_key:
+        if api_key and genai is not None:
             try:
                 # genai.configure() is called once at app startup in main.py
                 self.model = genai.GenerativeModel("gemini-2.0-flash")
@@ -141,6 +48,11 @@ class WatcherService:
             except Exception as e:
                 logger.error(f"Error inicializando Gemini: {e}")
                 self.model = None
+        elif api_key:
+            logger.warning(
+                "GOOGLE_API_KEY set but google-generativeai is not installed; "
+                "using LocalPro/FreeProvider. Install extra [ai] for Gemini."
+            )
         else:
             logger.warning(
                 "GOOGLE_API_KEY no encontrada - el servicio funcionará con respuestas fallback. "
@@ -154,73 +66,19 @@ class WatcherService:
         self.requests_per_minute = 60
         
         # Control de rate limiting
-        self.request_timestamps: List[datetime] = []
+        self.request_timestamps: list[datetime] = []
         self.tokens_used_this_minute = 0
         self.last_minute_reset = datetime.now()
 
         # Reference Firewall (Fase IV) — set externally via set_firewall()
-        self._firewall: Optional[ReferenceFirewallService] = None
+        self._firewall: ReferenceFirewallService | None = None
 
         # AIU Decomposition Service (Fase II) — set externally via set_aiu_service()
-        self._aiu_service: Optional[Any] = None
+        self._aiu_service: Any | None = None
 
-        # Intelligence tier provider — FreeProvider when no API key, ProProvider otherwise
+        # Intelligence tier: local (Ollama) | pro (Gemini) | free (rules)
         self._provider: IntelligenceProvider = get_default_provider(api_key)
-
-        # System prompt v3: multi-acto, calibración de riesgo por montos, texto_original
-        self.system_prompt = """Eres un analista experto en gobierno abierto y transparencia del sector público argentino.
-Trabajas para Watcher, una plataforma de monitoreo ciudadano que mapea el gasto público y detecta irregularidades.
-
-Tu tarea es analizar fragmentos de boletines oficiales y extraer TODOS los actos administrativos que encuentres.
-
-Para CADA acto identificado, debes:
-1. Clasificar su tipo (decreto, resolución, licitación, designación, subsidio, transferencia, otro)
-2. Extraer el número/código del acto exactamente como aparece (ej: "2025/RSIHG-00000737", "Decreto 456/2025")
-3. Identificar el organismo emisor
-4. Listar beneficiarios (personas, empresas, entidades)
-5. Extraer TODOS los montos mencionados como texto Y calcular el monto_total_numerico en pesos
-6. Citar el texto_original: las primeras 2-3 líneas del acto tal como aparecen en el documento (max 300 chars, debe ser UNICA para cada acto)
-7. Resumir brevemente el contenido
-8. Extraer en fecha_acto la fecha del encabezado del acto (ej: "15 de febrero de 2026")
-9. Si el acto es una licitación o concurso, extraer en presupuesto_oficial el monto estimado declarado, y en fechas_clave la fecha/hora de apertura de ofertas y la duración del contrato
-10. Listar en referencias_normativas TODAS las citas del Visto: leyes (ej: "Ley N° 2095"), decretos anteriores (ej: "Decreto 114/GCBA/2016"), resoluciones previas, contratos referenciados
-11. Extraer en expediente el número de expediente que origina el acto (ej: "EX-2026-00001234-GCBA-MHGC")
-12. Capturar en firmante la autoridad que suscribe el acto
-13. Formular relacion_principal como una sola oración que conecte organismo → acción → beneficiario → monto (con todos los elementos disponibles)
-14. Capturar en imputacion_presupuestaria la partida presupuestaria citada (ej: "Programa 14 - Actividad 3 - Inciso 4")
-
-EVALUACION DE RIESGO - Reglas obligatorias:
-
-Nivel "informativo": actos sin montos significativos Y sin indicadores (designaciones estándar, edictos, notificaciones, aprobaciones de planes).
-
-Nivel "bajo": OBLIGATORIO cuando se cumple AL MENOS UNA condición:
-- Monto total >= $100.000.000 (cien millones de pesos) aunque el procedimiento sea normal
-- Licitaciones públicas con presupuesto oficial declarado
-- Adjudicaciones regulares
-
-Nivel "medio": OBLIGATORIO cuando se cumple AL MENOS UNA condición:
-- Monto total >= $1.000.000.000 (mil millones de pesos)
-- Contratación directa con monto >= $50.000.000
-- Plazos inusualmente cortos para la magnitud del monto
-- Falta de detalle en la descripción del objeto de contratación respecto al monto
-- Modificaciones de contrato que incrementan montos significativamente
-
-Nivel "alto": cuando hay señales claras de posible irregularidad:
-- Contratación directa con montos superiores a $500.000.000 sin justificación de urgencia
-- Fraccionamiento aparente (múltiples contratos similares para evitar licitación)
-- Conflicto de intereses identificable
-- Sobrecostos evidentes respecto a valores de mercado
-
-EJEMPLOS de calibración:
-- Licitación pública con presupuesto $3.000.000.000 -> "bajo" (procedimiento correcto pero monto alto, merece seguimiento)
-- Contratación directa por $200.000.000 -> "medio" (monto alto sin licitación competitiva)
-- Designación de cargo sin monto -> "informativo"
-- Edicto de notificación -> "informativo"
-- Subasta electrónica por $19.000.000 -> "informativo" (monto bajo, procedimiento competitivo)
-- Licitación pública con presupuesto $198.000.000 -> "bajo" (supera umbral de $100M)
-
-Siempre incluye motivo_riesgo y accion_sugerida, incluso para riesgo "bajo" (ej: "Verificar ejecución del contrato").
-"""
+        self.system_prompt = ANALYSIS_SYSTEM_PROMPT
 
     def set_firewall(self, firewall_service: "ReferenceFirewallService") -> None:
         """
@@ -246,7 +104,7 @@ Siempre incluye motivo_riesgo y accion_sugerida, incluso para riesgo "bajo" (ej:
         # Estimación: 1 token ≈ 3.5 caracteres en español
         return int(len(text) / 3.5)
 
-    def split_content_by_tokens(self, content: str, max_tokens: Optional[int] = None) -> List[str]:
+    def split_content_by_tokens(self, content: str, max_tokens: int | None = None) -> list[str]:
         """Divide el contenido en fragmentos que no excedan el límite de tokens."""
         if max_tokens is None:
             max_tokens = self.max_tokens_per_request
@@ -258,7 +116,7 @@ Siempre incluye motivo_riesgo y accion_sugerida, incluso para riesgo "bajo" (ej:
         
         # Dividir por párrafos primero
         paragraphs = content.split('\n\n')
-        fragments: List[str] = []
+        fragments: list[str] = []
         current_fragment = ""
         current_tokens = 0
         
@@ -332,7 +190,7 @@ Siempre incluye motivo_riesgo y accion_sugerida, incluso para riesgo "bajo" (ej:
         "5": "Normativas Municipales",
     }
 
-    def _build_contextual_prompt(self, content: str, metadata: Dict) -> str:
+    def _build_contextual_prompt(self, content: str, metadata: dict) -> str:
         """Construye el prompt con contexto de jurisdicción, sección y tipo de boletín."""
         context_parts = []
         
@@ -366,13 +224,17 @@ Siempre incluye motivo_riesgo y accion_sugerida, incluso para riesgo "bajo" (ej:
 {context_header}Contenido a analizar:
 {content}"""
 
-    async def analyze_fragment(self, content: str, metadata: Dict) -> Dict:
+    async def analyze_fragment(self, content: str, metadata: dict) -> dict:
         """
         Analiza un fragmento individual de contenido usando structured output.
         
         Returns:
             Dict con formato FragmentAnalysis: {"actos": [...], "resumen_general": "..."}
         """
+        # LocalPro takes priority even if a Gemini client exists (hardware-local).
+        if getattr(self._provider, "tier", None) == "local":
+            return await self._provider.analyze_fragment(content, metadata)
+
         # Delegar a FreeProvider cuando no hay modelo Gemini disponible
         if self.model is None:
             logger.warning(
@@ -388,7 +250,7 @@ Siempre incluye motivo_riesgo y accion_sugerida, incluso para riesgo "bajo" (ej:
         _GEMINI_CALL_TIMEOUT = 120  # seconds before declaring a hung Gemini call dead
         _MAX_FRAGMENT_RETRIES = 3   # attempts per fragment before giving up
 
-        def _empty_result(error_msg: str) -> Dict:
+        def _empty_result(error_msg: str) -> dict:
             return {
                 "actos": [],
                 "resumen_general": f"Error en análisis: {error_msg[:100]}",
@@ -475,7 +337,7 @@ Siempre incluye motivo_riesgo y accion_sugerida, incluso para riesgo "bajo" (ej:
 
                 return result
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 logger.warning(
                     f"Gemini timeout en fragmento {frag_num} "
                     f"(intento {attempt + 1}/{_MAX_FRAGMENT_RETRIES}, {_GEMINI_CALL_TIMEOUT}s)"
@@ -508,7 +370,7 @@ Siempre incluye motivo_riesgo y accion_sugerida, incluso para riesgo "bajo" (ej:
 
         return _empty_result("Max retries exceeded")
 
-    async def analyze_content(self, content: str, metadata: Dict) -> List[Dict]:
+    async def analyze_content(self, content: str, metadata: dict) -> list[dict]:
         """
         Analiza contenido dividiéndolo en fragmentos si es necesario.
         
@@ -518,14 +380,35 @@ Siempre incluye motivo_riesgo y accion_sugerida, incluso para riesgo "bajo" (ej:
         """
         try:
             total_tokens = self.count_tokens_estimate(content)
-            
-            if total_tokens <= self.max_tokens_per_request:
+            token_budget = self.max_tokens_per_request
+            if getattr(self._provider, "tier", None) == "local":
+                from app.core.hardware import ollama_num_ctx
+
+                token_budget = max(512, ollama_num_ctx() - 1536)
+
+            if total_tokens <= token_budget:
                 fragments = [content]
             else:
-                fragments = self.split_content_by_tokens(content)
-                logger.info(f"Dividiendo contenido en {len(fragments)} fragmentos (total: {total_tokens} tokens)")
+                fragments = self.split_content_by_tokens(content, max_tokens=token_budget)
+                logger.info(
+                    "Dividiendo contenido en %s fragmentos (total: %s tokens)",
+                    len(fragments),
+                    total_tokens,
+                )
+
+            from app.core.fragment_priority import select_prioritized
+            from app.core.hardware import max_analysis_fragments
+
+            cap = max_analysis_fragments()
+            if cap and len(fragments) > cap:
+                logger.info(
+                    "Analysis fragment cap %s/%s (priority: decretos/licitaciones over edictos)",
+                    cap,
+                    len(fragments),
+                )
+                fragments = select_prioritized(fragments, cap, lambda t: t)
             
-            all_actos: List[Dict] = []
+            all_actos: list[dict] = []
             
             for i, fragment in enumerate(fragments):
                 fragment_metadata = metadata.copy()
@@ -546,7 +429,7 @@ Siempre incluye motivo_riesgo y accion_sugerida, incluso para riesgo "bajo" (ej:
                     all_actos.append(acto)
                 
                 # Small pause between fragments
-                if i < len(fragments) - 1:
+                if i < len(fragments) - 1 and getattr(self._provider, "tier", None) != "local":
                     await asyncio.sleep(0.5)
             
             logger.info(f"Análisis completado: {len(all_actos)} actos extraídos de {len(fragments)} fragmentos")

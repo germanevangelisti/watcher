@@ -22,7 +22,9 @@
 
 - [Visión del producto](vision/product-vision.md)
 - [Estado actual](current/status.md)
+- [Próxima sesión](current/next-session.md)
 - [Backlog](backlog/)
+- [P.7 Gasto vs presupuesto](backlog/P.7-gasto-acumulado-presupuesto.md)
 - [Arquitectura](architecture/overview.md)
 - [DoD](workflows/definition-of-done.md)
 - [DoR](workflows/definition-of-ready.md)

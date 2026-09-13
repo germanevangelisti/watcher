@@ -36,8 +36,11 @@ def test_embedding_service_init_defaults():
     """Test EmbeddingService with default parameters."""
     service = EmbeddingService()
     
-    assert service.collection_name == "watcher_documents"
     assert service.embedding_provider in ["google", "local"]
+    if service.embedding_provider == "local":
+        assert service.collection_name == "watcher_documents_local"
+    else:
+        assert service.collection_name == "watcher_documents"
 
 
 # ============================================================================
@@ -383,3 +386,16 @@ def test_reset_collection(tmp_path):
     # Collection should exist but be empty
     assert service.collection is not None
     assert service.collection.count() == 0
+
+
+@pytest.mark.asyncio
+async def test_generate_embedding_local_uses_embedding_fn(tmp_path):
+    service = EmbeddingService(
+        persist_directory=str(tmp_path / "chromadb"),
+        collection_name="test_local_fn",
+        embedding_provider="google",
+    )
+    service.embedding_provider = "local"
+    service.embedding_fn = lambda texts: [[0.1, 0.2, 0.3]]
+    vector = await service.generate_embedding("hola mundo")
+    assert vector == [0.1, 0.2, 0.3]
