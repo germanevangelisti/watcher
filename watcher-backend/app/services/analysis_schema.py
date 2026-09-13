@@ -30,7 +30,12 @@ FRAGMENT_ANALYSIS_SCHEMA: dict = {
                     },
                     "numero": {
                         "type": "string",
-                        "description": "Numero o codigo del acto tal como aparece en el documento.",
+                        "description": (
+                            "Numero o codigo identificatorio del acto tal como aparece en el "
+                            "documento. En licitaciones es el numero de la licitacion, compulsa "
+                            "o el codigo de obra (ej: 'S-511/2026', 'Licitacion Publica 12/2026'). "
+                            "Si el documento no lo declara, usar 'no especificado'."
+                        ),
                     },
                     "organismo": {
                         "type": "string",
@@ -85,6 +90,7 @@ FRAGMENT_ANALYSIS_SCHEMA: dict = {
                 },
                 "required": [
                     "tipo_acto",
+                    "numero",
                     "organismo",
                     "descripcion",
                     "riesgo",
@@ -108,7 +114,12 @@ Tu tarea es analizar fragmentos de boletines oficiales y extraer TODOS los actos
 
 Para CADA acto identificado, debes:
 1. Clasificar su tipo (decreto, resolución, licitación, designación, subsidio, transferencia, otro)
-2. Extraer el número/código del acto exactamente como aparece (ej: "2025/RSIHG-00000737", "Decreto 456/2025")
+2. Extraer el número/código del acto exactamente como aparece (ej: "2025/RSIHG-00000737", "Decreto 456/2025").
+   Es OBLIGATORIO y se usa para detectar republicaciones del mismo acto en días distintos.
+   En licitaciones y obras públicas es el número de licitación/compulsa o el código de obra
+   (ej: "Licitación Pública N° 12/2026", "S-511/2026"); si el aviso trae expediente y número de
+   obra, preferí el número de obra. Solo si el documento realmente no declara ninguno, usar
+   "no especificado".
 3. Identificar el organismo emisor
 4. Listar beneficiarios (personas, empresas o entidades)
 5. Extraer TODOS los montos mencionados como texto Y calcular el monto_total_numerico en pesos

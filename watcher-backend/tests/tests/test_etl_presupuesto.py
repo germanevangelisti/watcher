@@ -420,9 +420,12 @@ def _setup_test_db(path: str):
         );
 
         -- seed data
-        INSERT INTO boletines VALUES (1, '20260201', 'b1.pdf', 'S1', 'completed', 'provincial', 'downloaded');
-        INSERT INTO boletines VALUES (2, '20260215', 'b2.pdf', 'S4', 'completed', 'provincial', 'downloaded');
-        INSERT INTO boletines VALUES (3, '20260202', 'b3.pdf', 'S1', 'completed', 'provincial', 'downloaded');
+        INSERT INTO boletines VALUES (1, '20260201', 'b1.pdf', '4', 'completed', 'provincial', 'downloaded');
+        INSERT INTO boletines VALUES (2, '20260215', 'b2.pdf', '5', 'completed', 'provincial', 'downloaded');
+        INSERT INTO boletines VALUES (3, '20260202', 'b3.pdf', '4', 'completed', 'provincial', 'downloaded');
+        INSERT INTO boletines VALUES (4, '20260203', 'b4.pdf', '2', 'completed', 'provincial', 'downloaded');
+        INSERT INTO boletines VALUES (5, '20260204', 'b5.pdf', '3', 'completed', 'provincial', 'downloaded');
+        INSERT INTO boletines VALUES (6, '20260205', 'b6.pdf', '1', 'completed', 'provincial', 'downloaded');
 
         INSERT INTO presupuesto_base VALUES (
             1, 2026, 'MINISTERIO DE SEGURIDAD', '10 - Programa Policia', NULL,
@@ -432,18 +435,28 @@ def _setup_test_db(path: str):
 
         INSERT INTO analisis VALUES
             (1, 1, 'licitacion', 'RES 001', 'MINISTERIO DE SEGURIDAD',
-             'Compra de patrulleros', 'frag1', 5000000.0, 'gasto', 'bajo',
-             '["Empresa ABC"]', NULL, NULL),
+             'Licitacion publica para compra de patrulleros', 'frag1', 5000000.0,
+             'gasto', 'bajo', '["Empresa ABC"]', NULL, NULL),
             (2, 2, 'subsidio', 'DEC 002', 'MUNICIPALIDAD DE CORDOBA',
              'Subsidio transporte', 'frag2', 1000000.0, 'subsidio', 'medio',
              NULL, 'Municipalidad Córdoba', 'Monto elevado'),
             (3, 1, 'resolucion', 'RES 003', NULL,
-             'Acto sin organismo', 'frag3', 2000000.0, 'otro', 'informativo',
-             NULL, NULL, NULL),
+             'Orden de pago por servicios de limpieza', 'frag3', 2000000.0,
+             'otro', 'informativo', NULL, NULL, NULL),
             -- duplicate of analisis_id=1: same org + acto + monto, published day after
             (4, 3, 'licitacion', 'RES 001', 'MINISTERIO DE SEGURIDAD',
-             'Compra de patrulleros (republica)', 'frag4', 5000000.0, 'gasto', 'bajo',
-             '["Empresa ABC"]', NULL, NULL);
+             'Licitacion publica para compra de patrulleros (republica)', 'frag4',
+             5000000.0, 'gasto', 'bajo', '["Empresa ABC"]', NULL, NULL),
+            -- P.7.1 exclusions: large montos that are not public spending
+            (5, 4, 'otro', 'EXP 900', 'JUZGADO CIVIL',
+             'Remate judicial de inmueble', 'frag5', 13500000000.0, 'otro', 'bajo',
+             NULL, NULL, NULL),
+            (6, 5, 'otro', 'ACTA 5', 'EL AGUANTE SA',
+             'Aumento de capital social', 'frag6', 8000000000.0, 'otro', 'bajo',
+             NULL, NULL, NULL),
+            (7, 6, 'decreto', 'DEC 700', 'MINISTERIO DE SEGURIDAD',
+             'Compensacion de partidas del ejercicio', 'frag7', 5964000000.0,
+             'otro', 'bajo', NULL, NULL, NULL);
     """)
     conn.commit()
     conn.close()
@@ -584,9 +597,61 @@ class TestETLIntegration:
 
     def test_total_rows_includes_duplicates(self):
         run_etl(dry_run=False)
-        # All 4 analisis rows (including the duplicate) should be stored
+        # All 4 gasto rows (including the duplicate) should be stored
         rows = self._query("SELECT COUNT(*) as n FROM ejecucion_presupuestaria")
         assert rows[0]["n"] == 4
+
+    def test_non_gasto_actos_never_reach_the_ledger(self):
+        """P.7.1: remate, capital social y compensación de partidas quedan fuera."""
+        run_etl(dry_run=False)
+        rows = self._query("SELECT organismo FROM ejecucion_presupuestaria")
+        organismos = {r["organismo"] for r in rows}
+        assert "JUZGADO CIVIL" not in organismos
+        assert "EL AGUANTE SA" not in organismos
+        # $27,4 mil M de contaminación excluidos del acumulado
+        total = self._query(
+            "SELECT COALESCE(SUM(monto), 0) AS s FROM ejecucion_presupuestaria "
+            "WHERE is_duplicate = 0"
+        )
+        assert total[0]["s"] == 8_000_000.0
+
+    def test_classification_is_written_back_to_analisis(self):
+        run_etl(dry_run=False)
+        rows = self._query(
+            "SELECT id, is_gasto_publico, etapa_gasto, jurisdiccion_gasto "
+            "FROM analisis ORDER BY id"
+        )
+        by_id = {r["id"]: r for r in rows}
+        assert by_id[1]["etapa_gasto"] == "llamado"
+        assert by_id[1]["jurisdiccion_gasto"] == "provincial"
+        assert by_id[2]["etapa_gasto"] == "pago"
+        assert by_id[2]["jurisdiccion_gasto"] == "municipal"
+        assert by_id[5]["is_gasto_publico"] == 0
+        assert by_id[6]["is_gasto_publico"] == 0
+        assert by_id[7]["etapa_gasto"] == "modificacion"
+        assert by_id[7]["is_gasto_publico"] == 0
+
+    def test_ledger_rows_carry_etapa_and_jurisdiccion(self):
+        """P.7.4 necesita separar compromiso de ejecución sin volver a analisis."""
+        run_etl(dry_run=False)
+        rows = self._query(
+            "SELECT etapa_gasto, jurisdiccion, analisis_id FROM ejecucion_presupuestaria "
+            "WHERE is_duplicate = 0 ORDER BY analisis_id"
+        )
+        # analisis_id 1 = licitación provincial, 2 = subsidio municipal,
+        # 3 = orden de pago sin organismo
+        assert [r["etapa_gasto"] for r in rows] == ["llamado", "pago", "pago"]
+        assert [r["jurisdiccion"] for r in rows] == [
+            "provincial",
+            "municipal",
+            "provincial",
+        ]
+        assert all(r["analisis_id"] is not None for r in rows)
+
+    def test_dry_run_does_not_write_classification(self):
+        run_etl(dry_run=True)
+        rows = self._query("SELECT is_gasto_publico FROM analisis")
+        assert all(r["is_gasto_publico"] is None for r in rows)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

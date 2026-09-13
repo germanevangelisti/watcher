@@ -118,25 +118,42 @@ async def _create_pg_fts_infrastructure(conn):
     """))
 
 
-async def _ensure_sqlite_columns(conn) -> None:
-    """
-    Idempotent SQLite column migrations — runs on every startup, safe to re-run.
-    SQLite does not support IF NOT EXISTS in ALTER TABLE, so we check PRAGMA first.
-    """
-    result = await conn.execute(text("PRAGMA table_info(analisis)"))
-    existing = {row[1] for row in result.fetchall()}
-
-    new_cols = [
+_SQLITE_ADDED_COLUMNS: dict[str, list[tuple[str, str]]] = {
+    "analisis": [
         ("aiu_summary_json", "TEXT"),
         ("firewall_score", "REAL"),
         ("transparency_score", "REAL"),
         ("red_flags_json", "TEXT"),
         ("num_red_flags", "INTEGER"),
-    ]
-    for col_name, col_type in new_cols:
-        if col_name not in existing:
-            await conn.execute(text(f"ALTER TABLE analisis ADD COLUMN {col_name} {col_type}"))
-            logger.info(f"SQLite migration: added analisis.{col_name}")
+        ("is_gasto_publico", "INTEGER"),
+        ("etapa_gasto", "TEXT"),
+        ("jurisdiccion_gasto", "TEXT"),
+    ],
+    "ejecucion_presupuestaria": [
+        ("is_duplicate", "INTEGER NOT NULL DEFAULT 0"),
+        ("analisis_id", "INTEGER"),
+        ("etapa_gasto", "TEXT"),
+        ("jurisdiccion", "TEXT"),
+    ],
+}
+
+
+async def _ensure_sqlite_columns(conn) -> None:
+    """
+    Idempotent SQLite column migrations — runs on every startup, safe to re-run.
+    SQLite does not support IF NOT EXISTS in ALTER TABLE, so we check PRAGMA first.
+    """
+    for table, columns in _SQLITE_ADDED_COLUMNS.items():
+        result = await conn.execute(text(f"PRAGMA table_info({table})"))
+        existing = {row[1] for row in result.fetchall()}
+        if not existing:
+            continue  # table not created yet; create_all will build it complete
+        for col_name, col_type in columns:
+            if col_name not in existing:
+                await conn.execute(
+                    text(f"ALTER TABLE {table} ADD COLUMN {col_name} {col_type}")
+                )
+                logger.info(f"SQLite migration: added {table}.{col_name}")
 
 
 async def init_db():

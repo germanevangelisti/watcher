@@ -117,7 +117,7 @@ Ordenado por valor de negocio. Estatus: `idea` | `refinado` | `en progreso` | `h
 ---
 
 ## Épica P — Presupuesto y Ejecución 2026 (fuera del plan original)
-> P.1–P.6 hecho · P.7 idea (ledger no alimentado)
+> P.1–P.6 hecho · P.7.1 y P.7.2 hechos · P.7.3 y P.7.4 pendientes
 
 | # | Historia | Criterio de aceptación | Estado |
 |---|---|---|---|
@@ -127,9 +127,12 @@ Ordenado por valor de negocio. Estatus: `idea` | `refinado` | `en progreso` | `h
 | P.4 | Detección de duplicados en ejecución | Columna `is_duplicate` + lógica en ETL | ✅ hecho |
 | P.5 | API `/presupuesto/ejecucion/*` | Endpoints con filtrado y agregación | ✅ hecho |
 | P.6 | Frontend "Ejecución Presupuestaria" | Página con métricas de deduplicación | ✅ hecho |
-| P.7 | Gasto acumulado vs presupuesto (ledger vivo) | `is_gasto_publico` + ETL al cerrar pipeline + `% monto_acumulado/monto_vigente` | 💡 idea |
+| P.7.1 | Clasificar gasto público per acto | `is_gasto_publico` + `etapa_gasto` + `jurisdiccion_gasto` por reglas | ✅ hecho |
+| P.7.2 | Ledger al cerrar el pipeline | Upsert `ejecucion_presupuestaria` tras `_analyze_document`; `numero_acto` recuperado | ✅ hecho |
+| P.7.3 | Anclar Ley 11.088 | `presupuesto_base` 2026 cargado + alias ACIF/EPEC | ⬜ pendiente (falta el PDF) |
+| P.7.4 | Contrastar en UI | `% monto_acumulado/monto_vigente` + toggle compromiso/ejecución | ⬜ pendiente |
 
-Corte empírico 2026-09-13: 5.667 actos, $458 mil M brutos; ledger vacío. Ver [gasto-publico-actos.md](../current/gasto-publico-actos.md), [P.7](P.7-gasto-acumulado-presupuesto.md) y [next-session.md](../current/next-session.md).
+Medición 2026-09-13 tras P.7.1/P.7.2: de 1.680 actos con monto, **131 son gasto público**; ledger canónico **$205,9 mil M** vs $437,8 mil M brutos; 19 republicaciones excluidas ($87,5 mil M). El boletín es 99,9% compromiso ($188,3 mil M) y casi nada de ejecución ($0,2 mil M). Ver [P.7](P.7-gasto-acumulado-presupuesto.md), [gasto-publico-actos.md](../current/gasto-publico-actos.md) y [next-session.md](../current/next-session.md).
 
 ---
 
@@ -139,5 +142,9 @@ Corte empírico 2026-09-13: 5.667 actos, $458 mil M brutos; ledger vacío. Ver [
 |---|---|---|---|
 | DT-1 | Modelo de embeddings inconsistente (`gemini-embedding-001` vs `text-embedding-004`) | 0 | ✅ resuelto (A1) |
 | DT-2 | Tests de `indexing_service` hacen `await` sobre sesión SQLAlchemy síncrona del fixture | 7 | ⬜ abierto |
+| DT-3 | `scripts/parse_excel_presupuesto.py` importaba `pandas` (no declarado) en el top level e impedía colectar `test_etl_presupuesto.py` | P | ✅ resuelto (P.7.2, import perezoso) |
+| DT-4 | `reindex_google_embeddings.py` hace `sys.exit(1)` al importarse sin `GOOGLE_API_KEY` → INTERNALERROR que corta la colección de toda la suite | 7 | ⬜ abierto |
+| DT-5 | 6 módulos de test no colectan: `watcher_monolith` y `kba_agent` no existen en el repo | 7 | ⬜ abierto |
+| DT-6 | `[tool.ruff]` de `pyproject.toml` no se aplica con ruff 0.16 (usa defaults: line-length 88 y reglas extra); `ruff check .` da 2.668 errores | 7 | ⬜ abierto |
 
-> Sincronizado con commits hasta `da098b7` — 2026-06-26
+> Sincronizado con commits hasta `da098b7` — 2026-06-26. Bugs DT-3..DT-6 detectados en P.7 (2026-09-13).

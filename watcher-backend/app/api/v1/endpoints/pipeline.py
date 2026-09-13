@@ -1469,7 +1469,9 @@ async def _analyze_document(
 
     from app.core.observability import record_vcp
     from app.db.crud import create_analisis
+    from app.services.ejecucion_ledger import upsert_boletin_ejecucion
     from app.services.feature_engineering import get_feature_engineer
+    from app.services.gasto_classifier import classify_gasto
     from app.services.reference_firewall import ReferenceFirewallService
 
     _feature_engineer = get_feature_engineer()
@@ -1493,6 +1495,7 @@ async def _analyze_document(
     metadata = {
         "boletin": filename.replace(".pdf", ""),
     }
+    boletin_section = None
 
     # Try to get jurisdiccion info from the boletin record
     try:
@@ -1506,6 +1509,7 @@ async def _analyze_document(
                 metadata["jurisdiccion_nombre"] = boletin.jurisdiccion.nombre
             metadata["fuente"] = getattr(boletin, "fuente", "provincial")
             metadata["section_type"] = str(boletin.section) if boletin.section else ""
+            boletin_section = boletin.section
             seccion_nombre = getattr(boletin, "seccion_nombre", None)
             if seccion_nombre:
                 metadata["seccion_nombre"] = seccion_nombre
@@ -1598,6 +1602,16 @@ async def _analyze_document(
             except Exception as fe_e:
                 logger.debug(f"Feature engineering skipped for {filename}: {fe_e}")
 
+            # P.7.1: clasificar el acto como gasto público (reglas, sin LLM).
+            # Sin esto el ledger sumaría remates, capital social y modificaciones.
+            try:
+                gasto = classify_gasto(
+                    {**acto, "fragmento": fragment_text}, section=boletin_section
+                )
+                acto.update(gasto.as_analisis_fields())
+            except Exception as gc_e:
+                logger.debug(f"Gasto classification skipped for {filename}: {gc_e}")
+
             prepared.append({
                 "acto": acto,
                 "fragment_text": fragment_text,
@@ -1626,6 +1640,29 @@ async def _analyze_document(
             except Exception as e:
                 logger.error(f"Failed to save acto for {filename}: {e}")
         await db.commit()
+
+    # P.7.2: ledger de gasto al cerrar el documento — evita el ETL manual
+    # posterior. Non-fatal: un fallo acá no invalida los actos ya guardados.
+    if total_saved > 0:
+        async with _sqlite_write_lock:
+            try:
+                ledger = await upsert_boletin_ejecucion(db, boletin_id)
+                await db.commit()
+                logger.info(
+                    "Ledger ejecución %s: %d filas (%d canónicas, %d duplicadas), "
+                    "%d con match presupuesto, %d no-gasto",
+                    filename,
+                    ledger.rows_written,
+                    ledger.canonical,
+                    ledger.duplicates,
+                    ledger.matched_presupuesto,
+                    ledger.skipped_no_gasto,
+                )
+            except Exception as ledger_e:
+                await db.rollback()
+                logger.warning(
+                    "Ledger de ejecución falló para %s (non-fatal): %s", filename, ledger_e
+                )
 
     # Emit VCP metrics using real VerificationAgent data
     if total_saved > 0:

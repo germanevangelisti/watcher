@@ -1,7 +1,16 @@
 """
 ETL: analisis → ejecucion_presupuestaria
 
-Populates the budget execution table from analyzed administrative acts.
+Batch rebuild of the budget execution table from analyzed administrative acts.
+The live per-boletín path is `app/services/ejecucion_ledger.py`; this script
+exists to backfill a corpus ingested before that hook, and both share
+`app/services/presupuesto_matching.py` so they agree on dedup keys.
+
+Only actos classified as public spending reach the table (P.7.1): remates,
+corporate filings and budget line transfers carry large montos but are not
+spending.  Actos ingested before the classifier existed are classified here on
+the fly and the result is written back to `analisis`.
+
 Attempts fuzzy organismo matching against presupuesto_base (ejercicio=2026).
 Detects duplicate publications of the same acto (same tender published on
 consecutive days) and marks them with is_duplicate=1; their monto is excluded
@@ -14,179 +23,121 @@ Usage:
 
 from __future__ import annotations
 
-import sys
-import re
-import json
-import unicodedata
 import sqlite3
-from datetime import datetime, date
-from pathlib import Path
+import sys
 from collections import defaultdict
+from datetime import datetime
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from app.services.gasto_classifier import classify_gasto
+from app.services.presupuesto_matching import (
+    _ACTO_NO_DEDUP,
+    _ANALISIS_NO_MATCH,
+    _dedup_key,
+    _normalize,
+    _normalize_acto,
+    _ORGANISMO_ALIASES,
+    _token_jaccard,
+    build_presupuesto_index,
+    extract_numero_acto,
+    first_beneficiario,
+    match_organismo,
+    parse_date,
+)
+
+# Re-exported so the existing test suite keeps importing these from the script.
+__all__ = [
+    "_ACTO_NO_DEDUP",
+    "_ANALISIS_NO_MATCH",
+    "_ORGANISMO_ALIASES",
+    "_dedup_key",
+    "_normalize",
+    "_normalize_acto",
+    "_token_jaccard",
+    "build_presupuesto_index",
+    "classify_gasto",
+    "extract_numero_acto",
+    "first_beneficiario",
+    "match_organismo",
+    "parse_date",
+    "run_etl",
+]
 
 DB_PATH = Path(__file__).parent.parent / "sqlite.db"
 
-# ── Normalización ──────────────────────────────────────────────────────────────
 
-def _normalize(s: str) -> str:
-    """Uppercase + strip accents + compress whitespace."""
-    if not s:
-        return ""
-    nfkd = unicodedata.normalize("NFKD", s)
-    ascii_str = "".join(c for c in nfkd if not unicodedata.combining(c))
-    return re.sub(r"\s+", " ", ascii_str.upper().strip())
-
-
-def _token_jaccard(a: str, b: str) -> float:
-    """Jaccard similarity on word-token sets."""
-    ta = set(a.split())
-    tb = set(b.split())
-    if not ta or not tb:
-        return 0.0
-    return len(ta & tb) / len(ta | tb)
-
-
-# ── Organismo matching ─────────────────────────────────────────────────────────
-
-def build_presupuesto_index(cur) -> list[tuple[int, str, str, str | None]]:
-    """Load presupuesto_base 2026 and return list of (id, org_norm, programa, partida)."""
+def load_presupuesto_rows(cur, ejercicio: int = 2026) -> list[tuple[int, str, str, str | None]]:
+    """Fetch presupuesto_base rows for one ejercicio as raw index input."""
     cur.execute(
-        "SELECT id, organismo, programa, partida_presupuestaria FROM presupuesto_base WHERE ejercicio=2026"
+        "SELECT id, organismo, programa, partida_presupuestaria "
+        "FROM presupuesto_base WHERE ejercicio=?",
+        (ejercicio,),
     )
-    return [(r[0], _normalize(r[1]), r[2], r[3]) for r in cur.fetchall()]
+    return [tuple(r) for r in cur.fetchall()]
 
 
-# Generic placeholder names in analisis that must not match any presupuesto_base organism
-_ANALISIS_NO_MATCH = {"UNIDAD EJECUTORA", "N/A", "NO IDENTIFICADO", "DESCONOCIDO"}
-
-# Explicit alias table: maps normalized analisis organismo → canonical presupuesto_base
-# organismo name to use for matching.  Extend this dict whenever a new known variant
-# appears in analisis that fuzzy matching fails or mis-routes.
-#   str value  → use that name for matching against pb_index / pb_exact
-#   None value → entity is outside the provincial central budget; skip matching
-_ORGANISMO_ALIASES: dict[str, str | None] = {
-    # ── Poder Judicial ────────────────────────────────────────────────────────
-    # "PODER JUDICIAL" (len=14) scores 0.34 on substring against the longer
-    # analisis forms — below the 0.40 threshold.  Force canonical form.
-    "PODER JUDICIAL DE LA PROVINCIA DE CORDOBA": "PODER JUDICIAL",
-    "PODER JUDICIAL DE CORDOBA": "PODER JUDICIAL",
-    # Tribunal Superior de Justicia is part of the Poder Judicial branch and
-    # was incorrectly matched to "TRIBUNAL DE CUENTAS" via Jaccard (score 0.40).
-    "TRIBUNAL SUPERIOR DE JUSTICIA": "PODER JUDICIAL",
-    "TRIBUNAL SUPERIOR DE JUSTICIA DE CORDOBA": "PODER JUDICIAL",
-    "TSJ": "PODER JUDICIAL",
+_ADDED_COLUMNS: dict[str, list[tuple[str, str]]] = {
+    "ejecucion_presupuestaria": [
+        ("is_duplicate", "INTEGER NOT NULL DEFAULT 0"),
+        ("analisis_id", "INTEGER"),
+        ("etapa_gasto", "TEXT"),
+        ("jurisdiccion", "TEXT"),
+    ],
+    "analisis": [
+        ("is_gasto_publico", "INTEGER"),
+        ("etapa_gasto", "TEXT"),
+        ("jurisdiccion_gasto", "TEXT"),
+    ],
 }
 
 
-def match_organismo(
-    org_norm: str,  # pre-normalized by caller
-    pb_index: list[tuple[int, str, str, str | None]],
-    pb_exact: dict[str, tuple[int, str, str | None]],
-    threshold: float = 0.4,
-) -> tuple[int | None, float, str | None, str | None, str | None]:
-    """
-    Returns (pb_id, score, method, programa, partida) or (None, 0, None, None, None).
-    Methods: alias > exact > substring > jaccard
-    pb_exact is a pre-built dict for O(1) exact lookups.
-    """
-    if not org_norm or org_norm in _ANALISIS_NO_MATCH:
-        return None, 0.0, None, None, None
-
-    # Alias override — applied before any fuzzy logic
-    aliased = False
-    if org_norm in _ORGANISMO_ALIASES:
-        canonical = _ORGANISMO_ALIASES[org_norm]
-        if canonical is None:
-            return None, 0.0, None, None, None  # explicitly non-matchable
-        org_norm = canonical
-        aliased = True
-
-    # O(1) exact match
-    if org_norm in pb_exact:
-        pb_id, programa, partida = pb_exact[org_norm]
-        method = "alias+exact" if aliased else "exact"
-        return pb_id, 1.0, method, programa, partida
-
-    best = (None, 0.0, None, None, None)
-
-    for pb_id, pb_norm, programa, partida in pb_index:
-        # Substring match
-        if org_norm in pb_norm or pb_norm in org_norm:
-            score = min(len(org_norm), len(pb_norm)) / max(len(org_norm), len(pb_norm))
-            if score > best[1]:
-                best = (pb_id, score, "substring", programa, partida)
+def _ensure_columns(cur) -> None:
+    """Add columns missing from DBs created before P.7 (idempotent)."""
+    for table, columns in _ADDED_COLUMNS.items():
+        cur.execute(f"PRAGMA table_info({table})")
+        existing = {r[1] for r in cur.fetchall()}
+        if not existing:
             continue
-
-        # Token Jaccard
-        jac = _token_jaccard(org_norm, pb_norm)
-        if jac > best[1]:
-            best = (pb_id, jac, "jaccard", programa, partida)
-
-    if best[1] >= threshold:
-        return best
-    return None, 0.0, None, None, None
+        for col_name, col_type in columns:
+            if col_name not in existing:
+                cur.execute(f"ALTER TABLE {table} ADD COLUMN {col_name} {col_type}")
 
 
-# ── Deduplicación ─────────────────────────────────────────────────────────────
+def _classify_pending(cur, rows: list[dict], dry_run: bool = False) -> int:
+    """Classify rows lacking P.7.1 flags, mutating them in place.
 
-# Placeholder acto numbers that carry no dedup information
-# After whitespace removal, these become: N/A, NA, NOESPECIFICADO, SINNUMERO, NINGUNO
-_ACTO_NO_DEDUP = {"N/A", "NA", "NOESPECIFICADO", "SINNUMERO", "NINGUNO"}
-
-
-def _normalize_acto(s: str | None) -> str | None:
-    """Normalize acto number for deduplication key. Returns None for empty/generic values."""
-    if not s:
-        return None
-    norm = re.sub(r"\s+", "", s.upper().strip())
-    if norm in _ACTO_NO_DEDUP or not norm:
-        return None
-    return norm
-
-
-def _dedup_key(org_norm: str, monto: float, acto_norm: str | None) -> tuple:
+    Writes the classification back to `analisis` so it is computed once, and
+    recovers `numero_acto` when the LLM left it null — without it the dedup key
+    collapses to (organismo, monto) and republished tenders stay uncollapsed.
     """
-    Returns a hashable deduplication key.
-    Rounds monto to nearest 1M to absorb floating-point noise between publications.
-    acto_norm=None means we can't deduplicate this row by acto number.
-    """
-    return (org_norm, round(monto / 1e6), acto_norm)
+    pending = 0
+    for row in rows:
+        if row.get("is_gasto_publico") is None or not row.get("etapa_gasto"):
+            classification = classify_gasto(row, section=row.get("boletin_section"))
+            row["is_gasto_publico"] = 1 if classification.is_gasto_publico else 0
+            row["etapa_gasto"] = classification.etapa_gasto
+            row["jurisdiccion_gasto"] = classification.jurisdiccion
+            pending += 1
+        if not row.get("numero_acto"):
+            recovered = extract_numero_acto(row.get("descripcion"), row.get("fragmento"))
+            if recovered:
+                row["numero_acto"] = recovered
 
-
-# ── Helpers ────────────────────────────────────────────────────────────────────
-
-def parse_date(date_str: str) -> date | None:
-    """Parse YYYYMMDD string to date."""
-    if not date_str:
-        return None
-    try:
-        return datetime.strptime(date_str, "%Y%m%d").date()
-    except ValueError:
-        return None
-
-
-def first_beneficiario(analisis_row: dict) -> str | None:
-    """Extract first beneficiary from json or entidad_beneficiaria fallback."""
-    bj = analisis_row.get("beneficiarios_json")
-    if isinstance(bj, list) and bj:
-        return str(bj[0])[:200]
-    if isinstance(bj, str):
-        try:
-            parsed = json.loads(bj)
-            if isinstance(parsed, list) and parsed:
-                return str(parsed[0])[:200]
-        except (json.JSONDecodeError, TypeError):
-            pass
-    return analisis_row.get("entidad_beneficiaria") or None
-
-
-def _ensure_is_duplicate_column(cur) -> None:
-    """Add is_duplicate column if the table was created before this feature."""
-    cur.execute("PRAGMA table_info(ejecucion_presupuestaria)")
-    cols = {r[1] for r in cur.fetchall()}
-    if "is_duplicate" not in cols:
-        cur.execute(
-            "ALTER TABLE ejecucion_presupuestaria ADD COLUMN is_duplicate INTEGER NOT NULL DEFAULT 0"
-        )
+        if not dry_run:
+            cur.execute(
+                "UPDATE analisis SET is_gasto_publico=?, etapa_gasto=?, "
+                "jurisdiccion_gasto=?, numero_acto=? WHERE id=?",
+                (
+                    row["is_gasto_publico"],
+                    row["etapa_gasto"],
+                    row["jurisdiccion_gasto"],
+                    row["numero_acto"],
+                    row["analisis_id"],
+                ),
+            )
+    return pending
 
 
 # ── ETL main ───────────────────────────────────────────────────────────────────
@@ -196,11 +147,10 @@ def run_etl(dry_run: bool = False) -> None:
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
 
-    _ensure_is_duplicate_column(cur)
+    _ensure_columns(cur)
 
     # Load presupuesto_base index + exact-match dict for O(1) lookups
-    pb_index = build_presupuesto_index(cur)
-    pb_exact = {pb_norm: (pb_id, programa, partida) for pb_id, pb_norm, programa, partida in pb_index}
+    pb_index, pb_exact = build_presupuesto_index(load_presupuesto_rows(cur))
     print(f"presupuesto_base 2026: {len(pb_index)} programmes loaded")
 
     # Fetch analisis records with montos > 0 joined with boletin date
@@ -219,7 +169,11 @@ def run_etl(dry_run: bool = False) -> None:
             a.beneficiarios_json,
             a.entidad_beneficiaria,
             a.motivo_riesgo,
-            b.date          AS boletin_date
+            a.is_gasto_publico,
+            a.etapa_gasto,
+            a.jurisdiccion_gasto,
+            b.date          AS boletin_date,
+            b.section       AS boletin_section
         FROM analisis a
         JOIN boletines b ON a.boletin_id = b.id
         WHERE a.monto_numerico > 0
@@ -227,6 +181,18 @@ def run_etl(dry_run: bool = False) -> None:
     """)
     rows = [dict(r) for r in cur.fetchall()]
     print(f"analisis rows with monto > 0: {len(rows)}")
+
+    # Classify actos ingested before P.7.1 and persist the result so the live
+    # ledger and this script see the same flags on the next run.
+    classified = _classify_pending(cur, rows, dry_run=dry_run)
+    if classified:
+        print(f"clasificados en este run: {classified}")
+    if not dry_run:
+        conn.commit()
+
+    gasto_rows = [r for r in rows if r["is_gasto_publico"]]
+    print(f"actos de gasto público: {len(gasto_rows)} (excluidos {len(rows) - len(gasto_rows)})")
+    rows = gasto_rows
 
     # Build cumulative monthly / quarterly / annual totals per organismo
     # Only canonical (non-duplicate) rows contribute to accumulators.
@@ -304,18 +270,20 @@ def run_etl(dry_run: bool = False) -> None:
 
         cur.execute("""
             INSERT INTO ejecucion_presupuestaria (
-                boletin_id, presupuesto_base_id,
+                boletin_id, presupuesto_base_id, analisis_id,
                 fecha_boletin, organismo, beneficiario, concepto,
                 monto, tipo_operacion,
                 partida_presupuestaria, programa,
                 categoria_watcher, riesgo_watcher,
+                etapa_gasto, jurisdiccion,
                 monto_acumulado_mes, monto_acumulado_trimestre, monto_acumulado_anual,
                 es_modificacion_presupuestaria, requiere_revision, observaciones,
                 is_duplicate, created_at
-            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """, (
             row["boletin_id"],
             pb_id,
+            row["analisis_id"],
             fecha.isoformat(),
             org[:200] if org else None,
             beneficiario,
@@ -326,6 +294,8 @@ def run_etl(dry_run: bool = False) -> None:
             programa,
             row["categoria"],
             riesgo or None,
+            row["etapa_gasto"],
+            row["jurisdiccion_gasto"],
             monthly_acc[(org_norm, year, month)],
             quarterly_acc[(org_norm, year, quarter)],
             annual_acc[(org_norm, year)],
