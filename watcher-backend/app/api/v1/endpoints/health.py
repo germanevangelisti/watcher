@@ -9,8 +9,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.database import get_db
 from app.core.config import settings
+from app.db.database import get_db
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +29,10 @@ async def health_check(db: AsyncSession = Depends(get_db)):
         "database": "unknown",
         "chromadb": "unknown",
     }
+
+    from app.core.hardware import hardware_snapshot
+
+    checks["hardware"] = hardware_snapshot()
 
     # Check relational DB
     try:

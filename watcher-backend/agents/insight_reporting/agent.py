@@ -63,15 +63,9 @@ class InsightReportingAgent:
             else:
                 logger.warning("Google API key no encontrada - chat funcionará con fallback")
         
-        # Initialize RetrievalService for hybrid search
+        # Retrieval is lazy so importing the API does not download HF models.
         self.retrieval_service = None
-        if self.config.use_vector_db:
-            try:
-                from app.services.retrieval_service import get_retrieval_service
-                self.retrieval_service = get_retrieval_service()
-                logger.info("RetrievalService inicializado para búsqueda semántica")
-            except Exception as e:
-                logger.warning(f"No se pudo inicializar RetrievalService: {e}")
+        self._retrieval_init_attempted = False
         
         # Historial de conversación
         self.conversation_history: List[Dict[str, str]] = []
@@ -80,6 +74,19 @@ class InsightReportingAgent:
         self._firewall: Optional[ReferenceFirewallService] = None
 
         logger.info("InsightReportingAgent inicializado")
+
+    def _ensure_retrieval(self):
+        if self._retrieval_init_attempted or not self.config.use_vector_db:
+            return self.retrieval_service
+        self._retrieval_init_attempted = True
+        try:
+            from app.services.retrieval_service import get_retrieval_service
+
+            self.retrieval_service = get_retrieval_service()
+            logger.info("RetrievalService inicializado para búsqueda semántica")
+        except Exception as e:
+            logger.warning("No se pudo inicializar RetrievalService: %s", e)
+        return self.retrieval_service
     
     async def execute(self, workflow: WorkflowState, 
                      task: TaskDefinition) -> Dict[str, Any]:
@@ -420,7 +427,7 @@ class InsightReportingAgent:
                     data_context['entities'] = await AnalysisTools.get_entity_analysis(db, 'beneficiaries')
                 
                 # Agregar contexto de búsqueda semántica si está disponible
-                if self.retrieval_service:
+                if self._ensure_retrieval():
                     try:
                         search_results = await self.retrieval_service.hybrid_search(
                             query=query,

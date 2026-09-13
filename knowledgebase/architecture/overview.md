@@ -86,5 +86,6 @@ Relationships: `MENCIONADO_EN` (entity ← → bulletin)
 - **SecurityHeadersMiddleware** — X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, Referrer-Policy
 - CORS configured via `ALLOWED_ORIGINS` env var
 - Auth: JWT planned for v3
+- **Hardware profiles:** `local` (development workstation — Ollama, local embeddings/rerank, nproc-2 workers) vs `cloud` (GCE, Gemini). See [ADR-001](ADR-001-pipeline-hardware-local.md).
 
 > Fuente original: `docs/architecture.md` — migrado el 2026-05-24

@@ -129,6 +129,9 @@ async def _ensure_sqlite_columns(conn) -> None:
     new_cols = [
         ("aiu_summary_json", "TEXT"),
         ("firewall_score", "REAL"),
+        ("transparency_score", "REAL"),
+        ("red_flags_json", "TEXT"),
+        ("num_red_flags", "INTEGER"),
     ]
     for col_name, col_type in new_cols:
         if col_name not in existing:

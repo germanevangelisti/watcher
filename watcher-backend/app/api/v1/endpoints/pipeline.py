@@ -10,36 +10,36 @@ Provides endpoints for:
 """
 
 import asyncio
+import calendar as _cal_module
 import logging
 import uuid
-import calendar as _cal_module
 from datetime import date as _date
 from pathlib import Path
-from typing import Dict, Any, Optional, List
+from typing import Any
 
-from fastapi import APIRouter, HTTPException, Depends, Header, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException
 from pydantic import BaseModel
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, update, delete
 
-from app.db.session import get_db
-from app.db.models import Boletin, ChunkRecord, Analisis, FuenteDato
-from app.services.url_fetcher import build_url_from_template
 from app.core.config import settings
-from app.core.events import event_bus, EventType
+from app.core.events import EventType, event_bus
+from app.db.models import Analisis, Boletin, ChunkRecord, FuenteDato
+from app.db.session import get_db
 from app.schemas.pipeline import (
-    PipelineConfig,
-    ExtractionConfig,
     EnrichmentConfig,
+    ExtractionConfig,
     IndexingConfig,
+    PipelineConfig,
 )
+from app.services.url_fetcher import build_url_from_template
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
 # In-memory session tracking for active pipeline runs
-_active_sessions: Dict[str, Dict[str, Any]] = {}
+_active_sessions: dict[str, dict[str, Any]] = {}
 
 # SQLite allows only one writer at a time. This semaphore serialises all DB
 # write phases across concurrently-running background pipeline tasks so that
@@ -59,9 +59,9 @@ _PIPELINE_SECTION_NAMES = {
 # ---------------------------------------------------------------------------
 # Lazy singletons for expensive services (BUG-1: wire firewall + AIU once)
 # ---------------------------------------------------------------------------
-_watcher_singleton: Optional[Any] = None
-_aiu_singleton: Optional[Any] = None
-_svc_init_lock: Optional[Any] = None
+_watcher_singleton: Any | None = None
+_aiu_singleton: Any | None = None
+_svc_init_lock: Any | None = None
 
 
 def _get_svc_lock():
@@ -78,8 +78,8 @@ async def _get_watcher_and_aiu():
     if _watcher_singleton is None:
         async with _get_svc_lock():
             if _watcher_singleton is None:
-                from app.services.watcher_service import WatcherService
                 from app.services.aiu_service import AIUService
+                from app.services.watcher_service import WatcherService
                 ws = WatcherService()
                 aiu_svc = AIUService(gemini_model=getattr(ws, "model", None))
                 ws.set_aiu_service(aiu_svc)
@@ -95,7 +95,7 @@ async def _get_watcher_and_aiu():
 @router.post("/reset")
 async def reset_all_pipeline_data(
     db: AsyncSession = Depends(get_db),
-    x_confirm_reset: Optional[str] = Header(None, alias="X-Confirm-Reset"),
+    x_confirm_reset: str | None = Header(None, alias="X-Confirm-Reset"),
 ):
     """
     Reset ALL processed data. Requires confirmation header.
@@ -317,7 +317,7 @@ async def reset_document_pipeline(
 @router.post("/process/{boletin_id}")
 async def process_single_document(
     boletin_id: int,
-    config: Optional[PipelineConfig] = None,
+    config: PipelineConfig | None = None,
     background_tasks: BackgroundTasks = BackgroundTasks(),
     db: AsyncSession = Depends(get_db),
 ):
@@ -379,7 +379,7 @@ async def process_single_document(
 
 @router.post("/process-all")
 async def process_all_pending(
-    config: Optional[PipelineConfig] = None,
+    config: PipelineConfig | None = None,
     background_tasks: BackgroundTasks = BackgroundTasks(),
     db: AsyncSession = Depends(get_db),
 ):
@@ -466,7 +466,7 @@ class TriggerMonthRequest(BaseModel):
     jurisdiccion_id: int
     year: int
     month: int
-    sections: List[str] = ["1", "2", "3", "4", "5"]
+    sections: list[str] = ["1", "2", "3", "4", "5"]
 
 
 @router.post("/trigger-from-date")
@@ -580,7 +580,7 @@ async def trigger_month(
 
     # 2. Compute weekdays in the requested month
     _, days_in_month = _cal_module.monthrange(req.year, req.month)
-    weekdays: List[str] = []
+    weekdays: list[str] = []
     for d in range(1, days_in_month + 1):
         dt = _date(req.year, req.month, d)
         if dt.weekday() < 5:  # Mon=0 … Fri=4
@@ -594,7 +594,7 @@ async def trigger_month(
             Boletin.filename.like(f"{prefix}%"),
         )
     )
-    existing_by_filename: Dict[str, Any] = {b.filename: b for b in existing_result.scalars().all()}
+    existing_by_filename: dict[str, Any] = {b.filename: b for b in existing_result.scalars().all()}
 
     # 4. Upsert + queue each not-yet-completed section
     triggered = 0
@@ -725,21 +725,27 @@ async def _process_document_pipeline(
     filename: str,
     session_id: str,
     config: PipelineConfig,
+    *,
+    batch_mode: bool = False,
 ):
     """Background task: process a single document through the full pipeline."""
     from app.db.database import BackgroundSessionLocal
     
     TOTAL_STAGES = 7  # extract, clean, entity_mapping, chunk, index, analyze, completed
-    
-    # Track active session globally so /status can report it
-    _active_sessions[session_id] = {
-        "status": "running",
-        "boletin_id": boletin_id,
-        "filename": filename,
-        "stage": "extracting",
-        "stages_done": 0,
-        "stages_total": TOTAL_STAGES,
-    }
+
+    if not batch_mode:
+        _active_sessions[session_id] = {
+            "status": "running",
+            "boletin_id": boletin_id,
+            "filename": filename,
+            "stage": "extracting",
+            "stages_done": 0,
+            "stages_total": TOTAL_STAGES,
+        }
+    elif session_id in _active_sessions:
+        _active_sessions[session_id]["stage"] = "extracting"
+        _active_sessions[session_id]["filename"] = filename
+        _active_sessions[session_id]["boletin_id"] = boletin_id
     
     async with BackgroundSessionLocal() as db:
         try:
@@ -828,7 +834,8 @@ async def _process_document_pipeline(
             # Stage 7/7: COMPLETED
             _active_sessions[session_id]["stage"] = "completed"
             _active_sessions[session_id]["stages_done"] = 7
-            _active_sessions[session_id]["status"] = "completed"
+            if not batch_mode:
+                _active_sessions[session_id]["status"] = "completed"
             await _update_status(db, boletin_id, "completed")
             await _emit_stage(session_id, boletin_id, filename, "completed", 7, TOTAL_STAGES,
                             details={"chunks_created": len(chunks), "chunks_indexed": indexed, "actos_extracted": actos_count})
@@ -847,34 +854,33 @@ async def _process_document_pipeline(
             )
             
             logger.info(f"Document {boletin_id} processed: {len(chunks)} chunks, {indexed} indexed")
-            
-            # Emit pipeline completed for single-doc processing
-            await event_bus.emit(
-                EventType.PIPELINE_COMPLETED,
-                data={
-                    "session_id": session_id,
-                    "total": 1,
-                    "completed": 1,
-                    "failed": 0,
-                },
-                source="pipeline"
-            )
-            
-            # Clean up session after a delay (let frontend poll it)
-            _active_sessions.pop(session_id, None)
-        
+
+            if not batch_mode:
+                await event_bus.emit(
+                    EventType.PIPELINE_COMPLETED,
+                    data={
+                        "session_id": session_id,
+                        "total": 1,
+                        "completed": 1,
+                        "failed": 0,
+                    },
+                    source="pipeline"
+                )
+                _active_sessions.pop(session_id, None)
+
         except Exception as e:
             logger.error(f"Pipeline failed for {boletin_id}: {e}", exc_info=True)
-            _active_sessions[session_id] = {
-                "status": "failed",
-                "boletin_id": boletin_id,
-                "filename": filename,
-                "error": str(e),
-                "stages_done": _active_sessions.get(session_id, {}).get("stages_done", 0),
-                "stages_total": TOTAL_STAGES,
-            }
+            if not batch_mode:
+                _active_sessions[session_id] = {
+                    "status": "failed",
+                    "boletin_id": boletin_id,
+                    "filename": filename,
+                    "error": str(e),
+                    "stages_done": _active_sessions.get(session_id, {}).get("stages_done", 0),
+                    "stages_total": TOTAL_STAGES,
+                }
             await _update_status(db, boletin_id, "failed", str(e))
-            
+
             await event_bus.emit(
                 EventType.PIPELINE_DOCUMENT_FAILED,
                 data={
@@ -885,64 +891,78 @@ async def _process_document_pipeline(
                 },
                 source="pipeline"
             )
-            
-            # Emit pipeline completed (with failure) for single-doc processing
-            await event_bus.emit(
-                EventType.PIPELINE_COMPLETED,
-                data={
-                    "session_id": session_id,
-                    "total": 1,
-                    "completed": 0,
-                    "failed": 1,
-                },
-                source="pipeline"
-            )
-            
-            _active_sessions.pop(session_id, None)
+
+            if not batch_mode:
+                await event_bus.emit(
+                    EventType.PIPELINE_COMPLETED,
+                    data={
+                        "session_id": session_id,
+                        "total": 1,
+                        "completed": 0,
+                        "failed": 1,
+                    },
+                    source="pipeline"
+                )
+                _active_sessions.pop(session_id, None)
 
 
 async def _process_all_pipeline(
-    boletin_list: List[Dict[str, Any]],
+    boletin_list: list[dict[str, Any]],
     session_id: str,
     config: PipelineConfig,
 ):
-    """Background task: process all pending documents sequentially."""
+    """Background task: process pending documents with bounded concurrency."""
+    from app.core.concurrency import map_bounded
+    from app.core.hardware import document_pipeline_concurrency
+
     total = len(boletin_list)
     completed = 0
     failed = 0
-    
-    for i, item in enumerate(boletin_list):
+    counter_lock = asyncio.Lock()
+    workers = document_pipeline_concurrency()
+    logger.info(
+        "Pipeline batch starting: %s documents, concurrency=%s",
+        total,
+        workers,
+    )
+
+    async def _one(item: dict[str, Any]) -> None:
+        nonlocal completed, failed
         boletin_id = item["id"]
         filename = item["filename"]
-        
-        # Update session tracking
-        if session_id in _active_sessions:
-            _active_sessions[session_id]["current"] = i + 1
-        
-        # Emit progress
+
         await event_bus.emit(
             EventType.PIPELINE_DOCUMENT_STARTED,
             data={
                 "session_id": session_id,
                 "boletin_id": boletin_id,
                 "filename": filename,
-                "progress": {"current": i + 1, "total": total},
+                "progress": {"total": total},
             },
-            source="pipeline"
+            source="pipeline",
         )
-        
+
         try:
-            await _process_document_pipeline(boletin_id, filename, session_id, config)
-            completed += 1
+            await _process_document_pipeline(
+                boletin_id, filename, session_id, config, batch_mode=True
+            )
+            async with counter_lock:
+                completed += 1
+                if session_id in _active_sessions:
+                    _active_sessions[session_id]["current"] = completed + failed
         except Exception as e:
-            failed += 1
+            async with counter_lock:
+                failed += 1
+                if session_id in _active_sessions:
+                    _active_sessions[session_id]["current"] = completed + failed
+                    _active_sessions[session_id]["errors"].append({
+                        "boletin_id": boletin_id,
+                        "filename": filename,
+                        "error": str(e),
+                    })
             logger.error(f"Batch: document {boletin_id} failed: {e}")
-            if session_id in _active_sessions:
-                _active_sessions[session_id]["errors"].append({
-                    "boletin_id": boletin_id,
-                    "filename": filename,
-                    "error": str(e),
-                })
+
+    await map_bounded(boletin_list, _one, workers, return_exceptions=True)
     
     # Mark session as complete
     if session_id in _active_sessions:
@@ -968,7 +988,7 @@ async def _process_all_pipeline(
 # PIPELINE STAGE HELPERS
 # =============================================================================
 
-def _find_pdf(filename: str) -> Optional[Path]:
+def _find_pdf(filename: str) -> Path | None:
     """
     Find a PDF file across all known directories.
     
@@ -1028,7 +1048,7 @@ async def _emit_stage(
     stage: str,
     current: int,
     total: int,
-    details: Optional[Dict] = None,
+    details: dict | None = None,
 ):
     """Emit a pipeline stage event via EventBus."""
     await event_bus.emit(
@@ -1128,7 +1148,7 @@ async def _get_source_url(
     boletin_id: int,
     filename: str,
     db: AsyncSession,
-) -> Optional[str]:
+) -> str | None:
     """
     Resuelve la URL de origen de un boletín.
 
@@ -1137,6 +1157,7 @@ async def _get_source_url(
     2. Construir desde JurisdiccionSyncConfig.source_url_template
     """
     from sqlalchemy import select
+
     from app.db.models import Boletin, JurisdiccionSyncConfig
 
     # 1. URL ya guardada en el registro del boletín
@@ -1176,6 +1197,7 @@ async def _parse_and_store_sumario(
     import json
     try:
         from sqlalchemy import select
+
         from app.db.models import Boletin, FuenteBoletin, SumarioParseado
         from app.services.sumario_parser import SumarioParser
 
@@ -1217,7 +1239,7 @@ async def _parse_and_store_sumario(
 
 def _clean_text(text: str, config) -> str:
     """Clean extracted text using TextCleaner."""
-    from app.services.text_cleaner import TextCleaner, CleaningConfig
+    from app.services.text_cleaner import CleaningConfig, TextCleaner
     
     cleaner_config = CleaningConfig(
         fix_encoding=config.fix_encoding,
@@ -1231,17 +1253,34 @@ def _clean_text(text: str, config) -> str:
 
 
 def _chunk_text(text: str, config, entity_map=None) -> list:
-    """Chunk text using ChunkingService."""
-    from app.services.chunking_service import ChunkingService, ChunkingConfig
+    """Chunk text using ChunkingService, with local caps for huge judiciales PDFs."""
+    from app.core.fragment_priority import select_prioritized
+    from app.core.hardware import index_chunk_size, max_index_chunks, prefer_local_ai
+    from app.services.chunking_service import ChunkingConfig, ChunkingService
+
+    chunk_size = config.chunk_size
+    overlap = config.chunk_overlap
+    if prefer_local_ai() and chunk_size == 1000:
+        chunk_size = index_chunk_size()
+        overlap = min(overlap, 200)
 
     chunking_config = ChunkingConfig(
-        chunk_size=config.chunk_size,
-        chunk_overlap=config.chunk_overlap,
+        chunk_size=chunk_size,
+        chunk_overlap=overlap,
         min_chunk_size=config.min_chunk_size,
         strategy=config.strategy,
     )
     service = ChunkingService(config=chunking_config)
-    return service.chunk(text, config=chunking_config, entity_map=entity_map)
+    chunks = service.chunk(text, config=chunking_config, entity_map=entity_map)
+    cap = max_index_chunks()
+    if cap and len(chunks) > cap:
+        logger.info(
+            "Index chunk cap %s/%s (priority: high-signal actos over edictos)",
+            cap,
+            len(chunks),
+        )
+        chunks = select_prioritized(chunks, cap, lambda c: c.text)
+    return chunks
 
 
 async def _build_entity_map(
@@ -1267,9 +1306,9 @@ async def _index_chunks(
     indexing_config: IndexingConfig,
 ) -> int:
     """Index chunks into SQLite (+ FTS5) and optionally ChromaDB."""
-    from datetime import datetime
     import hashlib
-    
+    from datetime import datetime
+
     from sqlalchemy.exc import IntegrityError, OperationalError
 
     document_id = filename.replace(".pdf", "").replace(".txt", "")
@@ -1427,10 +1466,11 @@ async def _analyze_document(
     Returns the number of actos saved.
     """
     import time
-    from app.db.crud import create_analisis
-    from app.services.reference_firewall import ReferenceFirewallService
-    from app.services.feature_engineering import get_feature_engineer
+
     from app.core.observability import record_vcp
+    from app.db.crud import create_analisis
+    from app.services.feature_engineering import get_feature_engineer
+    from app.services.reference_firewall import ReferenceFirewallService
 
     _feature_engineer = get_feature_engineer()
 
@@ -1483,18 +1523,14 @@ async def _analyze_document(
     # DB writes happen AFTER all computation, under the write lock.
     t_start = time.monotonic()
     total_aius = 0
-    vcp_results: List[Any] = []
+    vcp_results: list[Any] = []
 
     from agents.verification.agent import VerificationAgent
-    try:
-        from app.services.retrieval_service import get_retrieval_service
-        _retrieval_svc = get_retrieval_service()
-    except Exception:
-        _retrieval_svc = None
-    verifier = VerificationAgent(retrieval_service=_retrieval_svc, firewall_service=firewall)
+    # Do not load MiniLM/cross-encoder during extraction: it fights Ollama for RAM/VRAM.
+    verifier = VerificationAgent(retrieval_service=None, firewall_service=firewall)
 
     # Phase 1: compute — Gemini results + adversarial pipeline (no DB writes here)
-    prepared: List[Dict[str, Any]] = []
+    prepared: list[dict[str, Any]] = []
     for acto in actos:
         try:
             fragment_text = acto.pop("_fragment_content", text[:500])

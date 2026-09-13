@@ -10,9 +10,9 @@ This service handles:
 """
 
 import logging
-from typing import List, Dict, Optional, Any
-from pathlib import Path
 import os
+from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ except ImportError:
 
 # Import ChunkingService
 try:
-    from .chunking_service import ChunkingService, ChunkingConfig
+    from .chunking_service import ChunkingConfig, ChunkingService
     CHUNKING_SERVICE_AVAILABLE = True
 except ImportError:
     logger.warning("ChunkingService not available")
@@ -49,9 +49,17 @@ except ImportError:
     logger.warning("Google Generative AI not installed. Install with: pip install google-generativeai")
     GOOGLE_AI_AVAILABLE = False
 
+try:
+    from sentence_transformers import SentenceTransformer
+    SENTENCE_TRANSFORMERS_AVAILABLE = True
+except ImportError:
+    SENTENCE_TRANSFORMERS_AVAILABLE = False
+    SentenceTransformer = None  # type: ignore[misc, assignment]
+
 
 EMBEDDING_MODEL = "models/gemini-embedding-001"
 EMBEDDING_DIM = 3072
+LOCAL_COLLECTION_NAME = "watcher_documents_local"
 
 
 class GoogleEmbeddingFunction:
@@ -65,7 +73,7 @@ class GoogleEmbeddingFunction:
         """Required by ChromaDB 1.x."""
         return "google-gemini-embedding"
 
-    def __call__(self, input: List[str]) -> List[List[float]]:
+    def __call__(self, input: list[str]) -> list[list[float]]:
         """Generate embeddings for a list of texts."""
         embeddings = []
         batch_size = 100
@@ -87,6 +95,39 @@ class GoogleEmbeddingFunction:
         return embeddings
 
 
+class LocalEmbeddingFunction:
+    """ChromaDB-compatible embedding function using sentence-transformers."""
+
+    def __init__(self, model_name: str):
+        if not SENTENCE_TRANSFORMERS_AVAILABLE or SentenceTransformer is None:
+            raise ImportError(
+                "sentence-transformers not installed. "
+                "Install with: pip install 'watcher-backend[local]'"
+            )
+        from app.core.hardware import local_device
+
+        self.model_name = model_name
+        device = local_device()
+        self.model = SentenceTransformer(model_name, device=device)
+        dim_fn = getattr(self.model, "get_embedding_dimension", None) or getattr(
+            self.model, "get_sentence_embedding_dimension"
+        )
+        self.dim = int(dim_fn())
+        logger.info("Local embeddings on %s (%s, %s dims)", device, model_name, self.dim)
+
+    def name(self) -> str:
+        return f"local-{self.model_name}"
+
+    def __call__(self, input: list[str]) -> list[list[float]]:
+        vectors = self.model.encode(
+            list(input),
+            convert_to_numpy=True,
+            show_progress_bar=False,
+            normalize_embeddings=True,
+        )
+        return vectors.tolist()
+
+
 class EmbeddingService:
     """
     Service for generating and managing document embeddings.
@@ -98,10 +139,10 @@ class EmbeddingService:
     
     def __init__(
         self,
-        persist_directory: Optional[str] = None,
+        persist_directory: str | None = None,
         collection_name: str = "watcher_documents",
         embedding_provider: str = "google",  # "google" or "local"
-        google_api_key: Optional[str] = None,
+        google_api_key: str | None = None,
         enable_text_cleaning: bool = True
     ):
         """
@@ -143,6 +184,8 @@ class EmbeddingService:
         # Initialize embedding function
         self.embedding_fn = None
         self.google_model = EMBEDDING_MODEL
+        self.local_model_name = None
+        self.embedding_dim = EMBEDDING_DIM
 
         if embedding_provider == "google":
             api_key = google_api_key or os.getenv("GOOGLE_API_KEY")
@@ -152,6 +195,27 @@ class EmbeddingService:
             else:
                 logger.warning("Google API key not found. Falling back to local embeddings.")
                 self.embedding_provider = "local"
+
+        if self.embedding_provider == "local":
+            from app.core.hardware import local_embedding_model
+
+            model_name = local_embedding_model()
+            if SENTENCE_TRANSFORMERS_AVAILABLE:
+                try:
+                    self.embedding_fn = LocalEmbeddingFunction(model_name)
+                    self.local_model_name = model_name
+                    self.embedding_dim = self.embedding_fn.dim
+                    if collection_name == "watcher_documents":
+                        collection_name = LOCAL_COLLECTION_NAME
+                        self.collection_name = collection_name
+                    logger.info("Local embeddings enabled with model %s", model_name)
+                except Exception as exc:
+                    logger.warning("Local embedding model failed to load: %s", exc)
+                    self.embedding_fn = None
+            else:
+                logger.warning(
+                    "Local embeddings requested but sentence-transformers is not installed"
+                )
 
         # Initialize ChromaDB client
         self.client = None
@@ -171,9 +235,9 @@ class EmbeddingService:
                 collection_kwargs = {
                     "name": collection_name,
                     "metadata": {
-                        "description": f"Watcher Agent - Google {EMBEDDING_MODEL}",
-                        "model": self.google_model,
-                        "dimensions": EMBEDDING_DIM,
+                        "description": f"Watcher Agent - {self.embedding_provider}",
+                        "model": self.local_model_name or self.google_model,
+                        "dimensions": self.embedding_dim,
                     },
                 }
                 if self.embedding_fn:
@@ -211,7 +275,7 @@ class EmbeddingService:
         text: str,
         chunk_size: int = 1000,
         overlap: int = 200
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Split text into overlapping chunks using ChunkingService.
         
@@ -236,7 +300,7 @@ class EmbeddingService:
     async def generate_embedding(
         self,
         text: str
-    ) -> Optional[List[float]]:
+    ) -> list[float] | None:
         """
         Generate embedding for a text.
         
@@ -260,12 +324,14 @@ class EmbeddingService:
                 embedding = result['embedding']
                 self.stats["embeddings_created"] += 1
                 return embedding
-            
-            else:
-                # For local embeddings, we would use sentence-transformers
-                # For now, return None to indicate not implemented
-                logger.warning("Local embeddings not yet implemented")
-                return None
+
+            if self.embedding_provider == "local" and self.embedding_fn is not None:
+                vectors = self.embedding_fn([text])
+                self.stats["embeddings_created"] += 1
+                return vectors[0]
+
+            logger.warning("No embedding function available for provider %s", self.embedding_provider)
+            return None
         
         except Exception as e:
             logger.error(f"Error generating embedding: {e}")
@@ -276,12 +342,12 @@ class EmbeddingService:
         self,
         document_id: str,
         content: str,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
         chunk: bool = True,
         db_session = None,
         persist_chunks: bool = True,
         use_triple_indexing: bool = True
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Add a document to the vector store.
         
@@ -433,8 +499,8 @@ class EmbeddingService:
         self,
         query: str,
         n_results: int = 10,
-        filter: Optional[Dict[str, Any]] = None
-    ) -> List[Dict[str, Any]]:
+        filter: dict[str, Any] | None = None
+    ) -> list[dict[str, Any]]:
         """
         Perform semantic search.
         
@@ -487,7 +553,7 @@ class EmbeddingService:
     async def delete_document(
         self,
         document_id: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Delete a document and all its chunks from vector store.
         
@@ -533,7 +599,7 @@ class EmbeddingService:
                 "error": str(e)
             }
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get service statistics."""
         stats = self.stats.copy()
         
@@ -549,9 +615,9 @@ class EmbeddingService:
             collection_kwargs = {
                 "name": self.collection_name,
                 "metadata": {
-                    "description": f"Watcher Agent - Google {EMBEDDING_MODEL}",
-                    "model": self.google_model,
-                    "dimensions": EMBEDDING_DIM,
+                    "description": f"Watcher Agent - {self.embedding_provider}",
+                    "model": self.local_model_name or self.google_model,
+                    "dimensions": self.embedding_dim,
                 },
             }
             if self.embedding_fn:
@@ -562,14 +628,18 @@ class EmbeddingService:
 
 
 # Global instance
-_embedding_service: Optional[EmbeddingService] = None
+_embedding_service: EmbeddingService | None = None
 
 
 def get_embedding_service() -> EmbeddingService:
     """Get or create the global embedding service instance."""
     global _embedding_service
-    
+
     if _embedding_service is None:
-        _embedding_service = EmbeddingService()
-    
+        from app.core.hardware import embedding_provider_default
+
+        _embedding_service = EmbeddingService(
+            embedding_provider=embedding_provider_default(),
+        )
+
     return _embedding_service

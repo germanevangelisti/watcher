@@ -10,18 +10,18 @@ Tests validate:
 
 from __future__ import annotations
 
-import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from app.services.intelligence_provider import (
+    _PROVIDER_CACHE,
     FreeProvider,
     ProProvider,
-    get_default_provider,
     _free_risk_level,
     _parse_max_amount,
-    _PROVIDER_CACHE,
+    get_default_provider,
+    resolve_intelligence_tier,
 )
 
 
@@ -50,60 +50,50 @@ class TestFreeProvider:
         assert len(caps) >= 1
         assert "keyword_risk_detection" in caps
 
-    def test_analyze_fragment_returns_dict(self):
+    async def test_analyze_fragment_returns_dict(self):
         p = FreeProvider()
-        result = asyncio.get_event_loop().run_until_complete(
-            p.analyze_fragment("Resolución de compra directa por $200.000.000", {"fuente": "test"})
+        result = await p.analyze_fragment(
+            "Resolución de compra directa por $200.000.000", {"fuente": "test"}
         )
         assert "actos" in result
         assert "resumen_general" in result
         assert isinstance(result["actos"], list)
         assert len(result["actos"]) == 1
 
-    def test_analyze_fragment_detects_risk(self):
+    async def test_analyze_fragment_detects_risk(self):
         p = FreeProvider()
-        result = asyncio.get_event_loop().run_until_complete(
-            p.analyze_fragment("contratación directa sin licitación pública", {})
-        )
+        result = await p.analyze_fragment("contratación directa sin licitación pública", {})
         acto = result["actos"][0]
         assert acto["riesgo"] in ("alto", "medio", "bajo", "informativo")
 
-    def test_analyze_fragment_classifies_licitacion(self):
+    async def test_analyze_fragment_classifies_licitacion(self):
         p = FreeProvider()
-        result = asyncio.get_event_loop().run_until_complete(
-            p.analyze_fragment("Licitación pública N° 001/2026 para provisión de insumos", {})
+        result = await p.analyze_fragment(
+            "Licitación pública N° 001/2026 para provisión de insumos", {}
         )
         assert result["actos"][0]["tipo_acto"] == "licitacion"
 
-    def test_analyze_fragment_classifies_decreto(self):
+    async def test_analyze_fragment_classifies_decreto(self):
         p = FreeProvider()
-        result = asyncio.get_event_loop().run_until_complete(
-            p.analyze_fragment("Decreto N° 456/2026 del Ejecutivo Provincial", {})
-        )
+        result = await p.analyze_fragment("Decreto N° 456/2026 del Ejecutivo Provincial", {})
         assert result["actos"][0]["tipo_acto"] == "decreto"
 
-    def test_analyze_content_returns_list(self):
+    async def test_analyze_content_returns_list(self):
         p = FreeProvider()
-        result = asyncio.get_event_loop().run_until_complete(
-            p.analyze_content("Resolución 1/2026", {"fuente": "Córdoba"})
-        )
+        result = await p.analyze_content("Resolución 1/2026", {"fuente": "Córdoba"})
         assert isinstance(result, list)
         assert len(result) >= 1
 
-    def test_analyze_content_enriches_actos(self):
+    async def test_analyze_content_enriches_actos(self):
         p = FreeProvider()
-        result = asyncio.get_event_loop().run_until_complete(
-            p.analyze_content("Subsidio a entidad social", {})
-        )
+        result = await p.analyze_content("Subsidio a entidad social", {})
         acto = result[0]
         assert "_fragment_index" in acto
         assert "_model_used" in acto
 
-    def test_model_used_is_rule_based(self):
+    async def test_model_used_is_rule_based(self):
         p = FreeProvider()
-        result = asyncio.get_event_loop().run_until_complete(
-            p.analyze_fragment("test content", {})
-        )
+        result = await p.analyze_fragment("test content", {})
         assert "rule_based" in result["model_used"]
 
 
@@ -123,27 +113,25 @@ class TestProProvider:
         assert isinstance(caps, list)
         assert "llm_structured_extraction" in caps
 
-    def test_analyze_fragment_delegates_to_watcher_service(self):
+    async def test_analyze_fragment_delegates_to_watcher_service(self):
         p = ProProvider(api_key="test_key")
         mock_service = MagicMock()
-        mock_service.analyze_fragment = AsyncMock(return_value={"actos": [], "resumen_general": "ok"})
+        mock_service.analyze_fragment = AsyncMock(
+            return_value={"actos": [], "resumen_general": "ok"}
+        )
         p._service = mock_service
 
-        result = asyncio.get_event_loop().run_until_complete(
-            p.analyze_fragment("test", {"fuente": "test"})
-        )
+        result = await p.analyze_fragment("test", {"fuente": "test"})
         mock_service.analyze_fragment.assert_called_once_with("test", {"fuente": "test"})
         assert result["resumen_general"] == "ok"
 
-    def test_analyze_content_delegates_to_watcher_service(self):
+    async def test_analyze_content_delegates_to_watcher_service(self):
         p = ProProvider(api_key="test_key")
         mock_service = MagicMock()
         mock_service.analyze_content = AsyncMock(return_value=[{"tipo_acto": "decreto"}])
         p._service = mock_service
 
-        result = asyncio.get_event_loop().run_until_complete(
-            p.analyze_content("test", {})
-        )
+        result = await p.analyze_content("test", {})
         assert isinstance(result, list)
         assert result[0]["tipo_acto"] == "decreto"
 
@@ -154,7 +142,8 @@ class TestProProvider:
 
 
 class TestGetDefaultProvider:
-    def test_returns_free_provider_when_no_api_key(self):
+    def test_returns_free_provider_when_no_api_key(self, monkeypatch):
+        monkeypatch.setenv("INTELLIGENCE_PROVIDER", "free")
         from app.core.config import settings as app_settings
         with patch.object(app_settings, "GOOGLE_API_KEY", None):
             _PROVIDER_CACHE.clear()
@@ -162,18 +151,31 @@ class TestGetDefaultProvider:
         assert provider.tier == "free"
         assert isinstance(provider, FreeProvider)
 
-    def test_returns_pro_provider_when_api_key_provided(self):
+    def test_returns_pro_provider_when_api_key_provided(self, monkeypatch):
+        monkeypatch.setenv("INTELLIGENCE_PROVIDER", "google")
         provider = get_default_provider(api_key="fake_key_12345")
         assert provider.tier == "pro"
         assert isinstance(provider, ProProvider)
 
-    def test_caches_provider_by_tier(self):
-        # Use an explicit key to force pro tier — test that second call returns cached object
+    def test_returns_local_provider_when_requested(self, monkeypatch):
+        monkeypatch.setenv("INTELLIGENCE_PROVIDER", "local")
+        provider = get_default_provider(api_key="fake_key_12345")
+        assert provider.tier == "local"
+
+    def test_auto_local_with_ollama_url(self, monkeypatch):
+        monkeypatch.setenv("INTELLIGENCE_PROVIDER", "auto")
+        monkeypatch.setenv("HARDWARE_PROFILE", "local")
+        monkeypatch.setenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
+        assert resolve_intelligence_tier("google-key") == "local"
+
+    def test_caches_provider_by_tier(self, monkeypatch):
+        monkeypatch.setenv("INTELLIGENCE_PROVIDER", "google")
         p1 = get_default_provider(api_key="cache_test_key")
         p2 = get_default_provider(api_key="cache_test_key")
         assert p1 is p2  # same cached instance
 
-    def test_provider_is_intelligence_provider_instance(self):
+    def test_provider_is_intelligence_provider_instance(self, monkeypatch):
+        monkeypatch.setenv("INTELLIGENCE_PROVIDER", "google")
         provider = get_default_provider(api_key="any_key")
         assert hasattr(provider, "tier")
         assert hasattr(provider, "analyze_fragment")

@@ -5,13 +5,13 @@ Servicio para procesamiento de archivos PDF en lotes - Versión optimizada con h
 import logging
 import re
 import uuid
+from datetime import date, datetime
 from pathlib import Path
-from typing import Dict, List, Optional
-from datetime import datetime, date
 
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.hardware import document_pipeline_concurrency
 from app.db import crud
 from app.db.models import ProcesamientoBatch
 from app.services.extractors import ExtractorRegistry
@@ -31,9 +31,7 @@ class BatchProcessor:
         """
         self.db = db
         self.watcher_service = WatcherService()
-        
-        # Configuración de procesamiento
-        self.max_workers = 4
+        self.max_workers = document_pipeline_concurrency()
         self.batch_size = 10
         
         # Patrones para extracción de montos
@@ -56,8 +54,8 @@ class BatchProcessor:
         self, 
         source_dir: Path, 
         batch_size: int = 10,
-        filtros: Optional[Dict] = None
-    ) -> Dict:
+        filtros: dict | None = None
+    ) -> dict:
         """
         Procesa directorio con historial acumulativo y comparación presupuestaria.
         
@@ -166,7 +164,7 @@ class BatchProcessor:
             logger.error(f"Error en procesamiento batch {batch_id}: {e}")
             raise
     
-    def _get_files_to_process(self, source_dir: Path, filtros: Optional[Dict]) -> List[Path]:
+    def _get_files_to_process(self, source_dir: Path, filtros: dict | None) -> list[Path]:
         """Obtiene archivos a procesar aplicando filtros."""
         pdf_files = sorted(list(source_dir.glob('*.pdf')))
         
@@ -198,26 +196,40 @@ class BatchProcessor:
         
         return filtered_files
     
-    async def _process_batch(self, batch_files: List[Path]) -> List[Dict]:
-        """Procesa un lote de archivos secuencialmente para evitar conflictos de transacción."""
-        processed_results = []
-        
-        # Procesar secuencialmente para evitar problemas de transacción
-        for pdf_file in batch_files:
+    async def _process_batch(self, batch_files: list[Path]) -> list[dict]:
+        """Procesa un lote con concurrencia acotada (una sesión DB por PDF)."""
+        from app.core.concurrency import map_bounded
+
+        async def _one(pdf_file: Path) -> dict:
             try:
-                result = await self._process_single_pdf(pdf_file)
-                processed_results.append(result)
+                return await self._process_single_pdf(pdf_file)
             except Exception as e:
                 logger.error(f"Error procesando {pdf_file.name}: {e}")
+                return {
+                    "filename": pdf_file.name,
+                    "status": "failed",
+                    "error": str(e),
+                }
+
+        raw = await map_bounded(
+            batch_files,
+            _one,
+            self.max_workers,
+            return_exceptions=True,
+        )
+        processed_results: list[dict] = []
+        for pdf_file, item in zip(batch_files, raw):
+            if isinstance(item, BaseException):
                 processed_results.append({
                     "filename": pdf_file.name,
                     "status": "failed",
-                    "error": str(e)
+                    "error": str(item),
                 })
-        
+            else:
+                processed_results.append(item)
         return processed_results
     
-    async def _process_single_pdf(self, pdf_path: Path) -> Dict:
+    async def _process_single_pdf(self, pdf_path: Path) -> dict:
         """
         Procesa un PDF individual con manejo seguro de transacciones.
         """
@@ -363,10 +375,10 @@ class BatchProcessor:
     async def _extraer_ejecucion_presupuestaria(
         self, 
         content: str, 
-        analysis: Dict, 
+        analysis: dict, 
         boletin_id: int,
         boletin_date: str
-    ) -> Optional[Dict]:
+    ) -> dict | None:
         """
         Extrae información de ejecución presupuestaria del contenido usando SQL directo.
         """
@@ -417,7 +429,7 @@ class BatchProcessor:
         
         return ejecucion_data
     
-    async def _crear_alerta_sql(self, ejecucion_data: Dict, boletin_id: int):
+    async def _crear_alerta_sql(self, ejecucion_data: dict, boletin_id: int):
         """Crea una alerta usando SQL directo."""
         sql = """
         INSERT INTO alertas_gestion 
@@ -441,7 +453,7 @@ class BatchProcessor:
         
         await self.db.execute(text(sql), alerta_data)
     
-    def _extraer_monto(self, content: str) -> Optional[float]:
+    def _extraer_monto(self, content: str) -> float | None:
         """Extrae monto del contenido usando patrones regex."""
         for pattern in self.monto_patterns:
             matches = re.findall(pattern, content, re.IGNORECASE)
@@ -454,7 +466,7 @@ class BatchProcessor:
                     continue
         return None
     
-    def _extraer_organismo(self, content: str) -> Optional[str]:
+    def _extraer_organismo(self, content: str) -> str | None:
         """Extrae organismo del contenido."""
         for pattern in self.organismo_patterns:
             match = re.search(pattern, content, re.IGNORECASE)
@@ -462,7 +474,7 @@ class BatchProcessor:
                 return match.group(1).strip().title()
         return None
     
-    def _determinar_tipo_operacion(self, content: str, analysis: Dict) -> str:
+    def _determinar_tipo_operacion(self, content: str, analysis: dict) -> str:
         """Determina el tipo de operación basado en el contenido y análisis."""
         content_lower = content.lower()
         

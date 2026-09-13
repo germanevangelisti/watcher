@@ -1,0 +1,27 @@
+# Workstation local (cooperledge): Neo4j 8 GB + Postgres tuned.
+# NOT auto-merged. GCE e2-medium (~4 GB) must keep docker-compose.yml defaults.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.local.yml up -d db neo4j
+#
+# Backend and GPU inference (Ollama) run on the host so CUDA is visible.
+
+services:
+  db:
+    shm_size: "256mb"
+    command:
+      - postgres
+      - -c
+      - shared_buffers=2GB
+      - -c
+      - effective_cache_size=8GB
+      - -c
+      - work_mem=32MB
+      - -c
+      - maintenance_work_mem=512MB
+
+  neo4j:
+    environment:
+      NEO4J_server_memory_heap_initial__size: ${NEO4J_HEAP_INITIAL:-4G}
+      NEO4J_server_memory_heap_max__size: ${NEO4J_HEAP_MAX:-8G}
+      NEO4J_server_memory_pagecache_size: ${NEO4J_PAGECACHE:-2G}

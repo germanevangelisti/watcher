@@ -19,6 +19,24 @@ from app.pipelines.base import BoletinPipeline
 logger = logging.getLogger(__name__)
 
 
+def _text_and_pages(extraction: Any) -> tuple[str, int]:
+    """Accept ExtractedContent or the dict stub used in unit tests."""
+    if isinstance(extraction, dict):
+        text = str(extraction.get("text") or extraction.get("full_text") or "")
+        pages = extraction.get("pages", 0)
+        if isinstance(pages, list):
+            pages = len(pages)
+        return text, int(pages or 0)
+    text = str(getattr(extraction, "full_text", "") or "")
+    pages = getattr(extraction, "pages", None)
+    if isinstance(pages, list):
+        return text, len(pages)
+    stats = getattr(extraction, "stats", None)
+    if stats is not None:
+        return text, int(getattr(stats, "total_pages", 0) or 0)
+    return text, 0
+
+
 class ProvincialPipeline(BoletinPipeline):
     """
     Pipeline for Córdoba provincial bulletins (boletinoficial.cba.gov.ar).
@@ -52,6 +70,7 @@ class ProvincialPipeline(BoletinPipeline):
         Returns a list of dicts with keys: path, filename, date, section.
         """
         from sqlalchemy import select
+
         from app.db.models import Boletin
 
         if not self._source_dir.exists():
@@ -83,31 +102,46 @@ class ProvincialPipeline(BoletinPipeline):
         return pending
 
     async def transform(self, raw_data: list[dict]) -> list[dict]:
-        """
-        Extract text from each PDF using ExtractorRegistry.
-
-        Adds 'text', 'pages', and 'char_count' to each record.
-        """
+        """Extract text from each PDF with bounded CPU concurrency."""
+        from app.core.concurrency import map_bounded
+        from app.core.hardware import pipeline_workers
         from app.services.extractors import ExtractorRegistry
 
-        transformed: list[dict] = []
-        for item in raw_data:
+        async def _one(item: dict) -> dict:
             path = Path(item["path"])
             try:
                 extraction = await ExtractorRegistry.extract(path)
-                transformed.append(
-                    {
-                        **item,
-                        "text": extraction.get("text", ""),
-                        "pages": extraction.get("pages", 0),
-                        "char_count": len(extraction.get("text", "")),
-                    }
-                )
+                text, pages = _text_and_pages(extraction)
+                return {
+                    **item,
+                    "text": text,
+                    "pages": pages,
+                    "char_count": len(text),
+                }
             except Exception as exc:
                 logger.warning("transform: failed to extract '%s': %s", path.name, exc)
-                # Still include but mark as failed so load() can record the error
-                transformed.append({**item, "text": "", "pages": 0, "char_count": 0, "error": str(exc)})
+                return {
+                    **item,
+                    "text": "",
+                    "pages": 0,
+                    "char_count": 0,
+                    "error": str(exc),
+                }
 
+        results = await map_bounded(
+            raw_data,
+            _one,
+            pipeline_workers(),
+            return_exceptions=True,
+        )
+        transformed: list[dict] = []
+        for item, result in zip(raw_data, results):
+            if isinstance(result, BaseException):
+                transformed.append(
+                    {**item, "text": "", "pages": 0, "char_count": 0, "error": str(result)}
+                )
+            else:
+                transformed.append(result)
         return transformed
 
     async def load(self, transformed: list[dict]) -> None:
@@ -116,8 +150,9 @@ class ProvincialPipeline(BoletinPipeline):
 
         Creates or updates a Boletin record and triggers analysis via BatchProcessor.
         """
-        from app.db.models import Boletin
         from sqlalchemy import select
+
+        from app.db.models import Boletin
 
         loaded = 0
         for item in transformed:

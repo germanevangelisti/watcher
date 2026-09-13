@@ -38,5 +38,5 @@ Tipos: `feat` `fix` `refactor` `test` `docs` `chore`
 - [ ] KB actualizada si hubo cambios de arquitectura (ADR)
 
 ## Estado actual del proyecto
-Épica 0 en curso — Migración OpenAI → Google Gemini. Ver `knowledgebase/current/status.md`.
-Próximo: Épica 1 — Pipeline de Ingesta.
+H.1 (pipeline hardware local) está en `main`. Ver `knowledgebase/current/status.md`.
+**Próxima sesión:** P.7 gasto acumulado vs presupuesto — leer `knowledgebase/current/next-session.md` y `knowledgebase/backlog/P.7-gasto-acumulado-presupuesto.md`.

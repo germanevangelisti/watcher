@@ -1,58 +1,65 @@
 # Estado Actual — Watcher Agent
 
-**Última actualización:** 2026-06-26
+**Última actualización:** 2026-09-13
 **Snapshot del momento.** Se pisa al avanzar. La historia completa está en `docs/changelog.md` y el historial de git.
 
-> Sincronizado a partir de los commits hasta `da098b7` (changelog v2.0.0 + vertical de presupuesto 2026).
+> Rama activa: `main` (H.1 mergeado). Próxima sesión: [P.7](../backlog/P.7-gasto-acumulado-presupuesto.md) — [handoff](next-session.md).
 
 ---
 
-## 🏃 Foco actual
+## Foco actual
 
 | Campo | Valor |
 |---|---|
-| Release | v2.0.0 — Architecture Overhaul (Fases 0–4 completas) + vertical Presupuesto 2026 |
-| Estado | 🟢 Núcleo funcional end-to-end (ingesta → extracción → indexación → retrieval → agentes) |
-| Stack LLM | Google Gemini (migración desde OpenAI **completada** en código) |
-| Pendiente inmediato | Ejecutar el re-indexado operativo de ChromaDB en el entorno con datos reales |
+| Release | v2.0.0 + H.1 (pipeline hardware local) |
+| Estado | Núcleo e2e en código; runtime local-first en development |
+| Stack LLM | Gemini (cloud) + LocalPro/Ollama (default en development si `OLLAMA_BASE_URL`) |
+| Pendiente inmediato | P.7.1+P.7.2 ledger gasto vs presupuesto (ver next-session.md) |
 
 ---
 
-## 📊 Estado por épica (vs. código real)
+## Estado por épica
 
 | Épica | Estado | Notas |
 |---|---|---|
-| Épica 0: Migración Gemini | 🟢 Hecho (1 ajuste) | OpenAI eliminado del backend; falta unificar modelo de embeddings |
-| Épica 1: Ingesta | 🟢 Hecho (1 parcial) | ABC + `IngestionRun` + upload SHA256; descarga provincial vive en `sync_service` |
-| Épica 2: Extracción / Análisis | 🟢 Hecho | `IntelligenceProvider` (Free/Pro) + `DocumentIntelligenceAgent` |
-| Épica 3: Feature Engineering | 🟢 Hecho | `feature_engineering.py` per-acto (transparencia 0–100 + red flags tipificadas) cableado en pipeline; CUIT extraído/normalizado en `EntityService` |
-| Épica 4: Indexación / Búsqueda | 🟢 Hecho | Neo4j (`Entidad`/`Boletin`/`MENCIONADO_EN`) + ChromaDB + FTS5 (triple index) |
-| Épica 5: Retrieval / Consulta | 🟢 Hecho | Semantic + Hybrid (RRF) + re-ranking + graph traversal |
-| Épica 6: Sistema multi-agente | 🟢 Hecho | Orchestrator + Anomaly + Learning + Insight + Verification |
-| Épica 7: Producción / Hardening | 🟢 Mayormente hecho | Suite de tests (~181 pasando), APScheduler, frontend v2 shadcn/ui |
-| Presupuesto 2026 (fuera de plan) | 🟢 Hecho | Parser PDF + ETL análisis→ejecución + dedup + API + UI |
+| Épica 0: Migración Gemini | Hecho | Reindex operativo Google aún pendiente si se sigue en 3072-d |
+| Épica 1: Ingesta | Hecho (parcial) | Transform provincial ahora paralelo (nproc-2) |
+| Épica 2: Extracción | Hecho | Free / Pro / **LocalPro** |
+| Épica 3: Feature Engineering | Hecho | Sin cambios en H.1 |
+| Épica 4–5: Índice / retrieval | Hecho | Rerank local-first; colección local separada |
+| Épica 6: Agentes | Hecho | Sin cambios de canales |
+| Épica 7: Prod | En curso | H.1; CI/auth/UI huérfana siguen abiertos |
+| H.1 Hardware local | Hecho | Workers nproc-2, overlay Compose, LocalPro, embeddings/rerank locales |
+| Épica P: Presupuesto | Hecho + P.7 idea | Código P.1–P.6; ledger vacío en SQLite local |
 
 ---
 
-## 🚧 Bloqueos
+## Corte gasto público (2026-09-13)
 
-*Ninguno activo.*
-
----
-
-## ⚠️ Deuda técnica conocida
-
-1. ~~**Modelo de embeddings inconsistente** (`gemini-embedding-001` vs `text-embedding-004`).~~ ✅ **Resuelto (A1):** `scripts/reindex_google_embeddings.py` ahora reutiliza el modelo canónico (`gemini-embedding-001`, 3072 dims), re-indexa la colección in-place con backup, y comentarios de `embedding_service.py` corregidos. Queda como paso **operativo** correr el re-indexado contra ChromaDB con datos reales.
-2. **`ProvincialPipeline.extract()`** descubre PDFs locales; la descarga remota está en `sync_service.download_boletines_task` (no dentro del pipeline).
-3. **`indexing_service` tests** fallan por usar `await` sobre una sesión SQLAlchemy síncrona en el fixture (bug de test, no de producción).
-4. **DSLabAnalyzer/AnomalyDetectionAgent** mantienen su scoring a nivel **documento** (legacy). El nuevo `feature_engineering.py` opera per-acto y es la fuente canónica; consolidar/retirar el camino DS Lab queda como limpieza futura.
+5.667 actos en `analisis`; **$458,4 mil M** brutos de `monto_numerico`; **$315,4 mil M** en tipos de gasto deduplicados. Un pliego (S-511) republicado 8 veces = 44% del bruto. `presupuesto_base` y `ejecucion_presupuestaria` = 0 filas. Ver [gasto-publico-actos.md](gasto-publico-actos.md) y P.7.
 
 ---
 
-## 🔮 Próximos pasos
+## Bloqueos
 
-1. Ejecutar el re-indexado operativo de ChromaDB (A1 ya unificó el modelo en código).
-2. ~~Auditar y formalizar Épica 3 (Feature Engineering).~~ ✅ **Hecho (E3):** `feature_engineering.py` per-acto + CUIT en `EntityService`.
-3. Documentar formalmente la vertical de Presupuesto 2026 en el backlog/arquitectura.
-4. Medir cobertura de tests y arreglar el fixture async de `indexing_service` para cerrar Épica 7.
-5. (Limpieza) Consolidar el camino DS Lab (scoring a nivel documento) con el nuevo feature engineering per-acto.
+Ninguno activo. Notion MCP no disponible en la sesión que abrió H.1.
+
+---
+
+## Deuda técnica conocida
+
+1. Re-indexado operativo Chroma (Google o local) contra corpus real.
+2. `ProvincialPipeline.extract()` no descarga; sigue en `sync_service`.
+3. Fixture async de `indexing_service`.
+4. DS Lab scoring a nivel documento vs per-acto.
+5. CI (`requirements.txt`, Py 3.10, tests `continue-on-error`).
+6. UI v2 sin compliance / menciones / jurisdicciones / mapa.
+
+---
+
+## Próximos pasos
+
+1. **P.7.1 + P.7.2** — clasificar `is_gasto_publico` y escribir `ejecucion_presupuestaria` al cerrar el pipeline. Handoff: [next-session.md](next-session.md).
+2. P.7.3 cargar Ley 11.088; P.7.4 UI `%` vs `monto_vigente`.
+3. Reintentar S1/S3 del 2026-09-01 (sin actos en analisis).
+4. UI huérfana y CI.

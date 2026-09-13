@@ -9,8 +9,8 @@ Provides pluggable re-ranking strategies:
 
 import logging
 import os
-from typing import List, Optional, Protocol
 from abc import ABC, abstractmethod
+from typing import Protocol
 
 logger = logging.getLogger(__name__)
 
@@ -45,9 +45,9 @@ class BaseReranker(ABC):
     def rerank(
         self,
         query: str,
-        results: List[SearchResultProtocol],
+        results: list[SearchResultProtocol],
         top_k: int = 5
-    ) -> List[SearchResultProtocol]:
+    ) -> list[SearchResultProtocol]:
         """
         Re-rank search results based on query relevance.
         
@@ -59,7 +59,6 @@ class BaseReranker(ABC):
         Returns:
             Re-ranked list of results (top_k items)
         """
-        pass
 
 
 class NoopReranker(BaseReranker):
@@ -68,9 +67,9 @@ class NoopReranker(BaseReranker):
     def rerank(
         self,
         query: str,
-        results: List[SearchResultProtocol],
+        results: list[SearchResultProtocol],
         top_k: int = 5
-    ) -> List[SearchResultProtocol]:
+    ) -> list[SearchResultProtocol]:
         """Return top_k results without re-ranking."""
         return results[:top_k]
 
@@ -82,7 +81,7 @@ class GoogleReranker(BaseReranker):
     Uses Google Gemini to score each result's relevance to the query.
     """
     
-    def __init__(self, api_key: Optional[str] = None, model: str = "gemini-2.0-flash"):
+    def __init__(self, api_key: str | None = None, model: str = "gemini-2.0-flash"):
         """
         Initialize Google re-ranker.
         
@@ -103,9 +102,9 @@ class GoogleReranker(BaseReranker):
     def rerank(
         self,
         query: str,
-        results: List[SearchResultProtocol],
+        results: list[SearchResultProtocol],
         top_k: int = 5
-    ) -> List[SearchResultProtocol]:
+    ) -> list[SearchResultProtocol]:
         """
         Re-rank results using Google Gemini relevance scoring.
         
@@ -161,34 +160,27 @@ Relevance score (0-10):"""
 
 class CrossEncoderReranker(BaseReranker):
     """
-    Local cross-encoder re-ranker.
-    
-    Uses sentence-transformers cross-encoder model for relevance scoring.
-    Model: cross-encoder/ms-marco-MiniLM-L-6-v2
+    Local cross-encoder re-ranker (GPU if CUDA is available).
     """
-    
-    def __init__(self, model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"):
-        """
-        Initialize cross-encoder re-ranker.
-        
-        Args:
-            model_name: HuggingFace model name
-        """
+
+    def __init__(self, model_name: str | None = None):
         if not SENTENCE_TRANSFORMERS_AVAILABLE:
             raise ImportError(
                 "sentence-transformers not installed. "
-                "Install with: pip install sentence-transformers"
+                "Install with: pip install '.[local]'"
             )
-        
-        self.model = CrossEncoder(model_name)
-        logger.info(f"Loaded cross-encoder model: {model_name}")
+        from app.core.hardware import local_rerank_model
+
+        self.model_name = model_name or local_rerank_model()
+        self.model = CrossEncoder(self.model_name)
+        logger.info("Loaded cross-encoder model: %s", self.model_name)
     
     def rerank(
         self,
         query: str,
-        results: List[SearchResultProtocol],
+        results: list[SearchResultProtocol],
         top_k: int = 5
-    ) -> List[SearchResultProtocol]:
+    ) -> list[SearchResultProtocol]:
         """
         Re-rank results using cross-encoder model.
         
@@ -224,67 +216,76 @@ class RerankerService:
     Service for re-ranking search results.
     
     Automatically selects best available strategy:
-    1. Google re-ranker (if Google API key available)
-    2. Cross-encoder (if sentence-transformers installed)
-    3. Noop (fallback)
+    1. Local profile: cross-encoder, then Google, then noop
+    2. Cloud profile: Google, then cross-encoder, then noop
     """
-    
-    def __init__(self, strategy: Optional[str] = None):
+
+    def __init__(self, strategy: str | None = None):
         """
         Initialize reranker service.
-        
+
         Args:
-            strategy: Reranker strategy ("google", "cross-encoder", "noop", or None for auto)
+            strategy: Reranker strategy ("google", "cross-encoder", "noop",
+            or None for auto / RERANK_STRATEGY env)
         """
         self.strategy_name = strategy
         self.reranker = self._create_reranker(strategy)
-    
-    def _create_reranker(self, strategy: Optional[str]) -> BaseReranker:
+
+    def _create_reranker(self, strategy: str | None) -> BaseReranker:
         """Create reranker based on strategy and availability."""
-        
-        # If strategy specified, use it
+        from app.core.hardware import prefer_local_ai, rerank_strategy_default
+
+        if strategy is None:
+            strategy = rerank_strategy_default()
+
         if strategy == "noop":
             logger.info("Using noop reranker (no re-ranking)")
             return NoopReranker()
-        
-        elif strategy == "google":
+
+        if strategy == "google":
             if GOOGLE_AI_AVAILABLE and os.getenv("GOOGLE_API_KEY"):
                 logger.info("Using Google reranker")
                 return GoogleReranker()
-            else:
-                logger.warning("Google reranker requested but not available, using noop")
-                return NoopReranker()
-        
-        elif strategy == "cross-encoder":
+            logger.warning("Google reranker requested but not available, using noop")
+            return NoopReranker()
+
+        if strategy == "cross-encoder":
             if SENTENCE_TRANSFORMERS_AVAILABLE:
                 logger.info("Using cross-encoder reranker")
                 return CrossEncoderReranker()
-            else:
-                logger.warning("Cross-encoder requested but not available, using noop")
-                return NoopReranker()
-        
-        # Auto-select best available
-        elif strategy is None:
-            if GOOGLE_AI_AVAILABLE and os.getenv("GOOGLE_API_KEY"):
-                logger.info("Auto-selected Google reranker")
-                return GoogleReranker()
-            elif SENTENCE_TRANSFORMERS_AVAILABLE:
-                logger.info("Auto-selected cross-encoder reranker")
-                return CrossEncoderReranker()
-            else:
-                logger.info("No reranker available, using noop")
-                return NoopReranker()
-        
-        else:
-            logger.warning(f"Unknown strategy '{strategy}', using noop")
+            logger.warning("Cross-encoder requested but not available, using noop")
             return NoopReranker()
+
+        if strategy not in {None, "auto"}:
+            logger.warning("Unknown strategy '%s', using noop", strategy)
+            return NoopReranker()
+
+        # Auto-select: local hardware prefers on-device models
+        if prefer_local_ai():
+            if SENTENCE_TRANSFORMERS_AVAILABLE:
+                logger.info("Auto-selected cross-encoder reranker (local profile)")
+                return CrossEncoderReranker()
+            if GOOGLE_AI_AVAILABLE and os.getenv("GOOGLE_API_KEY"):
+                logger.info("Auto-selected Google reranker (local fallback)")
+                return GoogleReranker()
+            logger.info("No reranker available, using noop")
+            return NoopReranker()
+
+        if GOOGLE_AI_AVAILABLE and os.getenv("GOOGLE_API_KEY"):
+            logger.info("Auto-selected Google reranker")
+            return GoogleReranker()
+        if SENTENCE_TRANSFORMERS_AVAILABLE:
+            logger.info("Auto-selected cross-encoder reranker")
+            return CrossEncoderReranker()
+        logger.info("No reranker available, using noop")
+        return NoopReranker()
     
     def rerank(
         self,
         query: str,
-        results: List[SearchResultProtocol],
+        results: list[SearchResultProtocol],
         top_k: int = 5
-    ) -> List[SearchResultProtocol]:
+    ) -> list[SearchResultProtocol]:
         """
         Re-rank search results.
         
@@ -299,7 +300,7 @@ class RerankerService:
         return self.reranker.rerank(query, results, top_k)
 
 
-def get_reranker_service(strategy: Optional[str] = None) -> RerankerService:
+def get_reranker_service(strategy: str | None = None) -> RerankerService:
     """
     Get a reranker service instance.
     
