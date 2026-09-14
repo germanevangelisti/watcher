@@ -4,9 +4,11 @@
 **Corpus:** 150 boletines, 29 días feb–mar 2026 + 1 sep, 5.667 filas en `analisis`.  
 **Artefacto:** canvas `gasto-publico-actos` (abrir junto al chat).
 
+> Corte **previo a P.7.3**. Desde 2026-09-14 `presupuesto_base` tiene 480 programas 2026 y el ledger matchea 90/131. Este documento conserva el diagnóstico del bruto.
+
 ## Hallazgo
 
-La suma bruta de `monto_numerico` es **$458,4 mil millones ARS**. Eso **no** es gasto ejecutado: mezcla llamados a licitación, republicaciones, remates judiciales, actos societarios y modificaciones de partidas. `presupuesto_base`, `ejecucion_presupuestaria` y `vinculos_acto_presupuesto` están **vacíos**, así que no hay contraste con la Ley 11.088 en esta base.
+La suma bruta de `monto_numerico` es **$458,4 mil millones ARS**. Eso **no** es gasto ejecutado: mezcla llamados a licitación, republicaciones, remates judiciales, actos societarios y modificaciones de partidas. En este corte `presupuesto_base`, `ejecucion_presupuestaria` y `vinculos_acto_presupuesto` estaban **vacíos**.
 
 Un solo pliego (pavimento S-511 Las Peñas–Isletillas, $25.341 M) publicado **8 veces** suma **$202,7 mil M = 44% del bruto**.
 
@@ -74,15 +76,15 @@ Calidad ese día: dos obras ACIF distintas con el **mismo** $2.114.469.923; un p
 
 ## Feature de producto (P.7)
 
-Registrar **gasto acumulado detallado** y contrastarlo con presupuesto. P.1–P.6 ya están en código (parser 2026, ETL, alias, `is_duplicate`, API, página Ejecución). Falta:
+Registrar **gasto acumulado detallado** y contrastarlo con presupuesto. P.1–P.7.3 ya están en código (parser 2026 cargado, ETL, alias ACIF/EPEC/Policía/CCU, ledger vivo). Falta:
 
-1. Clasificar `is_gasto_publico` + etapa + jurisdicción.
-2. Extraer `numero_acto` en S4 para que el dedup del ETL funcione.
-3. Cablear el ETL al cierre del pipeline.
-4. Cargar `presupuesto_base` 2026 y ampliar alias (ACIF, EPEC, Policía).
-5. UI: `% monto_acumulado / monto_vigente`, alerta &gt;100%, separar compromiso de ejecución.
+1. ~~Clasificar `is_gasto_publico` + etapa + jurisdicción.~~
+2. ~~Extraer `numero_acto` en S4 para que el dedup del ETL funcione.~~
+3. ~~Cablear el ETL al cierre del pipeline.~~
+4. ~~Cargar `presupuesto_base` 2026 y ampliar alias (ACIF, EPEC, Policía).~~
+5. ~~UI: `% monto_acumulado / monto_vigente`, alerta &gt;100%, separar compromiso de ejecución.~~
 
 Orden de magnitud (no KPI): $315 mil M vs ~11,4 billones de la Ley 11.088 ≈ 2,8%, sobre ~30 días hábiles y casi todo compromiso de obra. No publicar ese % hasta filtrar y anclar partidas.
 
 Historia: [P.7-gasto-acumulado-presupuesto.md](../backlog/P.7-gasto-acumulado-presupuesto.md).  
-Próxima sesión: [next-session.md](next-session.md).
+Próxima sesión: [V.1](../backlog/V.1-verificar-pipeline-vs-realidad.md).

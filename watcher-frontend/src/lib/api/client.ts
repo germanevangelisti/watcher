@@ -1,6 +1,6 @@
 import axios, { AxiosError } from "axios"
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8001/api/v1"
+const API_URL = import.meta.env.VITE_API_URL || "/api/v1"
 
 // Backend base URL without the /api/v1 suffix — use this for direct file links
 export const API_BASE_URL = API_URL.replace(/\/api\/v1\/?$/, "")
@@ -11,6 +11,24 @@ export const apiClient = axios.create({
     "Content-Type": "application/json",
   },
   timeout: 30000, // 30 seconds
+  // Default axios JSON.parse swallows errors and returns the raw string.
+  // That made the ejecución page render zeros (string.data.total_canonical).
+  transformResponse: [
+    (data, headers) => {
+      if (typeof data !== "string" || data.length === 0) return data
+      const rawType = headers?.["content-type"] ?? headers?.["Content-Type"] ?? ""
+      const contentType = Array.isArray(rawType) ? rawType.join(" ") : String(rawType)
+      const looksJson =
+        contentType.includes("json") ||
+        (data.startsWith("{") || data.startsWith("["))
+      if (!looksJson) return data
+      try {
+        return JSON.parse(data)
+      } catch {
+        throw new Error("Respuesta JSON inválida del API")
+      }
+    },
+  ],
 })
 
 // Request interceptor

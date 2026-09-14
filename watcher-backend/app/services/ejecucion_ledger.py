@@ -35,10 +35,10 @@ from app.services.presupuesto_matching import (
     _normalize,
     _normalize_acto,
     build_presupuesto_index,
-    extract_numero_acto,
     first_beneficiario,
     match_organismo,
     parse_date,
+    resolve_numero_acto,
 )
 
 logger = logging.getLogger(__name__)
@@ -236,12 +236,12 @@ async def upsert_boletin_ejecucion(db: AsyncSession, boletin_id: int) -> LedgerR
         org = acto.organismo or ""
         org_norm = _normalize(org)
 
-        # numero_acto may be missing on actos extracted before the prompt change;
-        # recover it so republished tenders still collapse.
-        numero_acto = acto.numero_acto or extract_numero_acto(
-            acto.descripcion, acto.fragmento
+        # Actos extracted before the prompt change may carry no numero_acto, or a
+        # per-publication ID that changes every time the tender is republished.
+        numero_acto = resolve_numero_acto(
+            acto.numero_acto, acto.descripcion, acto.fragmento
         )
-        if numero_acto and not acto.numero_acto:
+        if numero_acto != acto.numero_acto:
             acto.numero_acto = numero_acto
 
         acto_norm = _normalize_acto(numero_acto)

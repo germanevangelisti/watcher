@@ -2,7 +2,7 @@
 
 **Épica:** P — Presupuesto y Ejecución  
 **Puntos:** 8 (tomar por slices; no implementar el epígrafe entero en un solo PR si se va de scope)  
-**Estado:** en progreso · **P.7.1 y P.7.2 hechas** (2026-09-13) · P.7.3 y P.7.4 pendientes  
+**Estado:** hecho · **P.7.1–P.7.4** (2026-09-14)  
 **Rama:** `feature/P.7-gasto-acumulado-presupuesto` desde `main`  
 **Handoff de sesión:** [next-session.md](../current/next-session.md)  
 **Evidencia del corte:** [gasto-publico-actos.md](../current/gasto-publico-actos.md)
@@ -24,8 +24,8 @@ Watcher ya extrae actos con monto. El valor ciudadano es poder decir: *este orga
 - [x] Al completar el pipeline de un boletín se upserta `ejecucion_presupuestaria` (no hace falta un ETL manual posterior).
 - [x] Dedup con la clave ya definida en `etl_analisis_to_ejecucion.py` (organismo normalizado, monto a 1 M, `numero_acto`); duplicados marcan `is_duplicate=1` y **no** suman a `monto_acumulado_*`.
 - [x] `numero_acto` se extrae en S4 — `numero` pasó a `required` en el schema + fallback regex determinista. Sólo 3 de 131 filas del ledger quedan sin número.
-- [ ] `presupuesto_base` 2026 (Ley 11.088) cargado; match organismo/programa con alias (ACIF, EPEC, Policía, CCU). → **P.7.3**
-- [ ] UI `/presupuesto/ejecucion` muestra `% monto_acumulado / monto_vigente` y alerta de sobre-compromiso, **separando** licitación (compromiso) de pago/transferencia (ejecución). → **P.7.4**
+- [x] `presupuesto_base` 2026 (Ley 11.088) cargado; match organismo/programa con alias (ACIF, EPEC, Policía, CCU). → **P.7.3**
+- [x] UI `/presupuesto/ejecucion` muestra `% monto_acumulado / monto_vigente` y alerta de sobre-compromiso, **separando** licitación (compromiso) de pago/transferencia (ejecución). → **P.7.4**
 - [x] Filtro de jurisdicción: provincial vs municipal vs fuera del presupuesto (judicial-privado). Persistido en `analisis.jurisdiccion_gasto` y `ejecucion_presupuestaria.jurisdiccion`.
 
 ## Slices (orden de implementación)
@@ -34,10 +34,10 @@ Watcher ya extrae actos con monto. El valor ciudadano es poder decir: *este orga
 |---|---|---|---|
 | **P.7.1** Clasificar | 2 | Flag + etapa + jurisdicción en `analisis` (reglas; sin reentrenar LLM) | ✅ hecho — `app/services/gasto_classifier.py`, 56 tests |
 | **P.7.2** Ledger al cerrar pipeline | 3 | Tras `_analyze_document`, upsert `ejecucion_presupuestaria`; extraer `numero_acto` en S4 | ✅ hecho — `app/services/ejecucion_ledger.py`, 18 tests |
-| **P.7.3** Anclar Ley 11.088 | 2 | Cargar `presupuesto_base` 2026 + alias ACIF/EPEC/Policía/CCU | ⬜ **bloqueada** — el PDF 2026 no está en el repo |
-| **P.7.4** Contrastar en UI | 1 | `%` vs `monto_vigente` + alerta &gt;100% + toggle compromiso/ejecución | ⬜ pendiente — el ledger ya tiene datos y `etapa_gasto` |
+| **P.7.3** Anclar Ley 11.088 | 2 | Cargar `presupuesto_base` 2026 + alias ACIF/EPEC/Policía/CCU | ✅ hecho — 480 programas; match 90/131 |
+| **P.7.4** Contrastar en UI | 1 | `%` vs `monto_vigente` + alerta &gt;100% + toggle compromiso/ejecución | ✅ hecho — dos barras; alerta DIRECCIÓN DE MINISTERIO 295% (falso positivo S-511) |
 
-P.7.3 está bloqueada por datos, no por código: `watcher-doc/data/2026/` no existe y `watcher-doc/data/` sólo tiene PDFs 2025 (`Ley-de-Presupuesto-L-11014.pdf` es la Ley 11.014 de 2025). Hay que bajar Mapas-por-Programas / Ley 11.088 del portal provincial. P.7.4 ya tiene ledger con datos: sólo le falta `monto_vigente` como denominador.
+P.7.4 ya tiene ledger + `monto_vigente`. El PDF vive en `watcher-doc/data/2026/Mapas-por-Programas.pdf` (no está en git). EPEC y ACIF no aparecen en Mapas: se seedearon desde los arts. 11 y 15 de la Ley 11.088.
 
 ## Resultado medido sobre el corpus real (2026-09-13)
 
@@ -68,6 +68,26 @@ La republicación del pliego de pavimento ($25,34 mil M) quedó cubierta dos vec
 - Re-entrenar el LLM. Clasificador = reglas + `tipo_acto` + `boletines.section` + keywords.
 - Neo4j, reindex Chroma, Docker/WSL, merge H.1 (ya en `main`).
 
+## Archivos tocados (P.7.4)
+
+| Área | Path | Cambio |
+|---|---|---|
+| Contraste | `app/services/ejecucion_contrast.py` | **nuevo** — dos ratios, alerta &gt;100% |
+| API | `app/api/v1/endpoints/presupuesto.py` · `app/schemas/presupuesto.py` | resumen con compromiso/ejecución/`monto_vigente`; filtro `jurisdiccion` |
+| UI | `watcher-frontend/src/pages/presupuesto/ejecucion.tsx` | toggle, dos barras, alerta, filtro provincial/municipal/fuera |
+| Tests | `tests/tests/unit/test_ejecucion_contrast.py` | 20 tests |
+
+## Archivos tocados (P.7.3)
+
+| Área | Path | Cambio |
+|---|---|---|
+| Seed Ley 11.088 | `scripts/parse_pdf_presupuesto_2026.py` | `LEY_11088_ENTES`: EPEC $2,63 T (art. 11) + ACIF $0,57 T (art. 15) |
+| Aliases | `app/services/presupuesto_matching.py` | EPEC / ACIF / Policía / CCU=`None`; collapse `S.A.U.`/`S.E.M.`/paréntesis antes del alias |
+| Tests | `tests/tests/test_etl_presupuesto.py` | alias EPEC/ACIF/Policía/CCU + integridad vs seed |
+
+Fuente PDF: https://economiaygestionpublica.cba.gov.ar/wp-content/uploads/2025/12/Mapas-por-Programas.pdf  
+El PDF de empresas **no tiene montos**; no se parsea.
+
 ## Archivos tocados (P.7.1 + P.7.2)
 
 | Área | Path | Cambio |
@@ -84,7 +104,7 @@ La republicación del pliego de pavimento ($25,34 mil M) quedó cubierta dos vec
 | Desbloqueo | `scripts/parse_excel_presupuesto.py` | `pandas` pasa a import perezoso (bloqueaba la colección de `test_etl_presupuesto.py`) |
 | Tests | `tests/tests/unit/test_gasto_classifier.py` · `tests/tests/test_ejecucion_ledger.py` · `tests/tests/test_etl_presupuesto.py` | 74 tests nuevos |
 
-Pendiente para P.7.3/P.7.4: `scripts/parse_pdf_presupuesto_2026.py`, `app/api/v1/endpoints/presupuesto.py`, `watcher-frontend/src/pages/presupuesto/ejecucion.tsx`.
+Mergeada a `main` el 2026-09-14. Siguiente historia: [V.1](V.1-verificar-pipeline-vs-realidad.md).
 
 No hizo falta tocar `local_intelligence.py` ni `watcher_service.py`: ambos tiers ya comparten `analysis_schema.py`, así que exigir `numero` alcanzó a Gemini y a LocalPro a la vez.
 
@@ -106,21 +126,13 @@ Licitación ≠ devengado. La UI debe mostrar dos barras, no una.
 
 `watcher-backend/sqlite.db` es artefacto de runtime (gitignore `*.db`; el blob del repo es el snapshot viejo). El corte analizado vive en [gasto-publico-actos.md](../current/gasto-publico-actos.md), no hace falta commitear la DB.
 
-Para probar P.7.2 contra actos reales: el SQLite local de cooperledge ya tiene 5.667 filas en `analisis`. No borrar. `presupuesto_base` = 0 hasta P.7.3.
+Para probar contra actos reales: el SQLite local ya tiene 5.667 filas en `analisis` y **480** en `presupuesto_base`. No borrar. No commitear `sqlite.db`.
 
-## Cómo seguir (P.7.3)
+## Cómo seguir
 
-```powershell
-cd C:\Users\germa\watcher
-git checkout feature/P.7-gasto-acumulado-presupuesto
-cd watcher-backend
-uv run python scripts/parse_pdf_presupuesto_2026.py   # necesita el PDF Mapas-por-Programas
-uv run python scripts/etl_analisis_to_ejecucion.py    # re-matchea el ledger ya poblado
-```
+P.7 está cerrada. Verificar cobertura y calidad contra fuentes oficiales: [V.1](V.1-verificar-pipeline-vs-realidad.md).
 
-`presupuesto_base` sigue en 0 filas, así que el match cae a 0% y `% monto_acumulado / monto_vigente` no se puede calcular todavía. Ese es exactamente el bloqueo de P.7.3.
-
-Alias a agregar en `_ORGANISMO_ALIASES` (vistos como organismos reales del ledger): `ACIF`, `EMPRESA PROVINCIAL DE ENERGIA DE CORDOBA` (EPEC), `UNIDAD EJECUTORA` ya está en la blocklist.
+La UI vive en `http://localhost:5173/presupuesto/ejecucion`. Backend en `:8001`.
 
 ## Notas para agentes
 
@@ -130,7 +142,21 @@ Alias a agregar en `_ORGANISMO_ALIASES` (vistos como organismos reales del ledge
 - El default del clasificador es `is_gasto_publico=false`. Es deliberado: el ledger es una afirmación sobre dinero público, y un acto no clasificable no debe inflar el total.
 - Código en inglés, docs en español. Línea ≤ 100 (ruff).
 - Notion: MCP no estuvo disponible en la sesión de P.7.1/P.7.2 — el tablero quedó sin actualizar.
-- Tests: `uv run pytest tests/tests/unit/test_gasto_classifier.py tests/tests/test_ejecucion_ledger.py tests/tests/test_etl_presupuesto.py -q` (158 tests).
+- Tests: `uv run pytest tests/tests/unit/test_gasto_classifier.py tests/tests/test_ejecucion_ledger.py tests/tests/test_etl_presupuesto.py tests/tests/unit/test_ejecucion_contrast.py -q` (222 tests).
+
+## Decisiones tomadas en P.7.4
+
+1. **Dos ratios, nunca uno.** Compromiso y ejecución no se suman contra `monto_vigente`.
+2. **Agrupar por organismo de `presupuesto_base` cuando hay match.** Las 7 variantes de EPEC son una sola barra.
+3. **Alerta &gt;100% se muestra, no se oculta.** El 295% de `DIRECCIÓN DE MINISTERIO` es un falso positivo de matching; silenciarlo sería esconder el bug.
+4. **Filtro default = provincial.** El % contra la Ley 11.088 no tiene denominador municipal.
+
+## Decisiones tomadas en P.7.3
+
+1. **EPEC y ACIF se seedean, no se parsean del PDF de empresas.** Ese PDF no trae montos; los arts. 11 y 15 de la Ley sí.
+2. **Colapsar `S.A.U.` / `S.E.M.` / paréntesis antes del alias.** Evita siete claves para la misma EPEC.
+3. **CCU → `None`.** Está fuera de la Ley 11.088; no forzar un match provincial.
+4. **Blocklist se evalúa antes del collapse.** `UNIDAD EJECUTORA` sigue sin match.
 
 ## Decisiones tomadas en P.7.1/P.7.2
 

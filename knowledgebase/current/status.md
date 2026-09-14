@@ -1,9 +1,9 @@
 # Estado Actual — Watcher Agent
 
-**Última actualización:** 2026-09-13
+**Última actualización:** 2026-09-14
 **Snapshot del momento.** Se pisa al avanzar. La historia completa está en `docs/changelog.md` y el historial de git.
 
-> Rama activa: `feature/P.7-gasto-acumulado-presupuesto` (P.7.1 + P.7.2 hechas, sin mergear). Próxima sesión: [P.7.3](../backlog/P.7-gasto-acumulado-presupuesto.md) — [handoff](next-session.md).
+> Rama activa al cerrar sesión: `main` (P.7 mergeada). Próxima historia: [V.1](../backlog/V.1-verificar-pipeline-vs-realidad.md). Handoff: [next-session.md](next-session.md).
 
 ---
 
@@ -11,10 +11,10 @@
 
 | Campo | Valor |
 |---|---|
-| Release | v2.0.0 + H.1 (pipeline hardware local) |
+| Release | v2.0.0 + H.1 + P.7 |
 | Estado | Núcleo e2e en código; runtime local-first en development |
 | Stack LLM | Gemini (cloud) + LocalPro/Ollama (default en development si `OLLAMA_BASE_URL`) |
-| Pendiente inmediato | P.7.3 cargar Ley 11.088 en `presupuesto_base` (el ledger ya tiene datos, falta el denominador) |
+| Pendiente inmediato | **V.1.1** inventario calendario vs DB |
 
 ---
 
@@ -30,25 +30,24 @@
 | Épica 6: Agentes | Hecho | Sin cambios de canales |
 | Épica 7: Prod | En curso | H.1; CI/auth/UI huérfana siguen abiertos |
 | H.1 Hardware local | Hecho | Workers nproc-2, overlay Compose, LocalPro, embeddings/rerank locales |
-| Épica P: Presupuesto | P.1–P.6 + P.7.1/P.7.2 hechos | Ledger vivo y poblado; falta `presupuesto_base` (P.7.3) y UI (P.7.4) |
+| Épica P: Presupuesto | P.1–P.7.4 en `main` | Ledger + Ley 11.088 + UI `%` vs vigente |
+| Épica V: Ground truth | V.1 refinado | Calendario, gold set, mes cerrado, Ley, trimestral CGE |
 
 ---
 
-## Ledger de gasto público (2026-09-13, post P.7.1/P.7.2)
+## Ledger de gasto público (2026-09-14, post P.7.4)
 
-De 1.680 actos con monto, **131 son gasto público**: el ledger canónico vale **$205,9 mil M** ($188,5 mil M provinciales) contra $437,8 mil M brutos. Se excluyeron 1.549 actos (S2 judicial, S3 societario, modificaciones de partidas) y se marcaron 19 republicaciones por $87,5 mil M.
+De 1.680 actos con monto, **131 son gasto público**. `presupuesto_base` 2026: **480 programas**. Match 90/131. La UI separa compromiso (~$188,3 mil M) de ejecución (~$0,23 mil M). EPEC 2,87% del vigente. Un falso positivo (S-511 → `DIRECCIÓN DE MINISTERIO`) dispara la alerta &gt;100%.
 
-**El boletín es casi todo compromiso:** $188,3 mil M en licitaciones/adjudicaciones contra $0,2 mil M de pagos. La UI de P.7.4 tiene que mostrar dos barras.
+Montos de presupuesto en API van en **millones de ARS** (el frontend escala a pesos). No commitear `sqlite.db`.
 
-`presupuesto_base` sigue en 0 filas → el `%` contra `monto_vigente` todavía no se puede calcular. Ver [P.7](../backlog/P.7-gasto-acumulado-presupuesto.md) y el corte previo en [gasto-publico-actos.md](gasto-publico-actos.md).
+Ver [P.7](../backlog/P.7-gasto-acumulado-presupuesto.md).
 
 ---
 
 ## Bloqueos
 
-**P.7.3 bloqueada:** el PDF del presupuesto 2026 no está en el repo. `watcher-doc/data/2026/` no existe y `watcher-doc/data/` sólo tiene material 2025 (`Ley-de-Presupuesto-L-11014.pdf` = Ley 11.014 de 2025, no la 11.088 de 2026). Hay que descargarlo del portal provincial.
-
-Notion MCP no disponible en esta sesión ni en la que abrió H.1 — el tablero quedó sin actualizar.
+Ninguno de producto para arrancar V.1. Notion MCP no disponible — el tablero quedó sin actualizar.
 
 ---
 
@@ -67,7 +66,6 @@ Notion MCP no disponible en esta sesión ni en la que abrió H.1 — el tablero 
 
 ## Próximos pasos
 
-1. **P.7.3** — cargar Ley 11.088 en `presupuesto_base` + alias ACIF/EPEC. Handoff: [next-session.md](next-session.md).
-2. P.7.4 UI `%` vs `monto_vigente` + toggle compromiso/ejecución.
-3. Mergear `feature/P.7-gasto-acumulado-presupuesto` a `main`.
-4. UI huérfana y CI.
+1. **V.1.1** inventario calendario boletinoficial.cba.gov.ar vs `boletines`.
+2. V.1.2 gold set (12 PDFs) antes de completar abr–dic 2026.
+3. UI huérfana y CI (paralelo, no bloquean V.1).

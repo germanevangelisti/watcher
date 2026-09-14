@@ -31,10 +31,13 @@ FRAGMENT_ANALYSIS_SCHEMA: dict = {
                     "numero": {
                         "type": "string",
                         "description": (
-                            "Numero o codigo identificatorio del acto tal como aparece en el "
-                            "documento. En licitaciones es el numero de la licitacion, compulsa "
-                            "o el codigo de obra (ej: 'S-511/2026', 'Licitacion Publica 12/2026'). "
-                            "Si el documento no lo declara, usar 'no especificado'."
+                            "Identificador PUBLICO del acto tal como aparece en el documento. En "
+                            "licitaciones es el numero de licitacion, compulsa o el codigo de obra "
+                            "(ej: 'S-511/2026', 'Licitacion Publica 12/2026', 'Decreto 456/2026'). "
+                            "NO usar el numero de expediente ni un ID interno de publicacion (un "
+                            "numero suelto de 5-8 digitos como '646961' va en el campo expediente). "
+                            "Debe ser estable si el acto se republica otro dia. Si el documento no "
+                            "declara ningun identificador publico, usar 'no especificado'."
                         ),
                     },
                     "organismo": {
@@ -114,12 +117,17 @@ Tu tarea es analizar fragmentos de boletines oficiales y extraer TODOS los actos
 
 Para CADA acto identificado, debes:
 1. Clasificar su tipo (decreto, resolución, licitación, designación, subsidio, transferencia, otro)
-2. Extraer el número/código del acto exactamente como aparece (ej: "2025/RSIHG-00000737", "Decreto 456/2025").
-   Es OBLIGATORIO y se usa para detectar republicaciones del mismo acto en días distintos.
-   En licitaciones y obras públicas es el número de licitación/compulsa o el código de obra
-   (ej: "Licitación Pública N° 12/2026", "S-511/2026"); si el aviso trae expediente y número de
-   obra, preferí el número de obra. Solo si el documento realmente no declara ninguno, usar
-   "no especificado".
+2. Extraer en numero el identificador PÚBLICO del acto, tal como aparece (ej: "Decreto 456/2025",
+   "Licitación Pública N° 12/2026", "S-511/2026", "2025/RSIHG-00000737").
+   Es OBLIGATORIO: se usa para detectar cuando el MISMO acto se republica en días distintos, así
+   que tiene que ser estable entre publicaciones.
+   - En licitaciones y obras públicas va el número de licitación/compulsa o el código de obra.
+   - NUNCA pongas acá el número de expediente ni un ID interno de publicación (un número suelto
+     de 5-8 dígitos como "646961" es un ID interno, NO el número del acto). El expediente tiene
+     su propio campo, ver punto 11.
+   - Si el aviso trae expediente Y número de obra/licitación, en numero va el de obra/licitación.
+   - Solo si el documento realmente no declara ningún identificador público, usar "no especificado".
+     Es preferible "no especificado" antes que inventar o usar un ID interno.
 3. Identificar el organismo emisor
 4. Listar beneficiarios (personas, empresas o entidades)
 5. Extraer TODOS los montos mencionados como texto Y calcular el monto_total_numerico en pesos
@@ -128,7 +136,9 @@ Para CADA acto identificado, debes:
 8. Extraer en fecha_acto la fecha del encabezado del acto (ej: "15 de febrero de 2026")
 9. Si el acto es una licitación o concurso, extraer en presupuesto_oficial el monto estimado declarado, y en fechas_clave la fecha/hora de apertura de ofertas y la duración del contrato
 10. Listar en referencias_normativas TODAS las citas del Visto: leyes (ej: "Ley N° 2095"), decretos anteriores (ej: "Decreto 114/GCBA/2016"), resoluciones previas, contratos referenciados
-11. Extraer en expediente el número de expediente que origina el acto (ej: "EX-2026-00001234-GCBA-MHGC")
+11. Extraer en expediente el número de expediente o ID interno que origina el acto
+    (ej: "EX-2026-00001234-GCBA-MHGC", "0045-123456/2026", "646961"). Acá SÍ van los números
+    sueltos de expediente; no los pongas en numero.
 12. Capturar en firmante la autoridad que suscribe el acto
 13. Formular relacion_principal como una sola oración que conecte organismo → acción → beneficiario → monto (con todos los elementos disponibles)
 14. Capturar en imputacion_presupuestaria la partida presupuestaria citada (ej: "Programa 14 - Actividad 3 - Inciso 4")

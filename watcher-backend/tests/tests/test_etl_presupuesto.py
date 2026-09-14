@@ -26,9 +26,11 @@ from etl_analisis_to_ejecucion import (
     _normalize_acto,
     _dedup_key,
     _ORGANISMO_ALIASES,
+    looks_like_publication_id,
     match_organismo,
     parse_date,
     first_beneficiario,
+    resolve_numero_acto,
     run_etl,
 )
 
@@ -39,6 +41,7 @@ from parse_pdf_presupuesto_2026 import (
     _is_jurisdiction_header,
     _col_for_x,
     _words_to_rows,
+    LEY_11088_ENTES,
 )
 
 from parse_excel_presupuesto import OrganismoNormalizer
@@ -218,6 +221,83 @@ class TestMatchOrganismo:
                 assert value not in _ORGANISMO_ALIASES, (
                     f"Alias chain detected: {value!r} is both a value and a key"
                 )
+
+    def _entes_index(self):
+        """Minimal 2026 index: Ley 11.088 seed rows + Policía (from Mapas)."""
+        return self._make_index([
+            (20, "Empresa Provincial de Energia de Cordoba", "993 - EPEC", "4.1.1"),
+            (21, "Agencia Cordoba de Inversion y Financiamiento", "ACIF", None),
+            (22, "Policia de la Provincia", "Seguridad", "1.1.0"),
+            (23, "Poder Judicial", "Poder Judicial", None),
+            (5, "Unidad Ejecutora Para El Saneamiento", "UES", None),
+        ])
+
+    def test_alias_epec_short_and_sau(self):
+        pb_index, pb_exact = self._entes_index()
+        for org in (
+            "EPEC",
+            "EPEC SAU",
+            "EPEC S.A.U. (EPEC)",
+            "EMPRESA PROVINCIAL DE ENERGIA DE CORDOBA S.A.U (EPEC)",
+        ):
+            pb_id, score, method, _, _ = match_organismo(
+                _normalize(org), pb_index, pb_exact
+            )
+            assert pb_id == 20, org
+            assert score == 1.0
+            assert method in ("alias+exact", "exact")
+
+    def test_alias_acif(self):
+        pb_index, pb_exact = self._entes_index()
+        for org in (
+            "ACIF",
+            "Agencia Córdoba de Inversión y Financiamiento S.E.M. (ACIF)",
+        ):
+            pb_id, score, method, _, _ = match_organismo(
+                _normalize(org), pb_index, pb_exact
+            )
+            assert pb_id == 21, org
+            assert score == 1.0
+            assert method in ("alias+exact", "exact")
+
+    def test_alias_policia(self):
+        pb_index, pb_exact = self._entes_index()
+        for org in (
+            "POLICIA",
+            "Policía de la Provincia de Córdoba",
+            "POLICIA DE CORDOBA",
+        ):
+            pb_id, _, method, _, _ = match_organismo(
+                _normalize(org), pb_index, pb_exact
+            )
+            assert pb_id == 22, org
+            assert method == "alias+exact"
+
+    def test_alias_ccu_is_outside_budget(self):
+        pb_index, pb_exact = self._entes_index()
+        for org in ("CCU", "Córdoba Capital", "Municipalidad de Córdoba Capital"):
+            pb_id, *_ = match_organismo(_normalize(org), pb_index, pb_exact)
+            assert pb_id is None, org
+
+    def test_unidad_ejecutora_still_blocklisted(self):
+        pb_index, pb_exact = self._entes_index()
+        pb_id, *_ = match_organismo("UNIDAD EJECUTORA", pb_index, pb_exact)
+        assert pb_id is None
+
+    def test_ley_11088_entes_seed_targets(self):
+        """Alias canonical names must match the Ley 11.088 seed organismos."""
+        seeded = {_normalize(row["organismo"]) for row in LEY_11088_ENTES}
+        assert _ORGANISMO_ALIASES["EPEC"] in seeded
+        assert _ORGANISMO_ALIASES["ACIF"] in seeded
+        epec = next(
+            r for r in LEY_11088_ENTES
+            if "ENERGIA" in r["organismo"]
+        )
+        acif = next(r for r in LEY_11088_ENTES if "INVERSION" in r["organismo"])
+        assert epec["monto_vigente"] == 2_627_774_687_000.0
+        assert acif["monto_vigente"] == 573_294_933_000.0
+        assert epec["ejercicio"] == 2026
+        assert acif["ejercicio"] == 2026
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -738,6 +818,76 @@ class TestNormalizeActo:
 
     def test_valid_acto_number(self):
         assert _normalize_acto("DECRETO 056/2026") == "DECRETO056/2026"
+
+
+class TestPublicationId:
+    """El boletín numera cada publicación, no cada acto.
+
+    El pliego de pavimento Las Peñas–Isletillas salió con '646961' el 20-feb y
+    '645803' el 24-feb: mismo acto, IDs distintos. Usar ese número como clave de
+    dedup parte un acto en varias filas canónicas.
+    """
+
+    @pytest.mark.parametrize("valor", ["646961", "645803", "12345", "123456789", " 646961 "])
+    def test_detecta_ids_de_publicacion(self, valor):
+        assert looks_like_publication_id(valor) is True
+
+    @pytest.mark.parametrize(
+        "valor",
+        [
+            "S-511",
+            "S-511/2026",
+            "056/2026",
+            "RESOLUCION 056/2026",
+            "DECRETO 456/2026",
+            "2025/RSIHG-00000737",
+            "1234",        # muy corto para ser un ID de publicación
+            "1234567890",  # muy largo
+            None,
+            "",
+        ],
+    )
+    def test_no_marca_identificadores_reales(self, valor):
+        assert looks_like_publication_id(valor) is False
+
+
+class TestResolveNumeroActo:
+    def test_id_de_publicacion_cede_ante_el_codigo_de_obra(self):
+        """El caso real: '646961' con el código S-511 en el texto del aviso."""
+        assert resolve_numero_acto(
+            "646961",
+            "Pavimentación Las Peñas Sud - Las Isletillas",
+            'Obra: "PAVIMENTACION RUTA S-511 LAS PEÑAS SUD - LAS ISLETILLAS"',
+        ) == "S-511"
+
+    def test_identificador_estructurado_del_llm_se_respeta(self):
+        """Si el LLM ya dio un identificador público, no lo tocamos."""
+        assert resolve_numero_acto(
+            "RESOLUCION 056/2026", "Texto con Licitación Pública N° 99/2026"
+        ) == "RESOLUCION 056/2026"
+
+    def test_id_de_publicacion_se_conserva_si_no_hay_nada_mejor(self):
+        """Peor que un ID inestable es None, que desactiva el dedup del todo."""
+        assert resolve_numero_acto("646961", "Aviso sin identificador alguno") == "646961"
+
+    def test_sin_numero_usa_el_texto(self):
+        assert resolve_numero_acto(
+            None, "Llamado a Licitación Pública N° 12/2026 para la obra"
+        ) == "12/2026"
+
+    def test_sin_numero_ni_texto(self):
+        assert resolve_numero_acto(None, None) is None
+
+    def test_dos_publicaciones_del_mismo_pliego_colapsan(self):
+        """Distinto ID de publicación, misma clave de dedup."""
+        frag = 'Obra: "PAVIMENTACION RUTA S-511 LAS PEÑAS SUD - LAS ISLETILLAS"'
+        a = resolve_numero_acto("646961", None, frag)
+        b = resolve_numero_acto("645803", None, frag)
+        assert a == b
+        monto = 25_341_000_000.0
+        assert _dedup_key("ACIF", monto, _normalize_acto(a)) == _dedup_key(
+            "ACIF", monto, _normalize_acto(b)
+        )
 
 
 class TestDedupKey:

@@ -48,6 +48,43 @@ DATABASE_URL = "sqlite+aiosqlite:///./sqlite.db"  # run from watcher-backend/
 
 FECHA_APROBACION = date(2026, 1, 1)   # Ley N°11088
 
+# Mapas-por-Programas.pdf covers Administración Central. EPEC and ACIF live in
+# Capítulo II of Ley 11.088 (entes / empresas) and have no rows in that PDF, so
+# matching them requires these seed programmes. Amounts = Presupuesto de
+# Erogaciones in arts. 11 and 15 of the bill text.
+LEY_11088_ENTES: list[dict] = [
+    {
+        "ejercicio": 2026,
+        "organismo": "EMPRESA PROVINCIAL DE ENERGIA DE CORDOBA",
+        "organismo_raw": "Empresa Provincial de Energía de Córdoba S.A.U. (EPEC)",
+        "programa": "993 - EMPRESA PROVINCIAL DE ENERGIA DE CORDOBA",
+        "subprograma": None,
+        "partida_presupuestaria": "4.1.1",
+        "descripcion": "[Ley 11.088 art. 11] Presupuesto de erogaciones EPEC S.A.U.",
+        "monto_inicial": 2_627_774_687_000.0,
+        "monto_vigente": 2_627_774_687_000.0,
+        "fuente_financiamiento": "Recursos Propios",
+        "naturaleza": "PROGRAMA",
+        "jurisdiccion": "8.05 - Empresa Provincial De Energía De Córdoba (Epec)",
+        "page": 0,
+    },
+    {
+        "ejercicio": 2026,
+        "organismo": "AGENCIA CORDOBA DE INVERSION Y FINANCIAMIENTO",
+        "organismo_raw": "Agencia Córdoba de Inversión y Financiamiento S.E.M. (ACIF)",
+        "programa": "Agencia Córdoba de Inversión y Financiamiento",
+        "subprograma": None,
+        "partida_presupuestaria": "",
+        "descripcion": "[Ley 11.088 art. 15] Presupuesto de erogaciones ACIF",
+        "monto_inicial": 573_294_933_000.0,
+        "monto_vigente": 573_294_933_000.0,
+        "fuente_financiamiento": "Recursos Propios",
+        "naturaleza": "PROGRAMA",
+        "jurisdiccion": "Ente — Agencia Córdoba de Inversión y Financiamiento",
+        "page": 0,
+    },
+]
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -405,6 +442,8 @@ async def main() -> None:
     print(f"[1/3] Parseando {PDF_PATH.name} ...")
     records = parse_pdf(PDF_PATH)
     print(f"  → {len(records)} filas extraídas del PDF")
+    records.extend(LEY_11088_ENTES)
+    print(f"  → +{len(LEY_11088_ENTES)} entes Ley 11.088 (EPEC, ACIF)")
 
     if not records:
         print("❌ No se extrajeron registros. Revisar estructura del PDF.")

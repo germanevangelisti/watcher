@@ -2,7 +2,7 @@
 
 Ordenado por valor de negocio. Estatus: `idea` | `refinado` | `en progreso` | `hecho`.
 
-> **Sincronizado con el código el 2026-09-12** (rama `feature/H.1-pipeline-hardware-local`). El núcleo de las Épicas 0–6 está implementado; H.1 prioriza runtime local.
+> **Sincronizado con el código el 2026-09-14** (`main` + P.7 mergeada). Próxima historia: [V.1](V.1-verificar-pipeline-vs-realidad.md).
 
 ---
 
@@ -116,8 +116,23 @@ Ordenado por valor de negocio. Estatus: `idea` | `refinado` | `en progreso` | `h
 
 ---
 
+## Épica V — Verificación / ground truth
+> Refinado · 8 pts · [detalle](V.1-verificar-pipeline-vs-realidad.md)
+
+| # | Historia | Criterio de aceptación | Estado |
+|---|---|---|---|
+| V.1.1 | Inventario calendario vs DB | Diff días/secciones de boletinoficial.cba.gov.ar vs `boletines` | ⬜ por hacer |
+| V.1.2 | Gold set de extracción | ≥ 12 PDFs etiquetados; recall/monto/`numero_acto` | ⬜ por hacer |
+| V.1.3 | Cerrar un mes | Marzo 2026 completo; ledger idempotente al reprocesar | ⬜ por hacer |
+| V.1.4 | Ancla Ley 11.088 | Totales EPEC/ACIF + 15 programas + unmatched / 295% | ⬜ por hacer |
+| V.1.5 | Trimestral CGE | `ejecucion_trimestral` T1 2026 vs 8 organismos (orden de magnitud) | ⬜ por hacer |
+
+No mezclar capa A (pipeline vs boletín) con capa C (boletín vs caja). Arrancar por V.1.1.
+
+---
+
 ## Épica P — Presupuesto y Ejecución 2026 (fuera del plan original)
-> P.1–P.6 hecho · P.7.1 y P.7.2 hechos · P.7.3 y P.7.4 pendientes
+> P.1–P.7.4 hecho · mergeada a `main`
 
 | # | Historia | Criterio de aceptación | Estado |
 |---|---|---|---|
@@ -129,10 +144,10 @@ Ordenado por valor de negocio. Estatus: `idea` | `refinado` | `en progreso` | `h
 | P.6 | Frontend "Ejecución Presupuestaria" | Página con métricas de deduplicación | ✅ hecho |
 | P.7.1 | Clasificar gasto público per acto | `is_gasto_publico` + `etapa_gasto` + `jurisdiccion_gasto` por reglas | ✅ hecho |
 | P.7.2 | Ledger al cerrar el pipeline | Upsert `ejecucion_presupuestaria` tras `_analyze_document`; `numero_acto` recuperado | ✅ hecho |
-| P.7.3 | Anclar Ley 11.088 | `presupuesto_base` 2026 cargado + alias ACIF/EPEC | ⬜ pendiente (falta el PDF) |
-| P.7.4 | Contrastar en UI | `% monto_acumulado/monto_vigente` + toggle compromiso/ejecución | ⬜ pendiente |
+| P.7.3 | Anclar Ley 11.088 | `presupuesto_base` 2026 cargado + alias ACIF/EPEC/Policía/CCU | ✅ hecho (480 programas; match 90/131) |
+| P.7.4 | Contrastar en UI | `% monto_acumulado/monto_vigente` + toggle compromiso/ejecución | ✅ hecho |
 
-Medición 2026-09-13 tras P.7.1/P.7.2: de 1.680 actos con monto, **131 son gasto público**; ledger canónico **$205,9 mil M** vs $437,8 mil M brutos; 19 republicaciones excluidas ($87,5 mil M). El boletín es 99,9% compromiso ($188,3 mil M) y casi nada de ejecución ($0,2 mil M). Ver [P.7](P.7-gasto-acumulado-presupuesto.md), [gasto-publico-actos.md](../current/gasto-publico-actos.md) y [next-session.md](../current/next-session.md).
+Medición 2026-09-14 tras P.7.3: `presupuesto_base` 480 filas; match **90/131** (provincial 90/97). EPEC 61 actos / $75,4 mil M a un canónico. `UNIDAD EJECUTORA` sin match. Ver [P.7](P.7-gasto-acumulado-presupuesto.md). Próxima sesión: [V.1](V.1-verificar-pipeline-vs-realidad.md).
 
 ---
 

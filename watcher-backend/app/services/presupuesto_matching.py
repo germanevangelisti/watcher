@@ -56,7 +56,35 @@ _ORGANISMO_ALIASES: dict[str, str | None] = {
     "TRIBUNAL SUPERIOR DE JUSTICIA": "PODER JUDICIAL",
     "TRIBUNAL SUPERIOR DE JUSTICIA DE CORDOBA": "PODER JUDICIAL",
     "TSJ": "PODER JUDICIAL",
+    # ── EPEC (Ley 11.088 art. 11; jurisdicción 8.05, no está en Mapas Admin.) ─
+    "EPEC": "EMPRESA PROVINCIAL DE ENERGIA DE CORDOBA",
+    "EPEC SAU": "EMPRESA PROVINCIAL DE ENERGIA DE CORDOBA",
+    "EMPRESA PROVINCIAL DE ENERGIA": "EMPRESA PROVINCIAL DE ENERGIA DE CORDOBA",
+    # ── ACIF (Ley 11.088 art. 15) ────────────────────────────────────────────
+    "ACIF": "AGENCIA CORDOBA DE INVERSION Y FINANCIAMIENTO",
+    # ── Policía ───────────────────────────────────────────────────────────────
+    "POLICIA": "POLICIA DE LA PROVINCIA",
+    "POLICIA DE LA PROVINCIA DE CORDOBA": "POLICIA DE LA PROVINCIA",
+    "POLICIA DE CORDOBA": "POLICIA DE LA PROVINCIA",
+    # ── Fuera del presupuesto provincial ─────────────────────────────────────
+    "CCU": None,
+    "CORDOBA CAPITAL": None,
+    "MUNICIPALIDAD DE CORDOBA CAPITAL": None,
 }
+
+# Corporate suffixes and parentheticals the LLM appends to the same organism.
+# Collapsing them lets "EPEC S.A.U. (EPEC)" share an alias/exact key with "EPEC".
+_RE_ORG_PARENS = re.compile(r"\([^)]*\)")
+_RE_ORG_SUFFIX = re.compile(r"\b(?:S\.?A\.?U\.?|S\.?E\.?M\.?|S\.?A\.?|S\.?R\.?L\.?)\b")
+
+
+def _collapse_organismo(org_norm: str) -> str:
+    """Strip legal suffixes and parentheticals from an already-normalized name."""
+    if not org_norm:
+        return ""
+    collapsed = _RE_ORG_PARENS.sub(" ", org_norm)
+    collapsed = _RE_ORG_SUFFIX.sub(" ", collapsed)
+    return re.sub(r"\s+", " ", collapsed).strip(" .,-")
 
 
 def build_presupuesto_index(
@@ -89,14 +117,19 @@ def match_organismo(
     if not org_norm or org_norm in _ANALISIS_NO_MATCH:
         return None, 0.0, None, None, None
 
-    # Alias override — applied before any fuzzy logic
+    collapsed = _collapse_organismo(org_norm)
     aliased = False
-    if org_norm in _ORGANISMO_ALIASES:
-        canonical = _ORGANISMO_ALIASES[org_norm]
+    alias_key = org_norm if org_norm in _ORGANISMO_ALIASES else None
+    if alias_key is None and collapsed in _ORGANISMO_ALIASES:
+        alias_key = collapsed
+    if alias_key is not None:
+        canonical = _ORGANISMO_ALIASES[alias_key]
         if canonical is None:
             return None, 0.0, None, None, None  # explicitly non-matchable
         org_norm = canonical
         aliased = True
+    elif collapsed and collapsed != org_norm:
+        org_norm = collapsed
 
     # O(1) exact match
     if org_norm in pb_exact:
@@ -178,22 +211,53 @@ _NUMERO_PATTERNS: tuple[re.Pattern[str], ...] = (
 def extract_numero_acto(*texts: str | None) -> str | None:
     """Best-effort acto identifier from raw acto text.
 
-    Deterministic fallback for when the LLM omits `numero`: without it
-    `_dedup_key` degrades to (organismo, monto) and republished tenders cannot be
-    collapsed.  Scans each text in order and returns the first match.
+    Deterministic fallback for when the LLM omits `numero` or returns a bare
+    publication ID: without a stable identifier `_dedup_key` cannot collapse
+    republished tenders.  Patterns are tried most-specific first, so a tender
+    code wins over a generic "Resolución N° 56".
     """
-    for text in texts:
-        if not text:
-            continue
-        snippet = text[:2000]
-        for pattern in _NUMERO_PATTERNS:
-            match = pattern.search(snippet)
+    for pattern in _NUMERO_PATTERNS:
+        for text in texts:
+            if not text:
+                continue
+            match = pattern.search(text[:2000])
             if not match:
                 continue
             raw = re.sub(r"\s+", "", match.group(1)).strip(".-/")
             if len(raw) >= 2 and any(c.isdigit() for c in raw):
                 return raw[:100]
     return None
+
+
+# A bare run of digits with no year, separator or prefix.  The Córdoba boletín
+# uses these as per-publication IDs, so the same tender carries a different one
+# each day it is republished ("646961" then "645803") and using it as the dedup
+# key splits one acto into several canonical ledger rows.
+_RE_BARE_PUBLICATION_ID = re.compile(r"^\d{5,9}$")
+
+
+def looks_like_publication_id(numero: str | None) -> bool:
+    """True when `numero` carries no stable acto identity."""
+    if not numero:
+        return False
+    return bool(_RE_BARE_PUBLICATION_ID.match(re.sub(r"\s+", "", numero.strip())))
+
+
+def resolve_numero_acto(numero: str | None, *texts: str | None) -> str | None:
+    """Pick the most stable acto identifier available.
+
+    A structured identifier from the LLM wins outright.  A bare publication ID
+    is only kept when the text yields nothing better: it still beats `None`,
+    which disables dedup altogether, and it can never merge two distinct actos.
+    """
+    candidate = (numero or "").strip() or None
+    if candidate and not looks_like_publication_id(candidate):
+        return candidate[:100]
+
+    recovered = extract_numero_acto(*texts)
+    if recovered:
+        return recovered
+    return candidate[:100] if candidate else None
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────

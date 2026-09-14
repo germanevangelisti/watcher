@@ -9,6 +9,8 @@ import {
   Copy,
   ChevronLeft,
   ChevronRight,
+  Landmark,
+  Banknote,
 } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -19,6 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch"
 import { Skeleton } from "@/components/ui/skeleton"
 import { FadeTransition } from "@/components/ui/fade-transition"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Table,
   TableHeader,
@@ -27,16 +30,12 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table"
+import { OrganismoContrastList } from "@/components/features/organismo-contrast"
 import { useEjecucion, useEjecucionResumen } from "@/lib/api/hooks"
+import { formatARS, asMoney } from "@/lib/presupuesto-format"
+import type { JurisdiccionGasto, SerieGasto } from "@/types/presupuesto"
 
 const PAGE_SIZE = 50
-
-function formatARS(value: number | null | undefined): string {
-  if (value == null) return "—"
-  if (value >= 1e9) return `$${(value / 1e9).toFixed(1)}B`
-  if (value >= 1e6) return `$${(value / 1e6).toFixed(0)}M`
-  return `$${value.toLocaleString("es-AR")}`
-}
 
 function RiesgoBadge({ riesgo }: { riesgo?: string }) {
   if (!riesgo) return <span className="text-muted-foreground text-xs">—</span>
@@ -49,16 +48,39 @@ function RiesgoBadge({ riesgo }: { riesgo?: string }) {
   return <Badge className={color}>{riesgo}</Badge>
 }
 
+function EtapaBadge({ etapa }: { etapa?: string }) {
+  if (!etapa) return <span className="text-muted-foreground text-xs">—</span>
+  const isPago = etapa === "pago"
+  return (
+    <Badge
+      className={
+        isPago
+          ? "bg-blue-500/10 text-blue-400 border-blue-500/20 text-xs"
+          : "bg-amber-500/10 text-amber-400 border-amber-500/20 text-xs"
+      }
+    >
+      {etapa}
+    </Badge>
+  )
+}
+
 export function EjecucionPresupuestariaPage() {
   const [page, setPage] = useState(1)
+  const [serie, setSerie] = useState<SerieGasto>("compromiso")
   const [filters, setFilters] = useState({
     organismo: "",
     riesgo: undefined as string | undefined,
     solo_canonicos: true,
     requiere_revision: undefined as boolean | undefined,
+    jurisdiccion: "provincial" as JurisdiccionGasto | "all",
   })
 
-  const resumenQuery = useEjecucionResumen()
+  const jurisdiccionParam =
+    filters.jurisdiccion === "all" ? undefined : filters.jurisdiccion
+
+  const resumenQuery = useEjecucionResumen({
+    jurisdiccion: jurisdiccionParam,
+  })
 
   const ejecucionQuery = useEjecucion({
     skip: (page - 1) * PAGE_SIZE,
@@ -67,28 +89,70 @@ export function EjecucionPresupuestariaPage() {
     riesgo: filters.riesgo,
     solo_canonicos: filters.solo_canonicos,
     requiere_revision: filters.requiere_revision,
+    jurisdiccion: jurisdiccionParam,
   })
 
   const totalPages = ejecucionQuery.data?.total
     ? Math.ceil(ejecucionQuery.data.total / PAGE_SIZE)
     : 0
+  const organismos = resumenQuery.data?.por_organismo ?? []
+  const porMes = resumenQuery.data?.por_mes ?? []
+  const filas = ejecucionQuery.data?.ejecuciones ?? []
 
   function handleFilterChange(patch: Partial<typeof filters>) {
     setFilters((f) => ({ ...f, ...patch }))
     setPage(1)
   }
 
+  const alertas = organismos.filter((org) =>
+    serie === "compromiso" ? org.sobre_compromiso : org.sobre_ejecucion
+  )
+
   return (
     <div className="space-y-6 p-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold">Ejecución Presupuestaria 2026</h1>
-        <p className="text-muted-foreground mt-2">
-          Actos publicados en el Boletín Oficial con deduplicación automática
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Ejecución Presupuestaria 2026</h1>
+          <p className="text-muted-foreground mt-2">
+            Compromiso (licitaciones) vs ejecución (pagos), contrastado con la
+            Ley 11.088. No son la misma cifra.
+          </p>
+        </div>
+        <Tabs
+          value={serie}
+          onValueChange={(v) => setSerie(v as SerieGasto)}
+        >
+          <TabsList>
+            <TabsTrigger value="compromiso">Compromiso</TabsTrigger>
+            <TabsTrigger value="ejecucion">Ejecución</TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
 
-      {/* Summary Cards */}
+      {alertas.length > 0 && (
+        <div className="rounded-md border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+            <div>
+              <p className="font-medium">
+                {alertas.length} organismo{alertas.length === 1 ? "" : "s"} con{" "}
+                {serie} por encima del 100% del presupuesto vigente
+              </p>
+              <ul className="mt-1 space-y-0.5 text-red-200/90">
+                {alertas.slice(0, 5).map((org) => (
+                  <li key={org.organismo ?? "x"}>
+                    {org.organismo} ·{" "}
+                    {serie === "compromiso"
+                      ? `${org.pct_compromiso?.toFixed(1)}%`
+                      : `${org.pct_ejecucion?.toFixed(1)}%`}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
       <FadeTransition
         isLoading={resumenQuery.isLoading}
         skeleton={
@@ -103,6 +167,11 @@ export function EjecucionPresupuestariaPage() {
           </div>
         }
       >
+        {resumenQuery.isError && (
+          <div className="p-4 text-center text-red-400">
+            Error cargando resumen: {(resumenQuery.error as Error).message}
+          </div>
+        )}
         {resumenQuery.data && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card>
@@ -119,16 +188,36 @@ export function EjecucionPresupuestariaPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className={serie === "compromiso" ? "ring-1 ring-amber-500/40" : undefined}>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">Monto total</p>
+                    <p className="text-sm text-muted-foreground">Compromiso</p>
+                    <p className="text-2xl font-bold text-amber-400">
+                      {formatARS(resumenQuery.data.monto_compromiso)}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      llamados, adjudicaciones, contratos
+                    </p>
+                  </div>
+                  <Landmark className="h-8 w-8 text-amber-400" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className={serie === "ejecucion" ? "ring-1 ring-blue-500/40" : undefined}>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Ejecución</p>
                     <p className="text-2xl font-bold text-blue-400">
-                      {formatARS(resumenQuery.data.monto_canonical)}
+                      {formatARS(resumenQuery.data.monto_ejecucion)}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      pagos y transferencias
                     </p>
                   </div>
-                  <TrendingUp className="h-8 w-8 text-blue-400" />
+                  <Banknote className="h-8 w-8 text-blue-400" />
                 </div>
               </CardContent>
             </Card>
@@ -137,26 +226,17 @@ export function EjecucionPresupuestariaPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">Duplicados detectados</p>
-                    <p className="text-2xl font-bold text-orange-400">
-                      {(resumenQuery.data.total_duplicates ?? 0).toLocaleString()}
+                    <p className="text-sm text-muted-foreground">Sobre-compromiso</p>
+                    <p className="text-2xl font-bold text-red-400">
+                      {resumenQuery.data.sobre_compromiso_count ?? 0}
                     </p>
-                  </div>
-                  <Copy className="h-8 w-8 text-orange-400" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Monto duplicado</p>
-                    <p className="text-2xl font-bold text-muted-foreground">
+                    <p className="text-xs text-muted-foreground mt-1">
+                      duplicados {resumenQuery.data.total_duplicates ?? 0}
+                      {" · "}
                       {formatARS(resumenQuery.data.monto_duplicates)}
                     </p>
                   </div>
-                  <AlertTriangle className="h-8 w-8 text-muted-foreground" />
+                  <Copy className="h-8 w-8 text-muted-foreground" />
                 </div>
               </CardContent>
             </Card>
@@ -164,8 +244,25 @@ export function EjecucionPresupuestariaPage() {
         )}
       </FadeTransition>
 
-      {/* Monthly breakdown */}
-      {resumenQuery.data?.por_mes && resumenQuery.data.por_mes.length > 0 && (
+      {organismos.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <TrendingUp className="h-4 w-4" />
+              % vs presupuesto vigente
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Dos barras por organismo: compromiso (ámbar) y ejecución (azul).
+              El relleno se recorta al 100%; la etiqueta muestra el % real.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <OrganismoContrastList items={organismos} serie={serie} />
+          </CardContent>
+        </Card>
+      )}
+
+      {porMes.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
@@ -175,11 +272,11 @@ export function EjecucionPresupuestariaPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {resumenQuery.data.por_mes.map((item) => {
+              {porMes.map((item) => {
                 const maxMonto = Math.max(
-                  ...resumenQuery.data!.por_mes.map((m) => m.monto_total)
+                  ...porMes.map((m) => asMoney(m.monto_total) ?? 0)
                 )
-                const pct = maxMonto > 0 ? (item.monto_total / maxMonto) * 100 : 0
+                const pct = maxMonto > 0 ? ((asMoney(item.monto_total) ?? 0) / maxMonto) * 100 : 0
                 return (
                   <div key={item.mes} className="flex items-center gap-3">
                     <span className="text-sm text-muted-foreground w-16 shrink-0">
@@ -205,31 +302,6 @@ export function EjecucionPresupuestariaPage() {
         </Card>
       )}
 
-      {/* Top organisms */}
-      {resumenQuery.data?.por_organismo && resumenQuery.data.por_organismo.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Top organismos por monto</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {resumenQuery.data.por_organismo.slice(0, 10).map((item, i) => (
-                <div key={i} className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground truncate flex-1 pr-4">
-                    {item.organismo ?? "(sin organismo)"}
-                  </span>
-                  <div className="flex items-center gap-4 shrink-0">
-                    <span className="text-xs text-muted-foreground">{item.count} actos</span>
-                    <span className="font-mono font-medium">{formatARS(item.monto_total)}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Filters */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -238,12 +310,31 @@ export function EjecucionPresupuestariaPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
             <Input
               placeholder="Buscar organismo..."
               value={filters.organismo}
               onChange={(e) => handleFilterChange({ organismo: e.target.value })}
             />
+
+            <Select
+              value={filters.jurisdiccion}
+              onValueChange={(v) =>
+                handleFilterChange({
+                  jurisdiccion: v as JurisdiccionGasto | "all",
+                })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Jurisdicción" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="provincial">Provincial</SelectItem>
+                <SelectItem value="municipal">Municipal</SelectItem>
+                <SelectItem value="fuera_presupuesto">Fuera del presupuesto</SelectItem>
+                <SelectItem value="all">Todas</SelectItem>
+              </SelectContent>
+            </Select>
 
             <Select
               value={filters.riesgo ?? "all"}
@@ -303,7 +394,6 @@ export function EjecucionPresupuestariaPage() {
         </CardContent>
       </Card>
 
-      {/* Table */}
       <FadeTransition
         isLoading={ejecucionQuery.isLoading}
         skeleton={
@@ -361,7 +451,7 @@ export function EjecucionPresupuestariaPage() {
                       <TableRow>
                         <TableHead className="w-24">Fecha</TableHead>
                         <TableHead>Organismo</TableHead>
-                        <TableHead>Beneficiario</TableHead>
+                        <TableHead>Etapa</TableHead>
                         <TableHead className="max-w-xs">Concepto</TableHead>
                         <TableHead className="text-right">Monto</TableHead>
                         <TableHead>Riesgo</TableHead>
@@ -369,14 +459,14 @@ export function EjecucionPresupuestariaPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {ejecucionQuery.data.ejecuciones.length === 0 && (
+                      {filas.length === 0 && (
                         <TableRow>
                           <TableCell colSpan={7} className="text-center text-muted-foreground py-12">
                             No se encontraron ejecuciones
                           </TableCell>
                         </TableRow>
                       )}
-                      {ejecucionQuery.data.ejecuciones.map((ej) => (
+                      {filas.map((ej) => (
                         <TableRow
                           key={ej.id}
                           className={ej.is_duplicate ? "opacity-50" : undefined}
@@ -387,8 +477,8 @@ export function EjecucionPresupuestariaPage() {
                           <TableCell className="text-sm max-w-[180px] truncate">
                             {ej.organismo ?? "—"}
                           </TableCell>
-                          <TableCell className="text-sm max-w-[180px] truncate text-muted-foreground">
-                            {ej.beneficiario ?? "—"}
+                          <TableCell>
+                            <EtapaBadge etapa={ej.etapa_gasto} />
                           </TableCell>
                           <TableCell className="text-sm max-w-xs truncate text-muted-foreground">
                             {ej.concepto ?? "—"}

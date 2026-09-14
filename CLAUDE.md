@@ -39,4 +39,4 @@ Tipos: `feat` `fix` `refactor` `test` `docs` `chore`
 
 ## Estado actual del proyecto
 H.1 (pipeline hardware local) está en `main`. Ver `knowledgebase/current/status.md`.
-**Próxima sesión:** P.7 gasto acumulado vs presupuesto — leer `knowledgebase/current/next-session.md` y `knowledgebase/backlog/P.7-gasto-acumulado-presupuesto.md`.
+**Próxima sesión:** V.1.1 inventario calendario vs DB — leer `knowledgebase/current/next-session.md` y `knowledgebase/backlog/V.1-verificar-pipeline-vs-realidad.md`.

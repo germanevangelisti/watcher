@@ -43,8 +43,10 @@ from app.services.presupuesto_matching import (
     build_presupuesto_index,
     extract_numero_acto,
     first_beneficiario,
+    looks_like_publication_id,
     match_organismo,
     parse_date,
+    resolve_numero_acto,
 )
 
 # Re-exported so the existing test suite keeps importing these from the script.
@@ -60,8 +62,10 @@ __all__ = [
     "classify_gasto",
     "extract_numero_acto",
     "first_beneficiario",
+    "looks_like_publication_id",
     "match_organismo",
     "parse_date",
+    "resolve_numero_acto",
     "run_etl",
 ]
 
@@ -120,10 +124,9 @@ def _classify_pending(cur, rows: list[dict], dry_run: bool = False) -> int:
             row["etapa_gasto"] = classification.etapa_gasto
             row["jurisdiccion_gasto"] = classification.jurisdiccion
             pending += 1
-        if not row.get("numero_acto"):
-            recovered = extract_numero_acto(row.get("descripcion"), row.get("fragmento"))
-            if recovered:
-                row["numero_acto"] = recovered
+        row["numero_acto"] = resolve_numero_acto(
+            row.get("numero_acto"), row.get("descripcion"), row.get("fragmento")
+        )
 
         if not dry_run:
             cur.execute(

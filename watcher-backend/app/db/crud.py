@@ -9,7 +9,7 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.services.presupuesto_matching import extract_numero_acto
+from app.services.presupuesto_matching import resolve_numero_acto
 
 from .models import Boletin, Analisis
 
@@ -214,15 +214,15 @@ async def create_analisis(
             if parsed and parsed > 0:
                 monto_numerico = (monto_numerico or 0) + parsed
     
-    # numero_acto is the dedup key for re-published tenders; when the LLM omits
-    # it, recover the identifier from the acto text with a regex.
-    numero_acto = analisis_data.get("numero") or analisis_data.get("numero_acto")
-    if not numero_acto:
-        numero_acto = extract_numero_acto(
-            analisis_data.get("texto_original"),
-            analisis_data.get("descripcion"),
-            fragmento,
-        )
+    # numero_acto holds the dedup identity for re-published tenders, so it must
+    # be the stable public identifier rather than the per-publication ID the LLM
+    # sometimes returns. The raw ID stays available in `expediente`/`fragmento`.
+    numero_acto = resolve_numero_acto(
+        analisis_data.get("numero") or analisis_data.get("numero_acto"),
+        analisis_data.get("texto_original"),
+        analisis_data.get("descripcion"),
+        fragmento,
+    )
 
     db_analisis = Analisis(
         boletin_id=boletin_id,
