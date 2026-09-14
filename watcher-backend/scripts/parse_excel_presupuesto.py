@@ -8,13 +8,32 @@ Fecha: Noviembre 2025
 Versión: 2.0 - Soporte multi-período
 """
 
-import pandas as pd
+from __future__ import annotations
+
 import json
 import re
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import TYPE_CHECKING, Dict, List, Tuple
 from collections import defaultdict
 from datetime import datetime
+
+# pandas is only needed to read the Excel workbooks; importing it eagerly would
+# make OrganismoNormalizer (pure Python, reused by the PDF parser and its tests)
+# unimportable wherever pandas is not installed.
+if TYPE_CHECKING:
+    import pandas as pd
+
+
+def _require_pandas():
+    """Import pandas on demand, with an actionable error if it is missing."""
+    try:
+        import pandas as pd
+    except ImportError as exc:  # pragma: no cover - depends on the environment
+        raise ImportError(
+            "Leer los Excel de ejecución presupuestaria requiere pandas y openpyxl: "
+            "uv pip install pandas openpyxl"
+        ) from exc
+    return pd
 
 # Rutas base
 BASE_DIR = Path(__file__).parent.parent.parent.parent
@@ -43,6 +62,24 @@ FILE_PATTERNS = {
 }
 
 
+# Expansión de abreviaturas, sólo sobre tokens completos.  Con `str.replace`
+# sin anclar, cualquier palabra que empezara con una abreviatura quedaba
+# corrompida: "PROVINCIA" → "PROVINCIALINCIA", "ADMINISTRATIVO" →
+# "ADMINISTRACIONINISTRATIVO", "INTEGRAL" → "INTEGENERAL".  Esos nombres se
+# escribían en `presupuesto_base` y después no matcheaban con los organismos
+# extraídos de los boletines.
+_ABBREVIATIONS = {
+    "MIN": "MINISTERIO",
+    "SEC": "SECRETARIA",
+    "DIR": "DIRECCION",
+    "GRAL": "GENERAL",
+    "ADM": "ADMINISTRACION",
+    "PROV": "PROVINCIAL",
+}
+
+_ABBREV_RE = re.compile(r"\b(" + "|".join(_ABBREVIATIONS) + r")\b")
+
+
 class OrganismoNormalizer:
     """Normaliza nombres de organismos para matching consistente"""
     
@@ -67,23 +104,10 @@ class OrganismoNormalizer:
         # Normalizar espacios
         org = re.sub(r'\s+', ' ', org)
         
-        # Abreviaturas comunes
-        replacements = {
-            'MIN ': 'MINISTERIO ',
-            'MIN.': 'MINISTERIO',
-            'SEC ': 'SECRETARIA ',
-            'SEC.': 'SECRETARIA',
-            'DIR ': 'DIRECCION ',
-            'DIR.': 'DIRECCION',
-            'GRAL': 'GENERAL',
-            'GRAL.': 'GENERAL',
-            'ADM': 'ADMINISTRACION',
-            'PROV': 'PROVINCIAL'
-        }
-        
-        for old, new in replacements.items():
-            org = org.replace(old, new)
-        
+        # Abreviaturas comunes (los puntos ya los quitó la limpieza anterior,
+        # así que "MIN." llega como "MIN" y matchea igual)
+        org = _ABBREV_RE.sub(lambda m: _ABBREVIATIONS[m.group(1)], org)
+
         # Guardar en mapping
         if organismo not in self.mapping:
             self.mapping[organismo] = org
@@ -125,8 +149,8 @@ def explore_excel_structure(file_path: Path) -> Dict:
     
     try:
         # Leer Excel
-        df = pd.read_excel(file_path)
-        
+        df = _require_pandas().read_excel(file_path)
+
         result = {
             "archivo": file_path.name,
             "filas": len(df),
@@ -165,8 +189,8 @@ def detect_file_format(df: pd.DataFrame) -> str:
 def parse_excel_gastos(file_path: Path, normalizer: OrganismoNormalizer, periodo: str = 'marzo') -> List[Dict]:
     """Parsea archivo de gastos y extrae estructura presupuestaria con soporte multi-período"""
     print(f"\n📊 Parseando gastos: {file_path.name}")
-    
-    df = pd.read_excel(file_path)
+
+    df = _require_pandas().read_excel(file_path)
     programas = []
     
     # Detectar formato del archivo

@@ -6,7 +6,7 @@ import json
 from datetime import date
 from pathlib import Path
 from typing import Optional
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends, Query, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, or_
 
@@ -23,12 +23,23 @@ from app.schemas.presupuesto import (
     MesResumenItem,
     OrganismoResponse,
 )
+from app.services.ejecucion_contrast import (
+    BUCKET_COMPROMISO,
+    BUCKET_EJECUCION,
+    aggregate_organismos,
+    bucket_etapa,
+)
+from app.services.gasto_classifier import JURISDICCIONES
 
 # Paths for analysis data
 BASE_DIR = Path(__file__).parent.parent.parent.parent.parent.parent
 DATOS_DIR = BASE_DIR / "watcher-doc"
 
-router = APIRouter()
+async def _no_store(response: Response) -> None:
+    response.headers["Cache-Control"] = "no-store"
+
+
+router = APIRouter(dependencies=[Depends(_no_store)])
 
 @router.get("/programas/", response_model=ProgramasListResponse)
 async def get_programas(
@@ -240,65 +251,134 @@ async def get_organismos(
 async def get_ejecucion_resumen(
     fecha_desde: Optional[date] = Query(None),
     fecha_hasta: Optional[date] = Query(None),
+    jurisdiccion: Optional[str] = Query(
+        None, description="provincial | municipal | fuera_presupuesto"
+    ),
+    ejercicio: int = Query(2026, ge=2000, le=2100),
     db: AsyncSession = Depends(get_db),
 ):
     """
     Aggregated stats for ejecucion_presupuestaria.
-    Returns canonical vs duplicate totals, top 10 organisms, and monthly breakdown.
+
+    Canonical vs duplicate totals, commitment vs execution split, top organisms
+    contrasted against presupuesto_base.monto_vigente, and monthly breakdown.
     """
     try:
+        if jurisdiccion is not None and jurisdiccion not in JURISDICCIONES:
+            raise HTTPException(
+                status_code=400,
+                detail=f"jurisdiccion must be one of {list(JURISDICCIONES)}",
+            )
+
         date_filters = []
         if fecha_desde:
             date_filters.append(EjecucionPresupuestaria.fecha_boletin >= fecha_desde)
         if fecha_hasta:
             date_filters.append(EjecucionPresupuestaria.fecha_boletin <= fecha_hasta)
+        if jurisdiccion:
+            date_filters.append(EjecucionPresupuestaria.jurisdiccion == jurisdiccion)
 
-        # Filters for canonical-only queries (always includes is_duplicate == 0)
         canon_filters = [EjecucionPresupuestaria.is_duplicate == 0] + date_filters
 
-        # Canonical vs duplicate totals
         group_q = (
             select(
                 EjecucionPresupuestaria.is_duplicate,
+                EjecucionPresupuestaria.etapa_gasto,
                 func.count(EjecucionPresupuestaria.id).label("cnt"),
-                func.coalesce(func.sum(EjecucionPresupuestaria.monto), 0).label("total"),
+                func.coalesce(func.sum(EjecucionPresupuestaria.monto), 0).label(
+                    "total"
+                ),
             )
-            .group_by(EjecucionPresupuestaria.is_duplicate)
+            .group_by(
+                EjecucionPresupuestaria.is_duplicate,
+                EjecucionPresupuestaria.etapa_gasto,
+            )
         )
         if date_filters:
             group_q = group_q.where(and_(*date_filters))
         result = await db.execute(group_q)
         canon_count = dup_count = 0
         canon_monto = dup_monto = 0.0
+        monto_compromiso = monto_ejecucion = 0.0
         for row in result.all():
+            total = float(row.total)
             if row.is_duplicate == 0:
-                canon_count, canon_monto = row.cnt, float(row.total)
+                canon_count += row.cnt
+                canon_monto += total
+                bucket = bucket_etapa(row.etapa_gasto)
+                if bucket == BUCKET_COMPROMISO:
+                    monto_compromiso += total
+                elif bucket == BUCKET_EJECUCION:
+                    monto_ejecucion += total
             else:
-                dup_count, dup_monto = row.cnt, float(row.total)
+                dup_count += row.cnt
+                dup_monto += total
 
-        # Top 15 organisms by canonical monto
-        result = await db.execute(
+        org_key = func.coalesce(
+            PresupuestoBase.organismo, EjecucionPresupuestaria.organismo
+        )
+        org_q = (
             select(
-                EjecucionPresupuestaria.organismo,
+                org_key.label("org_key"),
+                EjecucionPresupuestaria.etapa_gasto,
                 func.count(EjecucionPresupuestaria.id).label("cnt"),
-                func.coalesce(func.sum(EjecucionPresupuestaria.monto), 0).label("total"),
+                func.coalesce(func.sum(EjecucionPresupuestaria.monto), 0).label(
+                    "total"
+                ),
+            )
+            .select_from(EjecucionPresupuestaria)
+            .outerjoin(
+                PresupuestoBase,
+                PresupuestoBase.id == EjecucionPresupuestaria.presupuesto_base_id,
             )
             .where(and_(*canon_filters))
-            .group_by(EjecucionPresupuestaria.organismo)
-            .order_by(func.sum(EjecucionPresupuestaria.monto).desc())
-            .limit(15)
+            .group_by(org_key, EjecucionPresupuestaria.etapa_gasto)
         )
-        por_organismo = [
-            OrgResumenItem(organismo=r.organismo, count=r.cnt, monto_total=float(r.total))
-            for r in result.all()
+        org_rows = await db.execute(org_q)
+        spend_rows = [
+            (r.org_key, r.etapa_gasto, float(r.total), int(r.cnt))
+            for r in org_rows.all()
         ]
 
-        # Monthly breakdown (canonical only)
+        vig_q = (
+            select(
+                PresupuestoBase.organismo,
+                func.coalesce(func.sum(PresupuestoBase.monto_vigente), 0),
+            )
+            .where(PresupuestoBase.ejercicio == ejercicio)
+            .group_by(PresupuestoBase.organismo)
+        )
+        vig_result = await db.execute(vig_q)
+        vigente_por_org = {r[0]: float(r[1]) for r in vig_result.all() if r[0]}
+
+        contrast = aggregate_organismos(spend_rows, vigente_por_org)
+        sobre_compromiso_count = sum(1 for c in contrast if c.sobre_compromiso)
+        por_organismo = [
+            OrgResumenItem(
+                organismo=c.organismo,
+                count=c.count,
+                monto_total=c.monto_total,
+                monto_compromiso=c.monto_compromiso,
+                monto_ejecucion=c.monto_ejecucion,
+                monto_vigente=c.monto_vigente,
+                pct_compromiso=c.pct_compromiso,
+                pct_ejecucion=c.pct_ejecucion,
+                sobre_compromiso=c.sobre_compromiso,
+                sobre_ejecucion=c.sobre_ejecucion,
+                matched=c.matched,
+            )
+            for c in contrast
+        ]
+
         result = await db.execute(
             select(
-                func.strftime("%Y-%m", EjecucionPresupuestaria.fecha_boletin).label("mes"),
+                func.strftime("%Y-%m", EjecucionPresupuestaria.fecha_boletin).label(
+                    "mes"
+                ),
                 func.count(EjecucionPresupuestaria.id).label("cnt"),
-                func.coalesce(func.sum(EjecucionPresupuestaria.monto), 0).label("total"),
+                func.coalesce(func.sum(EjecucionPresupuestaria.monto), 0).label(
+                    "total"
+                ),
             )
             .where(and_(*canon_filters))
             .group_by("mes")
@@ -314,10 +394,15 @@ async def get_ejecucion_resumen(
             total_duplicates=dup_count,
             monto_canonical=canon_monto,
             monto_duplicates=dup_monto,
+            monto_compromiso=monto_compromiso,
+            monto_ejecucion=monto_ejecucion,
+            sobre_compromiso_count=sobre_compromiso_count,
             por_organismo=por_organismo,
             por_mes=por_mes,
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -333,6 +418,12 @@ async def get_ejecucion(
     solo_canonicos: bool = Query(True, description="Exclude duplicate publications"),
     presupuesto_base_id: Optional[int] = Query(None),
     requiere_revision: Optional[bool] = Query(None),
+    jurisdiccion: Optional[str] = Query(
+        None, description="provincial | municipal | fuera_presupuesto"
+    ),
+    etapa_gasto: Optional[str] = Query(
+        None, description="llamado | adjudicacion | contrato | pago"
+    ),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -355,6 +446,15 @@ async def get_ejecucion(
             filters.append(EjecucionPresupuestaria.presupuesto_base_id == presupuesto_base_id)
         if requiere_revision is not None:
             filters.append(EjecucionPresupuestaria.requiere_revision == requiere_revision)
+        if jurisdiccion:
+            if jurisdiccion not in JURISDICCIONES:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"jurisdiccion must be one of {list(JURISDICCIONES)}",
+                )
+            filters.append(EjecucionPresupuestaria.jurisdiccion == jurisdiccion)
+        if etapa_gasto:
+            filters.append(EjecucionPresupuestaria.etapa_gasto == etapa_gasto)
 
         base_q = select(EjecucionPresupuestaria)
         count_q = select(
@@ -390,6 +490,8 @@ async def get_ejecucion(
             page_size=limit,
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -9,6 +9,8 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.services.presupuesto_matching import resolve_numero_acto
+
 from .models import Boletin, Analisis
 
 async def create_boletin(
@@ -212,6 +214,16 @@ async def create_analisis(
             if parsed and parsed > 0:
                 monto_numerico = (monto_numerico or 0) + parsed
     
+    # numero_acto holds the dedup identity for re-published tenders, so it must
+    # be the stable public identifier rather than the per-publication ID the LLM
+    # sometimes returns. The raw ID stays available in `expediente`/`fragmento`.
+    numero_acto = resolve_numero_acto(
+        analisis_data.get("numero") or analisis_data.get("numero_acto"),
+        analisis_data.get("texto_original"),
+        analisis_data.get("descripcion"),
+        fragmento,
+    )
+
     db_analisis = Analisis(
         boletin_id=boletin_id,
         fragmento=fragmento,
@@ -226,7 +238,7 @@ async def create_analisis(
         datos_extra=analisis_data.get("metadata") or analisis_data.get("datos_extra", {}),
         # v2 fields
         tipo_acto=analisis_data.get("tipo_acto"),
-        numero_acto=analisis_data.get("numero") or analisis_data.get("numero_acto"),
+        numero_acto=numero_acto,
         organismo=analisis_data.get("organismo"),
         beneficiarios_json=beneficiarios if is_v2 else None,
         montos_json=montos if is_v2 else None,
@@ -236,6 +248,10 @@ async def create_analisis(
         transparency_score=analisis_data.get("transparency_score"),
         red_flags_json=analisis_data.get("red_flags_json"),
         num_red_flags=analisis_data.get("num_red_flags"),
+        # Épica P.7 — Clasificación de gasto (si fue calculada upstream)
+        is_gasto_publico=analisis_data.get("is_gasto_publico"),
+        etapa_gasto=analisis_data.get("etapa_gasto"),
+        jurisdiccion_gasto=analisis_data.get("jurisdiccion_gasto"),
     )
     db.add(db_analisis)
     return db_analisis

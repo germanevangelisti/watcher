@@ -26,9 +26,11 @@ from etl_analisis_to_ejecucion import (
     _normalize_acto,
     _dedup_key,
     _ORGANISMO_ALIASES,
+    looks_like_publication_id,
     match_organismo,
     parse_date,
     first_beneficiario,
+    resolve_numero_acto,
     run_etl,
 )
 
@@ -39,7 +41,10 @@ from parse_pdf_presupuesto_2026 import (
     _is_jurisdiction_header,
     _col_for_x,
     _words_to_rows,
+    LEY_11088_ENTES,
 )
+
+from parse_excel_presupuesto import OrganismoNormalizer
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -217,6 +222,83 @@ class TestMatchOrganismo:
                     f"Alias chain detected: {value!r} is both a value and a key"
                 )
 
+    def _entes_index(self):
+        """Minimal 2026 index: Ley 11.088 seed rows + Policía (from Mapas)."""
+        return self._make_index([
+            (20, "Empresa Provincial de Energia de Cordoba", "993 - EPEC", "4.1.1"),
+            (21, "Agencia Cordoba de Inversion y Financiamiento", "ACIF", None),
+            (22, "Policia de la Provincia", "Seguridad", "1.1.0"),
+            (23, "Poder Judicial", "Poder Judicial", None),
+            (5, "Unidad Ejecutora Para El Saneamiento", "UES", None),
+        ])
+
+    def test_alias_epec_short_and_sau(self):
+        pb_index, pb_exact = self._entes_index()
+        for org in (
+            "EPEC",
+            "EPEC SAU",
+            "EPEC S.A.U. (EPEC)",
+            "EMPRESA PROVINCIAL DE ENERGIA DE CORDOBA S.A.U (EPEC)",
+        ):
+            pb_id, score, method, _, _ = match_organismo(
+                _normalize(org), pb_index, pb_exact
+            )
+            assert pb_id == 20, org
+            assert score == 1.0
+            assert method in ("alias+exact", "exact")
+
+    def test_alias_acif(self):
+        pb_index, pb_exact = self._entes_index()
+        for org in (
+            "ACIF",
+            "Agencia Córdoba de Inversión y Financiamiento S.E.M. (ACIF)",
+        ):
+            pb_id, score, method, _, _ = match_organismo(
+                _normalize(org), pb_index, pb_exact
+            )
+            assert pb_id == 21, org
+            assert score == 1.0
+            assert method in ("alias+exact", "exact")
+
+    def test_alias_policia(self):
+        pb_index, pb_exact = self._entes_index()
+        for org in (
+            "POLICIA",
+            "Policía de la Provincia de Córdoba",
+            "POLICIA DE CORDOBA",
+        ):
+            pb_id, _, method, _, _ = match_organismo(
+                _normalize(org), pb_index, pb_exact
+            )
+            assert pb_id == 22, org
+            assert method == "alias+exact"
+
+    def test_alias_ccu_is_outside_budget(self):
+        pb_index, pb_exact = self._entes_index()
+        for org in ("CCU", "Córdoba Capital", "Municipalidad de Córdoba Capital"):
+            pb_id, *_ = match_organismo(_normalize(org), pb_index, pb_exact)
+            assert pb_id is None, org
+
+    def test_unidad_ejecutora_still_blocklisted(self):
+        pb_index, pb_exact = self._entes_index()
+        pb_id, *_ = match_organismo("UNIDAD EJECUTORA", pb_index, pb_exact)
+        assert pb_id is None
+
+    def test_ley_11088_entes_seed_targets(self):
+        """Alias canonical names must match the Ley 11.088 seed organismos."""
+        seeded = {_normalize(row["organismo"]) for row in LEY_11088_ENTES}
+        assert _ORGANISMO_ALIASES["EPEC"] in seeded
+        assert _ORGANISMO_ALIASES["ACIF"] in seeded
+        epec = next(
+            r for r in LEY_11088_ENTES
+            if "ENERGIA" in r["organismo"]
+        )
+        acif = next(r for r in LEY_11088_ENTES if "INVERSION" in r["organismo"])
+        assert epec["monto_vigente"] == 2_627_774_687_000.0
+        assert acif["monto_vigente"] == 573_294_933_000.0
+        assert epec["ejercicio"] == 2026
+        assert acif["ejercicio"] == 2026
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # parse_pdf_presupuesto_2026 — unit tests
@@ -243,6 +325,60 @@ class TestParseMonto:
 
     def test_non_numeric(self):
         assert _parse_monto("N/A") == 0.0
+
+
+class TestOrganismoNormalizer:
+    """Las abreviaturas sólo se expanden sobre tokens completos.
+
+    Los reemplazos sin anclar corrompían los nombres que van a
+    `presupuesto_base` ("PROVINCIA" → "PROVINCIALINCIA"), y eso rompía el match
+    contra los organismos extraídos de los boletines.
+    """
+
+    @pytest.fixture
+    def norm(self):
+        return OrganismoNormalizer()
+
+    @pytest.mark.parametrize(
+        "entrada",
+        [
+            "POLICIA DE LA PROVINCIA",
+            "PROVINCIA DE CORDOBA",
+            "DIRECCION PROVINCIAL DE VIALIDAD",
+            "SERVICIO ADMINISTRATIVO",
+            "ADMINISTRACION GENERAL",
+            "DESARROLLO INTEGRAL",
+            "MINISTERIO DE INFRAESTRUCTURA",
+            "SECRETARIA DE SALUD",
+        ],
+    )
+    def test_no_corrompe_palabras_largas(self, norm, entrada):
+        assert norm.normalize(entrada) == entrada
+
+    @pytest.mark.parametrize(
+        "entrada,esperado",
+        [
+            ("MIN DE SALUD", "MINISTERIO DE SALUD"),
+            ("SEC DE AMBIENTE", "SECRETARIA DE AMBIENTE"),
+            ("DIR DE RENTAS", "DIRECCION DE RENTAS"),
+            ("DIR GRAL DE RENTAS", "DIRECCION GENERAL DE RENTAS"),
+            ("ADM CENTRAL", "ADMINISTRACION CENTRAL"),
+            ("PROV DE CORDOBA", "PROVINCIAL DE CORDOBA"),
+        ],
+    )
+    def test_expande_abreviaturas_reales(self, norm, entrada, esperado):
+        assert norm.normalize(entrada) == esperado
+
+    def test_abreviatura_con_punto(self, norm):
+        # La limpieza de caracteres especiales quita el punto antes de expandir
+        assert norm.normalize("MIN. DE SALUD") == "MINISTERIO DE SALUD"
+
+    def test_uppercase_y_espacios(self, norm):
+        assert norm.normalize("  ministerio  de   salud ") == "MINISTERIO DE SALUD"
+
+    def test_vacio(self, norm):
+        assert norm.normalize("") == "DESCONOCIDO"
+        assert norm.normalize(None) == "DESCONOCIDO"
 
 
 class TestNormalizeFinFunDet:
@@ -420,9 +556,12 @@ def _setup_test_db(path: str):
         );
 
         -- seed data
-        INSERT INTO boletines VALUES (1, '20260201', 'b1.pdf', 'S1', 'completed', 'provincial', 'downloaded');
-        INSERT INTO boletines VALUES (2, '20260215', 'b2.pdf', 'S4', 'completed', 'provincial', 'downloaded');
-        INSERT INTO boletines VALUES (3, '20260202', 'b3.pdf', 'S1', 'completed', 'provincial', 'downloaded');
+        INSERT INTO boletines VALUES (1, '20260201', 'b1.pdf', '4', 'completed', 'provincial', 'downloaded');
+        INSERT INTO boletines VALUES (2, '20260215', 'b2.pdf', '5', 'completed', 'provincial', 'downloaded');
+        INSERT INTO boletines VALUES (3, '20260202', 'b3.pdf', '4', 'completed', 'provincial', 'downloaded');
+        INSERT INTO boletines VALUES (4, '20260203', 'b4.pdf', '2', 'completed', 'provincial', 'downloaded');
+        INSERT INTO boletines VALUES (5, '20260204', 'b5.pdf', '3', 'completed', 'provincial', 'downloaded');
+        INSERT INTO boletines VALUES (6, '20260205', 'b6.pdf', '1', 'completed', 'provincial', 'downloaded');
 
         INSERT INTO presupuesto_base VALUES (
             1, 2026, 'MINISTERIO DE SEGURIDAD', '10 - Programa Policia', NULL,
@@ -432,18 +571,28 @@ def _setup_test_db(path: str):
 
         INSERT INTO analisis VALUES
             (1, 1, 'licitacion', 'RES 001', 'MINISTERIO DE SEGURIDAD',
-             'Compra de patrulleros', 'frag1', 5000000.0, 'gasto', 'bajo',
-             '["Empresa ABC"]', NULL, NULL),
+             'Licitacion publica para compra de patrulleros', 'frag1', 5000000.0,
+             'gasto', 'bajo', '["Empresa ABC"]', NULL, NULL),
             (2, 2, 'subsidio', 'DEC 002', 'MUNICIPALIDAD DE CORDOBA',
              'Subsidio transporte', 'frag2', 1000000.0, 'subsidio', 'medio',
              NULL, 'Municipalidad Córdoba', 'Monto elevado'),
             (3, 1, 'resolucion', 'RES 003', NULL,
-             'Acto sin organismo', 'frag3', 2000000.0, 'otro', 'informativo',
-             NULL, NULL, NULL),
+             'Orden de pago por servicios de limpieza', 'frag3', 2000000.0,
+             'otro', 'informativo', NULL, NULL, NULL),
             -- duplicate of analisis_id=1: same org + acto + monto, published day after
             (4, 3, 'licitacion', 'RES 001', 'MINISTERIO DE SEGURIDAD',
-             'Compra de patrulleros (republica)', 'frag4', 5000000.0, 'gasto', 'bajo',
-             '["Empresa ABC"]', NULL, NULL);
+             'Licitacion publica para compra de patrulleros (republica)', 'frag4',
+             5000000.0, 'gasto', 'bajo', '["Empresa ABC"]', NULL, NULL),
+            -- P.7.1 exclusions: large montos that are not public spending
+            (5, 4, 'otro', 'EXP 900', 'JUZGADO CIVIL',
+             'Remate judicial de inmueble', 'frag5', 13500000000.0, 'otro', 'bajo',
+             NULL, NULL, NULL),
+            (6, 5, 'otro', 'ACTA 5', 'EL AGUANTE SA',
+             'Aumento de capital social', 'frag6', 8000000000.0, 'otro', 'bajo',
+             NULL, NULL, NULL),
+            (7, 6, 'decreto', 'DEC 700', 'MINISTERIO DE SEGURIDAD',
+             'Compensacion de partidas del ejercicio', 'frag7', 5964000000.0,
+             'otro', 'bajo', NULL, NULL, NULL);
     """)
     conn.commit()
     conn.close()
@@ -584,9 +733,61 @@ class TestETLIntegration:
 
     def test_total_rows_includes_duplicates(self):
         run_etl(dry_run=False)
-        # All 4 analisis rows (including the duplicate) should be stored
+        # All 4 gasto rows (including the duplicate) should be stored
         rows = self._query("SELECT COUNT(*) as n FROM ejecucion_presupuestaria")
         assert rows[0]["n"] == 4
+
+    def test_non_gasto_actos_never_reach_the_ledger(self):
+        """P.7.1: remate, capital social y compensación de partidas quedan fuera."""
+        run_etl(dry_run=False)
+        rows = self._query("SELECT organismo FROM ejecucion_presupuestaria")
+        organismos = {r["organismo"] for r in rows}
+        assert "JUZGADO CIVIL" not in organismos
+        assert "EL AGUANTE SA" not in organismos
+        # $27,4 mil M de contaminación excluidos del acumulado
+        total = self._query(
+            "SELECT COALESCE(SUM(monto), 0) AS s FROM ejecucion_presupuestaria "
+            "WHERE is_duplicate = 0"
+        )
+        assert total[0]["s"] == 8_000_000.0
+
+    def test_classification_is_written_back_to_analisis(self):
+        run_etl(dry_run=False)
+        rows = self._query(
+            "SELECT id, is_gasto_publico, etapa_gasto, jurisdiccion_gasto "
+            "FROM analisis ORDER BY id"
+        )
+        by_id = {r["id"]: r for r in rows}
+        assert by_id[1]["etapa_gasto"] == "llamado"
+        assert by_id[1]["jurisdiccion_gasto"] == "provincial"
+        assert by_id[2]["etapa_gasto"] == "pago"
+        assert by_id[2]["jurisdiccion_gasto"] == "municipal"
+        assert by_id[5]["is_gasto_publico"] == 0
+        assert by_id[6]["is_gasto_publico"] == 0
+        assert by_id[7]["etapa_gasto"] == "modificacion"
+        assert by_id[7]["is_gasto_publico"] == 0
+
+    def test_ledger_rows_carry_etapa_and_jurisdiccion(self):
+        """P.7.4 necesita separar compromiso de ejecución sin volver a analisis."""
+        run_etl(dry_run=False)
+        rows = self._query(
+            "SELECT etapa_gasto, jurisdiccion, analisis_id FROM ejecucion_presupuestaria "
+            "WHERE is_duplicate = 0 ORDER BY analisis_id"
+        )
+        # analisis_id 1 = licitación provincial, 2 = subsidio municipal,
+        # 3 = orden de pago sin organismo
+        assert [r["etapa_gasto"] for r in rows] == ["llamado", "pago", "pago"]
+        assert [r["jurisdiccion"] for r in rows] == [
+            "provincial",
+            "municipal",
+            "provincial",
+        ]
+        assert all(r["analisis_id"] is not None for r in rows)
+
+    def test_dry_run_does_not_write_classification(self):
+        run_etl(dry_run=True)
+        rows = self._query("SELECT is_gasto_publico FROM analisis")
+        assert all(r["is_gasto_publico"] is None for r in rows)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -617,6 +818,76 @@ class TestNormalizeActo:
 
     def test_valid_acto_number(self):
         assert _normalize_acto("DECRETO 056/2026") == "DECRETO056/2026"
+
+
+class TestPublicationId:
+    """El boletín numera cada publicación, no cada acto.
+
+    El pliego de pavimento Las Peñas–Isletillas salió con '646961' el 20-feb y
+    '645803' el 24-feb: mismo acto, IDs distintos. Usar ese número como clave de
+    dedup parte un acto en varias filas canónicas.
+    """
+
+    @pytest.mark.parametrize("valor", ["646961", "645803", "12345", "123456789", " 646961 "])
+    def test_detecta_ids_de_publicacion(self, valor):
+        assert looks_like_publication_id(valor) is True
+
+    @pytest.mark.parametrize(
+        "valor",
+        [
+            "S-511",
+            "S-511/2026",
+            "056/2026",
+            "RESOLUCION 056/2026",
+            "DECRETO 456/2026",
+            "2025/RSIHG-00000737",
+            "1234",        # muy corto para ser un ID de publicación
+            "1234567890",  # muy largo
+            None,
+            "",
+        ],
+    )
+    def test_no_marca_identificadores_reales(self, valor):
+        assert looks_like_publication_id(valor) is False
+
+
+class TestResolveNumeroActo:
+    def test_id_de_publicacion_cede_ante_el_codigo_de_obra(self):
+        """El caso real: '646961' con el código S-511 en el texto del aviso."""
+        assert resolve_numero_acto(
+            "646961",
+            "Pavimentación Las Peñas Sud - Las Isletillas",
+            'Obra: "PAVIMENTACION RUTA S-511 LAS PEÑAS SUD - LAS ISLETILLAS"',
+        ) == "S-511"
+
+    def test_identificador_estructurado_del_llm_se_respeta(self):
+        """Si el LLM ya dio un identificador público, no lo tocamos."""
+        assert resolve_numero_acto(
+            "RESOLUCION 056/2026", "Texto con Licitación Pública N° 99/2026"
+        ) == "RESOLUCION 056/2026"
+
+    def test_id_de_publicacion_se_conserva_si_no_hay_nada_mejor(self):
+        """Peor que un ID inestable es None, que desactiva el dedup del todo."""
+        assert resolve_numero_acto("646961", "Aviso sin identificador alguno") == "646961"
+
+    def test_sin_numero_usa_el_texto(self):
+        assert resolve_numero_acto(
+            None, "Llamado a Licitación Pública N° 12/2026 para la obra"
+        ) == "12/2026"
+
+    def test_sin_numero_ni_texto(self):
+        assert resolve_numero_acto(None, None) is None
+
+    def test_dos_publicaciones_del_mismo_pliego_colapsan(self):
+        """Distinto ID de publicación, misma clave de dedup."""
+        frag = 'Obra: "PAVIMENTACION RUTA S-511 LAS PEÑAS SUD - LAS ISLETILLAS"'
+        a = resolve_numero_acto("646961", None, frag)
+        b = resolve_numero_acto("645803", None, frag)
+        assert a == b
+        monto = 25_341_000_000.0
+        assert _dedup_key("ACIF", monto, _normalize_acto(a)) == _dedup_key(
+            "ACIF", monto, _normalize_acto(b)
+        )
 
 
 class TestDedupKey:

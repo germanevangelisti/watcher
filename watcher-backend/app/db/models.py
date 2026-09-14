@@ -110,6 +110,13 @@ class Analisis(Base):
     red_flags_json = Column(JSON, nullable=True)       # [{type, severity, title, description, evidence, confidence}]
     num_red_flags = Column(Integer, nullable=True)     # cantidad de red flags detectadas
 
+    # Épica P.7 — Clasificación de gasto público per acto.
+    # etapa_gasto: llamado | adjudicacion | contrato | pago | modificacion | no_aplica
+    # jurisdiccion_gasto: provincial | municipal | fuera_presupuesto
+    is_gasto_publico = Column(Boolean, nullable=True)  # False: remate, societario, modificación
+    etapa_gasto = Column(String(20), nullable=True)
+    jurisdiccion_gasto = Column(String(20), nullable=True)
+
     # Relación con boletín
     boletin = relationship("Boletin", back_populates="analisis")
 
@@ -217,7 +224,8 @@ class EjecucionPresupuestaria(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     boletin_id = Column(Integer, ForeignKey("boletines.id"))
     presupuesto_base_id = Column(Integer, ForeignKey("presupuesto_base.id"), nullable=True)
-    
+    analisis_id = Column(Integer, ForeignKey("analisis.id"), nullable=True, index=True)
+
     # Datos de la ejecución
     fecha_boletin = Column(Date, index=True)
     organismo = Column(String, index=True)
@@ -234,6 +242,12 @@ class EjecucionPresupuestaria(Base):
     # Metadatos del análisis
     categoria_watcher = Column(String)  # Del análisis de Watcher
     riesgo_watcher = Column(String)
+
+    # P.7 — etapa del ciclo de gasto y jurisdicción contra la que se contrasta.
+    # Compromiso (llamado/adjudicacion/contrato) y ejecución (pago) no se suman juntos.
+    etapa_gasto = Column(String(20), nullable=True, index=True)
+    jurisdiccion = Column(String(20), nullable=True, index=True)
+
     
     # Acumuladores
     monto_acumulado_mes = Column(Float, nullable=True)

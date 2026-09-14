@@ -59,4 +59,5 @@ No reemplaza al periodismo de investigación — **lo potencia** eliminando el t
 | Fase 3 | Épica 6: Sistema agentico multi-agente | ✅ Completado |
 | Fase 4 | Épica 7: Producción, hardening, testing | 🟢 Mayormente completado |
 | Fase 5 | UI v2: shadcn/ui + TanStack | ✅ Completado |
-| Extra | Vertical Presupuesto/Ejecución 2026 | 🟡 P.1–P.6 hecho; **P.7** ledger vivo pendiente |
+| Extra | Vertical Presupuesto/Ejecución 2026 | ✅ P.1–P.7.4 hecho (en `main`) |
+| Extra | V.1 Verificar pipeline vs realidad | ⬜ refinado — [historia](../backlog/V.1-verificar-pipeline-vs-realidad.md) |

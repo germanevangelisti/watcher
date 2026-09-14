@@ -23,15 +23,17 @@ export interface Ejecucion {
   organismo?: string;
   beneficiario?: string;
   concepto?: string;
-  monto: number;
+  monto: number | string;
   tipo_operacion?: string;
   partida_presupuestaria?: string;
   programa?: string;
   categoria_watcher?: string;
   riesgo_watcher?: string;
-  monto_acumulado_mes?: number;
-  monto_acumulado_trimestre?: number;
-  monto_acumulado_anual?: number;
+  etapa_gasto?: string;
+  jurisdiccion?: string;
+  monto_acumulado_mes?: number | string;
+  monto_acumulado_trimestre?: number | string;
+  monto_acumulado_anual?: number | string;
   requiere_revision?: boolean;
   is_duplicate: number;
   observaciones?: string;
@@ -40,7 +42,7 @@ export interface Ejecucion {
 export interface EjecucionListResponse {
   ejecuciones: Ejecucion[];
   total: number;
-  total_monto: number;
+  total_monto: number | string;
   page: number;
   page_size: number;
 }
@@ -48,23 +50,37 @@ export interface EjecucionListResponse {
 export interface OrgResumenItem {
   organismo: string | null;
   count: number;
-  monto_total: number;
+  monto_total: number | string;
+  monto_compromiso: number | string;
+  monto_ejecucion: number | string;
+  monto_vigente: number | string | null;
+  pct_compromiso: number | null;
+  pct_ejecucion: number | null;
+  sobre_compromiso: boolean;
+  sobre_ejecucion: boolean;
+  matched: boolean;
 }
 
 export interface MesResumenItem {
   mes: string; // "2026-02", "2026-03"
   count: number;
-  monto_total: number;
+  monto_total: number | string;
 }
 
 export interface EjecucionResumenResponse {
   total_canonical: number;
   total_duplicates: number;
-  monto_canonical: number;
-  monto_duplicates: number;
+  monto_canonical: number | string;
+  monto_duplicates: number | string;
+  monto_compromiso: number | string;
+  monto_ejecucion: number | string;
+  sobre_compromiso_count: number;
   por_organismo: OrgResumenItem[];
   por_mes: MesResumenItem[];
 }
+
+export type JurisdiccionGasto = "provincial" | "municipal" | "fuera_presupuesto"
+export type SerieGasto = "compromiso" | "ejecucion"
 
 export interface EjecucionFilters {
   skip?: number;
@@ -76,6 +92,8 @@ export interface EjecucionFilters {
   solo_canonicos?: boolean;
   presupuesto_base_id?: number;
   requiere_revision?: boolean;
+  jurisdiccion?: JurisdiccionGasto;
+  etapa_gasto?: string;
 }
 
 export interface ProgramaDetail extends Programa {
