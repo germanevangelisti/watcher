@@ -1,6 +1,6 @@
 # Visión de Producto — Watcher Agent
 
-**Documento vivo** · Última actualización: 2026-09-13
+**Documento vivo** · Última actualización: 2026-09-15
 
 ---
 
@@ -60,4 +60,5 @@ No reemplaza al periodismo de investigación — **lo potencia** eliminando el t
 | Fase 4 | Épica 7: Producción, hardening, testing | 🟢 Mayormente completado |
 | Fase 5 | UI v2: shadcn/ui + TanStack | ✅ Completado |
 | Extra | Vertical Presupuesto/Ejecución 2026 | ✅ P.1–P.7.4 hecho (en `main`) |
-| Extra | V.1 Verificar pipeline vs realidad | ⬜ refinado — [historia](../backlog/V.1-verificar-pipeline-vs-realidad.md) |
+| Extra | V.1 Verificar pipeline vs realidad | ✅ hecho (inventario, gold set, marzo cerrado, Ley 11.088, CGE T1) |
+| Extra | V.2 Matching y denominador | 🔄 siguiente — 4 alertas >100% del corte abril |

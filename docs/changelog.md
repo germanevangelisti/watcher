@@ -1,5 +1,12 @@
 # Watcher — Changelog
 
+## 2026-09-15 — V.1 cerrado + abril + V.2
+
+- V.1 (inventario, gold set, marzo, Ley 11.088, CGE T1) verificado.
+- Abril 2026: 98/98 `completed` vía `ingest_month.py` / `process_pending.py` / `lote_status.py`.
+- UI presupuesto: $703.7B compromiso / $1.1B ejecución; 4 alertas >100% documentadas en `knowledgebase/current/corte-abril-ui.md`.
+- Siguiente: V.2 matching/denominador (`knowledgebase/backlog/V.2-matching-denominador.md`). No ingest mayo+ hasta entonces.
+
 ## v2.0.0 (March 2026) — Architecture Overhaul
 
 ### Fase 0 — Foundation & Tooling

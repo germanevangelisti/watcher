@@ -31,6 +31,41 @@ logger = logging.getLogger(__name__)
 _LLM_SEM: asyncio.Semaphore | None = None
 
 
+def salvage_fragment_json(raw: str) -> dict[str, Any] | None:
+    """Parse a LocalPro payload, recovering complete acto objects if truncated."""
+    if not raw or not isinstance(raw, str):
+        return None
+    try:
+        parsed = json.loads(raw)
+        return parsed if isinstance(parsed, dict) else None
+    except json.JSONDecodeError:
+        pass
+    marker = raw.find('"actos"')
+    bracket = raw.find("[", marker if marker >= 0 else 0)
+    if bracket < 0:
+        return None
+    decoder = json.JSONDecoder()
+    actos: list[dict[str, Any]] = []
+    i = bracket
+    while i < len(raw):
+        if raw[i] != "{":
+            i += 1
+            continue
+        try:
+            obj, end = decoder.raw_decode(raw, i)
+        except json.JSONDecodeError:
+            break
+        if isinstance(obj, dict):
+            actos.append(obj)
+        i = end
+    if not actos:
+        return None
+    return {
+        "actos": actos,
+        "resumen_general": "JSON truncado; actos recuperados",
+    }
+
+
 def _llm_semaphore() -> asyncio.Semaphore:
     global _LLM_SEM
     if _LLM_SEM is None:
@@ -108,6 +143,7 @@ class LocalProProvider(IntelligenceProvider):
             "options": {
                 "temperature": 0.1,
                 "num_ctx": ollama_num_ctx(),
+                "num_predict": 2048,
             },
         }
         url = f"{self.base_url}/api/chat"
@@ -128,14 +164,16 @@ class LocalProProvider(IntelligenceProvider):
         message = body.get("message") or {}
         raw = message.get("content") or body.get("response") or "{}"
         try:
-            parsed = json.loads(raw) if isinstance(raw, str) else raw
-        except json.JSONDecodeError as exc:
-            logger.warning("LocalPro returned invalid JSON: %s", exc)
+            parsed = salvage_fragment_json(raw) if isinstance(raw, str) else raw
+        except (TypeError, ValueError):
+            parsed = None
+        if parsed is None:
+            logger.warning("LocalPro returned invalid JSON")
             return _normalize_actos(
                 {
                     "actos": [],
-                    "resumen_general": f"JSON inválido del modelo local: {exc}",
-                    "error": str(exc),
+                    "resumen_general": "JSON inválido del modelo local",
+                    "error": "invalid_json",
                 },
                 metadata,
                 self.model_name,

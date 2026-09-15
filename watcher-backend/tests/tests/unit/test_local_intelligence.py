@@ -5,7 +5,11 @@ from __future__ import annotations
 import sys
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from app.services.local_intelligence import LocalProProvider, _normalize_actos
+from app.services.local_intelligence import (
+    LocalProProvider,
+    _normalize_actos,
+    salvage_fragment_json,
+)
 
 
 def test_tier_and_capabilities():
@@ -48,7 +52,19 @@ async def test_analyze_fragment_parses_ollama_json():
     mock_client.post.assert_awaited()
     sent = mock_client.post.await_args
     assert sent.kwargs["json"]["options"]["num_ctx"] == 4096
+    assert sent.kwargs["json"]["options"]["num_predict"] == 2048
     assert sent.kwargs["json"]["keep_alive"] == "30m"
+
+
+def test_salvage_recovers_complete_actos_from_truncated_payload():
+    raw = (
+        '{"actos": [{"tipo_acto": "licitacion", "organismo": "EPEC"}, '
+        '{"tipo_acto": "licitacion", "organismo": "ACIF", "descripcion": "obra'
+    )
+    parsed = salvage_fragment_json(raw)
+    assert parsed is not None
+    assert len(parsed["actos"]) == 1
+    assert parsed["actos"][0]["organismo"] == "EPEC"
 
 
 async def test_analyze_fragment_falls_back_to_free_on_connection_error():
