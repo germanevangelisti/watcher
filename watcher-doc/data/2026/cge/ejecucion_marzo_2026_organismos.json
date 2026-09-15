@@ -1,0 +1,136 @@
+{
+  "periodo": "marzo-2026",
+  "portal": "https://economiaygestionpublica.cba.gov.ar/publicacion/ejecucion-presupuestaria/",
+  "datos_abiertos": "https://economiaygestionpublica.cba.gov.ar/download/12397/?tmstv=1789410356",
+  "informe": "https://economiaygestionpublica.cba.gov.ar/download/12413/?tmstv=1789410356",
+  "organismos": [
+    {
+      "organismo": "EPEC",
+      "cge": {
+        "label": "EPEC",
+        "vigente": 2636128316000.0,
+        "compromiso": 0.0,
+        "devengado": 539398374000.0,
+        "pagado": 0.0,
+        "n_rows": 8,
+        "source": "Gastos EMAEE - Acumulado Marzo 2026.xlsx"
+      },
+      "ledger_compromiso": 139890436984.17,
+      "ledger_ejecucion": 0.0,
+      "ledger_n": 102.0,
+      "nota": "mismo orden de magnitud (25.9% de CGE)"
+    },
+    {
+      "organismo": "ACIF",
+      "cge": {
+        "label": "ACIF",
+        "vigente": 1820197808226.0,
+        "compromiso": 0.0,
+        "devengado": 196792765547.52417,
+        "pagado": 168688813651.70413,
+        "n_rows": 27,
+        "source": "Gastos EMAEE - Acumulado Marzo 2026.xlsx"
+      },
+      "ledger_compromiso": 112825740583.61,
+      "ledger_ejecucion": 62708525.0,
+      "ledger_n": 4.0,
+      "nota": "mismo orden de magnitud (57.4% de CGE)"
+    },
+    {
+      "organismo": "Poder Judicial",
+      "cge": {
+        "label": "Poder Judicial",
+        "vigente": 704483195000.0,
+        "compromiso": 191537480077.18967,
+        "devengado": 171384047375.38547,
+        "pagado": 141479838319.30008,
+        "n_rows": 20,
+        "source": "Gastos Administración Central - Acumulado Marzo 2026.xlsx"
+      },
+      "ledger_compromiso": 8834951000.0,
+      "ledger_ejecucion": 0.0,
+      "ledger_n": 3.0,
+      "nota": "mismo orden de magnitud (5.2% de CGE)"
+    },
+    {
+      "organismo": "Ministerio de Seguridad",
+      "cge": {
+        "label": "Ministerio de Seguridad",
+        "vigente": 1223164174000.0,
+        "compromiso": 315558784241.76166,
+        "devengado": 272046036941.65234,
+        "pagado": 186557402898.4299,
+        "n_rows": 61,
+        "source": "Gastos Administración Central - Acumulado Marzo 2026.xlsx"
+      },
+      "ledger_compromiso": 654644000.0,
+      "ledger_ejecucion": 0.0,
+      "ledger_n": 5.0,
+      "nota": "Watcher es ~0.2% de CGE (suelo de avisos, no tesorería)"
+    },
+    {
+      "organismo": "Ministerio de Educación",
+      "cge": {
+        "label": "Ministerio de Educación",
+        "vigente": 2531943327000.0,
+        "compromiso": 716789833184.9017,
+        "devengado": 572909700151.9828,
+        "pagado": 473350989826.8085,
+        "n_rows": 94,
+        "source": "Gastos Administración Central - Acumulado Marzo 2026.xlsx"
+      },
+      "ledger_compromiso": 0.0,
+      "ledger_ejecucion": 0.0,
+      "ledger_n": 0.0,
+      "nota": "Watcher 0 — el boletín no trajo gasto canónico"
+    },
+    {
+      "organismo": "Ministerio de Salud",
+      "cge": {
+        "label": "Ministerio de Salud",
+        "vigente": 1276034759000.0,
+        "compromiso": 400769987220.3309,
+        "devengado": 277699444426.15826,
+        "pagado": 206603215857.50366,
+        "n_rows": 136,
+        "source": "Gastos Administración Central - Acumulado Marzo 2026.xlsx"
+      },
+      "ledger_compromiso": 0.0,
+      "ledger_ejecucion": 139425865.0,
+      "ledger_n": 1.0,
+      "nota": "Watcher es ~0.1% de CGE (suelo de avisos, no tesorería)"
+    },
+    {
+      "organismo": "Policía de la Provincia",
+      "cge": {
+        "label": "Policía de la Provincia",
+        "vigente": 1057975642000.0,
+        "compromiso": 272997781952.57578,
+        "devengado": 247935742112.92575,
+        "pagado": 165752736149.91995,
+        "n_rows": 12,
+        "source": "Gastos Administración Central - Acumulado Marzo 2026.xlsx"
+      },
+      "ledger_compromiso": 0.0,
+      "ledger_ejecucion": 0.0,
+      "ledger_n": 0.0,
+      "nota": "Watcher 0 — el boletín no trajo gasto canónico"
+    },
+    {
+      "organismo": "Dirección de Ministerio / Inteligencia Fiscal",
+      "cge": {
+        "label": "Dirección de Ministerio / Inteligencia Fiscal",
+        "vigente": 0.0,
+        "compromiso": 0.0,
+        "devengado": 0.0,
+        "pagado": 0.0,
+        "n_rows": 0,
+        "source": ""
+      },
+      "ledger_compromiso": 25341354988.89,
+      "ledger_ejecucion": 0.0,
+      "ledger_n": 1.0,
+      "nota": "CGE no publica esta unidad; el ledger no es caja"
+    }
+  ]
+}

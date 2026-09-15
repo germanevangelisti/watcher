@@ -87,4 +87,4 @@ Registrar **gasto acumulado detallado** y contrastarlo con presupuesto. P.1–P.
 Orden de magnitud (no KPI): $315 mil M vs ~11,4 billones de la Ley 11.088 ≈ 2,8%, sobre ~30 días hábiles y casi todo compromiso de obra. No publicar ese % hasta filtrar y anclar partidas.
 
 Historia: [P.7-gasto-acumulado-presupuesto.md](../backlog/P.7-gasto-acumulado-presupuesto.md).  
-Próxima sesión: [V.1](../backlog/V.1-verificar-pipeline-vs-realidad.md).
+Verificación vs realidad (V.1): [cobertura-calendario.md](cobertura-calendario.md), [goldset.md](goldset.md), [ancla-ley-11088.md](ancla-ley-11088.md), [cge-trimestral.md](cge-trimestral.md).

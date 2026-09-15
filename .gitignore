@@ -63,6 +63,10 @@ out/
 # Data / bulky artifacts generated locally
 boletines/
 boletines.zip
+watcher-doc/data/2026/goldset/*.txt
+watcher-doc/data/2026/cge/*.bin
+watcher-doc/data/2026/cge/*.xlsx
+watcher-doc/data/2026/cge/extracted/
 watcher-lab/resultados_watcher/
 logs/
 

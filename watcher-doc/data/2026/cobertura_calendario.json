@@ -1,0 +1,450 @@
+{
+  "start": "2026-02-02",
+  "end": "2026-03-31",
+  "probe_mode": "cached",
+  "weekday_days": 42,
+  "weekday_slots": 210,
+  "published_days": 38,
+  "published_slots": 188,
+  "db_total": 198,
+  "db_completed": 188,
+  "db_failed": 10,
+  "db_pending": 0,
+  "db_other": 0,
+  "covered_slots": 188,
+  "pct_published_days_covered": 100.0,
+  "pct_sections_present": 100.0,
+  "huecos": [],
+  "failed": [
+    {
+      "id": 101,
+      "date": "2026-02-16",
+      "section": 1,
+      "status": "failed",
+      "filename": "20260216_1_Secc.pdf",
+      "error_message": "justified: Carnaval 2026, HTTP 404 (no salió boletín)"
+    },
+    {
+      "id": 102,
+      "date": "2026-02-16",
+      "section": 3,
+      "status": "failed",
+      "filename": "20260216_3_Secc.pdf",
+      "error_message": "justified: Carnaval 2026, HTTP 404 (no salió boletín)"
+    },
+    {
+      "id": 103,
+      "date": "2026-02-16",
+      "section": 4,
+      "status": "failed",
+      "filename": "20260216_4_Secc.pdf",
+      "error_message": "justified: Carnaval 2026, HTTP 404 (no salió boletín)"
+    },
+    {
+      "id": 104,
+      "date": "2026-02-16",
+      "section": 5,
+      "status": "failed",
+      "filename": "20260216_5_Secc.pdf",
+      "error_message": "justified: Carnaval 2026, HTTP 404 (no salió boletín)"
+    },
+    {
+      "id": 105,
+      "date": "2026-02-16",
+      "section": 2,
+      "status": "failed",
+      "filename": "20260216_2_Secc.pdf",
+      "error_message": "justified: Carnaval 2026, HTTP 404 (no salió boletín)"
+    },
+    {
+      "id": 106,
+      "date": "2026-02-17",
+      "section": 1,
+      "status": "failed",
+      "filename": "20260217_1_Secc.pdf",
+      "error_message": "justified: Carnaval 2026, HTTP 404 (no salió boletín)"
+    },
+    {
+      "id": 107,
+      "date": "2026-02-17",
+      "section": 3,
+      "status": "failed",
+      "filename": "20260217_3_Secc.pdf",
+      "error_message": "justified: Carnaval 2026, HTTP 404 (no salió boletín)"
+    },
+    {
+      "id": 108,
+      "date": "2026-02-17",
+      "section": 4,
+      "status": "failed",
+      "filename": "20260217_4_Secc.pdf",
+      "error_message": "justified: Carnaval 2026, HTTP 404 (no salió boletín)"
+    },
+    {
+      "id": 109,
+      "date": "2026-02-17",
+      "section": 5,
+      "status": "failed",
+      "filename": "20260217_5_Secc.pdf",
+      "error_message": "justified: Carnaval 2026, HTTP 404 (no salió boletín)"
+    },
+    {
+      "id": 110,
+      "date": "2026-02-17",
+      "section": 2,
+      "status": "failed",
+      "filename": "20260217_2_Secc.pdf",
+      "error_message": "justified: Carnaval 2026, HTTP 404 (no salió boletín)"
+    }
+  ],
+  "pending": [],
+  "unpublished_weekdays": [
+    "2026-02-16",
+    "2026-02-17",
+    "2026-03-23",
+    "2026-03-24"
+  ],
+  "sections_present_by_day": {
+    "2026-02-02": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-02-03": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-02-04": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-02-05": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-02-06": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-02-09": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-02-10": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-02-11": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-02-12": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-02-13": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-02-16": {
+      "published": 0,
+      "in_db": 5,
+      "completed": 0,
+      "failed": 5,
+      "pending": 0,
+      "covered": 0
+    },
+    "2026-02-17": {
+      "published": 0,
+      "in_db": 5,
+      "completed": 0,
+      "failed": 5,
+      "pending": 0,
+      "covered": 0
+    },
+    "2026-02-18": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-02-19": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-02-20": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-02-23": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-02-24": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-02-25": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-02-26": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-02-27": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-03-02": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-03-03": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-03-04": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-03-05": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-03-06": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-03-09": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-03-10": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-03-11": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-03-12": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-03-13": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-03-16": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-03-17": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-03-18": {
+      "published": 4,
+      "in_db": 4,
+      "completed": 4,
+      "failed": 0,
+      "pending": 0,
+      "covered": 4
+    },
+    "2026-03-19": {
+      "published": 4,
+      "in_db": 4,
+      "completed": 4,
+      "failed": 0,
+      "pending": 0,
+      "covered": 4
+    },
+    "2026-03-20": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-03-23": {
+      "published": 0,
+      "in_db": 0,
+      "completed": 0,
+      "failed": 0,
+      "pending": 0,
+      "covered": 0
+    },
+    "2026-03-24": {
+      "published": 0,
+      "in_db": 0,
+      "completed": 0,
+      "failed": 0,
+      "pending": 0,
+      "covered": 0
+    },
+    "2026-03-25": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-03-26": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-03-27": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-03-30": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    },
+    "2026-03-31": {
+      "published": 5,
+      "in_db": 5,
+      "completed": 5,
+      "failed": 0,
+      "pending": 0,
+      "covered": 5
+    }
+  },
+  "notes": [
+    "Inventario sobre lo que `sync` persistió en `boletines`, no sobre disco.",
+    "No mezclar con ejecución CGE/SIGAF.",
+    "Probes leídos de ..\\watcher-doc\\data\\2026\\cobertura_probes.json"
+  ]
+}

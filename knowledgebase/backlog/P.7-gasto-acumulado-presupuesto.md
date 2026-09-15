@@ -130,7 +130,7 @@ Para probar contra actos reales: el SQLite local ya tiene 5.667 filas en `analis
 
 ## Cómo seguir
 
-P.7 está cerrada. Verificar cobertura y calidad contra fuentes oficiales: [V.1](V.1-verificar-pipeline-vs-realidad.md).
+P.7 está cerrada. Verificar cobertura: [V.1](V.1-verificar-pipeline-vs-realidad.md) (hecho). Matching/denominador: [V.2](V.2-matching-denominador.md).
 
 La UI vive en `http://localhost:5173/presupuesto/ejecucion`. Backend en `:8001`.
 

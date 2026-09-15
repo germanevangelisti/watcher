@@ -1,0 +1,19 @@
+filename,gold_id,tipo_acto,numero_acto,organismo,monto,etapa,is_gasto_publico,complete_gasto,notes
+20260202_1_Secc.pdf,g-ley-11063,ley,11063,Legislatura de Córdoba,,no_aplica,false,false,Ley 11063 Fiesta del Corazón Productivo — no es gasto
+20260202_2_Secc.pdf,g-concurso-soria,otro,14167382,Juzgado Civil Córdoba,,no_aplica,false,false,Concurso preventivo SORIA — S2 judicial no es gasto provincial
+20260202_3_Secc.pdf,g-asamblea-mutual,otro,,ASOCIACION MUTUAL DE EMPLEADOS Y FUNCIONARIOS DEL MINISTERIO DE JUSTICIA DE CORDOBA,,no_aplica,false,false,Asamblea S3 societaria — no es gasto
+20260202_4_Secc.pdf,g-epec-1231,licitacion,1231,EMPRESA PROVINCIAL DE ENERGIA DE CORDOBA,61068700.14,llamado,true,false,LP electrónica 1231 consultoría CAMMESA ET Gran Córdoba
+20260202_4_Secc.pdf,g-epec-5547,licitacion,5547,EMPRESA PROVINCIAL DE ENERGIA DE CORDOBA,1540354200.00,llamado,true,false,LP 5547 normalización eléctrica escuelas zona 1
+20260202_5_Secc.pdf,g-alta-gracia-lp01,licitacion,01/25,MUNICIPALIDAD DE ALTA GRACIA,634593450.00,llamado,true,false,Rotonda RP C45 km 20 — S5 municipal
+20260220_4_Secc.pdf,g-pj-02-2026,licitacion,02/2026,Poder Judicial de la Provincia de Córdoba,4116420000.00,llamado,true,false,LP conexiones permanentes sedes judiciales
+20260220_4_Secc.pdf,g-epec-1252,licitacion,1252,EPEC,501482000.14,llamado,true,false,LP 1252 detección incendios Los Molinos I y II
+20260224_4_Secc.pdf,g-pj-02-2026-rep,licitacion,02/2026,Poder Judicial de la Provincia de Córdoba,4116420000.00,llamado,true,false,Republicación LP 02/2026
+20260224_4_Secc.pdf,g-epec-1243,licitacion,1243,EPEC,140043887.50,llamado,true,false,LP 1243 red de carga vehículos eléctricos
+20260227_4_Secc.pdf,g-mds-transporte,licitacion,2026/PRSGA-00000011,Ministerio de Desarrollo Social y Promoción del Empleo,1008500438.40,llamado,true,false,Transporte de pasajeros 12 meses
+20260303_4_Secc.pdf,g-mds-transporte-rep,licitacion,2026/PRSGA-00000011,Ministerio de Desarrollo Social y Promoción del Empleo,1008500438.40,llamado,true,false,Republicación transporte MDS
+20260303_4_Secc.pdf,g-epec-1257,licitacion,1257,EPEC,28993607.39,llamado,true,false,LP 1257 racks industriales líneas aéreas
+20260304_1_Secc.pdf,g-decreto-10,decreto,10,Poder Ejecutivo Provincial,,no_aplica,false,false,Decreto 10/2026 acepta renuncia ministra Jure
+20260309_4_Secc.pdf,g-seg-neumaticos,licitacion,0909-078704/2026,Ministerio de Seguridad,170960000.00,llamado,true,false,800 neumáticos Ojos en Alerta
+20260309_4_Secc.pdf,g-epec-1268,licitacion,1268,EPEC,2092685805.35,llamado,true,false,LP 1268 control de acceso inmuebles EPEC
+20260312_4_Secc.pdf,g-epec-1271,licitacion,1271,EPEC,41725640.00,llamado,true,false,LP 1271 curso pilotaje drones
+20260312_4_Secc.pdf,g-epec-1277,licitacion,1277,EPEC,198579900.20,llamado,true,false,LP 1277 aceite aislante transformadores

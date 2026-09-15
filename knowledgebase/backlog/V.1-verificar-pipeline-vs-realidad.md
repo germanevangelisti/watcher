@@ -2,10 +2,10 @@
 
 **Épica:** V — Verificación / ground truth  
 **Puntos:** 8 (tomar por slices; no implementar el epígrafe entero en un solo PR)  
-**Estado:** refinado · **por hacer**  
+**Estado:** hecho (V.1.1–V.1.5 verificados 2026-09-14)  
 **Rama sugerida:** `feature/V.1-verificar-pipeline-vs-realidad` desde `main`  
 **Depende de:** P.7 mergeada (ledger vivo + Ley 11.088 + UI de contraste)  
-**Handoff:** [next-session.md](../current/next-session.md)  
+**Handoff:** [next-session.md](../current/next-session.md) (siguiente: V.2)  
 **Evidencia de corpus actual:** [gasto-publico-actos.md](../current/gasto-publico-actos.md)
 
 ---
@@ -19,7 +19,7 @@ Consumir las fuentes oficiales mínimas para decidir, con evidencia, si Watcher:
 3. **Ancla el % contra la Ley** — `presupuesto_base` es el denominador correcto.
 4. **No confunde aviso con caja** — el ledger de boletines no se vende como ejecución SIGAF/CGE.
 
-Hoy el corpus local es un recorte (feb–mar 2026 + 1 día de septiembre, ~150 boletines, 11 failed / 1 pending). Cualquier % vs Ley 11.088 está sesgado por **cobertura**, no solo por calidad del extractor.
+Hoy el corpus local cubre feb–abr 2026 (marzo y abril cerrados en DB). Cualquier % vs Ley 11.088 sigue sesgado por **matching/denominador** (V.2) y por meses faltantes, no solo por el extractor.
 
 ## Por qué es producto
 
@@ -39,22 +39,22 @@ El boletín es **proxy de compromisos publicados**. La ejecución real vive en i
 
 ## Criterio de aceptación (epígrafe)
 
-- [ ] Script o informe reproducible: días hábiles publicados (fecha × sección S1–S5) vs filas en `boletines` (status). Lista de huecos y `failed`/`pending`.
-- [ ] Gold set versionado: ≥ 12 PDFs etiquetados a mano (acto, monto, organismo, `numero_acto`, etapa). Métricas: recall/precisión de actos, error de monto, % S4 con número.
-- [ ] Un mes calendario cerrado (marzo 2026) cubierto: failed re-bajados o justificados; ledger estable al reprocesar.
-- [ ] Totales EPEC/ACIF y sample de 15 programas de `presupuesto_base` contrastados contra PDF/ley. Bitácora de unmatched provinciales y del falso positivo S-511 → `DIRECCIÓN DE MINISTERIO`.
-- [ ] Un informe trimestral oficial 2026 (tipo `ejecucion_trimestral`) contrastado a mano contra 8 organismos del ledger. El resultado se documenta como **orden de magnitud**, no como join acto a acto.
-- [ ] `knowledgebase/current/` actualizado con el corte (cobertura, gold set, CGE). No se commitea `sqlite.db`.
+- [x] Script o informe reproducible: días hábiles publicados (fecha × sección S1–S5) vs filas en `boletines` (status). Lista de huecos y `failed`/`pending`.
+- [x] Gold set versionado: ≥ 12 PDFs etiquetados a mano (acto, monto, organismo, `numero_acto`, etapa). Métricas: recall/precisión de actos, error de monto, % S4 con número.
+- [x] Un mes calendario cerrado (marzo 2026) cubierto: failed re-bajados o justificados; ledger estable al reprocesar.
+- [x] Totales EPEC/ACIF y sample de 15 programas de `presupuesto_base` contrastados contra PDF/ley. Bitácora de unmatched provinciales y del falso positivo S-511 → `DIRECCIÓN DE MINISTERIO`.
+- [x] Un informe trimestral oficial 2026 (tipo `ejecucion_trimestral`) contrastado a mano contra 8 organismos del ledger. El resultado se documenta como **orden de magnitud**, no como join acto a acto.
+- [x] `knowledgebase/current/` actualizado con el corte (cobertura, gold set, CGE). No se commitea `sqlite.db`.
 
 ## Slices (orden de implementación)
 
 | Slice | Pts | Entrega | Estado |
 |---|---|---|---|
-| **V.1.1** Inventario calendario vs DB | 2 | Diff días/secciones publicados vs `boletines`; lista de huecos y failed | ⬜ por hacer |
-| **V.1.2** Gold set de extracción | 2 | 12 PDFs etiquetados + planilla precisión/recall/monto/`numero_acto` | ⬜ por hacer |
-| **V.1.3** Cerrar un mes | 2 | Marzo 2026 completo (re-bajar failed, reprocesar, ledger idempotente) | ⬜ por hacer |
-| **V.1.4** Ancla Ley 11.088 | 1 | Totales + 15 programas + bitácora unmatched / 295% | ⬜ por hacer |
-| **V.1.5** Trimestral CGE | 1 | Subir T1 2026 (o el publicado) como `ejecucion_trimestral`; tabla 8 organismos | ⬜ por hacer |
+| **V.1.1** Inventario calendario vs DB | 2 | Diff días/secciones publicados vs `boletines`; lista de huecos y failed | ✅ hecho |
+| **V.1.2** Gold set de extracción | 2 | 12 PDFs etiquetados + planilla precisión/recall/monto/`numero_acto` | ✅ hecho |
+| **V.1.3** Cerrar un mes | 2 | Marzo 2026 completo (re-bajar failed, reprocesar, ledger idempotente) | ✅ hecho |
+| **V.1.4** Ancla Ley 11.088 | 1 | Totales + 15 programas + bitácora unmatched / 295% | ✅ hecho |
+| **V.1.5** Trimestral CGE | 1 | Subir T1 2026 (o el publicado) como `ejecucion_trimestral`; tabla 8 organismos | ✅ hecho |
 
 No completar abr–dic 2026 antes de V.1.1 + V.1.2: se multiplica basura.
 
