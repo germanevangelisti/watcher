@@ -5,6 +5,8 @@ from app.services.ejecucion_contrast import (
     BUCKET_EJECUCION,
     BUCKET_OTRO,
     aggregate_cobertura,
+    aggregate_cobertura_temporal,
+    aggregate_denominador_sin_dueno,
     aggregate_organismos,
     bucket_etapa,
     is_sobre,
@@ -223,3 +225,123 @@ class TestCobertura:
         cob = aggregate_cobertura(items)
         assert cob.monto_con_denominador + cob.monto_sin_denominador == cob.monto_total
         assert cob.pct_sin_denominador == 75.0
+
+
+class TestCoberturaTemporal:
+    """The period behind the numerator, so the pct stops implying a full year."""
+
+    def _feb_abr(self):
+        """Feb–Apr 2026 as stored: 3 months, one justified holiday pair."""
+        rows = [("20260202", "completed", None)]
+        rows += [("20260216", "failed", "justified: Carnaval 2026, HTTP 404")]
+        rows += [("20260217", "failed", "justified: Carnaval 2026, HTTP 404")]
+        rows += [(f"2026030{d}", "completed", None) for d in range(2, 6)]
+        rows += [(f"2026040{d}", "completed", None) for d in range(2, 6)]
+        return rows
+
+    def test_counts_months_covered_against_the_year(self):
+        cob = aggregate_cobertura_temporal(
+            self._feb_abr(), 2026, "2026-02", "2026-04", mes_actual="2026-09"
+        )
+        assert cob.meses_cubiertos == 3
+        assert cob.meses_del_ejercicio == 12
+        assert cob.denominador_es_anual is True
+
+    def test_overdue_months_are_separate_from_future_ones(self):
+        cob = aggregate_cobertura_temporal(
+            self._feb_abr(), 2026, "2026-02", "2026-04", mes_actual="2026-09"
+        )
+        assert cob.meses_vencidos_sin_ingesta == ("2026-01", "2026-05", "2026-06",
+                                                 "2026-07", "2026-08", "2026-09")
+        assert cob.meses_futuros == ("2026-10", "2026-11", "2026-12")
+
+    def test_a_justified_holiday_is_not_a_missing_day(self):
+        cob = aggregate_cobertura_temporal(
+            self._feb_abr(), 2026, "2026-02", "2026-04", mes_actual="2026-09"
+        )
+        assert cob.dias_con_publicacion == 9
+        assert cob.dias_justificados == 2
+        assert cob.dias_faltantes == 0
+
+    def test_an_unjustified_failure_is_a_missing_day(self):
+        rows = [
+            ("20260302", "completed", None),
+            ("20260303", "failed", "HTTP 500"),
+        ]
+        cob = aggregate_cobertura_temporal(
+            rows, 2026, "2026-03", "2026-03", mes_actual="2026-09"
+        )
+        assert cob.dias_faltantes == 1
+        assert cob.dias_justificados == 0
+
+    def test_no_partial_day_counts_as_published(self):
+        # One section completing makes the day published, however many failed.
+        rows = [
+            ("20260302", "completed", None),
+            ("20260302", "failed", "HTTP 500"),
+        ]
+        cob = aggregate_cobertura_temporal(
+            rows, 2026, "2026-03", "2026-03", mes_actual="2026-09"
+        )
+        assert cob.dias_con_publicacion == 1
+        assert cob.dias_faltantes == 0
+
+    def test_empty_ledger_reports_no_period_rather_than_twelve_missing(self):
+        # With no span there is nothing to split: claiming "all 12 months are
+        # missing" would be a scarier and less useful statement than "no period".
+        cob = aggregate_cobertura_temporal([], 2026, None, None, mes_actual="2026-09")
+        assert cob.meses_cubiertos == 0
+        assert cob.meses_vencidos_sin_ingesta == ()
+        assert cob.meses_futuros == ()
+        assert cob.dias_con_publicacion == 0
+
+
+class TestDenominadorSinDueno:
+    """The ceiling split into what can be a denominator and what cannot."""
+
+    def _rows(self):
+        return [
+            ("MINISTERIO DE SALUD", 1_000_000.0),
+            ("MINISTERIO DE SALUD", 500_000.0),
+            ("MINISTERIO DE", 600_000.0),  # 12 rows, same stub
+            ("MINISTERIO DE", 400_000.0),
+            ("SECRETARÍA DE", 200_000.0),
+            ("SECRETARIA DE", 100_000.0),  # same stub, no accent
+            ("PODER JUDICIAL -", 300_000.0),  # messy but not truncated
+        ]
+
+    def test_splits_total_into_verifiable_and_unowned(self):
+        d = aggregate_denominador_sin_dueno(self._rows())
+        assert d.monto_total == 3_100_000.0
+        assert d.monto_sin_dueno == 1_300_000.0
+        assert d.monto_verificable == 1_800_000.0
+        assert d.count_sin_dueno == 4
+        assert d.pct_sin_dueno == 41.94
+
+    def test_truncated_stubs_group_by_canonical_name(self):
+        # SECRETARÍA DE / SECRETARIA DE are one stub. The display is the variant
+        # that appears most often — here they tie, and the tie-breaks are length
+        # then name, so the label does not depend on row order — and the amounts
+        # add up either way.
+        d = aggregate_denominador_sin_dueno(self._rows())
+        by_name = {item.organismo: item for item in d.por_organismo}
+        assert set(by_name) == {"MINISTERIO DE", "SECRETARIA DE"}
+        assert by_name["MINISTERIO DE"].count == 2
+        assert by_name["MINISTERIO DE"].monto_vigente == 1_000_000.0
+        assert by_name["SECRETARIA DE"].monto_vigente == 300_000.0
+
+    def test_items_are_ordered_by_monto(self):
+        d = aggregate_denominador_sin_dueno(self._rows())
+        montos = [item.monto_vigente for item in d.por_organismo]
+        assert montos == sorted(montos, reverse=True)
+
+    def test_a_messy_but_complete_name_is_not_unowned(self):
+        # "PODER JUDICIAL -" is normalized, not lost: it keeps its denominator.
+        d = aggregate_denominador_sin_dueno([("PODER JUDICIAL -", 300_000.0)])
+        assert d.monto_sin_dueno == 0.0
+        assert d.por_organismo == ()
+
+    def test_empty_ceiling_does_not_divide_by_zero(self):
+        d = aggregate_denominador_sin_dueno([])
+        assert d.monto_total == 0.0
+        assert d.pct_sin_dueno == 0.0

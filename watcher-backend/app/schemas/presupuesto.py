@@ -108,6 +108,38 @@ class CoberturaResumen(BaseModel):
     pct_sin_denominador: float = 0.0
 
 
+class CoberturaTemporalResumen(BaseModel):
+    """The period the numerator covers, against the annual Ley it is divided by."""
+
+    mes_desde: str | None = None
+    mes_hasta: str | None = None
+    meses_cubiertos: int = 0
+    meses_del_ejercicio: int = 12
+    meses_vencidos_sin_ingesta: list[str] = []
+    meses_futuros: list[str] = []
+    dias_con_publicacion: int = 0
+    dias_justificados: int = 0
+    dias_faltantes: int = 0
+    denominador_es_anual: bool = True
+
+
+class DenominadorSinDuenoItemResumen(BaseModel):
+    organismo: str
+    count: int
+    monto_vigente: JsonMoney = 0.0
+
+
+class DenominadorSinDuenoResumen(BaseModel):
+    """The ceiling split into what can be a denominator and what cannot."""
+
+    monto_total: JsonMoney = 0.0
+    monto_sin_dueno: JsonMoney = 0.0
+    monto_verificable: JsonMoney = 0.0
+    count_sin_dueno: int = 0
+    pct_sin_dueno: float = 0.0
+    por_organismo: list[DenominadorSinDuenoItemResumen] = []
+
+
 class EjecucionResumenResponse(BaseModel):
     total_canonical: int
     total_duplicates: int
@@ -117,6 +149,8 @@ class EjecucionResumenResponse(BaseModel):
     monto_ejecucion: JsonMoney = 0.0
     sobre_compromiso_count: int = 0
     cobertura: CoberturaResumen = CoberturaResumen()
+    cobertura_temporal: CoberturaTemporalResumen = CoberturaTemporalResumen()
+    denominador: DenominadorSinDuenoResumen = DenominadorSinDuenoResumen()
     por_organismo: list[OrgResumenItem]
     por_mes: list[MesResumenItem]
 

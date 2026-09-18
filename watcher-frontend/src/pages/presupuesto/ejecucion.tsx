@@ -257,7 +257,9 @@ export function EjecucionPresupuestariaPage() {
               adjudicación y contrato) y <strong>ejecución</strong> (pagos). Una
               licitación publicada no es un compromiso asumido, y la diferencia es
               visible. El relleno se recorta al 100%; la etiqueta muestra el % real.
-              Los organismos sin denominador en la Ley se listan aparte, sin %.
+              Los organismos sin denominador en la Ley se listan aparte, sin %, y el
+              techo del que salen esos % se declara arriba: no todo el presupuesto de
+              la Ley tiene un organismo al que pertenecer.
             </p>
           </CardHeader>
           <CardContent>
@@ -265,6 +267,8 @@ export function EjecucionPresupuestariaPage() {
               items={organismos}
               serie={serie}
               cobertura={resumenQuery.data.cobertura}
+              temporal={resumenQuery.data.cobertura_temporal}
+              denominador={resumenQuery.data.denominador}
             />
           </CardContent>
         </Card>

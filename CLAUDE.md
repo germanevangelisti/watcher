@@ -38,5 +38,8 @@ Tipos: `feat` `fix` `refactor` `test` `docs` `chore`
 - [ ] KB actualizada si hubo cambios de arquitectura (ADR)
 
 ## Estado actual del proyecto
-V.1, V.2 y **V.3 (honestidad del contraste)** están hechas en `feature/V.3-honestidad-contraste`; H.1 ya está en `main`. Ver `knowledgebase/current/status.md`.
-**Próxima sesión:** mergear la rama V.3 a `main`, luego ingesta mayo–septiembre. Leer `knowledgebase/current/next-session.md`.
+V.1, V.2, V.3 (honestidad del contraste) y **V.4 (límites del cociente)** están en
+`main`; H.1 también. El % declara su período y su techo, y no hay alertas >100%.
+Ver `knowledgebase/current/status.md`.
+**Próxima sesión:** ingesta mayo–septiembre (el producto mide feb–abr y hoy es
+septiembre). Leer `knowledgebase/current/next-session.md`.

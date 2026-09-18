@@ -3,7 +3,12 @@
 **Última actualización:** 2026-09-18
 **Snapshot del momento.** Se pisa al avanzar. La historia completa está en `docs/changelog.md` y el historial de git.
 
-> **V.2 mergeada a `main`** (`7a366b0`) el 2026-09-18, sin `sqlite.db`: el binario se dio de baja del índice (`git rm --cached`) porque estaba trackeado pese a `*.db` en `.gitignore`. Handoff: [next-session.md](next-session.md).
+> **V.4 mergeada a `main`** (2026-09-18): el cociente deja de mentir por período y por
+> techo. Handoff: [next-session.md](next-session.md).
+>
+> Contexto: V.3 (`4a28e2e`) ya está en `main`; V.2 se mergeó en `7a366b0` sin
+> `sqlite.db` (el binario se dio de baja del índice con `git rm --cached` porque
+> estaba trackeado pese a `*.db` en `.gitignore`).
 
 ---
 
@@ -11,10 +16,10 @@
 
 | Campo | Valor |
 |---|---|
-| Release | v2.0.0 + H.1 + P.7 + V.1 + V.2 + V.3 |
-| Estado | V.3 hecho (V.3.1/32/33); **1** alerta >100%, documentada como denominador trunco |
+| Release | v2.0.0 + H.1 + P.7 + V.1 + V.2 + V.3 + V.4 |
+| Estado | V.4 hecho (V.4.1/42/43); **0** alertas >100%; el % declara su período y su techo |
 | Stack LLM | Gemini (cloud) + LocalPro/Ollama (`qwen2.5:7b`) |
-| Pendiente inmediato | Mergear la rama V.3 a `main`. Ingesta mayo–septiembre. |
+| Pendiente inmediato | Ingesta mayo–septiembre: el producto mide feb–abr y hoy es septiembre. |
 
 ---
 
@@ -31,7 +36,48 @@
 | Épica 7: Prod | En curso | H.1; CI/auth/UI huérfana siguen abiertos |
 | H.1 Hardware local | Hecho | Workers nproc-2, overlay Compose, LocalPro |
 | Épica P: Presupuesto | P.1–P.7.4 en `main` | Ledger + Ley 11.088 + UI dos barras |
-| Épica V: Ground truth | V.1 + V.2 + V.3 hechos | El dato persistido y la pantalla ahora dicen lo mismo que el matcher |
+| Épica V: Ground truth | V.1 + V.2 + V.3 + V.4 hechos | El dato persistido y la pantalla ahora dicen lo mismo que el matcher; y el cociente declara su período y su techo |
+
+---
+
+## Corte V.4 (2026-09-18)
+
+Historia: [V.4-limites-del-cociente.md](../backlog/V.4-limites-del-cociente.md).
+Tres slices: declarar el período, declarar el techo sin dueño, recuperar los nombres.
+
+| Slice | Qué cambió | Medido |
+|---|---|---|
+| V.4.1 | El % declara su período y su calendario | "3 de 12 meses" (feb–abr) contra la **Ley anual**; 58 días publicados + 2 feriados justificados, **0 faltantes** |
+| V.4.2 | El techo se parte en verificable y sin dueño | $706,6B / **74 programas (9,38%)** separados del techo verificable ($6,825T). El % no se toca |
+| V.4.3 | Los nombres perdidos se recuperan de la fuente | **74 truncos → 0**; denominador sin dueño **9,38% → 0%**; alertas **1 → 0** |
+
+**Titular del corte:** el `%` que ve el ciudadano dividía **3 meses de gasto por la
+Ley de 12** y nadie lo decía, y el techo contra el que dividía incluía **$706,6B
+(9,4%) de presupuesto cuyo organismo el parser había perdido**. Ninguna de las dos
+cosas era un error de datos: eran límites sin declarar. Ahora la pantalla dice el
+período, dice el techo verificado y lista los programas sin dueño.
+
+**La última alerta, resuelta con medición:** el 145,25% de V.3 se apoyaba en
+`MINISTERIO DE ECONOMÍA MINISTERIO Y GESTIÓN PÚBLICA`, un nombre que el parser
+armó pegando la unidad de organización con la cola de la jurisdicción. Reparado a
+`MINISTERIO DE ECONOMIA Y GESTION PUBLICA` (su jurisdicción real, la que declara el
+PDF), su techo pasó de $23,72B a **$80,86B** y el mismo acto de $34,45B da
+**42,61%**. El numerador nunca se movió. **No se silenció: se midió y se declaró.**
+
+Reparo (`--repair-db`), con backup y diff fila por fila: 480 filas → 480, ids
+idénticos, total **$7,531907T idéntico**, 375 rótulos de organismo reescritos. De
+los 89 organismos del contraste, **exactamente uno** cambia de denominador (el
+fantasma). Los otros 294 son re-normalizaciones sin acentos que no mueven ningún %, y
+el docstring del flag ahora declara ese alcance.
+
+**Lo que no se pudo recuperar, y por qué:** la unidad ejecutora exacta está en el PDF
+pero repartida en 2–3 líneas de la misma celda, y el agrupado por tolerancia tira la
+tercera. Dos reagrupados alternativos movían el total entre **$3,2T y $3,5T** —
+descartados. La jurisdicción es el dueño más preciso que la fuente sostiene.
+
+**Lo que queda declarado y no arreglado:** el gasto sin denominador sigue en
+**$140,72B / 140 actos** (26,13% del medido); la ejecución (pagos) sigue siendo
+$1,12B; y faltan **5 meses** de ingesta (may–sep) — eso es la etapa siguiente.
 
 ---
 
@@ -45,6 +91,12 @@ Tres slices: revalidar el match persistido, dedup robusto, UI honesta.
 | V.3.1 | El ETL re-corre el matcher: `presupuesto_base_id` deja de ser un campo que nadie revalida | Alertas **3 → 1**; deriva 18 filas/$86,11B → **0** |
 | V.3.2 | Dedup por organismo canónico + código de obra | **$166,34B** de doble conteo eliminado; 369 → **346** filas canónicas |
 | V.3.3 | Cobertura visible + `llamado` separado de compromiso real | **47** organismos en pantalla (antes 17); $104,13B sin denominador a la vista |
+
+> **Superado por V.4:** la "1 alerta >100%" del cierre de V.3 (145,25% en
+> MINISTERIO DE ECONOMÍA) ya no existe, y el motivo está medido: el denominador no
+> era un stub de $1,37B sino un **nombre fantasma** del parser (5–6 filas,
+> $23,72B). Reparado el nombre, el techo real es $80,86B y el mismo acto da
+> **42,61%**. El numerador nunca se tocó. Ver *Corte V.4*.
 
 **Titular del corte:** el gasto medido es **$501,85B**, de los cuales **$397,72B
 (79,25%) tiene denominador** y **$104,13B (20,75%, 53 actos) no**. De lo que tiene
@@ -109,8 +161,8 @@ Ninguno de producto. Notion MCP no disponible — el tablero quedó sin actualiz
 4. DS Lab scoring a nivel documento vs per-acto.
 5. CI (`requirements.txt`, Py 3.10, tests `continue-on-error`).
 6. UI v2 sin compliance / menciones / jurisdicciones / mapa.
-7. ✅ Resuelto (DT-4/DT-5, 2026-09-18): la suite colecta entera. `reindex_google_embeddings.py` ya no hace `sys.exit(1)` al importarse; los 3 módulos con prefijo `watcher_monolith` se revivieron y los 3 de `kba_agent`/`raga_agent` usan `importorskip`. Suite: **15 failed, 652 passed, 7 skipped** (los 15 son DT-2/DT-3, pre-existentes; verificado por A/B con `git stash`).
-8. Lint: causa raíz resuelta (DT-6 — `ruff.toml` tapaba `pyproject.toml`). Deuda real medida: **8.327 → 642 errores**. `make lint` **sigue sin pasar**: el residual (DT-7) es `E501` 439 + `B904` 97 + `N806` 34, sin autofix, diferido a historia propia. V.3 no agregó ninguno (A/B: 642 antes y después).
+7. ✅ Resuelto (DT-4/DT-5, 2026-09-18): la suite colecta entera. `reindex_google_embeddings.py` ya no hace `sys.exit(1)` al importarse; los 3 módulos con prefijo `watcher_monolith` se revivieron y los 3 de `kba_agent`/`raga_agent` usan `importorskip`. Suite tras V.4: **15 failed, 663 passed, 7 skipped**; los 15 son los mismos 5 archivos pre-existentes de siempre (DT-2/DT-3), cero nuevos.
+8. Lint: causa raíz resuelta (DT-6 — `ruff.toml` tapaba `pyproject.toml`). Deuda real medida: **8.327 → 642 errores**. `make lint` **sigue sin pasar**: el residual (DT-7) es `E501` 439 + `B904` 97 + `N806` 34, sin autofix, diferido a historia propia. Ni V.3 ni V.4 agregaron ninguno (A/B con `git stash`, archivo por archivo).
 
 ---
 
@@ -118,9 +170,10 @@ Ninguno de producto. Notion MCP no disponible — el tablero quedó sin actualiz
 
 1. ✅ V.2 mergeada a `main` sin `sqlite.db` (2026-09-18).
 2. **Honestidad del contraste** — el número que muestra la UI no es el que dice ser (ver *Hallazgos del corte*, abajo).
-3. Sanear `presupuesto_base`: el denominador tiene basura del parser.
-4. Ingesta mayo–septiembre: el producto muestra abril y hoy es septiembre.
+3. ✅ Saneado (V.4.3): 74 organismos truncos reparados desde la jurisdicción del PDF.
+4. **Ingesta mayo–septiembre** — el producto muestra abril y hoy es septiembre. Es la etapa siguiente y la que más mueve la aguja: el gasto medido es un piso de 3 meses.
 5. DT-7 (residual de lint) e ingest CGE T2 cuando Hacienda publique.
+6. Tercera barra "pagado CGE" (no mezclar con el BO) sigue fuera de alcance.
 
 ---
 

@@ -26,6 +26,7 @@ from app.services.gasto_classifier import (
 )
 from app.services.presupuesto_matching import (
     canonical_organismo_name,
+    is_truncated_organismo,
     preferred_organismo_display,
 )
 
@@ -201,4 +202,183 @@ def aggregate_cobertura(contrast: Iterable[OrganismoContrast]) -> Cobertura:
         monto_sin_denominador=sin,
         count_sin_denominador=count_sin,
         pct_sin_denominador=pct,
+    )
+
+
+@dataclass(frozen=True)
+class CoberturaTemporal:
+    """The period the numerator covers, and what it is actually divided by.
+
+    `presupuesto_base` holds the whole year's Ley, so a percentage built from
+    three months of boletines is divided by twelve.  That makes it incomparable
+    rather than wrong, and the caller has to say which it is.  Nothing here
+    prorates the Ley: budget execution is not uniform across the year, so a
+    prorated denominator would be an invented one.
+
+    Months outside the span are split by whether they are *due* yet.  A month
+    that has not happened is not missing data, and lumping it in with May —
+    which is overdue — would overstate the gap.
+    """
+
+    mes_desde: str | None
+    mes_hasta: str | None
+    meses_cubiertos: int
+    meses_del_ejercicio: int
+    meses_vencidos_sin_ingesta: tuple[str, ...]
+    meses_futuros: tuple[str, ...]
+    dias_con_publicacion: int
+    dias_justificados: int
+    dias_faltantes: int
+    denominador_es_anual: bool
+
+
+# A boletín that never came out (holiday, HTTP 404) is recorded as failed with
+# this prefix instead of silently counting as a day of zero spending.
+_JUSTIFIED_PREFIX = "justified:"
+
+
+def aggregate_cobertura_temporal(
+    rows: Iterable[tuple[str | None, str | None, str | None]],
+    ejercicio: int,
+    mes_desde: str | None = None,
+    mes_hasta: str | None = None,
+    mes_actual: str | None = None,
+) -> CoberturaTemporal:
+    """Summarize the publication calendar behind the numerator.
+
+    `rows` are (date, status, error_message) as stored in `boletines`.  A day is
+    *published* when any of its sections completed, *justified* when none did but
+    every failure says so, and *missing* otherwise — a real gap, which is the
+    only case that understates the numerator without saying so.
+    """
+    by_day: dict[str, list[tuple[str | None, str | None]]] = defaultdict(list)
+    for date, status, error in rows:
+        if date:
+            by_day[date].append((status, error))
+
+    con_publicacion = justificados = faltantes = 0
+    for sections in by_day.values():
+        if any(status == "completed" for status, _ in sections):
+            con_publicacion += 1
+        elif sections and all(
+            (error or "").startswith(_JUSTIFIED_PREFIX) for _, error in sections
+        ):
+            justificados += 1
+        else:
+            faltantes += 1
+
+    meses_cubiertos = 0
+    vencidos: list[str] = []
+    futuros: list[str] = []
+    if mes_desde and mes_hasta:
+        cubiertos = {
+            f"{ejercicio:04d}-{m:02d}"
+            for m in range(int(mes_desde[5:7]), int(mes_hasta[5:7]) + 1)
+        }
+        meses_cubiertos = len(cubiertos)
+        for m in range(1, 13):
+            mes = f"{ejercicio:04d}-{m:02d}"
+            if mes in cubiertos:
+                continue
+            if mes_actual is not None and mes > mes_actual:
+                futuros.append(mes)
+            else:
+                vencidos.append(mes)
+
+    return CoberturaTemporal(
+        mes_desde=mes_desde,
+        mes_hasta=mes_hasta,
+        meses_cubiertos=meses_cubiertos,
+        meses_del_ejercicio=12,
+        meses_vencidos_sin_ingesta=tuple(vencidos),
+        meses_futuros=tuple(futuros),
+        dias_con_publicacion=con_publicacion,
+        dias_justificados=justificados,
+        dias_faltantes=faltantes,
+        denominador_es_anual=True,
+    )
+
+
+@dataclass(frozen=True)
+class DenominadorSinDuenoItem:
+    organismo: str
+    count: int
+    monto_vigente: float
+
+
+@dataclass(frozen=True)
+class DenominadorSinDueno:
+    """The slice of the Ley's ceiling that can never work as a denominator.
+
+    `match_organismo` rejects rows whose organism the Mapas parser truncated
+    ("MINISTERIO DE", "SECRETARÍA DE"), and it is right to: a stub matches
+    nothing.  The side effect is that the ceiling every percentage divides by
+    includes budget no spending can ever be measured against.
+
+    Declared, not subtracted.  Removing those rows would move every published
+    percentage at once, in the direction nobody would notice — the exact failure
+    this épica exists to stop.  The total stays; the split is stated beside it.
+    """
+
+    monto_total: float
+    monto_sin_dueno: float
+    monto_verificable: float
+    count_sin_dueno: int
+    pct_sin_dueno: float
+    por_organismo: tuple[DenominadorSinDuenoItem, ...]
+
+
+def aggregate_denominador_sin_dueno(
+    rows: Iterable[tuple[str | None, float]],
+) -> DenominadorSinDueno:
+    """Split the ceiling into verifiable budget and budget with no owner.
+
+    `rows` are (organismo, monto_vigente) from `presupuesto_base`, for one
+    ejercicio and with no date filter — the denominator is the whole Ley.
+    """
+    total = sin_dueno = 0.0
+    count_sin = 0
+    # key -> [rows, monto, {raw name: rows}]
+    groups: dict[str, list] = defaultdict(lambda: [0, 0.0, defaultdict(int)])
+    for organismo, monto in rows:
+        monto = float(monto or 0.0)
+        total += monto
+        if not is_truncated_organismo(organismo):
+            continue
+        sin_dueno += monto
+        count_sin += 1
+        bucket = groups[canonical_organismo_name(organismo)]
+        bucket[0] += 1
+        bucket[1] += monto
+        if organismo:
+            bucket[2][organismo] += 1
+    items = tuple(
+        sorted(
+            (
+                DenominadorSinDuenoItem(
+                    # The variant that appears most often: these are stubs, so
+                    # the most frequent spelling is the most faithful label for
+                    # "the parser lost this one".  Length and then name break the
+                    # tie so the same rows always produce the same label.
+                    organismo=min(
+                        variants.items(),
+                        key=lambda kv: (-kv[1], len(kv[0]), kv[0]),
+                    )[0],
+                    count=count,
+                    monto_vigente=monto,
+                )
+                for count, monto, variants in groups.values()
+            ),
+            key=lambda item: item.monto_vigente,
+            reverse=True,
+        )
+    )
+    pct = round(100.0 * sin_dueno / total, 2) if total > 0 else 0.0
+    return DenominadorSinDueno(
+        monto_total=total,
+        monto_sin_dueno=sin_dueno,
+        monto_verificable=total - sin_dueno,
+        count_sin_dueno=count_sin,
+        pct_sin_dueno=pct,
+        por_organismo=items,
     )

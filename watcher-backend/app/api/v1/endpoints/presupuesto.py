@@ -6,10 +6,13 @@ import json
 from datetime import date
 from pathlib import Path
 
-from app.db.models import EjecucionPresupuestaria, PresupuestoBase
+from app.db.models import Boletin, EjecucionPresupuestaria, PresupuestoBase
 from app.db.session import get_db
 from app.schemas.presupuesto import (
     CoberturaResumen,
+    CoberturaTemporalResumen,
+    DenominadorSinDuenoItemResumen,
+    DenominadorSinDuenoResumen,
     EjecucionListResponse,
     EjecucionResponse,
     EjecucionResumenResponse,
@@ -24,6 +27,8 @@ from app.services.ejecucion_contrast import (
     BUCKET_COMPROMISO,
     BUCKET_EJECUCION,
     aggregate_cobertura,
+    aggregate_cobertura_temporal,
+    aggregate_denominador_sin_dueno,
     aggregate_organismos,
     bucket_etapa,
     remap_organismo_key,
@@ -338,18 +343,18 @@ async def get_ejecucion_resumen(
             .group_by(org_key, EjecucionPresupuestaria.etapa_gasto)
         )
         org_rows = await db.execute(org_q)
+        # Raw rows, one per programa: the ceiling has to be countable in rows as
+        # well as in pesos, because "74 filas sin dueño" is a claim the UI makes.
+        # Both consumers below sum by canonical organism, so the totals are the
+        # same as the grouped query this replaces.
         vig_q = (
-            select(
-                PresupuestoBase.organismo,
-                func.coalesce(func.sum(PresupuestoBase.monto_vigente), 0),
-            )
+            select(PresupuestoBase.organismo, PresupuestoBase.monto_vigente)
             .where(PresupuestoBase.ejercicio == ejercicio)
-            .group_by(PresupuestoBase.organismo)
         )
         vig_result = await db.execute(vig_q)
-        vigente_por_org, display_by_canon = vigente_por_organismo_canonico(
-            [(r[0], float(r[1])) for r in vig_result.all()]
-        )
+        vig_rows = [(r[0], float(r[1] or 0.0)) for r in vig_result.all()]
+        vigente_por_org, display_by_canon = vigente_por_organismo_canonico(vig_rows)
+        denominador = aggregate_denominador_sin_dueno(vig_rows)
         spend_rows = [
             (
                 remap_organismo_key(r.org_key, display_by_canon),
@@ -380,6 +385,37 @@ async def get_ejecucion_resumen(
             for c in contrast
         ]
         cobertura = aggregate_cobertura(contrast)
+
+        # Period the numerator actually covers.  `presupuesto_base` is the whole
+        # year, so the pct below divides three months by twelve unless we say so.
+        rango = (
+            await db.execute(
+                select(
+                    func.min(EjecucionPresupuestaria.fecha_boletin),
+                    func.max(EjecucionPresupuestaria.fecha_boletin),
+                ).where(and_(*canon_filters))
+            )
+        ).one()
+        mes_desde = rango[0].strftime("%Y-%m") if rango[0] else None
+        mes_hasta = rango[1].strftime("%Y-%m") if rango[1] else None
+        boletin_rows: list[tuple] = []
+        if rango[0] and rango[1]:
+            # `boletines.date` is a YYYYMMDD string, so compare as strings.
+            fecha_desde_s = rango[0].strftime("%Y%m%d")
+            fecha_hasta_s = rango[1].strftime("%Y%m%d")
+            result = await db.execute(
+                select(Boletin.date, Boletin.status, Boletin.error_message).where(
+                    Boletin.date >= fecha_desde_s, Boletin.date <= fecha_hasta_s
+                )
+            )
+            boletin_rows = [tuple(r) for r in result.all()]
+        temporal = aggregate_cobertura_temporal(
+            boletin_rows,
+            ejercicio,
+            mes_desde,
+            mes_hasta,
+            mes_actual=date.today().strftime("%Y-%m"),
+        )
 
         result = await db.execute(
             select(
@@ -414,6 +450,33 @@ async def get_ejecucion_resumen(
                 monto_sin_denominador=cobertura.monto_sin_denominador,
                 count_sin_denominador=cobertura.count_sin_denominador,
                 pct_sin_denominador=cobertura.pct_sin_denominador,
+            ),
+            cobertura_temporal=CoberturaTemporalResumen(
+                mes_desde=temporal.mes_desde,
+                mes_hasta=temporal.mes_hasta,
+                meses_cubiertos=temporal.meses_cubiertos,
+                meses_del_ejercicio=temporal.meses_del_ejercicio,
+                meses_vencidos_sin_ingesta=list(temporal.meses_vencidos_sin_ingesta),
+                meses_futuros=list(temporal.meses_futuros),
+                dias_con_publicacion=temporal.dias_con_publicacion,
+                dias_justificados=temporal.dias_justificados,
+                dias_faltantes=temporal.dias_faltantes,
+                denominador_es_anual=temporal.denominador_es_anual,
+            ),
+            denominador=DenominadorSinDuenoResumen(
+                monto_total=denominador.monto_total,
+                monto_sin_dueno=denominador.monto_sin_dueno,
+                monto_verificable=denominador.monto_verificable,
+                count_sin_dueno=denominador.count_sin_dueno,
+                pct_sin_dueno=denominador.pct_sin_dueno,
+                por_organismo=[
+                    DenominadorSinDuenoItemResumen(
+                        organismo=item.organismo,
+                        count=item.count,
+                        monto_vigente=item.monto_vigente,
+                    )
+                    for item in denominador.por_organismo
+                ],
             ),
             por_organismo=por_organismo,
             por_mes=por_mes,
