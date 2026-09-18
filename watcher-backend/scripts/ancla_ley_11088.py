@@ -8,6 +8,10 @@ import sqlite3
 import sys
 from pathlib import Path
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.services.presupuesto_matching import (
@@ -79,6 +83,7 @@ def main() -> None:
         "UNIDAD EJECUTORA",
         "LAS PENAS SUD - LAS ISLETILLAS",
         "DIRECCION DE MINISTERIO",
+        "DIRECCION DE INTELIGENCIA FISCAL",
         "EPEC",
         "ACIF",
         "MINISTERIO DE SEGURIDAD",
@@ -127,10 +132,12 @@ def main() -> None:
     )
 
     lines = [
-        "# Ancla Ley 11.088 — V.1.4",
+        "# Ancla Ley 11.088 — V.1.4 / V.2",
         "",
         "Denominador = `presupuesto_base` ejercicio 2026 (parser de "
-        "`Mapas-por-Programas.pdf`). No es caja CGE.",
+        "`Mapas-por-Programas.pdf`, organismos reparados en V.2 con "
+        "`--repair-db`). No es caja CGE. El JSON parseado conserva nombres "
+        "pre-repair; el Δ de organismo en el sample 15 es esperado.",
         "",
         "## Totales",
         "",
@@ -166,10 +173,10 @@ def main() -> None:
             "## Matching S-511 / UNIDAD EJECUTORA / DIRECCIÓN DE MINISTERIO",
             "",
             "En este corte el pliego S-511 (pavimento Las Peñas–Isletillas, "
-            "~$25.341 M) entra al ledger como `UNIDAD EJECUTORA` o el tramo "
-            "de ruta, no como `DIRECCIÓN DE MINISTERIO`. El 295% de P.7.4 "
-            "venía de un recorte con 1-sep; acá el falso positivo se "
-            "reproduce como Jaccard contra el índice, no como fila viva.",
+            "~$25.341 M) entra al ledger como `UNIDAD EJECUTORA`, el tramo "
+            "de ruta o `DIRECCIÓN DE INTELIGENCIA FISCAL`. V.2 deja esos "
+            "nombres unmatched; `DIRECCIÓN DE MINISTERIO` ya no es un "
+            "target de matching.",
             "",
             "| Query | pb_id | score | method | organismo DB | programa |",
             "|---|---:|---:|---|---|---|",

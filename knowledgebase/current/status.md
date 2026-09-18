@@ -3,7 +3,7 @@
 **Última actualización:** 2026-09-15
 **Snapshot del momento.** Se pisa al avanzar. La historia completa está en `docs/changelog.md` y el historial de git.
 
-> Rama activa: `feature/V.1-verificar-pipeline-vs-realidad`. Handoff: [next-session.md](next-session.md). Próxima historia: [V.2](../backlog/V.2-matching-denominador.md).
+> Rama activa: `feature/V.2-matching-denominador`. Handoff: [next-session.md](next-session.md). [V.2](../backlog/V.2-matching-denominador.md) hecho.
 
 ---
 
@@ -11,10 +11,10 @@
 
 | Campo | Valor |
 |---|---|
-| Release | v2.0.0 + H.1 + P.7 + V.1 |
-| Estado | V.1 hecho; abril 2026 cerrado en DB; **siguiente = V.2 matching** |
+| Release | v2.0.0 + H.1 + P.7 + V.1 + V.2 |
+| Estado | V.2 hecho; 0 alertas >100% en el corte abril |
 | Stack LLM | Gemini (cloud) + LocalPro/Ollama (`qwen2.5:7b`) |
-| Pendiente inmediato | V.2.1 bitácora de las 4 alertas >100%. Mergear V.1 **sin** `sqlite.db`. |
+| Pendiente inmediato | Mergear V.2 **sin** `sqlite.db`. Mayo+ opcional. |
 
 ---
 
@@ -31,7 +31,7 @@
 | Épica 7: Prod | En curso | H.1; CI/auth/UI huérfana siguen abiertos |
 | H.1 Hardware local | Hecho | Workers nproc-2, overlay Compose, LocalPro |
 | Épica P: Presupuesto | P.1–P.7.4 en `main` | Ledger + Ley 11.088 + UI dos barras |
-| Épica V: Ground truth | V.1 hecho; V.2 refinada | Matching/denominador |
+| Épica V: Ground truth | V.1 + V.2 hechos | Matching/denominador: 0 alertas >100% |
 
 ---
 
@@ -52,7 +52,7 @@
 | Ingesta | `ingest_month.py --month 202604` → 98 filas (12 slots lun–vie no publicados / feriado) |
 | Extracción | `process_pending.py --month 202604`: S4 20/20; mes 98/98 `completed` |
 | Scripts | `lote_status.py`, `ingest_month.py`, `process_pending.py` |
-| UI | [corte-abril-ui.md](corte-abril-ui.md) — $703.7B compromiso / $1.1B ejecución; 4 alertas >100% |
+| UI | [corte-abril-ui.md](corte-abril-ui.md) — $703.7B compromiso / $1.1B ejecución; **0 alertas >100%** (V.2) |
 
 No commitear `sqlite.db`.
 
@@ -60,7 +60,7 @@ No commitear `sqlite.db`.
 
 ## Ledger de gasto público (2026-09-15)
 
-La UI sigue separando compromiso de ejecución. El % vs Ley es **legible** en EPEC (9.1%) y ACIF (26.3%). Las alertas Secretaría de Desarrollo 2703%, Economía 145%, Dirección de Ministerio 295% (S-511), Poder Judicial 163% son **matching/denominador**, no sobre-ejecución de caja.
+La UI sigue separando compromiso de ejecución. El % vs Ley es **legible** en EPEC (9.1%), ACIF (26.4%), Economía (42.6%) y Poder Judicial (17.6%). S-511 / Inteligencia Fiscal y Secretaría de Asuntos Institucionales quedan unmatched explícitos. La alerta >100% no se silenció: dejó de disparar porque el denominador y el match son los correctos.
 
 Ver [P.7](../backlog/P.7-gasto-acumulado-presupuesto.md), [V.1](../backlog/V.1-verificar-pipeline-vs-realidad.md), [V.2](../backlog/V.2-matching-denominador.md).
 
@@ -89,7 +89,7 @@ Ninguno de producto. Notion MCP no disponible — el tablero quedó sin actualiz
 
 ## Próximos pasos
 
-1. **V.2** matching y denominador (las 4 alertas). No mayo+ hasta que el % sea defendible.
-2. Mergear V.1 **sin** `sqlite.db`.
+1. Mergear V.2 **sin** `sqlite.db`.
+2. Ingest mayo+ si hace falta cobertura (el matching ya no infla las 4 alertas de abril).
 3. CGE T2 cuando Hacienda publique (contraste aparte, no tercera barra).
 4. UI huérfana y CI (paralelo).

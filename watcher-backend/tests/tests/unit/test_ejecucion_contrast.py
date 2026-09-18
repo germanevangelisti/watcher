@@ -8,7 +8,10 @@ from app.services.ejecucion_contrast import (
     bucket_etapa,
     is_sobre,
     pct_vs_vigente,
+    remap_organismo_key,
+    vigente_por_organismo_canonico,
 )
+from app.services.presupuesto_matching import canonical_organismo_name
 
 
 class TestBucketEtapa:
@@ -116,3 +119,47 @@ class TestAggregateOrganismos:
         items = aggregate_organismos(rows, {})
         assert items[0].organismo == "(sin organismo)"
         assert items[0].monto_ejecucion == 5.0
+
+
+class TestVigentePorOrganismoCanonico:
+    def test_poder_judicial_hyphen_merges_into_jurisdiction_ceiling(self):
+        vigente, display = vigente_por_organismo_canonico(
+            [
+                ("PODER JUDICIAL", 11_163_852_000.0),
+                ("PODER JUDICIAL -", 92_112_308_000.0),
+            ]
+        )
+        assert len(vigente) == 1
+        label = display["PODER JUDICIAL"]
+        assert vigente[label] == 103_276_160_000.0
+        assert not label.endswith("-")
+
+        rows = [(label, "llamado", 18_188_665_592.0, 16)]
+        items = aggregate_organismos(rows, vigente)
+        assert items[0].pct_compromiso == 17.61
+        assert items[0].sobre_compromiso is False
+
+    def test_truncated_ministerio_de_stays_its_own_bucket(self):
+        vigente, _ = vigente_por_organismo_canonico(
+            [
+                ("MINISTERIO DE", 290_000_000_000.0),
+                ("MINISTERIO DE SEGURIDAD", 219_000_000_000.0),
+            ]
+        )
+        assert len(vigente) == 2
+
+    def test_garbled_economia_collapses_duplicate_token(self):
+        vigente, display = vigente_por_organismo_canonico(
+            [
+                ("MINISTERIO DE ECONOMÍA MINISTERIO Y GESTIÓN PÚBLICA", 23.0),
+                ("MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA", 10.0),
+            ]
+        )
+        assert len(vigente) == 1
+        assert list(vigente.values())[0] == 33.0
+        key = canonical_organismo_name(
+            "MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA"
+        )
+        assert remap_organismo_key(
+            "Ministerio de Economía y Gestión Pública", display
+        ) == display[key]

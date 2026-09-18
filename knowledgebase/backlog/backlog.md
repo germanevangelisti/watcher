@@ -2,7 +2,7 @@
 
 Ordenado por valor de negocio. Estatus: `idea` | `refinado` | `en progreso` | `hecho`.
 
-> **Sincronizado con el código el 2026-09-15**. [V.1](V.1-verificar-pipeline-vs-realidad.md) hecho. Próxima: [V.2](V.2-matching-denominador.md) matching/denominador. Abril 2026 cerrado en DB (no commitear).
+> **Sincronizado con el código el 2026-09-15**. [V.1](V.1-verificar-pipeline-vs-realidad.md) y [V.2](V.2-matching-denominador.md) hechos. Abril 2026 cerrado en DB (no commitear).
 
 ---
 
@@ -117,7 +117,7 @@ Ordenado por valor de negocio. Estatus: `idea` | `refinado` | `en progreso` | `h
 ---
 
 ## Épica V — Verificación / ground truth
-> V.1 hecho · V.2 refinada · [V.1](V.1-verificar-pipeline-vs-realidad.md) · [V.2](V.2-matching-denominador.md)
+> V.1 hecho · V.2 hecho · [V.1](V.1-verificar-pipeline-vs-realidad.md) · [V.2](V.2-matching-denominador.md)
 
 | # | Historia | Criterio de aceptación | Estado |
 |---|---|---|---|
@@ -126,12 +126,12 @@ Ordenado por valor de negocio. Estatus: `idea` | `refinado` | `en progreso` | `h
 | V.1.3 | Cerrar un mes | Marzo 2026 completo; ledger idempotente al reprocesar | ✅ hecho |
 | V.1.4 | Ancla Ley 11.088 | Totales EPEC/ACIF + 15 programas + unmatched / 295% | ✅ hecho |
 | V.1.5 | Trimestral CGE | `ejecucion_trimestral` T1 2026 vs 8 organismos (orden de magnitud) | ✅ hecho |
-| V.2.1 | Bitácora 4 alertas >100% | Query organismo → ledger → `pb_id` → vigente | ⬜ por hacer |
-| V.2.2 | S-511 / Unidad Ejecutora | No matchear a Dirección de Ministerio | ⬜ por hacer |
-| V.2.3 | Denominador por organismo | `%` vs suma vigente del organismo canónico | ⬜ por hacer |
-| V.2.4 | Truncados `presupuesto_base` | `MINISTERIO DE` / secretarías no cuelgan $50B de $1.9B | ⬜ por hacer |
+| V.2.1 | Bitácora 4 alertas >100% | Query organismo → ledger → `pb_id` → vigente | ✅ hecho |
+| V.2.2 | S-511 / Unidad Ejecutora | No matchear a Dirección de Ministerio | ✅ hecho |
+| V.2.3 | Denominador por organismo | `%` vs suma vigente del organismo canónico | ✅ hecho |
+| V.2.4 | Truncados `presupuesto_base` | `MINISTERIO DE` / secretarías no cuelgan $50B de $1.9B | ✅ hecho |
 
-No mezclar capa A (pipeline vs boletín) con capa C (boletín vs caja). No ingest mayo+ hasta V.2.
+No mezclar capa A (pipeline vs boletín) con capa C (boletín vs caja). Mayo+ ya no multiplica matching basura de las 4 alertas; el recall 44.4% sigue siendo deuda de extracción.
 
 ---
 
@@ -151,7 +151,7 @@ No mezclar capa A (pipeline vs boletín) con capa C (boletín vs caja). No inges
 | P.7.3 | Anclar Ley 11.088 | `presupuesto_base` 2026 cargado + alias ACIF/EPEC/Policía/CCU | ✅ hecho (480 programas; match 90/131) |
 | P.7.4 | Contrastar en UI | `% monto_acumulado/monto_vigente` + toggle compromiso/ejecución | ✅ hecho |
 
-Medición 2026-09-14 tras P.7.3: `presupuesto_base` 480 filas; match **90/131** (provincial 90/97). Corte UI 2026-09-15 (feb–abr): [corte-abril-ui.md](../current/corte-abril-ui.md). Ver [P.7](P.7-gasto-acumulado-presupuesto.md). [V.1](V.1-verificar-pipeline-vs-realidad.md) hecho. Próxima: [V.2](V.2-matching-denominador.md).
+Medición 2026-09-14 tras P.7.3: `presupuesto_base` 480 filas; match **90/131** (provincial 90/97). Corte UI post V.2 (2026-09-15): [corte-abril-ui.md](../current/corte-abril-ui.md) — 0 alertas >100%. Ver [P.7](P.7-gasto-acumulado-presupuesto.md). [V.1](V.1-verificar-pipeline-vs-realidad.md) y [V.2](V.2-matching-denominador.md) hechos.
 
 ---
 

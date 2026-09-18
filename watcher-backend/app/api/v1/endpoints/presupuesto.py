@@ -28,6 +28,8 @@ from app.services.ejecucion_contrast import (
     BUCKET_EJECUCION,
     aggregate_organismos,
     bucket_etapa,
+    remap_organismo_key,
+    vigente_por_organismo_canonico,
 )
 from app.services.gasto_classifier import JURISDICCIONES
 
@@ -335,11 +337,6 @@ async def get_ejecucion_resumen(
             .group_by(org_key, EjecucionPresupuestaria.etapa_gasto)
         )
         org_rows = await db.execute(org_q)
-        spend_rows = [
-            (r.org_key, r.etapa_gasto, float(r.total), int(r.cnt))
-            for r in org_rows.all()
-        ]
-
         vig_q = (
             select(
                 PresupuestoBase.organismo,
@@ -349,7 +346,18 @@ async def get_ejecucion_resumen(
             .group_by(PresupuestoBase.organismo)
         )
         vig_result = await db.execute(vig_q)
-        vigente_por_org = {r[0]: float(r[1]) for r in vig_result.all() if r[0]}
+        vigente_por_org, display_by_canon = vigente_por_organismo_canonico(
+            [(r[0], float(r[1])) for r in vig_result.all()]
+        )
+        spend_rows = [
+            (
+                remap_organismo_key(r.org_key, display_by_canon),
+                r.etapa_gasto,
+                float(r.total),
+                int(r.cnt),
+            )
+            for r in org_rows.all()
+        ]
 
         contrast = aggregate_organismos(spend_rows, vigente_por_org)
         sobre_compromiso_count = sum(1 for c in contrast if c.sobre_compromiso)
