@@ -25,6 +25,9 @@ from app.services.alert_dispatcher import AlertDispatcher
 from app.services.report_generator import ReportFormat, ReportGenerator, ReportType
 
 # Fix import for RAGAgent
+# kba_agent/raga_agent ya no existen en el repo (arquitectura refactorizada).
+# Sin esto el import rompe la colección de TODA la suite (DT-5).
+pytest.importorskip("raga_agent")
 from raga_agent import RAGAgent
 
 # ============================================================================

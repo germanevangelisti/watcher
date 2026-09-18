@@ -6,8 +6,8 @@ Tests para los extractores de PDF unificados.
 from pathlib import Path
 
 import pytest
-from watcher_monolith.backend.app.schemas.extraction import ExtractionMethod, SectionType
-from watcher_monolith.backend.app.services.extractors import PdfPlumberExtractor, PyPDF2Extractor
+from app.schemas.extraction import ExtractionMethod, SectionType
+from app.services.extractors import PdfPlumberExtractor, PyPDF2Extractor
 
 # Path to test PDF (will be created if needed)
 TEST_PDF_DIR = Path(__file__).parent / "fixtures" / "pdfs"

@@ -15,6 +15,10 @@ agents_path = Path(__file__).resolve().parent.parent.parent / "agents"
 sys.path.insert(0, str(backend_path))
 sys.path.insert(0, str(agents_path))
 
+# kba_agent/raga_agent ya no existen en el repo (arquitectura refactorizada).
+# Sin esto el import rompe la colección de TODA la suite (DT-5).
+pytest.importorskip("kba_agent")
+pytest.importorskip("raga_agent")
 from kba_agent import KnowledgeBaseAgent
 from raga_agent import RAGAgent
 

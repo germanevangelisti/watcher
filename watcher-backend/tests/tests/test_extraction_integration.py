@@ -4,8 +4,8 @@ Tests de integración para el sistema de extracción unificado.
 """
 
 import pytest
-from watcher_monolith.backend.app.schemas.extraction import ExtractionMethod, SectionType
-from watcher_monolith.backend.app.services.extractors import ExtractorRegistry, extract_pdf
+from app.schemas.extraction import ExtractionMethod, SectionType
+from app.services.extractors import ExtractorRegistry, extract_pdf
 
 
 class TestExtractorRegistry:
@@ -158,31 +158,36 @@ class TestCompatibilityWrappers:
 
     def test_pdf_processor_import(self):
         """Test que PDFProcessor sigue siendo importable."""
-        from watcher_monolith.backend.app.services.pdf_service import PDFProcessor
+        from app.services.pdf_service import PDFProcessor
 
         processor = PDFProcessor()
         assert processor is not None
 
     def test_document_processor_import(self):
         """Test que DocumentProcessor sigue siendo importable."""
-        from watcher_monolith.backend.app.services.document_processor import DocumentProcessor
+        from app.services.document_processor import DocumentProcessor
 
         processor = DocumentProcessor()
         assert processor is not None
 
     def test_content_extractor_import(self):
         """Test que ContentExtractor sigue siendo importable."""
-        from watcher_monolith.backend.app.services.content_extractor import ContentExtractor
+        from app.services.content_extractor import ContentExtractor
 
         extractor = ContentExtractor()
         assert extractor is not None
 
     @pytest.mark.asyncio
     async def test_pdf_processor_extract(self, tmp_path):
-        """Test que PDFProcessor._extract_text_from_pdf funciona con registry."""
+        """Test que PDFProcessor extrae texto vía ExtractorRegistry.
+
+        Usa la variante async: el método sync _extract_text_from_pdf se niega
+        a correr dentro de un event loop activo (guard para Jupyter), y este
+        test es async.
+        """
         from reportlab.lib.pagesizes import letter
         from reportlab.pdfgen import canvas
-        from watcher_monolith.backend.app.services.pdf_service import PDFProcessor
+        from app.services.pdf_service import PDFProcessor
 
         pdf_path = tmp_path / "compat_test.pdf"
 
@@ -193,8 +198,7 @@ class TestCompatibilityWrappers:
 
         processor = PDFProcessor()
 
-        # El método ahora debe usar el registry internamente
-        text = processor._extract_text_from_pdf(pdf_path)
+        text = await processor._extract_text_from_pdf_async(pdf_path)
 
         assert len(text) > 0
         assert "compatibility" in text.lower() or "test" in text.lower()
@@ -203,7 +207,7 @@ class TestCompatibilityWrappers:
         """Test que DocumentProcessor.extract_text_from_pdf funciona con registry."""
         from reportlab.lib.pagesizes import letter
         from reportlab.pdfgen import canvas
-        from watcher_monolith.backend.app.services.document_processor import DocumentProcessor
+        from app.services.document_processor import DocumentProcessor
 
         pdf_path = tmp_path / "doc_compat_test.pdf"
 

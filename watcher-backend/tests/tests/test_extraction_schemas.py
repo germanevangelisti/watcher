@@ -7,7 +7,7 @@ from datetime import datetime
 
 import pytest
 from pydantic import ValidationError
-from watcher_monolith.backend.app.schemas.extraction import (
+from app.schemas.extraction import (
     ContentSection,
     ExtractedContent,
     ExtractionMethod,
