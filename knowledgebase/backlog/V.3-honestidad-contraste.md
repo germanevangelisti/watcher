@@ -2,7 +2,7 @@
 
 **Épica:** V — Verificación / ground truth (capa B: ledger vs Ley)
 **Puntos:** 8 (tomar por slices)
-**Estado:** en curso — V.3.1 ✅ · V.3.2 ✅ · V.3.3 ⬜
+**Estado:** hecho — V.3.1 ✅ · V.3.2 ✅ · V.3.3 ✅
 **Rama sugerida:** `feature/V.3-honestidad-contraste` desde `main`
 **Depende de:** V.2 hecho (matcher canónico) — **pero V.2 nunca aplicó su fix a los datos**
 **Handoff:** [next-session.md](../current/next-session.md)
@@ -229,6 +229,50 @@ Cumulative: el dedup pasó de ver el acto a ver el organismo y la obra. Lo que
 **no** puede ver —y por eso queda documentado y no silenciado— es un monto mal
 extraído.
 
+## Resultado V.3.3 — UI honesta (2026-09-18)
+
+Dos cambios en el contrato del endpoint (aditivos: ningún campo cambió de
+significado, así que ninguna alerta se retiró por la puerta de atrás) y tres en
+la pantalla.
+
+**1. La lista ya no esconde lo que no tiene denominador.** `por_organismo` siempre
+devolvió los organismos sin match (`matched=false`, `monto_vigente=null`); el
+filtro `filter(item.matched)` de `organismo-contrast.tsx` los borraba. Ahora la
+lista muestra **47 organismos: 17 con denominador y 30 sin**, y una barra de
+cobertura arriba:
+
+| Métrica | Valor |
+|---|---:|
+| Gasto medido (canónico provincial) | $501,85B |
+| Con denominador | $397,72B · 79,25% |
+| **Sin denominador** | **$104,13B · 20,75% · 53 actos** |
+
+**2. "Compromiso" dejó de mentir.** El hallazgo más grande de V.3, y no lo
+habíamos medido: de los $397,08B publicados contra un denominador, **$397,08B
+son `llamado`** — llamados a licitación, o sea intención. El compromiso asumido
+(adjudicación + contrato) es **$0,55B = 0,14%**. La barra ámbar rotulada
+"Compromiso" sobreafirmaba el compromiso real por un factor de ~720×, en todos
+los organismos menos dos.
+
+| Organismo (top) | publicado | de eso, llamado | comprometido |
+|---|---:|---:|---:|
+| EPEC | $180,9B | $180,9B | $0,0B |
+| ACIF | $151,6B | $151,6B | $0,0B |
+| MINISTERIO DE ECONOMÍA | $34,5B | $34,0B | $0,4B |
+| PODER JUDICIAL | $17,6B | $17,6B | $0,0B |
+| **TOTAL (con denominador)** | **$397,1B** | **$397,1B (99,86%)** | **$0,55B (0,14%)** |
+
+La pantalla ahora muestra tres barras: **Publicado** (llamado + adjudicación +
+contrato), **Comprometido** (sólo adjudicación + contrato) y **Ejecución**
+(pagos), con la línea "de ese total, $X es sólo llamado".
+
+Decisión de diseño: `monto_llamado` se **informa, no se resta** del bucket
+`compromiso`. Restarlo habría cambiado el %, el umbral y por lo tanto las
+alertas — es decir, habría retirado alertas cambiando una definición, que es
+exactamente lo que la regla "no silenciar alertas >100% reales" prohíbe. La
+alerta de 145,25% sigue viva y sigue significando lo mismo; lo que cambió es que
+el ciudadano ahora ve que $34,0B de esos $34,5B son intención.
+
 ## Criterio de aceptación (epígrafe)
 
 - [x] **Ninguna fila canónica conserva un `presupuesto_base_id` que el matcher
@@ -242,14 +286,19 @@ extraído.
       cuenta 1 vez ($20,03B), no 2. Tests en `TestDedupKey` y `TestObraCodeDedup`
       (`test_same_obra_different_acto_shares_obra_key`, ids 85/93/97/106) y
       `test_alias_variant_collapses` (ids 95/99). Medido en el ETL: S-511 4 → 1.
-- [ ] **La UI muestra el gasto sin denominador.** El 34,7% ($244B) es visible como
-      cobertura, no oculto por el filtro `matched`. No se inventa un denominador
-      para mostrarlo.
-- [ ] **Compromiso ≠ llamado.** La UI separa `llamado` (intención) de
-      `adjudicación + contrato` (compromiso real: hoy $1,9B = 0,27%). Sin esto la
-      barra ámbar afirma un compromiso que el boletín no publicó.
-- [ ] `make test` pasa y `make lint` no agrega errores nuevos.
-- [ ] `knowledgebase/current/` (status + bitácora) refleja el corte post-V.3.
+- [x] **La UI muestra el gasto sin denominador.** El **20,75% ($104,13B, 53 actos)**
+      es visible como cobertura arriba de la lista y como lista propia abajo; el
+      filtro `filter(item.matched)` se eliminó. No se inventó un denominador: los
+      sin-denominador se muestran sin %.
+- [x] **Compromiso ≠ llamado.** La UI separa `llamado` (intención) de
+      `adjudicación + contrato` (compromiso real: **$0,55B = 0,14%**). Sin esto la
+      barra ámbar afirmaba un compromiso que el boletín no publicó, por ~720×.
+- [x] `make test` pasa y `make lint` no agrega errores nuevos. Suite: **652
+      passed / 15 failed / 7 skipped** — los 15 son DT-2/DT-3 pre-existentes,
+      verificados por A/B con `git stash`. Lint backend **642 antes y después**
+      (A/B); frontend 0 errores. `make` no existe en este entorno, así que se
+      corrieron los targets (`ruff check .`, `npm run lint`) directamente.
+- [x] `knowledgebase/current/` (status + bitácora) refleja el corte post-V.3.
       No se commitea `sqlite.db`.
 
 ## Slices (orden)
@@ -258,7 +307,7 @@ extraído.
 |---|---|---|---|
 | **V.3.1** Revalidar el match persistido | 2 | Re-upsert: el ETL re-corre el matcher y deja `NULL` donde no hay match. Baja las 3 alertas | ✅ |
 | **V.3.2** Dedup robusto | 3 | Organismo canónico (`_resolve_alias`) en la clave + capa por código de obra. Eliminó **$166,34B** de doble conteo (369 → 346 filas) | ✅ |
-| **V.3.3** UI honesta | 3 | Barra de cobertura (sin denominador) + separar `llamado` de compromiso real | ⬜ |
+| **V.3.3** UI honesta | 3 | Barra de cobertura (sin denominador) + tres barras: publicado / comprometido / ejecución | ✅ |
 
 Empezar por **V.3.1**: es el que cambia el titular y no requiere diseño nuevo.
 V.3.2 toca el ETL y `presupuesto_matching` — **hacer backup de `sqlite.db` antes**
