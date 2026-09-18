@@ -85,8 +85,10 @@ Caso S-511, una obra de **$25.341.354.989**, 4 filas canónicas:
 | `S-511` | LAS PEÑAS SUD – LAS ISLETILLAS | id=85 |
 | `S-511` | UNIDAD EJECUTORA | id=93 |
 
-Total canónico: **$101.365.419.956**. La barra de compromiso está inflada ~4× en
-esa obra. (Las otras 3 filas del grupo —ids 109/111/112— sí quedaron `is_duplicate=1`.)
+Total canónico: **$101.365.419.956**. Las 4 filas tienen `etapa_gasto='llamado'`,
+o sea que **la barra de compromiso misma carga los $101,37B** por una obra de
+$25,34B: inflada 4×. (Las otras 3 filas del grupo —ids 109/111/112— sí quedaron
+`is_duplicate=1`.)
 
 ### H3 — El dedup es ciego a variantes de ortografía
 
@@ -100,15 +102,58 @@ El sufijo `(EPEC)` cambia `org_norm`. Idéntico patrón en `acto=5560` (8 filas,
 canónicas) y `acto=5558` (3 canónicas) — ahí las copias con ortografía **idéntica**
 sí se deduplicaron, lo que confirma que la falla es la normalización, no el dedup.
 
+### H4 — El mismo acto con dos identificadores distintos es indeduplicable
+
+Peor que H3: hay actos que el boletín republica con **otro número**, así que ni
+normalizando el organismo se juntan. El caso de **$34.026.000.000** en 2 filas
+canónicas, ambas `etapa_gasto='llamado'` → **$68,05B** en la barra de compromiso:
+
+| fila | organismo | acto |
+|---|---|---|
+| id=399 | SECRETARIA DE ASUNTOS INSTITUCIONALES | `Licitación Pública N° 660649` |
+| id=411 | Secretaría General de la Gobernación - Ministerio de Economía y Gestión Pública | `Licitación Pública EXPEDIENTE N° 0378-219684/2026` |
+
+Mismo monto al peso, mismo tipo de acto, boletines distintos. `_normalize_acto`
+las ve como dos actos porque el número y el expediente no coinciden.
+
+**Esta única duplicación es lo que mantiene viva la última alerta.** id=411 es la
+que matchea `substring score=0.53` contra `pb_id=35`, un organismo trunco de
+$1,37B (`MINISTERIO DE ECONOMÍA MINISTERIO Y GESTIÓN PÚBLICA`, programa *16 -
+APORTES AGENCIA PARA LA*). Si la duplicación se colapsa, el compromiso de ese
+organismo cae de $34,45B a $0,42B → 1,79% → **la alerta de 145,25% desaparece**.
+V.3.2 cierra la última alerta sin tocar el matcher.
+
+## Resultado V.3.1 — re-upsert corrido (2026-09-18)
+
+`uv run python scripts/etl_analisis_to_ejecucion.py` (backup previo en
+`sqlite.bak.db`). Sin pérdida de filas: 369 canónicas / $704,78B antes y después.
+
+| Métrica | Antes | Después |
+|---|---:|---:|
+| Alertas `sobre_compromiso` (provincial) | **3** | **1** |
+| Deriva de match (`check_match_drift.py`) | 18 filas · $86,11B | **0 · $0,00B** |
+| Gasto provincial sin denominador | $142,02B | **$212,28B** |
+| Filas sin match en el ETL | — | 163 de 415 (39,3%) |
+
+Las alertas de **2703,67%** (SECRETARÍA DE DESARROLLO) y **295,41%** (DIRECCIÓN DE
+MINISTERIO) desaparecieron: eran denominadores falsos. La de 145,25% sobrevive y
+es duplicación (H4), no match — la cierra V.3.2.
+
+Los $70,26B que salieron de denominadores falsos no se "perdieron": ahora se
+declaran como gasto sin denominador. Eso es el producto siendo honesto, no el
+producto empeorando: antes afirmaba un % sobre un techo que no le correspondía.
+
+Nuevo script: `scripts/check_match_drift.py` (read-only, sale con código 1 si hay
+deriva). Es el gate del criterio de aceptación 1.
+
 ## Criterio de aceptación (epígrafe)
 
-- [ ] **Ninguna fila canónica conserva un `presupuesto_base_id` que el matcher
-      actual no asigne.** Las 14 filas ($80,72B) quedan re-matchadas o en `NULL`
-      explícito. Test: recorrer el ledger, correr `match_organismo`, comparar contra
-      lo persistido → 0 divergencias.
-- [ ] **Las 3 alertas artefacto desaparecen** de `bitacora-alertas-v2-post.md` con
-      el re-upsert corrido. Si alguna sobrevive, es sobre-compromiso real y queda
-      documentada como tal con su `pb_id` y su score.
+- [x] **Ninguna fila canónica conserva un `presupuesto_base_id` que el matcher
+      actual no asigne.** 18 filas con deriva → **0**. Gate:
+      `scripts/check_match_drift.py` (exit 1 si hay deriva).
+- [x] **Las 3 alertas artefacto desaparecen** de `bitacora-alertas-v2-post.md` con
+      el re-upsert corrido. Quedan **1**, y no es artefacto de match: es
+      duplicación (H4), con su `pb_id` y su score documentados.
 - [ ] **La obra S-511 cuenta 1 vez ($25,34B), no 4 ($101,37B)**, y `acto=5543`
       cuenta 1 vez ($20,03B), no 2. Test con los ids 85/93/97/106 y 95/99.
 - [ ] **La UI muestra el gasto sin denominador.** El 34,7% ($244B) es visible como
@@ -125,7 +170,7 @@ sí se deduplicaron, lo que confirma que la falla es la normalización, no el de
 
 | Slice | Pts | Entrega | Estado |
 |---|---|---|---|
-| **V.3.1** Revalidar el match persistido | 2 | Re-upsert: el ETL re-corre el matcher y deja `NULL` donde no hay match. Baja las 3 alertas | ⬜ |
+| **V.3.1** Revalidar el match persistido | 2 | Re-upsert: el ETL re-corre el matcher y deja `NULL` donde no hay match. Baja las 3 alertas | ✅ |
 | **V.3.2** Dedup robusto | 3 | Normalizar organismo (puntuación, tildes, sufijo entre paréntesis) antes de `_dedup_key`; y con identificador fuerte de acto, deduplicar por `(acto, monto)` sin exigir organismo | ⬜ |
 | **V.3.3** UI honesta | 3 | Barra de cobertura (sin denominador) + separar `llamado` de compromiso real | ⬜ |
 

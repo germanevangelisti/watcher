@@ -2,43 +2,11 @@
 
 Capa B: compromisos del Boletín vs `presupuesto_base` (Ley 11.088). No es caja CGE. Reproducible con `uv run python scripts/bitacora_alertas_v2.py`.
 
-Alertas `sobre_compromiso` (filtro provincial, canónicos): **3**.
+Alertas `sobre_compromiso` (filtro provincial, canónicos): **1**.
 
 | Organismo UI | compromiso | vigente | % | n |
 |---|---:|---:|---:|---:|
-| SECRETARÍA DE DESARROLLO | $50,613,330,422 | $1,872,024,000 | 2703.67% | 4 |
 | MINISTERIO DE ECONOMÍA MINISTERIO Y GESTIÓN PÚBLICA | $34,450,820,322 | $23,718,656,000 | 145.25% | 3 |
-| DIRECCIÓN DE MINISTERIO | $25,341,354,989 | $8,578,475,000 | 295.41% | 1 |
-
-## SECRETARÍA DE DESARROLLO
-
-- compromiso $50,613,330,422 / vigente $1,872,024,000 = **2703.67%**
-
-### Programas `presupuesto_base` con este organismo
-
-| pb_id | programa | vigente |
-|---:|---|---:|
-| 7 | 556 - CIRCULAR AMBIENTE- RECURSOS | $936,012,000 |
-| 8 | 556 - CIRCULAR AMBIENTE- RECURSOS | $599,512,000 |
-| 9 | 556 - CIRCULAR AMBIENTE- RECURSOS | $336,500,000 |
-
-### Filas ledger (top 25 por monto)
-
-| id | org ledger | número | monto | etapa | pb_id | org pb | programa pb |
-|---:|---|---|---:|---|---:|---|---|
-| 388 | SECRETARIA DE ASUNTOS INSTITUCIONALES | Licitación Pública N° 660649 | $34,026,000,000 | llamado | 7 | SECRETARÍA DE DESARROLLO | 556 - CIRCULAR AMBIENTE- RECURSOS |
-| 444 | SECRETARÍA GENERAL DE HÁBITAT Y DESARROLLO EMPRENDEDOR | MEJORAMIENTO CAMINO S-283 – TR: T259-18 –R.N. N°7. DPTO: GRAL ROCA | $16,064,411,753 | llamado | 7 | SECRETARÍA DE DESARROLLO | 556 - CIRCULAR AMBIENTE- RECURSOS |
-| 387 | SECRETARIA DE PLANEAMIENTO FÍSICO | Licitación Pública N° 659660 | $397,532,869 | llamado | 7 | SECRETARÍA DE DESARROLLO | 556 - CIRCULAR AMBIENTE- RECURSOS |
-| 222 | SECRETARÍA DE PLANEAMIENTO FÍSICO | 40/2026 | $125,385,800 | llamado | 7 | SECRETARÍA DE DESARROLLO | 556 - CIRCULAR AMBIENTE- RECURSOS |
-
-### Nombres en el ledger que cuelgan de este organismo UI
-
-| organismo ledger | n | monto | match en vivo |
-|---|---:|---:|---|
-| SECRETARIA DE ASUNTOS INSTITUCIONALES | 1 | $34,026,000,000 | unmatched pb_id=— score=0.00 →  |
-| SECRETARÍA GENERAL DE HÁBITAT Y DESARROLLO EMPRENDEDOR | 1 | $16,064,411,753 | unmatched pb_id=— score=0.00 →  |
-| SECRETARIA DE PLANEAMIENTO FÍSICO | 1 | $397,532,869 | jaccard pb_id=136 score=0.50 → DIRECCIÓN GENERAL DE PLANEAMIENTO |
-| SECRETARÍA DE PLANEAMIENTO FÍSICO | 1 | $125,385,800 | jaccard pb_id=136 score=0.50 → DIRECCIÓN GENERAL DE PLANEAMIENTO |
 
 ## MINISTERIO DE ECONOMÍA MINISTERIO Y GESTIÓN PÚBLICA
 
@@ -59,9 +27,9 @@ Alertas `sobre_compromiso` (filtro provincial, canónicos): **3**.
 
 | id | org ledger | número | monto | etapa | pb_id | org pb | programa pb |
 |---:|---|---|---:|---|---:|---|---|
-| 395 | Secretaría General de la Gobernación - Ministerio de Economía y Gestión Pública | Licitación Pública EXPEDIENTE N° 0378-219684/2026 | $34,026,000,000 | llamado | 35 | MINISTERIO DE ECONOMÍA MINISTERIO Y GESTIÓN PÚBLICA | 16 - APORTES AGENCIA PARA LA |
-| 445 | MINISTRO DE ECONOMÍA Y GESTIÓN PÚBLICA | RESOLUCION 144 - Letra:D | $391,286,760 | contrato | 35 | MINISTERIO DE ECONOMÍA MINISTERIO Y GESTIÓN PÚBLICA | 16 - APORTES AGENCIA PARA LA |
-| 20 | MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA | 37 | $33,533,562 | contrato | 35 | MINISTERIO DE ECONOMÍA MINISTERIO Y GESTIÓN PÚBLICA | 16 - APORTES AGENCIA PARA LA |
+| 411 | Secretaría General de la Gobernación - Ministerio de Economía y Gestión Pública | Licitación Pública EXPEDIENTE N° 0378-219684/2026 | $34,026,000,000 | llamado | 35 | MINISTERIO DE ECONOMÍA MINISTERIO Y GESTIÓN PÚBLICA | 16 - APORTES AGENCIA PARA LA |
+| 383 | MINISTRO DE ECONOMÍA Y GESTIÓN PÚBLICA | RESOLUCION 144 - Letra:D | $391,286,760 | contrato | 35 | MINISTERIO DE ECONOMÍA MINISTERIO Y GESTIÓN PÚBLICA | 16 - APORTES AGENCIA PARA LA |
+| 20 | MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA | 37 | $33,533,562 | contrato | 367 | MINISTERIO DE ECONOMÍA MINISTERIO Y GESTIÓN PÚBLICA | 780 - PROYECTOS ESTRATÉGICOS |
 
 ### Nombres en el ledger que cuelgan de este organismo UI
 
@@ -70,28 +38,6 @@ Alertas `sobre_compromiso` (filtro provincial, canónicos): **3**.
 | Secretaría General de la Gobernación - Ministerio de Economía y Gestión Pública | 1 | $34,026,000,000 | substring pb_id=35 score=0.53 → MINISTERIO DE ECONOMÍA MINISTERIO Y GESTIÓN PÚBLICA |
 | MINISTRO DE ECONOMÍA Y GESTIÓN PÚBLICA | 1 | $391,286,760 | jaccard pb_id=35 score=0.75 → MINISTERIO DE ECONOMÍA MINISTERIO Y GESTIÓN PÚBLICA |
 | MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA | 1 | $33,533,562 | exact pb_id=367 score=1.00 → MINISTERIO DE ECONOMÍA MINISTERIO Y GESTIÓN PÚBLICA |
-
-## DIRECCIÓN DE MINISTERIO
-
-- compromiso $25,341,354,989 / vigente $8,578,475,000 = **295.41%**
-
-### Programas `presupuesto_base` con este organismo
-
-| pb_id | programa | vigente |
-|---:|---|---:|
-| 54 | 156 - Agentes De R.G.P. INTELIGENCIA FISCAL | $8,578,475,000 |
-
-### Filas ledger (top 25 por monto)
-
-| id | org ledger | número | monto | etapa | pb_id | org pb | programa pb |
-|---:|---|---|---:|---|---:|---|---|
-| 97 | DIRECCIÓN DE INTELIGENCIA FISCAL | RESOLUCION 056/2026 | $25,341,354,989 | llamado | 54 | DIRECCIÓN DE MINISTERIO | 156 - Agentes De R.G.P. INTELIGENCIA FISCAL |
-
-### Nombres en el ledger que cuelgan de este organismo UI
-
-| organismo ledger | n | monto | match en vivo |
-|---|---:|---:|---|
-| DIRECCIÓN DE INTELIGENCIA FISCAL | 1 | $25,341,354,989 | unmatched pb_id=— score=0.00 →  |
 
 ## Nombres cortos / truncos en `presupuesto_base`
 
