@@ -3,17 +3,16 @@ Servicio unificado de extracción y persistencia de entidades
 Consolida lógica dispersa en múltiples archivos para un sistema centralizado
 """
 
+import logging
 import re
 import unicodedata
-from typing import List, Dict, Optional, Any, Tuple
-from datetime import datetime
 from dataclasses import dataclass, field
-import logging
+from datetime import datetime
+from typing import Any
 
-from sqlalchemy.ext.asyncio import AsyncSession
+from app.db.models import Boletin, EntidadExtraida, MencionEntidad, RelacionEntidad
 from sqlalchemy import select
-
-from app.db.models import EntidadExtraida, MencionEntidad, RelacionEntidad, Boletin
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -24,11 +23,11 @@ class EntityResult:
     tipo: str
     nombre: str
     nombre_normalizado: str
-    variantes: List[str]
+    variantes: list[str]
     contexto: str
     posicion: int
     confianza: float
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
 
 @dataclass
@@ -39,18 +38,18 @@ class RelationshipResult:
     tipo_relacion: str
     contexto: str
     confianza: float
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
 
 @dataclass
 class EntityMap:
     """Spatial index: maps char positions to entities for boundary-aware chunking."""
-    _entries: List[Tuple[int, int, "EntityResult"]] = field(default_factory=list)
+    _entries: list[tuple[int, int, "EntityResult"]] = field(default_factory=list)
 
     def add(self, start: int, end: int, entity: "EntityResult") -> None:
         self._entries.append((start, end, entity))
 
-    def get_entities_in_range(self, start: int, end: int) -> List["EntityResult"]:
+    def get_entities_in_range(self, start: int, end: int) -> list["EntityResult"]:
         return [e for (s, en, e) in self._entries if s >= start and en <= end]
 
     def entity_crosses_boundary(self, boundary: int, window: int = 50) -> bool:
@@ -65,7 +64,7 @@ class EntityMap:
 
 class EntityService:
     """Servicio para extracción y persistencia de entidades"""
-    
+
     def __init__(self):
         # Patrones para extracción de personas.
         # Prefijo: (?i:...) → case-insensitive solo en el prefijo (Sr./DR./etc.).
@@ -137,19 +136,19 @@ class EntityService:
             r'(?i:C\.?U\.?I\.?[TL]\.?\s*(?:N[°º]?\s*)?[:\s]?)(\d{2}[\-\s]?\d{8}[\-\s]?\d)',
             r'\b(\d{2}-\d{8}-\d)\b',
         ]
-    
-    def extract_entities(self, text: str) -> List[EntityResult]:
+
+    def extract_entities(self, text: str) -> list[EntityResult]:
         """
         Extrae todas las entidades del texto
-        
+
         Args:
             text: Texto completo del boletín
-            
+
         Returns:
             Lista de EntityResult con todas las entidades encontradas
         """
         entities = []
-        
+
         # Extraer cada tipo de entidad
         entities.extend(self._extract_personas(text))
         entities.extend(self._extract_organismos(text))
@@ -157,10 +156,10 @@ class EntityService:
         entities.extend(self._extract_contratos(text))
         entities.extend(self._extract_montos(text))
         entities.extend(self._extract_cuits(text))
-        
+
         return entities
-    
-    def _extract_personas(self, text: str) -> List[EntityResult]:
+
+    def _extract_personas(self, text: str) -> list[EntityResult]:
         """
         Extrae personas mencionadas.
 
@@ -211,8 +210,8 @@ class EntityService:
                 ))
 
         return self._deduplicate_entities(results)
-    
-    def _extract_organismos(self, text: str) -> List[EntityResult]:
+
+    def _extract_organismos(self, text: str) -> list[EntityResult]:
         """Extrae organismos gubernamentales desde líneas ALL-CAPS (alta precisión)."""
         results = []
         seen_norms: set = set()
@@ -242,8 +241,8 @@ class EntityService:
                 ))
 
         return results
-    
-    def _extract_empresas(self, text: str) -> List[EntityResult]:
+
+    def _extract_empresas(self, text: str) -> list[EntityResult]:
         """Extrae empresas desde líneas ALL-CAPS que terminan con sufijo societario."""
         results = []
         seen_norms: set = set()
@@ -273,16 +272,16 @@ class EntityService:
                 ))
 
         return results
-    
-    def _extract_contratos(self, text: str) -> List[EntityResult]:
+
+    def _extract_contratos(self, text: str) -> list[EntityResult]:
         """Extrae contratos y licitaciones"""
         results = []
-        
+
         for pattern in self.contrato_patterns:
             for match in re.finditer(pattern, text, re.IGNORECASE):
                 nombre = match.group(0).strip()
                 contexto = self._get_context(text, match.start(), match.end())
-                
+
                 results.append(EntityResult(
                     tipo='contrato',
                     nombre=nombre,
@@ -293,26 +292,26 @@ class EntityService:
                     confianza=1.0,
                     metadata={'numero': match.group(1) if match.groups() else None}
                 ))
-        
+
         return results
-    
-    def _extract_montos(self, text: str) -> List[EntityResult]:
+
+    def _extract_montos(self, text: str) -> list[EntityResult]:
         """Extrae montos mencionados"""
         results = []
         seen_amounts = set()
-        
+
         for pattern in self.monto_patterns:
             for match in re.finditer(pattern, text, re.IGNORECASE):
                 monto_str = match.group(0).strip()
                 monto_numerico = self._parse_amount(match.group(1))
-                
+
                 # Evitar duplicados por monto
                 if monto_numerico in seen_amounts or monto_numerico < 1000:
                     continue
-                
+
                 seen_amounts.add(monto_numerico)
                 contexto = self._get_context(text, match.start(), match.end())
-                
+
                 results.append(EntityResult(
                     tipo='monto',
                     nombre=monto_str,
@@ -323,9 +322,9 @@ class EntityService:
                     confianza=1.0,
                     metadata={'valor_numerico': monto_numerico}
                 ))
-        
+
         return sorted(results, key=lambda x: x.metadata.get('valor_numerico', 0), reverse=True)[:50]
-    
+
     def _parse_amount(self, amount_str: str) -> float:
         """Convierte string de monto a número"""
         try:
@@ -335,7 +334,7 @@ class EntityService:
             return 0.0
 
     @staticmethod
-    def normalize_cuit(raw: str) -> Optional[str]:
+    def normalize_cuit(raw: str) -> str | None:
         """Normaliza un CUIT/CUIL al formato canónico ``XX-XXXXXXXX-X``.
 
         Devuelve ``None`` si no contiene exactamente 11 dígitos.
@@ -360,14 +359,14 @@ class EntityService:
             check = 9
         return check == int(digits[10])
 
-    def _extract_cuits(self, text: str) -> List[EntityResult]:
+    def _extract_cuits(self, text: str) -> list[EntityResult]:
         """Extrae CUIT/CUIL del texto y los normaliza a ``XX-XXXXXXXX-X``.
 
         El dígito verificador inválido baja la confianza pero no descarta la
         entidad (los PDF oficiales tienen ruido de OCR). El masking en la capa
         HTTP sigue protegiendo el valor en las respuestas de la API.
         """
-        results: List[EntityResult] = []
+        results: list[EntityResult] = []
         seen: set = set()
 
         for pattern in self.cuit_patterns:
@@ -391,7 +390,7 @@ class EntityService:
                 ))
 
         return results
-    
+
     def _clean_name(self, nombre: str, max_len: int = 80) -> str:
         """Limpia un nombre de entidad extraído de PDF: quita saltos de línea y texto basura."""
         # Unir palabras con guion al final de línea: "Huma-\nnidades" → "Humanidades"
@@ -417,54 +416,54 @@ class EntityService:
         context_start = max(0, start - window)
         context_end = min(len(text), end + window)
         return text[context_start:context_end].strip()
-    
-    def _generate_variants(self, nombre: str) -> List[str]:
+
+    def _generate_variants(self, nombre: str) -> list[str]:
         """Genera variantes de un nombre para matching"""
         variants = [nombre]
-        
+
         # Sin acentos
         variants.append(self._remove_accents(nombre))
-        
+
         # Mayúsculas/minúsculas
         variants.append(nombre.upper())
         variants.append(nombre.title())
-        
+
         # Sin puntos
         variants.append(nombre.replace('.', ''))
-        
+
         return list(set(variants))
-    
+
     def _remove_accents(self, text: str) -> str:
         """Remueve acentos de un texto"""
         return ''.join(
             c for c in unicodedata.normalize('NFD', text)
             if unicodedata.category(c) != 'Mn'
         )
-    
+
     def normalize_entity(self, nombre: str, tipo: str) -> str:
         """Normaliza nombre de entidad para deduplicación"""
         # Remover acentos, convertir a mayúsculas, remover espacios extras
         normalized = self._remove_accents(nombre.upper().strip())
         normalized = re.sub(r'\s+', ' ', normalized)
-        
+
         # Remover puntos en abreviaturas
         normalized = normalized.replace('.', '')
-        
+
         return normalized
-    
-    def _deduplicate_entities(self, entities: List[EntityResult]) -> List[EntityResult]:
+
+    def _deduplicate_entities(self, entities: list[EntityResult]) -> list[EntityResult]:
         """Elimina entidades duplicadas basándose en nombre normalizado"""
         seen = {}
         unique = []
-        
+
         for entity in entities:
             if entity.nombre_normalizado not in seen:
                 seen[entity.nombre_normalizado] = entity
                 unique.append(entity)
-        
+
         return unique
-    
-    def detect_relationships(self, entities: List[EntityResult], text: str) -> List[RelationshipResult]:
+
+    def detect_relationships(self, entities: list[EntityResult], text: str) -> list[RelationshipResult]:
         """
         Detecta relaciones entre entidades usando bloques anclados a cabeceras ALL-CAPS.
 
@@ -628,8 +627,8 @@ class EntityService:
                     ))
 
         return relationships
-    
-    def build_entity_map(self, entities: List[EntityResult], text: str) -> EntityMap:
+
+    def build_entity_map(self, entities: list[EntityResult], text: str) -> EntityMap:
         """Build a spatial EntityMap by locating each entity's position in text."""
         entity_map = EntityMap()
         text_lower = text.lower()
@@ -646,18 +645,18 @@ class EntityService:
 
     async def persist_entities(
         self,
-        entities: List[EntityResult],
+        entities: list[EntityResult],
         boletin_id: int,
         db: AsyncSession
-    ) -> Dict[str, int]:
+    ) -> dict[str, int]:
         """
         Persiste entidades en la base de datos
-        
+
         Returns:
             Dict con estadísticas de creación/actualización
         """
         stats = {'created': 0, 'updated': 0, 'mentions': 0}
-        
+
         # Obtener fecha del boletín
         boletin_result = await db.execute(
             select(Boletin).where(Boletin.id == boletin_id)
@@ -665,9 +664,9 @@ class EntityService:
         boletin = boletin_result.scalar_one_or_none()
         if not boletin:
             return stats
-        
+
         fecha_boletin = datetime.strptime(boletin.date, '%Y%m%d').date()
-        
+
         for entity in entities:
             # Buscar o crear entidad
             result = await db.execute(
@@ -676,7 +675,7 @@ class EntityService:
                 )
             )
             entidad_db = result.scalar_one_or_none()
-            
+
             if entidad_db:
                 # Actualizar existente
                 entidad_db.total_menciones += 1
@@ -697,9 +696,9 @@ class EntityService:
                 )
                 db.add(entidad_db)
                 stats['created'] += 1
-            
+
             await db.flush()
-            
+
             # Crear mención
             mencion = MencionEntidad(
                 entidad_id=entidad_db.id,
@@ -709,7 +708,7 @@ class EntityService:
             )
             db.add(mencion)
             stats['mentions'] += 1
-        
+
         await db.commit()
 
         # ---- Neo4j dual-write (no-fatal) ----
@@ -753,14 +752,14 @@ class EntityService:
 
     async def persist_relationships(
         self,
-        relationships: List[RelationshipResult],
+        relationships: list[RelationshipResult],
         boletin_id: int,
-        entities: List[EntityResult],
+        entities: list[EntityResult],
         db: AsyncSession
     ) -> int:
         """
         Persiste relaciones entre entidades
-        
+
         Returns:
             Número de relaciones creadas
         """
@@ -771,10 +770,10 @@ class EntityService:
         boletin = boletin_result.scalar_one_or_none()
         if not boletin:
             return 0
-        
+
         fecha_boletin = datetime.strptime(boletin.date, '%Y%m%d').date()
         count = 0
-        
+
         for rel in relationships:
             # Buscar entidades por nombre normalizado
             # Bug fix: origen vacío (ej. recibe_subsidio legacy) → saltar
@@ -817,7 +816,7 @@ class EntityService:
                 )
                 db.add(relacion)
                 count += 1
-        
+
         await db.commit()
 
         # ---- Neo4j dual-write (no-fatal) ----
@@ -876,7 +875,7 @@ class EntityService:
 
 
 # Instancia global del servicio
-_entity_service: Optional[EntityService] = None
+_entity_service: EntityService | None = None
 
 
 def get_entity_service() -> EntityService:

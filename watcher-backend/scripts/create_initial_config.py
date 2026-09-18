@@ -3,8 +3,8 @@
 Script para crear la configuración inicial del DS Lab
 basada en el análisis de agosto 2025
 """
-import sys
 import asyncio
+import sys
 from pathlib import Path
 
 # Agregar el directorio raíz al path
@@ -131,7 +131,7 @@ async def create_initial_config():
     """Crear la configuración inicial"""
     print("🚀 Creando configuración inicial del DS Lab...")
     print()
-    
+
     async with AsyncSessionLocal() as session:
         try:
             # Verificar si ya existe
@@ -142,20 +142,20 @@ async def create_initial_config():
             )
             result = await session.execute(stmt)
             existing = result.scalar_one_or_none()
-            
+
             if existing:
                 print(f"⚠️  Configuración '{INITIAL_CONFIG['config_name']}' v{INITIAL_CONFIG['version']} ya existe")
                 print(f"   ID: {existing.id}")
                 print(f"   Creada: {existing.created_at}")
                 print(f"   Activa: {'Sí' if existing.is_active else 'No'}")
                 return True
-            
+
             # Crear nueva configuración
             config = AnalysisConfig(**INITIAL_CONFIG, is_active=True)
             session.add(config)
             await session.commit()
             await session.refresh(config)
-            
+
             print("✅ Configuración creada exitosamente")
             print()
             print("📋 DETALLES:")
@@ -180,9 +180,9 @@ async def create_initial_config():
             print("   POST /api/v1/dslab/analysis/executions")
             print(f"   {{ \"config_id\": {config.id}, ... }}")
             print()
-            
+
             return True
-            
+
         except Exception as e:
             print(f"❌ Error creando configuración: {e}")
             import traceback

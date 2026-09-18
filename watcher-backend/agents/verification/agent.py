@@ -3,10 +3,10 @@ VerificationAgent — Fase III: Adversarial Verification
 Verifica cada AIU contra el corpus usando hybrid search.
 Adversarial mindset: rol de INVALIDAR, no de confirmar.
 """
-import logging
 import asyncio
+import logging
 from dataclasses import dataclass
-from typing import List, Optional, Dict, Any
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -24,9 +24,9 @@ class VerificationResult:
     unverifiable: int
     contradicted: int
     pending: int
-    aius: List[Any]  # List[AIU] with updated status
+    aius: list[Any]  # List[AIU] with updated status
     requires_human_review: bool
-    boletin_id: Optional[int] = None
+    boletin_id: int | None = None
 
 
 class VerificationAgent:
@@ -50,7 +50,7 @@ class VerificationAgent:
 
     # --- Standard orchestrator interface ---
 
-    async def execute(self, workflow, task) -> Dict[str, Any]:
+    async def execute(self, workflow, task) -> dict[str, Any]:
         """Standard WorkflowState/TaskDefinition interface for the orchestrator."""
         try:
             params = task.parameters if hasattr(task, 'parameters') and task.parameters else {}
@@ -86,7 +86,7 @@ class VerificationAgent:
 
     # --- Core verification logic ---
 
-    async def verify_aius(self, aius: List[Any], boletin_id: Optional[int] = None) -> VerificationResult:
+    async def verify_aius(self, aius: list[Any], boletin_id: int | None = None) -> VerificationResult:
         """Verify a list of AIUs against the indexed corpus. Returns VerificationResult."""
         if not aius:
             return VerificationResult(
@@ -139,7 +139,7 @@ class VerificationAgent:
             boletin_id=boletin_id
         )
 
-    async def _verify_single_aiu(self, aiu: Any, boletin_id: Optional[int] = None) -> Any:
+    async def _verify_single_aiu(self, aiu: Any, boletin_id: int | None = None) -> Any:
         """Verify a single AIU. Returns AIU with updated verification_status and evidence."""
         from app.services.aiu_service import ClaimType, VerificationStatus
 
@@ -189,8 +189,8 @@ class VerificationAgent:
                 return aiu
 
             # hybrid_search accepts semantic_filters and keyword_filters separately
-            semantic_filters: Optional[Dict[str, Any]] = None
-            keyword_filters: Optional[Dict[str, Any]] = None
+            semantic_filters: dict[str, Any] | None = None
+            keyword_filters: dict[str, Any] | None = None
             if boletin_id is not None:
                 semantic_filters = {'boletin_id': boletin_id}
                 keyword_filters = {'boletin_id': boletin_id}
@@ -241,7 +241,7 @@ class VerificationAgent:
             self._logger.warning(f"_verify_single_aiu failed: {e}")
             return aiu
 
-    async def _verify_evidence_anchor(self, aiu: Any, boletin_id: Optional[int]) -> Any:
+    async def _verify_evidence_anchor(self, aiu: Any, boletin_id: int | None) -> Any:
         """EVIDENCE_ANCHOR: check if text exists literally in any indexed chunk."""
         from app.services.aiu_service import VerificationStatus
 
@@ -272,9 +272,10 @@ class VerificationAgent:
             self._logger.debug(f"evidence_anchor check failed: {e}")
             return aiu.model_copy(update={'verification_status': VerificationStatus.UNVERIFIABLE})
 
-    async def _verify_amount(self, aiu: Any, boletin_id: Optional[int]) -> Any:
+    async def _verify_amount(self, aiu: Any, boletin_id: int | None) -> Any:
         """AMOUNT: exact numeric match in corpus."""
         import re
+
         from app.services.aiu_service import VerificationStatus
 
         # Extract numeric value from claim
@@ -304,7 +305,7 @@ class VerificationAgent:
             self._logger.debug(f"amount verification failed: {e}")
             return aiu.model_copy(update={'verification_status': VerificationStatus.UNVERIFIABLE})
 
-    def _calculate_vcp(self, aius: List[Any]) -> float:
+    def _calculate_vcp(self, aius: list[Any]) -> float:
         """VCP = verified / total (excluding pending from denominator for strict mode)."""
         from app.services.aiu_service import VerificationStatus
 

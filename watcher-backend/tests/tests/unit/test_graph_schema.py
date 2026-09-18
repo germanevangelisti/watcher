@@ -11,7 +11,6 @@ from pathlib import Path
 
 import pytest
 
-
 # Path resolution: test file is at watcher-backend/tests/tests/unit/
 # parents[3] = watcher-backend/
 _BACKEND_ROOT = Path(__file__).resolve().parents[3]

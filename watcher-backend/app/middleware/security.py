@@ -7,7 +7,7 @@ against common web vulnerabilities (XSS, clickjacking, MIME sniffing, etc.).
 
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request

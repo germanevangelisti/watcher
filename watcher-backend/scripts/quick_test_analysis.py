@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-import requests
 import time
+
+import requests
 
 API_BASE = "http://localhost:8001/api/v1/dslab"
 
@@ -22,7 +23,7 @@ if response.status_code == 201:
     execution = response.json()
     exec_id = execution["id"]
     print(f"✅ Análisis iniciado - ID: {exec_id}")
-    
+
     # Monitorear progreso
     while True:
         time.sleep(2)
@@ -30,10 +31,10 @@ if response.status_code == 201:
         if progress_resp.status_code == 200:
             prog = progress_resp.json()
             print(f"📊 Progreso: {prog['processed']}/{prog['total']} ({prog['progress']:.1f}%) - Estado: {prog['status']}")
-            
+
             if prog['status'] in ['completed', 'failed']:
                 break
-    
+
     # Resumen final
     summary_resp = requests.get(f"{API_BASE}/analysis/executions/{exec_id}/summary")
     if summary_resp.status_code == 200:

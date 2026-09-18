@@ -8,7 +8,6 @@ El masking de CUIT en respuestas HTTP ya está cubierto por
 from __future__ import annotations
 
 import pytest
-
 from app.services.entity_service import EntityService
 
 

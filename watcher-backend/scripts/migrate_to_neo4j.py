@@ -10,8 +10,8 @@ Uso (desde watcher-backend/):
     python scripts/migrate_to_neo4j.py --batch-size 200
 """
 
-import asyncio
 import argparse
+import asyncio
 import logging
 import sys
 from pathlib import Path
@@ -19,13 +19,16 @@ from pathlib import Path
 # Agregar el directorio raíz al path para importar módulos de la app
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from sqlalchemy import select
 from app.db.database import AsyncSessionLocal
-from app.db.models import EntidadExtraida, RelacionEntidad, MencionEntidad, Boletin
-from app.db.neo4j_client import init_neo4j, close_neo4j, get_neo4j_session
+from app.db.models import Boletin, EntidadExtraida, MencionEntidad, RelacionEntidad
+from app.db.neo4j_client import close_neo4j, get_neo4j_session, init_neo4j
 from app.services.graph_service import (
-    upsert_entity, upsert_boletin, upsert_relationship, upsert_mention_edge,
+    upsert_boletin,
+    upsert_entity,
+    upsert_mention_edge,
+    upsert_relationship,
 )
+from sqlalchemy import select
 
 logging.basicConfig(
     level=logging.INFO,

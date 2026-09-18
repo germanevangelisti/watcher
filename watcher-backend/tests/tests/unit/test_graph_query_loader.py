@@ -13,8 +13,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-
-from app.db.query_loader import load_query, list_queries, clear_cache, QueryNotFoundError
+from app.db.query_loader import QueryNotFoundError, clear_cache, list_queries, load_query
 
 # Expected query files created in Fase 2.2
 EXPECTED_CYPHER_QUERIES = {

@@ -12,7 +12,6 @@ El PDF se descarga a un tempfile, se extrae el texto, y el tempfile se elimina.
 import logging
 import tempfile
 from pathlib import Path
-from typing import Optional
 
 import httpx
 
@@ -152,7 +151,7 @@ async def fetch_and_extract_text(
     Returns:
         Texto completo extraído del PDF.
     """
-    tmp_path: Optional[Path] = None
+    tmp_path: Path | None = None
     try:
         tmp_path = await fetch_pdf_to_tempfile(url, timeout_s=timeout_s)
 

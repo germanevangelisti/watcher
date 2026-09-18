@@ -9,7 +9,6 @@ Tests validate:
 
 from __future__ import annotations
 
-
 from app.middleware.security import SECURITY_HEADERS, SecurityHeadersMiddleware
 
 

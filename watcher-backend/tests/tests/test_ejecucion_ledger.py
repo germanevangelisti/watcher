@@ -10,11 +10,10 @@ Run from watcher-backend/:
 
 import pytest
 import pytest_asyncio
-from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-
 from app.db.models import Analisis, Base, Boletin, EjecucionPresupuestaria, PresupuestoBase
 from app.services.ejecucion_ledger import upsert_boletin_ejecucion
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 # Same pliego re-published on consecutive days — the S-511 pattern that was 44%
 # of the raw total in the 2026-09-13 cut.

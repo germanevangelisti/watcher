@@ -40,7 +40,7 @@ class SearchResultProtocol(Protocol):
 
 class BaseReranker(ABC):
     """Base class for re-ranking strategies."""
-    
+
     @abstractmethod
     def rerank(
         self,
@@ -50,12 +50,12 @@ class BaseReranker(ABC):
     ) -> list[SearchResultProtocol]:
         """
         Re-rank search results based on query relevance.
-        
+
         Args:
             query: Original search query
             results: List of search results to re-rank
             top_k: Number of top results to return
-        
+
         Returns:
             Re-ranked list of results (top_k items)
         """
@@ -63,7 +63,7 @@ class BaseReranker(ABC):
 
 class NoopReranker(BaseReranker):
     """No-op reranker - returns results unchanged."""
-    
+
     def rerank(
         self,
         query: str,
@@ -77,28 +77,28 @@ class NoopReranker(BaseReranker):
 class GoogleReranker(BaseReranker):
     """
     Google-based re-ranker using Gemini for relevance scoring.
-    
+
     Uses Google Gemini to score each result's relevance to the query.
     """
-    
+
     def __init__(self, api_key: str | None = None, model: str = "gemini-2.0-flash"):
         """
         Initialize Google re-ranker.
-        
+
         Args:
             api_key: Google API key (defaults to GOOGLE_API_KEY env var)
             model: Gemini model to use for scoring
         """
         if not GOOGLE_AI_AVAILABLE:
             raise ImportError("Google Generative AI not available. Install: pip install google-generativeai")
-        
+
         self.api_key = api_key or os.getenv("GOOGLE_API_KEY")
         if not self.api_key:
             raise ValueError("Google API key required for GoogleReranker")
-        
+
         # genai.configure() is called once at app startup in main.py
         self.model_name = model
-    
+
     def rerank(
         self,
         query: str,
@@ -107,15 +107,15 @@ class GoogleReranker(BaseReranker):
     ) -> list[SearchResultProtocol]:
         """
         Re-rank results using Google Gemini relevance scoring.
-        
+
         For each result, asks Gemini to score relevance on 0-10 scale.
         """
         if not results:
             return []
-        
+
         try:
             model = genai.GenerativeModel(self.model_name)
-            
+
             # Score each result
             scored_results = []
             for result in results:
@@ -128,30 +128,30 @@ Query: {query}
 Text: {result.text[:500]}...
 
 Relevance score (0-10):"""
-                
+
                 try:
                     response = model.generate_content(prompt)
                     score_text = response.text.strip()
-                    
+
                     # Try to parse score
                     relevance_score = float(score_text)
                     relevance_score = max(0.0, min(10.0, relevance_score))  # Clamp to [0, 10]
-                    
+
                     # Normalize to [0, 1]
                     result.score = relevance_score / 10.0
                     scored_results.append(result)
-                
+
                 except Exception as e:
                     logger.warning(f"Error scoring result {result.chunk_id}: {e}")
                     # Keep original score on error
                     scored_results.append(result)
-            
+
             # Sort by new relevance score (descending)
             scored_results.sort(key=lambda x: -x.score)
-            
+
             logger.info(f"Google re-ranked {len(results)} results -> returning top {top_k}")
             return scored_results[:top_k]
-        
+
         except Exception as e:
             logger.error(f"Error in Google re-ranking: {e}", exc_info=True)
             # Fallback: return original results
@@ -174,7 +174,7 @@ class CrossEncoderReranker(BaseReranker):
         self.model_name = model_name or local_rerank_model()
         self.model = CrossEncoder(self.model_name)
         logger.info("Loaded cross-encoder model: %s", self.model_name)
-    
+
     def rerank(
         self,
         query: str,
@@ -183,29 +183,29 @@ class CrossEncoderReranker(BaseReranker):
     ) -> list[SearchResultProtocol]:
         """
         Re-rank results using cross-encoder model.
-        
+
         Cross-encoders jointly encode query and document for better relevance.
         """
         if not results:
             return []
-        
+
         try:
             # Create query-document pairs
             pairs = [(query, result.text) for result in results]
-            
+
             # Predict relevance scores
             scores = self.model.predict(pairs)
-            
+
             # Update result scores
             for i, result in enumerate(results):
                 result.score = float(scores[i])
-            
+
             # Sort by score (descending)
             results.sort(key=lambda x: -x.score)
-            
+
             logger.info(f"Cross-encoder re-ranked {len(results)} results -> returning top {top_k}")
             return results[:top_k]
-        
+
         except Exception as e:
             logger.error(f"Error in cross-encoder re-ranking: {e}", exc_info=True)
             return results[:top_k]
@@ -214,7 +214,7 @@ class CrossEncoderReranker(BaseReranker):
 class RerankerService:
     """
     Service for re-ranking search results.
-    
+
     Automatically selects best available strategy:
     1. Local profile: cross-encoder, then Google, then noop
     2. Cloud profile: Google, then cross-encoder, then noop
@@ -279,7 +279,7 @@ class RerankerService:
             return CrossEncoderReranker()
         logger.info("No reranker available, using noop")
         return NoopReranker()
-    
+
     def rerank(
         self,
         query: str,
@@ -288,12 +288,12 @@ class RerankerService:
     ) -> list[SearchResultProtocol]:
         """
         Re-rank search results.
-        
+
         Args:
             query: Original search query
             results: List of search results to re-rank
             top_k: Number of top results to return (default 5)
-        
+
         Returns:
             Re-ranked list of top_k results
         """
@@ -303,10 +303,10 @@ class RerankerService:
 def get_reranker_service(strategy: str | None = None) -> RerankerService:
     """
     Get a reranker service instance.
-    
+
     Args:
         strategy: Reranker strategy ("google", "cross-encoder", "noop", or None for auto)
-    
+
     Returns:
         RerankerService instance
     """

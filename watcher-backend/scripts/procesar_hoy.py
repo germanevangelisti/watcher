@@ -14,22 +14,22 @@ Uso:
     python3 scripts/procesar_hoy.py --jurisdiccion 1        # Córdoba Provincial (default)
 """
 
-import asyncio
 import argparse
+import asyncio
 import logging
-import uuid
 import sys
+import uuid
 from datetime import date
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from sqlalchemy import select
+from app.core.config import settings
 from app.db.database import AsyncSessionLocal
 from app.db.models import Boletin, FuenteDato
+from app.db.neo4j_client import close_neo4j, init_neo4j
 from app.services.url_fetcher import build_url_cordoba_provincial, build_url_from_template
-from app.db.neo4j_client import init_neo4j, close_neo4j
-from app.core.config import settings
+from sqlalchemy import select
 
 logging.basicConfig(
     level=logging.INFO,

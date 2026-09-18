@@ -1,18 +1,16 @@
 """
 API endpoints para historial de workflows
 """
-from fastapi import APIRouter, Depends, HTTPException, Query
-from fastapi.responses import StreamingResponse
-from sqlalchemy.orm import Session
-from typing import List, Optional
-from datetime import datetime, timedelta
 import csv
 import io
+from datetime import datetime, timedelta
 
 from app.db.sync_session import get_sync_db
-from app.db.workflow_crud import workflow_crud, task_crud, log_crud
+from app.db.workflow_crud import log_crud, task_crud, workflow_crud
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-
+from sqlalchemy.orm import Session
 
 router = APIRouter()
 
@@ -23,16 +21,16 @@ class WorkflowHistoryResponse(BaseModel):
     workflow_name: str
     workflow_type: str
     status: str
-    parameters: Optional[dict]
-    results: Optional[dict]
+    parameters: dict | None
+    results: dict | None
     total_tasks: int
     completed_tasks: int
     failed_tasks: int
     progress_percentage: float
     created_at: datetime
-    started_at: Optional[datetime]
-    completed_at: Optional[datetime]
-    
+    started_at: datetime | None
+    completed_at: datetime | None
+
     class Config:
         from_attributes = True
 
@@ -42,21 +40,21 @@ class WorkflowDetailResponse(BaseModel):
     workflow_name: str
     workflow_type: str
     status: str
-    parameters: Optional[dict]
-    config: Optional[dict]
-    results: Optional[dict]
-    error_message: Optional[str]
+    parameters: dict | None
+    config: dict | None
+    results: dict | None
+    error_message: str | None
     total_tasks: int
     completed_tasks: int
     failed_tasks: int
     progress_percentage: float
     created_at: datetime
-    started_at: Optional[datetime]
-    completed_at: Optional[datetime]
+    started_at: datetime | None
+    completed_at: datetime | None
     updated_at: datetime
-    tasks: List[dict]
-    logs: List[dict]
-    
+    tasks: list[dict]
+    logs: list[dict]
+
     class Config:
         from_attributes = True
 
@@ -67,14 +65,14 @@ class WorkflowStatsResponse(BaseModel):
     completed_workflows: int
     failed_workflows: int
     total_tasks: int
-    average_completion_time: Optional[float]
+    average_completion_time: float | None
 
 
 # Endpoints
-@router.get("/history", response_model=List[WorkflowHistoryResponse])
+@router.get("/history", response_model=list[WorkflowHistoryResponse])
 def get_workflow_history(
-    status: Optional[str] = Query(None, description="Filtrar por estado"),
-    workflow_type: Optional[str] = Query(None, description="Filtrar por tipo"),
+    status: str | None = Query(None, description="Filtrar por estado"),
+    workflow_type: str | None = Query(None, description="Filtrar por tipo"),
     limit: int = Query(50, ge=1, le=500),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_sync_db)
@@ -99,7 +97,7 @@ def get_workflow_detail(
     workflow = workflow_crud.get_workflow(db, workflow_id)
     if not workflow:
         raise HTTPException(status_code=404, detail="Workflow no encontrado")
-    
+
     # Obtener tareas
     tasks = task_crud.get_workflow_tasks(db, workflow_id)
     task_list = [
@@ -116,7 +114,7 @@ def get_workflow_detail(
         }
         for t in tasks
     ]
-    
+
     # Obtener logs
     logs = log_crud.get_workflow_logs(db, workflow_id)
     log_list = [
@@ -129,7 +127,7 @@ def get_workflow_detail(
         }
         for log_entry in logs
     ]
-    
+
     # Construir respuesta
     return WorkflowDetailResponse(
         id=workflow.id,
@@ -160,36 +158,36 @@ def get_workflow_stats(
 ):
     """Obtiene estadísticas de workflows"""
     cutoff_date = datetime.utcnow() - timedelta(days=days)
-    
+
+    from app.db.models import AgentTask, AgentWorkflow
     from sqlalchemy import func
-    from app.db.models import AgentWorkflow, AgentTask
-    
+
     # Total workflows
     total = db.query(func.count(AgentWorkflow.id)).filter(
         AgentWorkflow.created_at >= cutoff_date
     ).scalar()
-    
+
     # Por estado
     active = db.query(func.count(AgentWorkflow.id)).filter(
         AgentWorkflow.created_at >= cutoff_date,
         AgentWorkflow.status.in_(['pending', 'in_progress', 'waiting_approval'])
     ).scalar()
-    
+
     completed = db.query(func.count(AgentWorkflow.id)).filter(
         AgentWorkflow.created_at >= cutoff_date,
         AgentWorkflow.status == 'completed'
     ).scalar()
-    
+
     failed = db.query(func.count(AgentWorkflow.id)).filter(
         AgentWorkflow.created_at >= cutoff_date,
         AgentWorkflow.status == 'failed'
     ).scalar()
-    
+
     # Total tareas
     total_tasks = db.query(func.count(AgentTask.id)).filter(
         AgentTask.created_at >= cutoff_date
     ).scalar()
-    
+
     # Tiempo promedio de completitud
     completed_workflows = db.query(
         AgentWorkflow.created_at,
@@ -199,7 +197,7 @@ def get_workflow_stats(
         AgentWorkflow.status == 'completed',
         AgentWorkflow.completed_at.isnot(None)
     ).all()
-    
+
     avg_time = None
     if completed_workflows:
         times = [
@@ -207,7 +205,7 @@ def get_workflow_stats(
             for w in completed_workflows
         ]
         avg_time = sum(times) / len(times) if times else None
-    
+
     return WorkflowStatsResponse(
         total_workflows=total or 0,
         active_workflows=active or 0,
@@ -228,19 +226,19 @@ def export_workflow_results(
     workflow = workflow_crud.get_workflow(db, workflow_id)
     if not workflow:
         raise HTTPException(status_code=404, detail="Workflow no encontrado")
-    
+
     if format == "csv":
         # Exportar como CSV
         output = io.StringIO()
         writer = csv.writer(output)
-        
+
         # Headers
         writer.writerow([
             "Workflow ID", "Workflow Name", "Type", "Status",
             "Total Tasks", "Completed", "Failed",
             "Created At", "Completed At"
         ])
-        
+
         # Data
         writer.writerow([
             workflow.id,
@@ -253,11 +251,11 @@ def export_workflow_results(
             workflow.created_at.isoformat() if workflow.created_at else "",
             workflow.completed_at.isoformat() if workflow.completed_at else ""
         ])
-        
+
         # Tasks
         writer.writerow([])
         writer.writerow(["Task ID", "Type", "Agent", "Status", "Created At"])
-        
+
         tasks = task_crud.get_workflow_tasks(db, workflow_id)
         for task in tasks:
             writer.writerow([
@@ -267,7 +265,7 @@ def export_workflow_results(
                 task.status,
                 task.created_at.isoformat() if task.created_at else ""
             ])
-        
+
         output.seek(0)
         return StreamingResponse(
             iter([output.getvalue()]),
@@ -276,11 +274,11 @@ def export_workflow_results(
                 "Content-Disposition": f"attachment; filename=workflow_{workflow_id}.csv"
             }
         )
-    
+
     else:  # JSON
         tasks = task_crud.get_workflow_tasks(db, workflow_id)
         logs = log_crud.get_workflow_logs(db, workflow_id)
-        
+
         return {
             "workflow": {
                 "id": workflow.id,
@@ -321,7 +319,7 @@ def delete_workflow(
     success = workflow_crud.delete_workflow(db, workflow_id)
     if not success:
         raise HTTPException(status_code=404, detail="Workflow no encontrado")
-    
+
     return {"message": "Workflow eliminado exitosamente"}
 
 

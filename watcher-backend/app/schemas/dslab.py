@@ -1,10 +1,10 @@
 """
 Schemas Pydantic para el DS Lab - Análisis Persistente
 """
-from datetime import datetime, date
-from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, Field, ConfigDict
+from datetime import date, datetime
+from typing import Any
 
+from pydantic import BaseModel, ConfigDict, Field
 
 # =============================================================================
 # DOCUMENTOS
@@ -18,15 +18,15 @@ class BoletinDocumentCreate(BaseModel):
     day: int
     section: int
     file_path: str
-    file_size_bytes: Optional[int] = None
-    num_pages: Optional[int] = None
+    file_size_bytes: int | None = None
+    num_pages: int | None = None
 
 
 class BoletinDocumentUpdate(BaseModel):
     """Schema para actualizar un documento"""
-    analysis_status: Optional[str] = None
-    last_analyzed: Optional[datetime] = None
-    num_pages: Optional[int] = None
+    analysis_status: str | None = None
+    last_analyzed: datetime | None = None
+    num_pages: int | None = None
 
 
 class BoletinDocumentResponse(BaseModel):
@@ -38,14 +38,14 @@ class BoletinDocumentResponse(BaseModel):
     day: int
     section: int
     file_path: str
-    file_size_bytes: Optional[int]
+    file_size_bytes: int | None
     download_date: datetime
-    last_analyzed: Optional[datetime]
+    last_analyzed: datetime | None
     analysis_status: str
-    num_pages: Optional[int]
+    num_pages: int | None
     created_at: datetime
     updated_at: datetime
-    
+
     class Config:
         from_attributes = True
 
@@ -53,10 +53,10 @@ class BoletinDocumentResponse(BaseModel):
 class DocumentStats(BaseModel):
     """Estadísticas de documentos"""
     total_documents: int
-    by_status: Dict[str, int]
-    by_month: Dict[str, int]
+    by_status: dict[str, int]
+    by_month: dict[str, int]
     total_size_mb: float
-    avg_pages: Optional[float]
+    avg_pages: float | None
 
 
 # =============================================================================
@@ -66,35 +66,35 @@ class DocumentStats(BaseModel):
 class AnalysisConfigCreate(BaseModel):
     """Schema para crear configuración"""
     model_config = ConfigDict(protected_namespaces=())
-    
+
     config_name: str = Field(..., max_length=100)
     version: str = Field(..., max_length=50)
-    description: Optional[str] = None
-    parameters: Dict[str, Any]
-    model_version: Optional[str] = None
-    model_weights_path: Optional[str] = None
-    created_by: Optional[str] = None
+    description: str | None = None
+    parameters: dict[str, Any]
+    model_version: str | None = None
+    model_weights_path: str | None = None
+    created_by: str | None = None
 
 
 class AnalysisConfigUpdate(BaseModel):
     """Schema para actualizar configuración"""
-    description: Optional[str] = None
-    parameters: Optional[Dict[str, Any]] = None
-    is_active: Optional[bool] = None
+    description: str | None = None
+    parameters: dict[str, Any] | None = None
+    is_active: bool | None = None
 
 
 class AnalysisConfigResponse(BaseModel):
     """Schema de respuesta para configuración"""
     model_config = ConfigDict(protected_namespaces=(), from_attributes=True)
-    
+
     id: int
     config_name: str
     version: str
-    description: Optional[str]
-    parameters: Dict[str, Any]
-    model_version: Optional[str]
-    model_weights_path: Optional[str]
-    created_by: Optional[str]
+    description: str | None
+    parameters: dict[str, Any]
+    model_version: str | None
+    model_weights_path: str | None
+    created_by: str | None
     created_at: datetime
     is_active: bool
 
@@ -105,38 +105,38 @@ class AnalysisConfigResponse(BaseModel):
 
 class AnalysisExecutionCreate(BaseModel):
     """Schema para iniciar ejecución"""
-    execution_name: Optional[str] = None
+    execution_name: str | None = None
     config_id: int
     start_date: date
     end_date: date
-    sections: Optional[List[int]] = [1, 2, 3, 4, 5]
+    sections: list[int] | None = [1, 2, 3, 4, 5]
 
 
 class AnalysisExecutionUpdate(BaseModel):
     """Schema para actualizar ejecución"""
-    status: Optional[str] = None
-    processed_documents: Optional[int] = None
-    failed_documents: Optional[int] = None
-    completed_at: Optional[datetime] = None
-    error_message: Optional[str] = None
+    status: str | None = None
+    processed_documents: int | None = None
+    failed_documents: int | None = None
+    completed_at: datetime | None = None
+    error_message: str | None = None
 
 
 class AnalysisExecutionResponse(BaseModel):
     """Schema de respuesta para ejecución"""
     id: int
-    execution_name: Optional[str]
+    execution_name: str | None
     config_id: int
     status: str
-    start_date: Optional[date]
-    end_date: Optional[date]
+    start_date: date | None
+    end_date: date | None
     total_documents: int
     processed_documents: int
     failed_documents: int
     started_at: datetime
-    completed_at: Optional[datetime]
-    error_message: Optional[str]
-    execution_metadata: Optional[Dict[str, Any]]
-    
+    completed_at: datetime | None
+    error_message: str | None
+    execution_metadata: dict[str, Any] | None
+
     class Config:
         from_attributes = True
 
@@ -149,30 +149,30 @@ class ExecutionProgress(BaseModel):
     processed_documents: int
     failed_documents: int
     progress_percentage: float
-    estimated_time_remaining_seconds: Optional[int]
-    current_document: Optional[str]
+    estimated_time_remaining_seconds: int | None
+    current_document: str | None
 
 
 class ExecutionSummary(BaseModel):
     """Resumen de resultados de una ejecución"""
     execution_id: int
-    execution_name: Optional[str]
+    execution_name: str | None
     config_name: str
     config_version: str
     status: str
     total_documents: int
     processed_documents: int
     failed_documents: int
-    
+
     # Métricas agregadas
-    avg_transparency_score: Optional[float]
-    risk_distribution: Dict[str, int]  # {high: 10, medium: 20, low: 30}
+    avg_transparency_score: float | None
+    risk_distribution: dict[str, int]  # {high: 10, medium: 20, low: 30}
     total_red_flags: int
-    red_flags_by_severity: Dict[str, int]
-    
+    red_flags_by_severity: dict[str, int]
+
     started_at: datetime
-    completed_at: Optional[datetime]
-    duration_seconds: Optional[float]
+    completed_at: datetime | None
+    duration_seconds: float | None
 
 
 # =============================================================================
@@ -184,15 +184,15 @@ class AnalysisResultCreate(BaseModel):
     document_id: int
     execution_id: int
     config_id: int
-    transparency_score: Optional[float] = None
-    risk_level: Optional[str] = None
-    anomaly_score: Optional[float] = None
-    extracted_entities: Optional[Dict[str, Any]] = None
-    red_flags: Optional[List[Dict[str, Any]]] = None
+    transparency_score: float | None = None
+    risk_level: str | None = None
+    anomaly_score: float | None = None
+    extracted_entities: dict[str, Any] | None = None
+    red_flags: list[dict[str, Any]] | None = None
     num_red_flags: int = 0
-    ml_predictions: Optional[Dict[str, Any]] = None
-    extracted_text_sample: Optional[str] = None
-    processing_time_seconds: Optional[float] = None
+    ml_predictions: dict[str, Any] | None = None
+    extracted_text_sample: str | None = None
+    processing_time_seconds: float | None = None
 
 
 class AnalysisResultResponse(BaseModel):
@@ -201,17 +201,17 @@ class AnalysisResultResponse(BaseModel):
     document_id: int
     execution_id: int
     config_id: int
-    transparency_score: Optional[float]
-    risk_level: Optional[str]
-    anomaly_score: Optional[float]
-    extracted_entities: Optional[Dict[str, Any]]
-    red_flags: Optional[List[Dict[str, Any]]]
+    transparency_score: float | None
+    risk_level: str | None
+    anomaly_score: float | None
+    extracted_entities: dict[str, Any] | None
+    red_flags: list[dict[str, Any]] | None
     num_red_flags: int
-    ml_predictions: Optional[Dict[str, Any]]
-    extracted_text_sample: Optional[str]
-    processing_time_seconds: Optional[float]
+    ml_predictions: dict[str, Any] | None
+    extracted_text_sample: str | None
+    processing_time_seconds: float | None
     analyzed_at: datetime
-    
+
     class Config:
         from_attributes = True
 
@@ -228,33 +228,33 @@ class ResultWithDocument(BaseModel):
 
 class RedFlagCreate(BaseModel):
     """Schema para crear red flag"""
-    result_id: Optional[int] = None
+    result_id: int | None = None
     document_id: int
     flag_type: str = Field(..., max_length=100)
     severity: str = Field(..., max_length=20)
-    category: Optional[str] = None
+    category: str | None = None
     title: str = Field(..., max_length=255)
-    description: Optional[str] = None
-    evidence: Optional[Dict[str, Any]] = None
-    confidence_score: Optional[float] = None
-    page_number: Optional[int] = None
+    description: str | None = None
+    evidence: dict[str, Any] | None = None
+    confidence_score: float | None = None
+    page_number: int | None = None
 
 
 class RedFlagResponse(BaseModel):
     """Schema de respuesta para red flag"""
     id: int
-    result_id: Optional[int]
+    result_id: int | None
     document_id: int
     flag_type: str
     severity: str
-    category: Optional[str]
+    category: str | None
     title: str
-    description: Optional[str]
-    evidence: Optional[Dict[str, Any]]
-    confidence_score: Optional[float]
-    page_number: Optional[int]
+    description: str | None
+    evidence: dict[str, Any] | None
+    confidence_score: float | None
+    page_number: int | None
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
 
@@ -262,10 +262,10 @@ class RedFlagResponse(BaseModel):
 class RedFlagStats(BaseModel):
     """Estadísticas de red flags"""
     total_flags: int
-    by_severity: Dict[str, int]
-    by_type: Dict[str, int]
-    by_category: Dict[str, int]
-    top_documents: List[Dict[str, Any]]  # Documentos con más flags
+    by_severity: dict[str, int]
+    by_type: dict[str, int]
+    by_category: dict[str, int]
+    top_documents: list[dict[str, Any]]  # Documentos con más flags
 
 
 # =============================================================================
@@ -277,7 +277,7 @@ class AnalysisComparisonCreate(BaseModel):
     name: str = Field(..., max_length=200)
     execution_a_id: int
     execution_b_id: int
-    notes: Optional[str] = None
+    notes: str | None = None
 
 
 class AnalysisComparisonResponse(BaseModel):
@@ -286,10 +286,10 @@ class AnalysisComparisonResponse(BaseModel):
     name: str
     execution_a_id: int
     execution_b_id: int
-    comparison_metrics: Optional[Dict[str, Any]]
-    notes: Optional[str]
+    comparison_metrics: dict[str, Any] | None
+    notes: str | None
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
 
@@ -299,7 +299,7 @@ class ComparisonDetail(BaseModel):
     comparison: AnalysisComparisonResponse
     execution_a: AnalysisExecutionResponse
     execution_b: AnalysisExecutionResponse
-    
+
     # Métricas calculadas
     score_diff_avg: float
     score_diff_median: float
@@ -308,7 +308,7 @@ class ComparisonDetail(BaseModel):
     documents_changed_risk: int
     documents_improved: int  # Score mejoró
     documents_worsened: int  # Score empeoró
-    
+
     # Distribuciones
-    risk_changes: Dict[str, Dict[str, int]]  # {high: {to_medium: 5, to_low: 2}, ...}
+    risk_changes: dict[str, dict[str, int]]  # {high: {to_medium: 5, to_low: 2}, ...}
 

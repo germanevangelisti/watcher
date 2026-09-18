@@ -1,35 +1,39 @@
 """
 🧪 DS Lab - Endpoints para resultados y comparaciones
 """
-from fastapi import APIRouter, HTTPException, Depends, Query
-from sqlalchemy.orm import Session
-from sqlalchemy import desc, func
-from typing import List, Optional, Dict, Any
+from typing import Any
 
-from app.db.sync_session import get_sync_db
 from app.db.models import (
-    AnalysisResult, AnalysisExecution, AnalysisConfig,
-    BoletinDocument, RedFlag, AnalysisComparison
+    AnalysisComparison,
+    AnalysisConfig,
+    AnalysisExecution,
+    AnalysisResult,
+    BoletinDocument,
+    RedFlag,
 )
+from app.db.sync_session import get_sync_db
 from app.schemas.dslab import (
+    AnalysisComparisonCreate,
+    AnalysisComparisonResponse,
     AnalysisResultResponse,
     RedFlagResponse,
     RedFlagStats,
-    AnalysisComparisonCreate,
-    AnalysisComparisonResponse
 )
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import desc, func
+from sqlalchemy.orm import Session
 
 router = APIRouter()
 
 
 @router.get("/analysis/results")
 async def list_results(
-    execution_id: Optional[int] = None,
-    document_id: Optional[int] = None,
-    risk_level: Optional[str] = None,
-    min_score: Optional[float] = None,
-    max_score: Optional[float] = None,
-    min_red_flags: Optional[int] = None,
+    execution_id: int | None = None,
+    document_id: int | None = None,
+    risk_level: str | None = None,
+    min_score: float | None = None,
+    max_score: float | None = None,
+    min_red_flags: int | None = None,
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=500),
     db: Session = Depends(get_sync_db)
@@ -38,32 +42,32 @@ async def list_results(
     Listar resultados con filtros avanzados
     """
     query = db.query(AnalysisResult)
-    
+
     if execution_id:
         query = query.filter(AnalysisResult.execution_id == execution_id)
-    
+
     if document_id:
         query = query.filter(AnalysisResult.document_id == document_id)
-    
+
     if risk_level:
         query = query.filter(AnalysisResult.risk_level == risk_level)
-    
+
     if min_score is not None:
         query = query.filter(AnalysisResult.transparency_score >= min_score)
-    
+
     if max_score is not None:
         query = query.filter(AnalysisResult.transparency_score <= max_score)
-    
+
     if min_red_flags is not None:
         query = query.filter(AnalysisResult.num_red_flags >= min_red_flags)
-    
+
     total = query.count()
-    
+
     results = query.order_by(
         desc(AnalysisResult.num_red_flags),
         AnalysisResult.transparency_score
     ).offset(skip).limit(limit).all()
-    
+
     return {
         "total": total,
         "skip": skip,
@@ -83,10 +87,10 @@ async def get_result(
     result = db.query(AnalysisResult).filter(
         AnalysisResult.id == result_id
     ).first()
-    
+
     if not result:
         raise HTTPException(status_code=404, detail="Resultado no encontrado")
-    
+
     return result
 
 
@@ -101,27 +105,27 @@ async def get_result_with_context(
     result = db.query(AnalysisResult).filter(
         AnalysisResult.id == result_id
     ).first()
-    
+
     if not result:
         raise HTTPException(status_code=404, detail="Resultado no encontrado")
-    
+
     document = db.query(BoletinDocument).filter(
         BoletinDocument.id == result.document_id
     ).first()
-    
+
     execution = db.query(AnalysisExecution).filter(
         AnalysisExecution.id == result.execution_id
     ).first()
-    
+
     config = db.query(AnalysisConfig).filter(
         AnalysisConfig.id == result.config_id
     ).first()
-    
+
     # Red flags del resultado
     red_flags = db.query(RedFlag).filter(
         RedFlag.result_id == result_id
     ).order_by(desc(RedFlag.severity)).all()
-    
+
     return {
         "result": result,
         "document": document,
@@ -139,13 +143,13 @@ async def get_result_with_context(
     }
 
 
-@router.get("/red-flags", response_model=List[RedFlagResponse])
+@router.get("/red-flags", response_model=list[RedFlagResponse])
 async def list_red_flags(
-    document_id: Optional[int] = None,
-    execution_id: Optional[int] = None,
-    severity: Optional[str] = None,
-    flag_type: Optional[str] = None,
-    category: Optional[str] = None,
+    document_id: int | None = None,
+    execution_id: int | None = None,
+    severity: str | None = None,
+    flag_type: str | None = None,
+    category: str | None = None,
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=500),
     db: Session = Depends(get_sync_db)
@@ -154,10 +158,10 @@ async def list_red_flags(
     Listar red flags con filtros
     """
     query = db.query(RedFlag)
-    
+
     if document_id:
         query = query.filter(RedFlag.document_id == document_id)
-    
+
     if execution_id:
         query = query.join(
             AnalysisResult,
@@ -165,34 +169,34 @@ async def list_red_flags(
         ).filter(
             AnalysisResult.execution_id == execution_id
         )
-    
+
     if severity:
         query = query.filter(RedFlag.severity == severity)
-    
+
     if flag_type:
         query = query.filter(RedFlag.flag_type == flag_type)
-    
+
     if category:
         query = query.filter(RedFlag.category == category)
-    
+
     flags = query.order_by(
         desc(RedFlag.severity),
         desc(RedFlag.created_at)
     ).offset(skip).limit(limit).all()
-    
+
     return flags
 
 
 @router.get("/red-flags/stats", response_model=RedFlagStats)
 async def get_red_flags_stats(
-    execution_id: Optional[int] = None,
+    execution_id: int | None = None,
     db: Session = Depends(get_sync_db)
 ):
     """
     Estadísticas de red flags
     """
     query = db.query(RedFlag)
-    
+
     if execution_id:
         query = query.join(
             AnalysisResult,
@@ -200,39 +204,39 @@ async def get_red_flags_stats(
         ).filter(
             AnalysisResult.execution_id == execution_id
         )
-    
+
     total_flags = query.count()
-    
+
     # Por severidad
     severity_stats = query.with_entities(
         RedFlag.severity,
         func.count(RedFlag.id)
     ).group_by(RedFlag.severity).all()
-    
+
     by_severity = {sev: count for sev, count in severity_stats if sev}
-    
+
     # Por tipo
     type_stats = query.with_entities(
         RedFlag.flag_type,
         func.count(RedFlag.id)
     ).group_by(RedFlag.flag_type).all()
-    
+
     by_type = {ftype: count for ftype, count in type_stats if ftype}
-    
+
     # Por categoría
     category_stats = query.with_entities(
         RedFlag.category,
         func.count(RedFlag.id)
     ).group_by(RedFlag.category).all()
-    
+
     by_category = {cat: count for cat, count in category_stats if cat}
-    
+
     # Top documentos con más flags
     top_docs_query = db.query(
         RedFlag.document_id,
         func.count(RedFlag.id).label('flag_count')
     )
-    
+
     if execution_id:
         top_docs_query = top_docs_query.join(
             AnalysisResult,
@@ -240,13 +244,13 @@ async def get_red_flags_stats(
         ).filter(
             AnalysisResult.execution_id == execution_id
         )
-    
+
     top_docs = top_docs_query.group_by(
         RedFlag.document_id
     ).order_by(
         desc('flag_count')
     ).limit(10).all()
-    
+
     top_documents = []
     for doc_id, count in top_docs:
         doc = db.query(BoletinDocument).filter(
@@ -258,7 +262,7 @@ async def get_red_flags_stats(
                 "filename": doc.filename,
                 "flag_count": count
             })
-    
+
     return RedFlagStats(
         total_flags=total_flags,
         by_severity=by_severity,
@@ -280,20 +284,20 @@ async def create_comparison(
     exec_a = db.query(AnalysisExecution).filter(
         AnalysisExecution.id == comparison.execution_a_id
     ).first()
-    
+
     exec_b = db.query(AnalysisExecution).filter(
         AnalysisExecution.id == comparison.execution_b_id
     ).first()
-    
+
     if not exec_a or not exec_b:
         raise HTTPException(status_code=404, detail="Una o ambas ejecuciones no encontradas")
-    
+
     if exec_a.status != 'completed' or exec_b.status != 'completed':
         raise HTTPException(status_code=400, detail="Ambas ejecuciones deben estar completadas")
-    
+
     # Calcular métricas de comparación
     metrics = calculate_comparison_metrics(db, comparison.execution_a_id, comparison.execution_b_id)
-    
+
     # Crear comparación
     db_comparison = AnalysisComparison(
         name=comparison.name,
@@ -302,15 +306,15 @@ async def create_comparison(
         comparison_metrics=metrics,
         notes=comparison.notes
     )
-    
+
     db.add(db_comparison)
     db.commit()
     db.refresh(db_comparison)
-    
+
     return db_comparison
 
 
-@router.get("/analysis/comparisons", response_model=List[AnalysisComparisonResponse])
+@router.get("/analysis/comparisons", response_model=list[AnalysisComparisonResponse])
 async def list_comparisons(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
@@ -322,7 +326,7 @@ async def list_comparisons(
     comparisons = db.query(AnalysisComparison).order_by(
         desc(AnalysisComparison.created_at)
     ).offset(skip).limit(limit).all()
-    
+
     return comparisons
 
 
@@ -337,21 +341,21 @@ async def get_comparison_detail(
     comparison = db.query(AnalysisComparison).filter(
         AnalysisComparison.id == comparison_id
     ).first()
-    
+
     if not comparison:
         raise HTTPException(status_code=404, detail="Comparación no encontrada")
-    
+
     exec_a = db.query(AnalysisExecution).filter(
         AnalysisExecution.id == comparison.execution_a_id
     ).first()
-    
+
     exec_b = db.query(AnalysisExecution).filter(
         AnalysisExecution.id == comparison.execution_b_id
     ).first()
-    
+
     # Obtener métricas detalladas
     detailed_metrics = get_detailed_comparison(db, comparison.execution_a_id, comparison.execution_b_id)
-    
+
     return {
         "comparison": comparison,
         "execution_a": exec_a,
@@ -371,17 +375,17 @@ async def delete_comparison(
     comparison = db.query(AnalysisComparison).filter(
         AnalysisComparison.id == comparison_id
     ).first()
-    
+
     if not comparison:
         raise HTTPException(status_code=404, detail="Comparación no encontrada")
-    
+
     db.delete(comparison)
     db.commit()
-    
+
     return {"message": "Comparación eliminada", "comparison_id": comparison_id}
 
 
-def calculate_comparison_metrics(db: Session, exec_a_id: int, exec_b_id: int) -> Dict[str, Any]:
+def calculate_comparison_metrics(db: Session, exec_a_id: int, exec_b_id: int) -> dict[str, Any]:
     """
     Calcular métricas de comparación entre dos ejecuciones
     """
@@ -389,18 +393,18 @@ def calculate_comparison_metrics(db: Session, exec_a_id: int, exec_b_id: int) ->
     results_a = db.query(AnalysisResult).filter(
         AnalysisResult.execution_id == exec_a_id
     ).all()
-    
+
     results_b = db.query(AnalysisResult).filter(
         AnalysisResult.execution_id == exec_b_id
     ).all()
-    
+
     # Crear mapas doc_id -> resultado
     map_a = {r.document_id: r for r in results_a}
     map_b = {r.document_id: r for r in results_b}
-    
+
     # Documentos comunes
     common_docs = set(map_a.keys()) & set(map_b.keys())
-    
+
     if not common_docs:
         return {
             "common_documents": 0,
@@ -409,34 +413,34 @@ def calculate_comparison_metrics(db: Session, exec_a_id: int, exec_b_id: int) ->
             "resolved_flags": 0,
             "documents_changed_risk": 0
         }
-    
+
     # Diferencias de score
     score_diffs = []
     risk_changes = 0
-    
+
     for doc_id in common_docs:
         ra = map_a[doc_id]
         rb = map_b[doc_id]
-        
+
         if ra.transparency_score and rb.transparency_score:
             score_diffs.append(rb.transparency_score - ra.transparency_score)
-        
+
         if ra.risk_level != rb.risk_level:
             risk_changes += 1
-    
+
     avg_score_diff = sum(score_diffs) / len(score_diffs) if score_diffs else 0
-    
+
     # Red flags nuevas vs resueltas
     flags_a = db.query(func.sum(AnalysisResult.num_red_flags)).filter(
         AnalysisResult.execution_id == exec_a_id
     ).scalar() or 0
-    
+
     flags_b = db.query(func.sum(AnalysisResult.num_red_flags)).filter(
         AnalysisResult.execution_id == exec_b_id
     ).scalar() or 0
-    
+
     flag_diff = int(flags_b - flags_a)
-    
+
     return {
         "common_documents": len(common_docs),
         "score_diff_avg": round(avg_score_diff, 2),
@@ -446,7 +450,7 @@ def calculate_comparison_metrics(db: Session, exec_a_id: int, exec_b_id: int) ->
     }
 
 
-def get_detailed_comparison(db: Session, exec_a_id: int, exec_b_id: int) -> Dict[str, Any]:
+def get_detailed_comparison(db: Session, exec_a_id: int, exec_b_id: int) -> dict[str, Any]:
     """
     Obtener comparación detallada con distribuciones
     """
@@ -454,43 +458,43 @@ def get_detailed_comparison(db: Session, exec_a_id: int, exec_b_id: int) -> Dict
     results_a = db.query(AnalysisResult).filter(
         AnalysisResult.execution_id == exec_a_id
     ).all()
-    
+
     results_b = db.query(AnalysisResult).filter(
         AnalysisResult.execution_id == exec_b_id
     ).all()
-    
+
     map_a = {r.document_id: r for r in results_a}
     map_b = {r.document_id: r for r in results_b}
-    
+
     common_docs = set(map_a.keys()) & set(map_b.keys())
-    
+
     # Cambios de riesgo detallados
     risk_changes = {}
     documents_improved = 0
     documents_worsened = 0
-    
+
     for doc_id in common_docs:
         ra = map_a[doc_id]
         rb = map_b[doc_id]
-        
+
         # Comparar scores
         if ra.transparency_score and rb.transparency_score:
             if rb.transparency_score > ra.transparency_score:
                 documents_improved += 1
             elif rb.transparency_score < ra.transparency_score:
                 documents_worsened += 1
-        
+
         # Rastrear cambios de riesgo
         if ra.risk_level and rb.risk_level and ra.risk_level != rb.risk_level:
             if ra.risk_level not in risk_changes:
                 risk_changes[ra.risk_level] = {}
-            
+
             target_risk = rb.risk_level
             if target_risk not in risk_changes[ra.risk_level]:
                 risk_changes[ra.risk_level][target_risk] = 0
-            
+
             risk_changes[ra.risk_level][target_risk] += 1
-    
+
     return {
         "documents_improved": documents_improved,
         "documents_worsened": documents_worsened,

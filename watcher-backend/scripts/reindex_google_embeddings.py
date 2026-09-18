@@ -25,12 +25,17 @@ import os
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 # El backend (paquete `app`) vive en el directorio padre de `scripts/`.
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
+
+# La consola de Windows (cp1252) no puede codificar los emojis del reporte:
+# sin esto, print() tira UnicodeEncodeError en vez del mensaje real.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 try:
     from dotenv import load_dotenv
@@ -39,21 +44,35 @@ try:
 except ImportError:
     pass
 
+_IMPORT_ERROR: str | None = None
 try:
     import chromadb
-    from chromadb.config import Settings
     import google.generativeai as genai
+    from chromadb.config import Settings
 except ImportError as e:  # pragma: no cover - entorno sin dependencias
-    print(f"❌ Error importando dependencias: {e}")
-    print("\n📦 Instala las dependencias:")
-    print("   pip install chromadb google-generativeai")
-    sys.exit(1)
+    # No abortar en import: test_reindex_embeddings.py importa este módulo
+    # para testear su lógica, y un sys.exit() acá corta la colección entera
+    # de la suite con INTERNALERROR (DT-4).
+    chromadb = None  # type: ignore[assignment]
+    Settings = None  # type: ignore[assignment]
+    genai = None  # type: ignore[assignment]
+    _IMPORT_ERROR = str(e)
 
 from app.services.embedding_service import (  # noqa: E402
     EMBEDDING_DIM,
     EMBEDDING_MODEL,
     GoogleEmbeddingFunction,
 )
+
+
+def _require_deps() -> None:
+    """Aborta con mensaje útil sólo al ejecutar, no al importar."""
+    if _IMPORT_ERROR is None:
+        return
+    print(f"❌ Error importando dependencias: {_IMPORT_ERROR}")
+    print("\n📦 Instala las dependencias:")
+    print("   pip install chromadb google-generativeai")
+    sys.exit(1)
 
 DEFAULT_COLLECTION = "watcher_documents"
 DEFAULT_PERSIST_DIR = Path.home() / ".watcher" / "chromadb"
@@ -155,7 +174,7 @@ async def reindex(
         }
 
     # Metadatos seguros: ChromaDB rechaza dicts vacíos / None.
-    def _safe_meta(m: Optional[dict]) -> dict:
+    def _safe_meta(m: dict | None) -> dict:
         return m if m else {"reindexed": True}
 
     safe_metadatas = [_safe_meta(m) for m in metadatas]
@@ -232,7 +251,9 @@ async def reindex(
 
 
 def _parse_args(argv=None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Re-indexa ChromaDB con el modelo canónico de Watcher")
+    parser = argparse.ArgumentParser(
+        description="Re-indexa ChromaDB con el modelo canónico de Watcher"
+    )
     parser.add_argument("--persist-dir", type=Path, default=DEFAULT_PERSIST_DIR)
     parser.add_argument("--collection", type=str, default=DEFAULT_COLLECTION)
     parser.add_argument("--no-backup", action="store_true", help="No crear backup")
@@ -242,6 +263,7 @@ def _parse_args(argv=None) -> argparse.Namespace:
 
 
 async def main(argv=None) -> int:
+    _require_deps()
     args = _parse_args(argv)
     result = await reindex(
         persist_dir=args.persist_dir,

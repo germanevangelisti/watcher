@@ -10,8 +10,7 @@ Tests validate:
 
 from __future__ import annotations
 
-
-from app.middleware.masking import CUIT_RE, CUIT_MASK, mask_cuit, mask_value
+from app.middleware.masking import CUIT_MASK, CUIT_RE, mask_cuit, mask_value
 
 
 class TestCUITRegex:

@@ -2,20 +2,14 @@
 API endpoints for Actos Administrativos
 """
 
-from typing import Optional
-from fastapi import APIRouter, HTTPException, Depends, Query
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_
 import json
 
+from app.db.models import ActoAdministrativo, PresupuestoBase, VinculoActoPresupuesto
 from app.db.session import get_db
-from app.db.models import ActoAdministrativo, VinculoActoPresupuesto, PresupuestoBase
-from app.schemas.actos import (
-    ActoResponse,
-    ActosListResponse,
-    ActoDetailResponse,
-    VinculoResponse
-)
+from app.schemas.actos import ActoDetailResponse, ActoResponse, ActosListResponse, VinculoResponse
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import and_, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
@@ -23,9 +17,9 @@ router = APIRouter()
 async def get_actos(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
-    tipo_acto: Optional[str] = None,
-    organismo: Optional[str] = None,
-    nivel_riesgo: Optional[str] = None,
+    tipo_acto: str | None = None,
+    organismo: str | None = None,
+    nivel_riesgo: str | None = None,
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -33,7 +27,7 @@ async def get_actos(
     """
     try:
         query = select(ActoAdministrativo)
-        
+
         # Apply filters
         filters = []
         if tipo_acto:
@@ -42,30 +36,30 @@ async def get_actos(
             filters.append(ActoAdministrativo.organismo == organismo)
         if nivel_riesgo:
             filters.append(ActoAdministrativo.nivel_riesgo == nivel_riesgo)
-        
+
         if filters:
             query = query.where(and_(*filters))
-        
+
         # Get total count
         count_query = select(func.count()).select_from(ActoAdministrativo)
         if filters:
             count_query = count_query.where(and_(*filters))
-        
+
         result = await db.execute(count_query)
         total = result.scalar()
-        
+
         # Get paginated results
         query = query.offset(skip).limit(limit).order_by(ActoAdministrativo.created_at.desc())
         result = await db.execute(query)
         actos = result.scalars().all()
-        
+
         return ActosListResponse(
             actos=[ActoResponse.model_validate(a) for a in actos],
             total=total or 0,
             page=skip // limit + 1,
             page_size=limit
         )
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -83,10 +77,10 @@ async def get_acto(
             select(ActoAdministrativo).where(ActoAdministrativo.id == acto_id)
         )
         acto = result.scalar_one_or_none()
-        
+
         if not acto:
             raise HTTPException(status_code=404, detail="Acto not found")
-        
+
         # Get vinculos
         vinculos_result = await db.execute(
             select(VinculoActoPresupuesto, PresupuestoBase)
@@ -94,7 +88,7 @@ async def get_acto(
             .where(VinculoActoPresupuesto.acto_id == acto_id)
             .order_by(VinculoActoPresupuesto.score_confianza.desc())
         )
-        
+
         vinculos = []
         for vinculo, programa in vinculos_result.all():
             programa_dict = {
@@ -104,7 +98,7 @@ async def get_acto(
                 "descripcion": programa.descripcion,
                 "monto_vigente": programa.monto_vigente
             }
-            
+
             # Parse detalles_json if it's a string
             detalles_json = vinculo.detalles_json
             if isinstance(detalles_json, str):
@@ -112,7 +106,7 @@ async def get_acto(
                     detalles_json = json.loads(detalles_json)
                 except (json.JSONDecodeError, TypeError):
                     detalles_json = None
-            
+
             vinculo_dict = {
                 "id": vinculo.id,
                 "acto_id": vinculo.acto_id,
@@ -122,9 +116,9 @@ async def get_acto(
                 "detalles_json": detalles_json,
                 "programa": programa_dict
             }
-            
+
             vinculos.append(VinculoResponse(**vinculo_dict))
-        
+
         # Create response
         acto_dict = {
             "id": acto.id,
@@ -143,9 +137,9 @@ async def get_acto(
             "fragmento_original": acto.fragmento_original,
             "pagina": acto.pagina
         }
-        
+
         return ActoDetailResponse(**acto_dict)
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -165,10 +159,10 @@ async def get_acto_vinculos(
             select(ActoAdministrativo).where(ActoAdministrativo.id == acto_id)
         )
         acto = acto_result.scalar_one_or_none()
-        
+
         if not acto:
             raise HTTPException(status_code=404, detail="Acto not found")
-        
+
         # Get vinculos
         result = await db.execute(
             select(VinculoActoPresupuesto, PresupuestoBase)
@@ -176,7 +170,7 @@ async def get_acto_vinculos(
             .where(VinculoActoPresupuesto.acto_id == acto_id)
             .order_by(VinculoActoPresupuesto.score_confianza.desc())
         )
-        
+
         vinculos = []
         for vinculo, programa in result.all():
             programa_dict = {
@@ -186,7 +180,7 @@ async def get_acto_vinculos(
                 "descripcion": programa.descripcion,
                 "monto_vigente": programa.monto_vigente
             }
-            
+
             # Parse detalles_json if it's a string
             detalles_json = vinculo.detalles_json
             if isinstance(detalles_json, str):
@@ -194,7 +188,7 @@ async def get_acto_vinculos(
                     detalles_json = json.loads(detalles_json)
                 except (json.JSONDecodeError, TypeError):
                     detalles_json = None
-            
+
             vinculo_dict = {
                 "id": vinculo.id,
                 "acto_id": vinculo.acto_id,
@@ -204,11 +198,11 @@ async def get_acto_vinculos(
                 "detalles_json": detalles_json,
                 "programa": programa_dict
             }
-            
+
             vinculos.append(VinculoResponse(**vinculo_dict))
-        
+
         return vinculos
-        
+
     except HTTPException:
         raise
     except Exception as e:

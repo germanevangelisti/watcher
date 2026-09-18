@@ -16,7 +16,7 @@ depends_on = None
 
 def upgrade():
     """Create FTS5 virtual table and sync triggers."""
-    
+
     # Create FTS5 virtual table
     # Use content= to reference the chunk_records table
     # Use content_rowid= to map to the id column
@@ -31,7 +31,7 @@ def upgrade():
             content_rowid=id
         )
     """)
-    
+
     # Create INSERT trigger to keep FTS5 in sync
     op.execute("""
         CREATE TRIGGER chunk_records_fts_insert AFTER INSERT ON chunk_records
@@ -40,7 +40,7 @@ def upgrade():
             VALUES (new.id, new.text, new.document_id, new.chunk_index, new.section_type);
         END
     """)
-    
+
     # Create DELETE trigger to keep FTS5 in sync
     op.execute("""
         CREATE TRIGGER chunk_records_fts_delete AFTER DELETE ON chunk_records
@@ -49,7 +49,7 @@ def upgrade():
             VALUES ('delete', old.id, old.text, old.document_id, old.chunk_index, old.section_type);
         END
     """)
-    
+
     # Create UPDATE trigger to keep FTS5 in sync
     op.execute("""
         CREATE TRIGGER chunk_records_fts_update AFTER UPDATE ON chunk_records

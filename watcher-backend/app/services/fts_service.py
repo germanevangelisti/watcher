@@ -9,11 +9,11 @@ The backend is chosen automatically based on DATABASE_URL.
 """
 
 import logging
-from typing import List, Dict, Optional, Any
-from sqlalchemy.orm import Session
-from sqlalchemy import text
+from typing import Any
 
 from app.core.config import settings
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ class FTSSearchResult:
         document_id: str,
         chunk_index: int,
         text: str,
-        section_type: Optional[str],
+        section_type: str | None,
         bm25_score: float,
     ):
         self.chunk_id = chunk_id
@@ -37,7 +37,7 @@ class FTSSearchResult:
         self.section_type = section_type
         self.bm25_score = bm25_score
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "chunk_id": self.chunk_id,
             "document_id": self.document_id,
@@ -55,7 +55,7 @@ class FTSService:
         self.db = db_session
         self._use_postgres = settings.is_postgres
 
-    def _build_filter_clauses(self, filters: Optional[Dict[str, Any]]) -> tuple:
+    def _build_filter_clauses(self, filters: dict[str, Any] | None) -> tuple:
         """Build WHERE clauses and params from filters dict."""
         where_clauses: list = []
         params: dict = {}
@@ -92,8 +92,8 @@ class FTSService:
     # ------------------------------------------------------------------
 
     def _search_postgres(
-        self, query: str, top_k: int, filters: Optional[Dict[str, Any]]
-    ) -> List[FTSSearchResult]:
+        self, query: str, top_k: int, filters: dict[str, Any] | None
+    ) -> list[FTSSearchResult]:
         where_clauses, params = self._build_filter_clauses(filters)
         params["query"] = query
         params["limit"] = top_k
@@ -133,8 +133,8 @@ class FTSService:
     # ------------------------------------------------------------------
 
     def _search_sqlite(
-        self, query: str, top_k: int, filters: Optional[Dict[str, Any]]
-    ) -> List[FTSSearchResult]:
+        self, query: str, top_k: int, filters: dict[str, Any] | None
+    ) -> list[FTSSearchResult]:
         where_clauses, params = self._build_filter_clauses(filters)
         params["query"] = query
         params["limit"] = top_k
@@ -182,8 +182,8 @@ class FTSService:
         self,
         query: str,
         top_k: int = 10,
-        filters: Optional[Dict[str, Any]] = None,
-    ) -> List[FTSSearchResult]:
+        filters: dict[str, Any] | None = None,
+    ) -> list[FTSSearchResult]:
         """Full-text search. Delegates to the appropriate backend."""
         if not query or not query.strip():
             return []
@@ -198,7 +198,7 @@ class FTSService:
             logger.error(f"Error performing FTS search: {e}", exc_info=True)
             return []
 
-    def rebuild_index(self) -> Dict[str, Any]:
+    def rebuild_index(self) -> dict[str, Any]:
         """Rebuild the full-text search index."""
         try:
             if self._use_postgres:
@@ -223,7 +223,7 @@ class FTSService:
             self.db.rollback()
             return {"success": False, "error": str(e)}
 
-    def optimize_index(self) -> Dict[str, Any]:
+    def optimize_index(self) -> dict[str, Any]:
         """Optimize the search index (SQLite-specific; no-op on PostgreSQL)."""
         try:
             if self._use_postgres:
@@ -240,7 +240,7 @@ class FTSService:
             self.db.rollback()
             return {"success": False, "error": str(e)}
 
-    def get_index_stats(self) -> Dict[str, Any]:
+    def get_index_stats(self) -> dict[str, Any]:
         """Get statistics about the search index."""
         try:
             if self._use_postgres:
@@ -274,7 +274,7 @@ class FTSService:
             logger.error(f"Error getting FTS stats: {e}", exc_info=True)
             return {"total_chunks": 0, "error": str(e)}
 
-    def test_query(self, query: str) -> Dict[str, Any]:
+    def test_query(self, query: str) -> dict[str, Any]:
         """Test whether a query is valid."""
         try:
             results = self.search_bm25(query, top_k=1)
@@ -283,7 +283,7 @@ class FTSService:
             return {"valid": False, "query": query, "error": str(e), "message": "Query syntax error"}
 
 
-_fts_service: Optional[FTSService] = None
+_fts_service: FTSService | None = None
 
 
 def get_fts_service(db_session: Session) -> FTSService:

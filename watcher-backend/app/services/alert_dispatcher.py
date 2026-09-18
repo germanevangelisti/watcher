@@ -7,8 +7,8 @@ Handles alert generation, prioritization, routing, and delivery.
 
 import logging
 from datetime import datetime
-from typing import Dict, List, Optional, Any
 from enum import Enum
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -36,7 +36,7 @@ class AlertChannel(str, Enum):
 class AlertDispatcher:
     """
     Alert Dispatcher Service (ALA Layer).
-    
+
     Responsibilities:
     - Generate alerts from analysis results
     - Prioritize alerts based on severity and rules
@@ -44,16 +44,16 @@ class AlertDispatcher:
     - Track alert delivery status
     - Manage alert subscriptions
     """
-    
-    def __init__(self, db_session: Optional[AsyncSession] = None):
+
+    def __init__(self, db_session: AsyncSession | None = None):
         """
         Initialize alert dispatcher.
-        
+
         Args:
             db_session: Optional database session
         """
         self.db_session = db_session
-        
+
         # Alert rules configuration
         self.alert_rules = {
             'high_amount': {
@@ -75,7 +75,7 @@ class AlertDispatcher:
                 'channels': [AlertChannel.IN_APP]
             }
         }
-        
+
         self.stats = {
             "alerts_generated": 0,
             "alerts_dispatched": 0,
@@ -83,19 +83,19 @@ class AlertDispatcher:
             "by_priority": {p.value: 0 for p in AlertPriority},
             "by_channel": {c.value: 0 for c in AlertChannel}
         }
-    
+
     async def create_alert(
         self,
         title: str,
         message: str,
         priority: AlertPriority = AlertPriority.MEDIUM,
         category: str = "general",
-        metadata: Optional[Dict[str, Any]] = None,
-        db: Optional[AsyncSession] = None
-    ) -> Dict[str, Any]:
+        metadata: dict[str, Any] | None = None,
+        db: AsyncSession | None = None
+    ) -> dict[str, Any]:
         """
         Create a new alert.
-        
+
         Args:
             title: Alert title
             message: Alert message
@@ -103,16 +103,16 @@ class AlertDispatcher:
             category: Alert category
             metadata: Optional metadata
             db: Optional database session
-            
+
         Returns:
             Created alert data
         """
         session = db or self.db_session
-        
+
         try:
             # Create alert in database
             from app.db.models import Alerta
-            
+
             alerta = Alerta(
                 titulo=title,
                 descripcion=message,
@@ -122,22 +122,22 @@ class AlertDispatcher:
                 estado="pendiente",
                 metadata=metadata or {}
             )
-            
+
             if session:
                 session.add(alerta)
                 await session.commit()
                 await session.refresh(alerta)
-                
+
                 alert_id = alerta.id
             else:
                 # If no session, create in-memory alert
                 alert_id = f"alert_{datetime.now().timestamp()}"
-            
+
             self.stats["alerts_generated"] += 1
             self.stats["by_priority"][priority.value] += 1
-            
+
             logger.info(f"🚨 Alert created: {title} (Priority: {priority.value})")
-            
+
             return {
                 "success": True,
                 "alert_id": alert_id,
@@ -145,7 +145,7 @@ class AlertDispatcher:
                 "priority": priority.value,
                 "created_at": datetime.now().isoformat()
             }
-        
+
         except Exception as e:
             logger.error(f"Error creating alert: {e}", exc_info=True)
             self.stats["alerts_failed"] += 1
@@ -153,26 +153,26 @@ class AlertDispatcher:
                 "success": False,
                 "error": str(e)
             }
-    
+
     async def dispatch_alert(
         self,
         alert_id: int,
-        channels: List[AlertChannel],
-        recipients: Optional[List[str]] = None
-    ) -> Dict[str, Any]:
+        channels: list[AlertChannel],
+        recipients: list[str] | None = None
+    ) -> dict[str, Any]:
         """
         Dispatch an alert to specified channels.
-        
+
         Args:
             alert_id: Alert ID
             channels: List of channels to dispatch to
             recipients: Optional list of recipients
-            
+
         Returns:
             Dispatch results
         """
         dispatch_results = []
-        
+
         for channel in channels:
             result = await self._dispatch_to_channel(
                 alert_id=alert_id,
@@ -180,17 +180,17 @@ class AlertDispatcher:
                 recipients=recipients
             )
             dispatch_results.append(result)
-            
+
             if result.get("success"):
                 self.stats["alerts_dispatched"] += 1
                 self.stats["by_channel"][channel.value] += 1
             else:
                 self.stats["alerts_failed"] += 1
-        
+
         successful = sum(1 for r in dispatch_results if r.get("success"))
-        
+
         logger.info(f"📤 Alert {alert_id} dispatched: {successful}/{len(channels)} channels successful")
-        
+
         return {
             "success": successful > 0,
             "alert_id": alert_id,
@@ -198,21 +198,21 @@ class AlertDispatcher:
             "channels_successful": successful,
             "results": dispatch_results
         }
-    
+
     async def _dispatch_to_channel(
         self,
         alert_id: int,
         channel: AlertChannel,
-        recipients: Optional[List[str]] = None
-    ) -> Dict[str, Any]:
+        recipients: list[str] | None = None
+    ) -> dict[str, Any]:
         """
         Dispatch alert to a specific channel.
-        
+
         Args:
             alert_id: Alert ID
             channel: Channel to dispatch to
             recipients: Optional recipients
-            
+
         Returns:
             Dispatch result
         """
@@ -224,7 +224,7 @@ class AlertDispatcher:
                     "channel": channel.value,
                     "message": "Alert available in-app"
                 }
-            
+
             elif channel == AlertChannel.EMAIL:
                 # Email dispatch (placeholder)
                 logger.info(f"📧 Would send email alert {alert_id} to {recipients}")
@@ -233,7 +233,7 @@ class AlertDispatcher:
                     "channel": channel.value,
                     "message": "Email dispatch simulated"
                 }
-            
+
             elif channel == AlertChannel.WEBHOOK:
                 # Webhook dispatch (placeholder)
                 logger.info(f"🔗 Would POST alert {alert_id} to webhook")
@@ -242,7 +242,7 @@ class AlertDispatcher:
                     "channel": channel.value,
                     "message": "Webhook dispatch simulated"
                 }
-            
+
             elif channel == AlertChannel.SLACK:
                 # Slack dispatch (placeholder)
                 logger.info(f"💬 Would send Slack message for alert {alert_id}")
@@ -251,14 +251,14 @@ class AlertDispatcher:
                     "channel": channel.value,
                     "message": "Slack dispatch simulated"
                 }
-            
+
             else:
                 return {
                     "success": False,
                     "channel": channel.value,
                     "error": f"Channel {channel.value} not implemented"
                 }
-        
+
         except Exception as e:
             logger.error(f"Error dispatching to {channel.value}: {e}")
             return {
@@ -266,19 +266,19 @@ class AlertDispatcher:
                 "channel": channel.value,
                 "error": str(e)
             }
-    
+
     async def create_and_dispatch(
         self,
         title: str,
         message: str,
         priority: AlertPriority = AlertPriority.MEDIUM,
         category: str = "general",
-        metadata: Optional[Dict[str, Any]] = None,
-        db: Optional[AsyncSession] = None
-    ) -> Dict[str, Any]:
+        metadata: dict[str, Any] | None = None,
+        db: AsyncSession | None = None
+    ) -> dict[str, Any]:
         """
         Create and immediately dispatch an alert.
-        
+
         Args:
             title: Alert title
             message: Alert message
@@ -286,7 +286,7 @@ class AlertDispatcher:
             category: Alert category
             metadata: Optional metadata
             db: Optional database session
-            
+
         Returns:
             Combined creation and dispatch results
         """
@@ -299,27 +299,27 @@ class AlertDispatcher:
             metadata=metadata,
             db=db
         )
-        
+
         if not create_result.get("success"):
             return create_result
-        
+
         # Determine channels based on priority
         channels = self._get_channels_for_priority(priority)
-        
+
         # Dispatch alert
         dispatch_result = await self.dispatch_alert(
             alert_id=create_result["alert_id"],
             channels=channels
         )
-        
+
         return {
             "success": True,
             "alert_id": create_result["alert_id"],
             "created": create_result,
             "dispatched": dispatch_result
         }
-    
-    def _get_channels_for_priority(self, priority: AlertPriority) -> List[AlertChannel]:
+
+    def _get_channels_for_priority(self, priority: AlertPriority) -> list[AlertChannel]:
         """Get appropriate channels for a priority level."""
         if priority == AlertPriority.CRITICAL:
             return [AlertChannel.EMAIL, AlertChannel.SMS, AlertChannel.IN_APP, AlertChannel.WEBHOOK]
@@ -329,24 +329,24 @@ class AlertDispatcher:
             return [AlertChannel.IN_APP, AlertChannel.EMAIL]
         else:
             return [AlertChannel.IN_APP]
-    
+
     async def process_analysis_results(
         self,
-        analysis_results: List[Dict[str, Any]],
-        db: Optional[AsyncSession] = None
-    ) -> Dict[str, Any]:
+        analysis_results: list[dict[str, Any]],
+        db: AsyncSession | None = None
+    ) -> dict[str, Any]:
         """
         Process analysis results and generate appropriate alerts.
-        
+
         Args:
             analysis_results: List of analysis results
             db: Optional database session
-            
+
         Returns:
             Processing results
         """
         alerts_created = []
-        
+
         for result in analysis_results:
             # Check for high-risk patterns
             if result.get('risk_level') == 'ALTO':
@@ -359,7 +359,7 @@ class AlertDispatcher:
                     db=db
                 )
                 alerts_created.append(alert)
-            
+
             # Check for high amounts
             entities = result.get('entities', {})
             amounts = entities.get('amounts', [])
@@ -380,20 +380,20 @@ class AlertDispatcher:
                         break  # Only one alert per document
                 except Exception:
                     pass
-        
+
         logger.info(f"✅ Processed {len(analysis_results)} results, created {len(alerts_created)} alerts")
-        
+
         return {
             "success": True,
             "results_processed": len(analysis_results),
             "alerts_created": len(alerts_created),
             "alerts": alerts_created
         }
-    
-    def get_stats(self) -> Dict[str, Any]:
+
+    def get_stats(self) -> dict[str, Any]:
         """Get dispatcher statistics."""
         return self.stats.copy()
-    
+
     def reset_stats(self):
         """Reset statistics."""
         self.stats = {
@@ -406,14 +406,14 @@ class AlertDispatcher:
 
 
 # Global instance
-_alert_dispatcher: Optional[AlertDispatcher] = None
+_alert_dispatcher: AlertDispatcher | None = None
 
 
-def get_alert_dispatcher(db_session: Optional[AsyncSession] = None) -> AlertDispatcher:
+def get_alert_dispatcher(db_session: AsyncSession | None = None) -> AlertDispatcher:
     """Get or create global alert dispatcher instance."""
     global _alert_dispatcher
-    
+
     if _alert_dispatcher is None:
         _alert_dispatcher = AlertDispatcher(db_session)
-    
+
     return _alert_dispatcher

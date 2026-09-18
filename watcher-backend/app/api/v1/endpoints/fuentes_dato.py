@@ -8,15 +8,14 @@ Gestiona URLs de acceso a fuentes de datos públicos:
 """
 
 import logging
-from typing import Dict, List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
-from pydantic import BaseModel, Field
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
-from app.db.database import get_db
-from app.db.models import FuenteDato, Jurisdiccion, Boletin
 from app.core.config import settings
+from app.db.database import get_db
+from app.db.models import Boletin, FuenteDato, Jurisdiccion
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from pydantic import BaseModel, Field
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -29,19 +28,19 @@ class FuenteDatoRequest(BaseModel):
     jurisdiccion_id: int
     tipo: str = Field(description="boletin_diario | presupuesto_anual | ejecucion_trimestral")
     nombre: str = Field(max_length=200)
-    url_template: Optional[str] = None
+    url_template: str | None = None
     activa: bool = True
-    descripcion: Optional[str] = None
+    descripcion: str | None = None
 
 
 class FuenteDatoUpdateRequest(BaseModel):
-    nombre: Optional[str] = Field(None, max_length=200)
-    url_template: Optional[str] = None
-    activa: Optional[bool] = None
-    descripcion: Optional[str] = None
+    nombre: str | None = Field(None, max_length=200)
+    url_template: str | None = None
+    activa: bool | None = None
+    descripcion: str | None = None
 
 
-def _serialize(f: FuenteDato, jurisdiccion_nombre: Optional[str] = None) -> Dict:
+def _serialize(f: FuenteDato, jurisdiccion_nombre: str | None = None) -> dict:
     return {
         "id": f.id,
         "jurisdiccion_id": f.jurisdiccion_id,
@@ -59,10 +58,10 @@ def _serialize(f: FuenteDato, jurisdiccion_nombre: Optional[str] = None) -> Dict
 @router.get("")
 @router.get("/")
 async def list_fuentes_dato(
-    jurisdiccion_id: Optional[int] = Query(None, description="Filtrar por jurisdicción"),
-    tipo: Optional[str] = Query(None, description="Filtrar por tipo"),
+    jurisdiccion_id: int | None = Query(None, description="Filtrar por jurisdicción"),
+    tipo: str | None = Query(None, description="Filtrar por tipo"),
     db: AsyncSession = Depends(get_db),
-) -> List[Dict]:
+) -> list[dict]:
     """Lista fuentes de datos, opcionalmente filtradas por jurisdicción y/o tipo."""
     stmt = select(FuenteDato, Jurisdiccion.nombre).outerjoin(
         Jurisdiccion, FuenteDato.jurisdiccion_id == Jurisdiccion.id
@@ -78,7 +77,7 @@ async def list_fuentes_dato(
 
 
 @router.get("/{fuente_id}")
-async def get_fuente_dato(fuente_id: int, db: AsyncSession = Depends(get_db)) -> Dict:
+async def get_fuente_dato(fuente_id: int, db: AsyncSession = Depends(get_db)) -> dict:
     """Detalle de una fuente de datos."""
     stmt = select(FuenteDato, Jurisdiccion.nombre).outerjoin(
         Jurisdiccion, FuenteDato.jurisdiccion_id == Jurisdiccion.id
@@ -93,7 +92,7 @@ async def get_fuente_dato(fuente_id: int, db: AsyncSession = Depends(get_db)) ->
 
 @router.post("", status_code=201)
 @router.post("/", status_code=201, include_in_schema=False)
-async def create_fuente_dato(body: FuenteDatoRequest, db: AsyncSession = Depends(get_db)) -> Dict:
+async def create_fuente_dato(body: FuenteDatoRequest, db: AsyncSession = Depends(get_db)) -> dict:
     """Crea una nueva fuente de datos para una jurisdicción."""
     if body.tipo not in TIPOS_VALIDOS:
         raise HTTPException(status_code=400, detail=f"Tipo inválido. Valores: {TIPOS_VALIDOS}")
@@ -132,7 +131,7 @@ async def create_fuente_dato(body: FuenteDatoRequest, db: AsyncSession = Depends
 @router.put("/{fuente_id}")
 async def update_fuente_dato(
     fuente_id: int, body: FuenteDatoUpdateRequest, db: AsyncSession = Depends(get_db)
-) -> Dict:
+) -> dict:
     """Actualiza nombre, url_template, activa o descripcion de una fuente."""
     fuente = await db.get(FuenteDato, fuente_id)
     if not fuente:
@@ -169,7 +168,7 @@ async def upload_fuente_dato(
     fuente_id: int,
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
-) -> Dict:
+) -> dict:
     """
     Sube un PDF para una fuente de tipo presupuesto_anual o ejecucion_trimestral.
     Guarda el archivo en UPLOADS_DIR y crea un Boletin con origin='uploaded', status='pending'.

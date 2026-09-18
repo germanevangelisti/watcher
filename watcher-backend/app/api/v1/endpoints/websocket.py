@@ -1,13 +1,12 @@
 """
 WebSocket endpoints para actualizaciones en tiempo real
 """
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from typing import List, Set, Dict
-from datetime import datetime
 import json
 import logging
+from datetime import datetime
 
-from app.core.events import event_bus, EventType, Event
+from app.core.events import Event, EventType, event_bus
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -15,18 +14,18 @@ logger = logging.getLogger(__name__)
 
 class ConnectionManager:
     """Gestiona conexiones WebSocket activas"""
-    
+
     def __init__(self):
-        self.active_connections: List[WebSocket] = []
-        self.subscriptions: Dict[WebSocket, Set[str]] = {}
-    
+        self.active_connections: list[WebSocket] = []
+        self.subscriptions: dict[WebSocket, set[str]] = {}
+
     async def connect(self, websocket: WebSocket):
         """Acepta una nueva conexión"""
         await websocket.accept()
         self.active_connections.append(websocket)
         self.subscriptions[websocket] = set()
         logger.info(f"Nueva conexión WebSocket. Total: {len(self.active_connections)}")
-    
+
     def disconnect(self, websocket: WebSocket):
         """Remueve una conexión"""
         if websocket in self.active_connections:
@@ -34,48 +33,48 @@ class ConnectionManager:
         if websocket in self.subscriptions:
             del self.subscriptions[websocket]
         logger.info(f"Conexión WebSocket cerrada. Total: {len(self.active_connections)}")
-    
-    def subscribe(self, websocket: WebSocket, event_types: List[str]):
+
+    def subscribe(self, websocket: WebSocket, event_types: list[str]):
         """Suscribe un websocket a tipos de eventos específicos"""
         if websocket in self.subscriptions:
             self.subscriptions[websocket].update(event_types)
             logger.debug(f"WebSocket suscrito a: {event_types}")
-    
-    def unsubscribe(self, websocket: WebSocket, event_types: List[str]):
+
+    def unsubscribe(self, websocket: WebSocket, event_types: list[str]):
         """Desuscribe un websocket de tipos de eventos"""
         if websocket in self.subscriptions:
             for event_type in event_types:
                 self.subscriptions[websocket].discard(event_type)
-    
+
     async def send_personal_message(self, message: str, websocket: WebSocket):
         """Envía mensaje a una conexión específica"""
         try:
             await websocket.send_text(message)
         except Exception as e:
             logger.error(f"Error enviando mensaje: {e}")
-    
+
     async def broadcast(self, message: str, event_type: str = None):
         """
         Broadcast a todas las conexiones o a las suscritas a un evento
-        
+
         Args:
             message: Mensaje a enviar
             event_type: Tipo de evento (opcional, para filtrado)
         """
         disconnected = []
-        
+
         for connection in self.active_connections:
             # Si hay filtro de evento, verificar suscripción
             if event_type:
                 if event_type not in self.subscriptions.get(connection, set()):
                     continue
-            
+
             try:
                 await connection.send_text(message)
             except Exception as e:
                 logger.error(f"Error en broadcast: {e}")
                 disconnected.append(connection)
-        
+
         # Limpiar conexiones desconectadas
         for conn in disconnected:
             self.disconnect(conn)
@@ -202,7 +201,7 @@ async def get_websocket_stats():
     return {
         "active_connections": len(manager.active_connections),
         "subscriptions_by_client": {
-            str(id(ws)): list(subs) 
+            str(id(ws)): list(subs)
             for ws, subs in manager.subscriptions.items()
         }
     }

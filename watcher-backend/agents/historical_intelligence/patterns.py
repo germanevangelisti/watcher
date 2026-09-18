@@ -3,8 +3,8 @@ Patrones de detección para Historical Intelligence Agent
 Define los patrones sospechosos y reglas de análisis
 """
 
-from typing import Dict, List, Any
 from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
@@ -15,7 +15,7 @@ class PatternRule:
     descripcion: str
     severidad: str  # ALTA, MEDIA, BAJA
     query_template: str
-    threshold: Dict[str, Any]
+    threshold: dict[str, Any]
     categoria: str
     cypher_template: str = ""  # Versión Cypher para Neo4j (fallback a query_template si vacío)
 
@@ -28,7 +28,7 @@ PATRONES_SOSPECHOSOS = {
         descripcion="Empresa recibe múltiples contratos en período corto",
         severidad="ALTA",
         query_template="""
-            SELECT 
+            SELECT
                 ee.nombre_display as empresa,
                 COUNT(*) as total_contratos,
                 SUM(CAST(json_extract(re.metadata_extra, '$.monto') AS REAL)) as monto_total
@@ -60,7 +60,7 @@ PATRONES_SOSPECHOSOS = {
         severidad="ALTA",
         query_template="""
             WITH promedios AS (
-                SELECT 
+                SELECT
                     re.tipo_relacion,
                     AVG(CAST(json_extract(re.metadata_extra, '$.monto') AS REAL)) as promedio,
                     MAX(CAST(json_extract(re.metadata_extra, '$.monto') AS REAL)) as maximo
@@ -69,7 +69,7 @@ PATRONES_SOSPECHOSOS = {
                 AND re.fecha_relacion >= date('now', '-365 days')
                 GROUP BY re.tipo_relacion
             )
-            SELECT 
+            SELECT
                 re.id,
                 re.tipo_relacion,
                 CAST(json_extract(re.metadata_extra, '$.monto') AS REAL) as monto,
@@ -107,7 +107,7 @@ PATRONES_SOSPECHOSOS = {
         severidad="MEDIA",
         query_template="""
             WITH designaciones AS (
-                SELECT 
+                SELECT
                     re1.entidad_destino_id as persona_id,
                     ee.nombre_display as persona,
                     re1.fecha_relacion as fecha_designacion
@@ -122,12 +122,12 @@ PATRONES_SOSPECHOSOS = {
                     MIN(b.date) as fecha_primer_contrato
                 FROM menciones_entidades me
                 JOIN boletines b ON me.boletin_id = b.id
-                WHERE me.fragmento LIKE '%contrat%' 
+                WHERE me.fragmento LIKE '%contrat%'
                    OR me.fragmento LIKE '%licitac%'
                    OR me.fragmento LIKE '%adjudica%'
                 GROUP BY me.entidad_id
             )
-            SELECT 
+            SELECT
                 d.persona,
                 d.fecha_designacion,
                 c.fecha_primer_contrato,
@@ -162,7 +162,7 @@ PATRONES_SOSPECHOSOS = {
         severidad="MEDIA",
         query_template="""
             WITH contratos_organismo AS (
-                SELECT 
+                SELECT
                     re.entidad_origen_id as organismo_id,
                     ee_org.nombre_display as organismo,
                     re.entidad_destino_id as empresa_id,
@@ -178,13 +178,13 @@ PATRONES_SOSPECHOSOS = {
                 GROUP BY re.entidad_origen_id, re.entidad_destino_id
             ),
             totales AS (
-                SELECT 
+                SELECT
                     organismo_id,
                     SUM(contratos) as total_contratos
                 FROM contratos_organismo
                 GROUP BY organismo_id
             )
-            SELECT 
+            SELECT
                 co.organismo,
                 co.empresa,
                 co.contratos,
@@ -214,7 +214,7 @@ PATRONES_SOSPECHOSOS = {
             ORDER BY porcentaje DESC
         """
     ),
-    
+
     "fragmentacion_sospechosa": PatternRule(
         id="fragmentacion_sospechosa",
         nombre="Fragmentación de Contratos",
@@ -222,7 +222,7 @@ PATRONES_SOSPECHOSOS = {
         severidad="ALTA",
         query_template="""
             WITH contratos_empresa AS (
-                SELECT 
+                SELECT
                     ee.id as empresa_id,
                     ee.nombre_display as empresa,
                     re.fecha_relacion,
@@ -236,7 +236,7 @@ PATRONES_SOSPECHOSOS = {
                 AND CAST(json_extract(re.metadata_extra, '$.monto') AS REAL) >= {umbral_licitacion} * 0.7
                 AND re.fecha_relacion >= date('now', '-{dias_ventana} days')
             )
-            SELECT 
+            SELECT
                 empresa,
                 COUNT(*) as num_contratos,
                 SUM(monto) as suma_total,
@@ -267,7 +267,7 @@ PATRONES_SOSPECHOSOS = {
             ORDER BY num_contratos DESC, suma_total DESC
         """
     ),
-    
+
     "recurrencia_temporal": PatternRule(
         id="recurrencia_temporal",
         nombre="Patrón Temporal Recurrente",
@@ -275,7 +275,7 @@ PATRONES_SOSPECHOSOS = {
         severidad="BAJA",
         query_template="""
             WITH contratos_temporales AS (
-                SELECT 
+                SELECT
                     ee.nombre_display as empresa,
                     strftime('%m', re.fecha_relacion) as mes,
                     strftime('%d', re.fecha_relacion) as dia,
@@ -288,7 +288,7 @@ PATRONES_SOSPECHOSOS = {
                 GROUP BY ee.id, mes, dia
                 HAVING COUNT(*) >= {min_recurrencias}
             )
-            SELECT 
+            SELECT
                 empresa,
                 mes,
                 dia,
@@ -308,7 +308,7 @@ PATRONES_SOSPECHOSOS = {
             ORDER BY apariciones DESC, empresa
         """
     ),
-    
+
     "vinculo_cruzado": PatternRule(
         id="vinculo_cruzado",
         nombre="Vínculos Cruzados Complejos",
@@ -325,7 +325,7 @@ PATRONES_SOSPECHOSOS = {
                 JOIN entidades_extraidas ee1 ON re.entidad_origen_id = ee1.id
                 JOIN entidades_extraidas ee2 ON re.entidad_destino_id = ee2.id
                 WHERE re.fecha_relacion >= date('now', '-{dias} days')
-                GROUP BY 
+                GROUP BY
                     CASE WHEN ee1.id < ee2.id THEN ee1.id ELSE ee2.id END,
                     CASE WHEN ee1.id < ee2.id THEN ee2.id ELSE ee1.id END
                 HAVING COUNT(DISTINCT re.tipo_relacion) >= {min_tipos_relacion}
@@ -354,16 +354,16 @@ def get_pattern(pattern_id: str) -> PatternRule:
     return PATRONES_SOSPECHOSOS.get(pattern_id)
 
 
-def get_patterns_by_severity(severidad: str) -> List[PatternRule]:
+def get_patterns_by_severity(severidad: str) -> list[PatternRule]:
     """Obtiene patrones por severidad"""
     return [p for p in PATRONES_SOSPECHOSOS.values() if p.severidad == severidad]
 
 
-def get_patterns_by_category(categoria: str) -> List[PatternRule]:
+def get_patterns_by_category(categoria: str) -> list[PatternRule]:
     """Obtiene patrones por categoría"""
     return [p for p in PATRONES_SOSPECHOSOS.values() if p.categoria == categoria]
 
 
-def get_all_patterns() -> Dict[str, PatternRule]:
+def get_all_patterns() -> dict[str, PatternRule]:
     """Obtiene todos los patrones"""
     return PATRONES_SOSPECHOSOS

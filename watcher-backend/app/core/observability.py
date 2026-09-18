@@ -1,51 +1,51 @@
 """
 Sistema de observability y telemetría para agentes
 """
-import time
 import logging
-from typing import Dict, Any, Optional, List
-from datetime import datetime, timedelta
+import time
 from collections import defaultdict
 from contextlib import contextmanager
+from datetime import datetime, timedelta
 from functools import wraps
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
 class MetricsCollector:
     """Recolector de métricas del sistema"""
-    
+
     def __init__(self):
-        self.metrics: Dict[str, List[Dict]] = defaultdict(list)
-        self.counters: Dict[str, int] = defaultdict(int)
-        self.gauges: Dict[str, float] = {}
-        self.histograms: Dict[str, List[float]] = defaultdict(list)
-        
+        self.metrics: dict[str, list[dict]] = defaultdict(list)
+        self.counters: dict[str, int] = defaultdict(int)
+        self.gauges: dict[str, float] = {}
+        self.histograms: dict[str, list[float]] = defaultdict(list)
+
         # Configuración
         self.max_history_size = 1000
         self.retention_hours = 24
-    
-    def increment_counter(self, name: str, value: int = 1, tags: Optional[Dict] = None):
+
+    def increment_counter(self, name: str, value: int = 1, tags: dict | None = None):
         """Incrementa un contador"""
         self.counters[name] += value
         self._record_metric('counter', name, value, tags)
-    
-    def set_gauge(self, name: str, value: float, tags: Optional[Dict] = None):
+
+    def set_gauge(self, name: str, value: float, tags: dict | None = None):
         """Establece un gauge"""
         self.gauges[name] = value
         self._record_metric('gauge', name, value, tags)
-    
-    def record_histogram(self, name: str, value: float, tags: Optional[Dict] = None):
+
+    def record_histogram(self, name: str, value: float, tags: dict | None = None):
         """Registra un valor en un histograma"""
         self.histograms[name].append(value)
-        
+
         # Limitar tamaño
         if len(self.histograms[name]) > self.max_history_size:
             self.histograms[name] = self.histograms[name][-self.max_history_size:]
-        
+
         self._record_metric('histogram', name, value, tags)
-    
-    def _record_metric(self, metric_type: str, name: str, value: Any, tags: Optional[Dict] = None):
+
+    def _record_metric(self, metric_type: str, name: str, value: Any, tags: dict | None = None):
         """Registra una métrica con timestamp"""
         metric = {
             'type': metric_type,
@@ -54,14 +54,14 @@ class MetricsCollector:
             'tags': tags or {},
             'timestamp': datetime.utcnow()
         }
-        
+
         self.metrics[name].append(metric)
-        
+
         # Limitar tamaño del historial
         if len(self.metrics[name]) > self.max_history_size:
             self.metrics[name] = self.metrics[name][-self.max_history_size:]
-    
-    def get_metrics_summary(self) -> Dict[str, Any]:
+
+    def get_metrics_summary(self) -> dict[str, Any]:
         """Obtiene resumen de métricas"""
         return {
             'counters': dict(self.counters),
@@ -78,14 +78,14 @@ class MetricsCollector:
                 for name, values in self.histograms.items()
             }
         }
-    
-    def get_metric_history(self, name: str, hours: int = 1) -> List[Dict]:
+
+    def get_metric_history(self, name: str, hours: int = 1) -> list[dict]:
         """Obtiene historial de una métrica"""
         cutoff = datetime.utcnow() - timedelta(hours=hours)
-        
+
         if name not in self.metrics:
             return []
-        
+
         return [
             {
                 'type': m['type'],
@@ -96,16 +96,16 @@ class MetricsCollector:
             for m in self.metrics[name]
             if m['timestamp'] >= cutoff
         ]
-    
-    def _percentile(self, values: List[float], percentile: int) -> float:
+
+    def _percentile(self, values: list[float], percentile: int) -> float:
         """Calcula percentil"""
         if not values:
             return 0
-        
+
         sorted_values = sorted(values)
         index = int(len(sorted_values) * (percentile / 100))
         return sorted_values[min(index, len(sorted_values) - 1)]
-    
+
     def cleanup_old_metrics(self):
         """Limpia métricas antiguas"""
         cutoff = datetime.utcnow() - timedelta(hours=self.retention_hours)
@@ -123,8 +123,8 @@ class MetricsCollector:
         verified: int,
         unverifiable: int,
         contradicted: int,
-        boletin_id: Optional[int] = None,
-        latency_ms: Optional[float] = None,
+        boletin_id: int | None = None,
+        latency_ms: float | None = None,
     ) -> None:
         """Record a complete VCP verification result into observability metrics."""
         # Gauge: current VCP score
@@ -145,21 +145,21 @@ class MetricsCollector:
 
 class TraceSpan:
     """Span de tracing para operaciones"""
-    
-    def __init__(self, operation_name: str, parent_span_id: Optional[str] = None):
+
+    def __init__(self, operation_name: str, parent_span_id: str | None = None):
         self.operation_name = operation_name
         self.span_id = f"{operation_name}_{time.time()}"
         self.parent_span_id = parent_span_id
         self.start_time = time.time()
-        self.end_time: Optional[float] = None
-        self.tags: Dict[str, Any] = {}
-        self.logs: List[Dict] = []
+        self.end_time: float | None = None
+        self.tags: dict[str, Any] = {}
+        self.logs: list[dict] = []
         self.status = 'in_progress'
-    
+
     def set_tag(self, key: str, value: Any):
         """Establece un tag"""
         self.tags[key] = value
-    
+
     def log(self, message: str, level: str = 'info'):
         """Agrega un log al span"""
         self.logs.append({
@@ -167,18 +167,18 @@ class TraceSpan:
             'message': message,
             'level': level
         })
-    
+
     def finish(self, status: str = 'completed'):
         """Finaliza el span"""
         self.end_time = time.time()
         self.status = status
-    
+
     def duration_ms(self) -> float:
         """Obtiene duración en milisegundos"""
         end = self.end_time or time.time()
         return (end - self.start_time) * 1000
-    
-    def to_dict(self) -> Dict[str, Any]:
+
+    def to_dict(self) -> dict[str, Any]:
         """Convierte a diccionario"""
         return {
             'span_id': self.span_id,
@@ -195,26 +195,26 @@ class TraceSpan:
 
 class ObservabilityManager:
     """Gestor central de observability"""
-    
+
     def __init__(self):
         self.metrics = MetricsCollector()
-        self.active_spans: Dict[str, TraceSpan] = {}
-        self.completed_spans: List[TraceSpan] = []
-        
+        self.active_spans: dict[str, TraceSpan] = {}
+        self.completed_spans: list[TraceSpan] = []
+
         # Límite de spans completados
         self.max_completed_spans = 1000
-    
+
     @contextmanager
-    def trace_operation(self, operation_name: str, tags: Optional[Dict] = None):
+    def trace_operation(self, operation_name: str, tags: dict | None = None):
         """Context manager para tracing de operaciones"""
         span = TraceSpan(operation_name)
-        
+
         if tags:
             for key, value in tags.items():
                 span.set_tag(key, value)
-        
+
         self.active_spans[span.span_id] = span
-        
+
         try:
             yield span
             span.finish('completed')
@@ -228,24 +228,24 @@ class ObservabilityManager:
             # Mover a completed
             if span.span_id in self.active_spans:
                 del self.active_spans[span.span_id]
-            
+
             self.completed_spans.append(span)
-            
+
             # Limitar tamaño
             if len(self.completed_spans) > self.max_completed_spans:
                 self.completed_spans = self.completed_spans[-self.max_completed_spans:]
-            
+
             # Registrar duración
             self.metrics.record_histogram(
                 f'operation.{operation_name}.duration_ms',
                 span.duration_ms(),
                 tags={'status': span.status}
             )
-    
-    def get_system_health(self) -> Dict[str, Any]:
+
+    def get_system_health(self) -> dict[str, Any]:
         """Obtiene estado de salud del sistema"""
         metrics_summary = self.metrics.get_metrics_summary()
-        
+
         return {
             'status': 'healthy',
             'timestamp': datetime.utcnow().isoformat(),
@@ -254,23 +254,23 @@ class ObservabilityManager:
             'metrics': metrics_summary,
             'recent_failures': self._get_recent_failures()
         }
-    
-    def get_operation_stats(self, operation_name: str) -> Dict[str, Any]:
+
+    def get_operation_stats(self, operation_name: str) -> dict[str, Any]:
         """Obtiene estadísticas de una operación"""
         # Buscar spans de esta operación
         operation_spans = [
             s for s in self.completed_spans
             if s.operation_name == operation_name
         ]
-        
+
         if not operation_spans:
             return {
                 'operation_name': operation_name,
                 'count': 0
             }
-        
+
         durations = [s.duration_ms() for s in operation_spans]
-        
+
         return {
             'operation_name': operation_name,
             'count': len(operation_spans),
@@ -282,16 +282,16 @@ class ObservabilityManager:
             'p95_duration_ms': self.metrics._percentile(durations, 95),
             'p99_duration_ms': self.metrics._percentile(durations, 99)
         }
-    
-    def get_recent_traces(self, limit: int = 50) -> List[Dict]:
+
+    def get_recent_traces(self, limit: int = 50) -> list[dict]:
         """Obtiene traces recientes"""
         recent = self.completed_spans[-limit:] if len(self.completed_spans) > limit else self.completed_spans
         return [s.to_dict() for s in reversed(recent)]
-    
-    def _get_recent_failures(self, minutes: int = 5) -> List[Dict]:
+
+    def _get_recent_failures(self, minutes: int = 5) -> list[dict]:
         """Obtiene fallos recientes"""
         cutoff = time.time() - (minutes * 60)
-        
+
         failures = [
             {
                 'operation': s.operation_name,
@@ -302,7 +302,7 @@ class ObservabilityManager:
             for s in self.completed_spans
             if s.status == 'failed' and s.start_time >= cutoff
         ]
-        
+
         return failures
 
 
@@ -316,8 +316,8 @@ def record_vcp(
     verified: int,
     unverifiable: int,
     contradicted: int,
-    boletin_id: Optional[int] = None,
-    latency_ms: Optional[float] = None,
+    boletin_id: int | None = None,
+    latency_ms: float | None = None,
 ) -> None:
     """Module-level convenience function to record VCP metrics via global ObservabilityManager."""
     try:
@@ -342,20 +342,20 @@ def traced_operation(operation_name: str):
             with observability.trace_operation(operation_name) as span:
                 span.set_tag('function', func.__name__)
                 return await func(*args, **kwargs)
-        
+
         @wraps(func)
         def sync_wrapper(*args, **kwargs):
             with observability.trace_operation(operation_name) as span:
                 span.set_tag('function', func.__name__)
                 return func(*args, **kwargs)
-        
+
         # Retornar wrapper apropiado
         import asyncio
         if asyncio.iscoroutinefunction(func):
             return async_wrapper
         else:
             return sync_wrapper
-    
+
     return decorator
 
 

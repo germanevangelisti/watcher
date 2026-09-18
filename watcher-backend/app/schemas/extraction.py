@@ -3,10 +3,11 @@ Schemas unificados para extracción de contenido de documentos PDF.
 Épica 2: Extracción - Tarea 2.3
 """
 
-from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
 from datetime import datetime
 from enum import Enum
+from typing import Any
+
+from pydantic import BaseModel, Field
 
 
 class ExtractionMethod(str, Enum):
@@ -48,7 +49,7 @@ class ContentSection(BaseModel):
     content: str = Field(..., description="Contenido de texto de la sección")
     start_page: int = Field(..., description="Página de inicio de la sección")
     end_page: int = Field(..., description="Página de fin de la sección")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Metadata adicional de la sección")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Metadata adicional de la sección")
 
     class Config:
         json_schema_extra = {
@@ -66,9 +67,9 @@ class ExtractionStats(BaseModel):
     """Estadísticas del proceso de extracción."""
     total_chars: int = Field(..., description="Total de caracteres extraídos")
     total_pages: int = Field(..., description="Total de páginas procesadas")
-    total_tokens: Optional[int] = Field(None, description="Total de tokens (si se calculó)")
+    total_tokens: int | None = Field(None, description="Total de tokens (si se calculó)")
     extraction_method: ExtractionMethod = Field(..., description="Método utilizado para la extracción")
-    extraction_duration_ms: Optional[float] = Field(None, description="Duración de la extracción en milisegundos")
+    extraction_duration_ms: float | None = Field(None, description="Duración de la extracción en milisegundos")
 
     class Config:
         json_schema_extra = {
@@ -85,19 +86,19 @@ class ExtractionStats(BaseModel):
 class ExtractedContent(BaseModel):
     """
     Modelo unificado de contenido extraído de un documento PDF.
-    
+
     Este modelo es retornado por todos los extractores de PDF del sistema,
     garantizando una interfaz consistente independientemente del método de extracción.
     """
     success: bool = Field(..., description="Indica si la extracción fue exitosa")
     source_path: str = Field(..., description="Ruta del archivo fuente")
     full_text: str = Field(..., description="Texto completo extraído del documento")
-    pages: List[PageContent] = Field(..., description="Contenido por página")
-    sections: List[ContentSection] = Field(default_factory=list, description="Secciones lógicas detectadas")
+    pages: list[PageContent] = Field(..., description="Contenido por página")
+    sections: list[ContentSection] = Field(default_factory=list, description="Secciones lógicas detectadas")
     stats: ExtractionStats = Field(..., description="Estadísticas de la extracción")
     extracted_at: datetime = Field(..., description="Timestamp de la extracción")
-    error: Optional[str] = Field(None, description="Mensaje de error si success=False")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Metadata adicional del documento")
+    error: str | None = Field(None, description="Mensaje de error si success=False")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Metadata adicional del documento")
 
     class Config:
         json_schema_extra = {

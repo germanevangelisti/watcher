@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import yaml
 from fastapi import APIRouter
@@ -33,11 +33,11 @@ class SourceEntry(BaseModel):
     id: str
     name: str
     type: str
-    url: Optional[str] = None
-    jurisdiccion: Optional[str] = None
-    schedule: Optional[str] = None
+    url: str | None = None
+    jurisdiccion: str | None = None
+    schedule: str | None = None
     enabled: bool = True
-    notes: Optional[str] = None
+    notes: str | None = None
 
     class Config:
         from_attributes = True
@@ -47,17 +47,17 @@ class SourcesHealthResponse(BaseModel):
     total: int
     enabled: int
     disabled: int
-    sources: List[SourceEntry]
+    sources: list[SourceEntry]
 
 
 # ---------------------------------------------------------------------------
 # Loader (cached at module level to avoid repeated disk reads)
 # ---------------------------------------------------------------------------
 
-_REGISTRY_CACHE: Optional[List[Dict[str, Any]]] = None
+_REGISTRY_CACHE: list[dict[str, Any]] | None = None
 
 
-def _load_registry() -> List[Dict[str, Any]]:
+def _load_registry() -> list[dict[str, Any]]:
     global _REGISTRY_CACHE
     if _REGISTRY_CACHE is not None:
         return _REGISTRY_CACHE
@@ -100,7 +100,7 @@ async def sources_health() -> SourcesHealthResponse:
     """
     raw_sources = _load_registry()
 
-    sources: List[SourceEntry] = []
+    sources: list[SourceEntry] = []
     for entry in raw_sources:
         try:
             sources.append(SourceEntry(**entry))

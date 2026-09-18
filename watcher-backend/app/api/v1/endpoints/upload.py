@@ -8,27 +8,19 @@ Provides endpoints to:
 - Automatic SHA256 deduplication
 """
 
-import re
 import asyncio
+import re
 from pathlib import Path
-from typing import List, Optional, Dict, Any
-import httpx
+from typing import Any
 
-from fastapi import (
-    APIRouter,
-    UploadFile,
-    File,
-    HTTPException,
-    Depends,
-    BackgroundTasks
-)
+import httpx
+from app.core.config import settings
+from app.db import crud
+from app.db.session import get_db
+from app.services.hash_utils import compute_sha256_bytes
+from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, UploadFile
 from pydantic import BaseModel, validator
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.db.session import get_db
-from app.db import crud
-from app.core.config import settings
-from app.services.hash_utils import compute_sha256_bytes
 
 router = APIRouter()
 
@@ -41,11 +33,11 @@ class UploadResult(BaseModel):
     """Result of a single file upload."""
     filename: str
     status: str  # 'uploaded', 'duplicate', 'failed'
-    boletin_id: Optional[int] = None
-    file_hash: Optional[str] = None
-    file_size_bytes: Optional[int] = None
-    error: Optional[str] = None
-    duplicate_of: Optional[str] = None  # Filename of existing duplicate
+    boletin_id: int | None = None
+    file_hash: str | None = None
+    file_size_bytes: int | None = None
+    error: str | None = None
+    duplicate_of: str | None = None  # Filename of existing duplicate
 
 
 class BatchUploadResponse(BaseModel):
@@ -54,17 +46,17 @@ class BatchUploadResponse(BaseModel):
     uploaded: int
     duplicates: int
     failed: int
-    results: List[UploadResult]
+    results: list[UploadResult]
 
 
 class DownloadFromURLRequest(BaseModel):
     """Request to download a file from a URL."""
     url: str
-    filename: Optional[str] = None  # Override filename
-    date: Optional[str] = None      # Override date (YYYYMMDD)
-    section: Optional[str] = None   # Override section
-    fuente: Optional[str] = "provincial"  # Source type
-    
+    filename: str | None = None  # Override filename
+    date: str | None = None      # Override date (YYYYMMDD)
+    section: str | None = None   # Override section
+    fuente: str | None = "provincial"  # Source type
+
     @validator('date')
     def validate_date(cls, v):
         """Validate date format if provided."""
@@ -75,32 +67,32 @@ class DownloadFromURLRequest(BaseModel):
 
 class BatchURLDownloadRequest(BaseModel):
     """Request to download multiple URLs."""
-    urls: List[str]
-    fuente: Optional[str] = "provincial"
+    urls: list[str]
+    fuente: str | None = "provincial"
 
 
 # =============================================================================
 # HELPER FUNCTIONS
 # =============================================================================
 
-def parse_filename(filename: str) -> Dict[str, Any]:
+def parse_filename(filename: str) -> dict[str, Any]:
     """
     Parse filename to extract date and section.
     Expected format: YYYYMMDD_N_Secc.pdf
-    
+
     Returns:
         Dict with 'date', 'section', and 'valid' flag
     """
     pattern = r'^(\d{8})_(\d+)_Secc\.pdf$'
     match = re.match(pattern, filename)
-    
+
     if match:
         return {
             'valid': True,
             'date': match.group(1),
             'section': match.group(2)
         }
-    
+
     return {'valid': False, 'date': None, 'section': None}
 
 
@@ -117,16 +109,16 @@ def validate_pdf(content: bytes) -> bool:
 async def save_uploaded_file(
     filename: str,
     content: bytes,
-    date: Optional[str] = None
+    date: str | None = None
 ) -> Path:
     """
     Save uploaded file to organized directory structure.
-    
+
     Args:
         filename: Name of the file
         content: File content bytes
         date: Optional date in YYYYMMDD format
-        
+
     Returns:
         Path where file was saved
     """
@@ -138,13 +130,13 @@ async def save_uploaded_file(
     else:
         # Fallback: save in uploads root with timestamp
         save_dir = settings.UPLOADS_DIR / "manual_uploads"
-    
+
     save_dir.mkdir(parents=True, exist_ok=True)
     filepath = save_dir / filename
-    
+
     # Write file
     filepath.write_bytes(content)
-    
+
     return filepath
 
 
@@ -154,14 +146,14 @@ async def save_uploaded_file(
 
 @router.post("/files", response_model=BatchUploadResponse)
 async def upload_files(
-    files: List[UploadFile] = File(...),
+    files: list[UploadFile] = File(...),
     db: AsyncSession = Depends(get_db)
 ):
     """
     Upload one or more PDF files with automatic deduplication.
-    
+
     Epic 1.2 - Batch file upload
-    
+
     Features:
     - Accepts multiple files via multipart/form-data
     - Validates PDF format (magic bytes)
@@ -169,12 +161,12 @@ async def upload_files(
     - Parses filename to extract date/section (if format matches)
     - Organizes files by year/month
     - Returns detailed results for each file
-    
+
     Example filename: 20250210_1_Secc.pdf
     """
     if not files:
         raise HTTPException(status_code=400, detail="No files provided")
-    
+
     # Validate file count
     MAX_FILES_PER_REQUEST = 50
     if len(files) > MAX_FILES_PER_REQUEST:
@@ -182,21 +174,21 @@ async def upload_files(
             status_code=400,
             detail=f"Maximum {MAX_FILES_PER_REQUEST} files per request"
         )
-    
+
     results = []
     uploaded = 0
     duplicates = 0
     failed = 0
-    
+
     for upload_file in files:
         try:
             # Read file content
             content = await upload_file.read()
-            
+
             # Validate size
             MAX_SIZE = 50 * 1024 * 1024  # 50MB
             MIN_SIZE = 10 * 1024  # 10KB
-            
+
             if len(content) > MAX_SIZE:
                 results.append(UploadResult(
                     filename=upload_file.filename,
@@ -205,7 +197,7 @@ async def upload_files(
                 ))
                 failed += 1
                 continue
-            
+
             if len(content) < MIN_SIZE:
                 results.append(UploadResult(
                     filename=upload_file.filename,
@@ -214,7 +206,7 @@ async def upload_files(
                 ))
                 failed += 1
                 continue
-            
+
             # Validate PDF
             if not validate_pdf(content):
                 results.append(UploadResult(
@@ -224,16 +216,16 @@ async def upload_files(
                 ))
                 failed += 1
                 continue
-            
+
             # Compute hash
             file_hash = compute_sha256_bytes(content)
             file_size = len(content)
-            
+
             # Parse filename
             parsed = parse_filename(upload_file.filename)
             date = parsed['date'] if parsed['valid'] else 'unknown'
             section = parsed['section'] if parsed['valid'] else 'unknown'
-            
+
             # Check for duplicate
             boletin = await crud.create_boletin(
                 db=db,
@@ -245,7 +237,7 @@ async def upload_files(
                 file_size_bytes=file_size,
                 origin="uploaded"
             )
-            
+
             # Check if this is a new upload or duplicate
             is_duplicate = boletin.file_hash == file_hash and \
                           await db.scalar(
@@ -254,7 +246,7 @@ async def upload_files(
                                   crud.Boletin.id < boletin.id
                               ).exists().select()
                           )
-            
+
             if is_duplicate:
                 # This is a duplicate
                 results.append(UploadResult(
@@ -273,7 +265,7 @@ async def upload_files(
                     content,
                     date=date if parsed['valid'] else None
                 )
-                
+
                 results.append(UploadResult(
                     filename=upload_file.filename,
                     status="uploaded",
@@ -282,7 +274,7 @@ async def upload_files(
                     file_size_bytes=file_size
                 ))
                 uploaded += 1
-        
+
         except Exception as e:
             results.append(UploadResult(
                 filename=upload_file.filename,
@@ -290,10 +282,10 @@ async def upload_files(
                 error=str(e)
             ))
             failed += 1
-    
+
     # Commit all DB changes
     await db.commit()
-    
+
     return BatchUploadResponse(
         total=len(files),
         uploaded=uploaded,
@@ -314,16 +306,16 @@ async def download_from_url(
 ):
     """
     Download a PDF from a URL with automatic deduplication.
-    
+
     Epic 1.3 - Generic URL download
-    
+
     Features:
     - Downloads file from any URL
     - Validates PDF format
     - Computes SHA256 for deduplication
     - Supports filename, date, section overrides
     - Times out after 60 seconds
-    
+
     Example:
     ```json
     {
@@ -341,29 +333,29 @@ async def download_from_url(
         async with httpx.AsyncClient(timeout=timeout) as client:
             response = await client.get(request.url, follow_redirects=True)
             response.raise_for_status()
-            
+
             content = response.content
-        
+
         # Validate size
         MAX_SIZE = 50 * 1024 * 1024  # 50MB
         MIN_SIZE = 10 * 1024  # 10KB
-        
+
         if len(content) > MAX_SIZE:
             raise HTTPException(
                 status_code=400,
                 detail=f"File too large (max {MAX_SIZE // (1024*1024)}MB)"
             )
-        
+
         if len(content) < MIN_SIZE:
             raise HTTPException(
                 status_code=400,
                 detail=f"File too small (min {MIN_SIZE // 1024}KB)"
             )
-        
+
         # Validate PDF
         if not validate_pdf(content):
             raise HTTPException(status_code=400, detail="Downloaded file is not a valid PDF")
-        
+
         # Determine filename
         if request.filename:
             filename = request.filename
@@ -377,11 +369,11 @@ async def download_from_url(
                 filename = request.url.split('/')[-1]
                 if not filename.endswith('.pdf'):
                     filename += '.pdf'
-        
+
         # Compute hash
         file_hash = compute_sha256_bytes(content)
         file_size = len(content)
-        
+
         # Parse or use provided metadata
         if request.date and request.section:
             date = request.date
@@ -390,7 +382,7 @@ async def download_from_url(
             parsed = parse_filename(filename)
             date = request.date or (parsed['date'] if parsed['valid'] else 'unknown')
             section = request.section or (parsed['section'] if parsed['valid'] else 'unknown')
-        
+
         # Check for duplicate and create/update record
         boletin = await crud.create_boletin(
             db=db,
@@ -401,23 +393,23 @@ async def download_from_url(
             file_hash=file_hash,
             file_size_bytes=file_size
         )
-        
+
         # Check if duplicate
-        from sqlalchemy import select, func
+        from sqlalchemy import func, select
         duplicate_count = await db.scalar(
             select(func.count(crud.Boletin.id)).where(
                 crud.Boletin.file_hash == file_hash
             )
         )
-        
+
         is_duplicate = duplicate_count > 1
-        
+
         if not is_duplicate:
             # Save file
             _filepath = await save_uploaded_file(filename, content, date=date)
-        
+
         await db.commit()
-        
+
         return UploadResult(
             filename=filename,
             status="duplicate" if is_duplicate else "uploaded",
@@ -426,7 +418,7 @@ async def download_from_url(
             file_size_bytes=file_size,
             duplicate_of=boletin.filename if is_duplicate else None
         )
-    
+
     except httpx.HTTPError as e:
         raise HTTPException(status_code=502, detail=f"Failed to download: {str(e)}")
     except Exception as e:
@@ -441,15 +433,15 @@ async def download_from_urls(
 ):
     """
     Download multiple PDFs from URLs with rate limiting.
-    
+
     Epic 1.3 - Batch URL download
-    
+
     Features:
     - Downloads from multiple URLs sequentially
     - Rate limiting (1 second between requests)
     - Automatic deduplication
     - Returns summary of all downloads
-    
+
     Example:
     ```json
     {
@@ -463,38 +455,38 @@ async def download_from_urls(
     """
     if not request.urls:
         raise HTTPException(status_code=400, detail="No URLs provided")
-    
+
     MAX_URLS = 20
     if len(request.urls) > MAX_URLS:
         raise HTTPException(
             status_code=400,
             detail=f"Maximum {MAX_URLS} URLs per request"
         )
-    
+
     results = []
     uploaded = 0
     duplicates = 0
     failed = 0
-    
+
     for idx, url in enumerate(request.urls):
         # Rate limiting: 1 second between requests
         if idx > 0:
             await asyncio.sleep(1.0)
-        
+
         try:
             # Download each URL
             download_request = DownloadFromURLRequest(url=url, fuente=request.fuente)
             result = await download_from_url(download_request, db)
-            
+
             results.append(result)
-            
+
             if result.status == "uploaded":
                 uploaded += 1
             elif result.status == "duplicate":
                 duplicates += 1
             else:
                 failed += 1
-        
+
         except Exception as e:
             results.append(UploadResult(
                 filename=url.split('/')[-1],
@@ -502,7 +494,7 @@ async def download_from_urls(
                 error=str(e)
             ))
             failed += 1
-    
+
     return BatchUploadResponse(
         total=len(request.urls),
         uploaded=uploaded,

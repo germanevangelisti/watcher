@@ -10,7 +10,6 @@ Run from watcher-backend/:
 """
 
 import pytest
-
 from app.services.gasto_classifier import (
     ETAPA_ADJUDICACION,
     ETAPA_CONTRATO,

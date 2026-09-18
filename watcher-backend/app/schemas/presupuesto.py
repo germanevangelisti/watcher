@@ -2,9 +2,11 @@
 Schemas for Presupuesto endpoints
 """
 
-from pydantic import BaseModel, PlainSerializer
-from typing import Annotated, Optional, List
 from datetime import date
+from typing import Annotated
+
+from pydantic import BaseModel, PlainSerializer
+
 
 # ARS values are emitted in millions so JSON never contains 11+ digit
 # integers (those get corrupted by some browser inspectors and axios then
@@ -23,7 +25,7 @@ class ProgramaBase(BaseModel):
     ejercicio: int
     organismo: str
     programa: str
-    subprograma: Optional[str] = None
+    subprograma: str | None = None
     partida_presupuestaria: str
     descripcion: str
     monto_inicial: JsonMoney
@@ -32,43 +34,43 @@ class ProgramaBase(BaseModel):
 class ProgramaResponse(ProgramaBase):
     id: int
     fecha_aprobacion: date
-    meta_fisica: Optional[str] = None
-    meta_numerica: Optional[float] = None
-    unidad_medida: Optional[str] = None
-    fuente_financiamiento: Optional[str] = None
+    meta_fisica: str | None = None
+    meta_numerica: float | None = None
+    unidad_medida: str | None = None
+    fuente_financiamiento: str | None = None
 
     class Config:
         from_attributes = True
 
 class EjecucionResponse(BaseModel):
     id: int
-    boletin_id: Optional[int] = None
-    presupuesto_base_id: Optional[int] = None
+    boletin_id: int | None = None
+    presupuesto_base_id: int | None = None
     fecha_boletin: date
-    organismo: Optional[str] = None
-    beneficiario: Optional[str] = None
-    concepto: Optional[str] = None
+    organismo: str | None = None
+    beneficiario: str | None = None
+    concepto: str | None = None
     monto: JsonMoney
-    tipo_operacion: Optional[str] = None
-    partida_presupuestaria: Optional[str] = None
-    programa: Optional[str] = None
-    categoria_watcher: Optional[str] = None
-    riesgo_watcher: Optional[str] = None
-    etapa_gasto: Optional[str] = None
-    jurisdiccion: Optional[str] = None
-    monto_acumulado_mes: Optional[JsonMoney] = None
-    monto_acumulado_trimestre: Optional[JsonMoney] = None
-    monto_acumulado_anual: Optional[JsonMoney] = None
-    requiere_revision: Optional[bool] = False
+    tipo_operacion: str | None = None
+    partida_presupuestaria: str | None = None
+    programa: str | None = None
+    categoria_watcher: str | None = None
+    riesgo_watcher: str | None = None
+    etapa_gasto: str | None = None
+    jurisdiccion: str | None = None
+    monto_acumulado_mes: JsonMoney | None = None
+    monto_acumulado_trimestre: JsonMoney | None = None
+    monto_acumulado_anual: JsonMoney | None = None
+    requiere_revision: bool | None = False
     is_duplicate: int = 0
-    observaciones: Optional[str] = None
+    observaciones: str | None = None
 
     class Config:
         from_attributes = True
 
 
 class EjecucionListResponse(BaseModel):
-    ejecuciones: List[EjecucionResponse]
+    ejecuciones: list[EjecucionResponse]
     total: int
     total_monto: JsonMoney
     page: int
@@ -76,14 +78,14 @@ class EjecucionListResponse(BaseModel):
 
 
 class OrgResumenItem(BaseModel):
-    organismo: Optional[str]
+    organismo: str | None
     count: int
     monto_total: JsonMoney
     monto_compromiso: JsonMoney = 0.0
     monto_ejecucion: JsonMoney = 0.0
-    monto_vigente: Optional[JsonMoney] = None
-    pct_compromiso: Optional[float] = None
-    pct_ejecucion: Optional[float] = None
+    monto_vigente: JsonMoney | None = None
+    pct_compromiso: float | None = None
+    pct_ejecucion: float | None = None
     sobre_compromiso: bool = False
     sobre_ejecucion: bool = False
     matched: bool = False
@@ -103,16 +105,16 @@ class EjecucionResumenResponse(BaseModel):
     monto_compromiso: JsonMoney = 0.0
     monto_ejecucion: JsonMoney = 0.0
     sobre_compromiso_count: int = 0
-    por_organismo: List[OrgResumenItem]
-    por_mes: List[MesResumenItem]
+    por_organismo: list[OrgResumenItem]
+    por_mes: list[MesResumenItem]
 
 class ProgramaDetailResponse(ProgramaResponse):
-    ejecuciones: List[EjecucionResponse]
+    ejecuciones: list[EjecucionResponse]
     total_ejecutado: JsonMoney
     porcentaje_ejecucion: float
 
 class ProgramasListResponse(BaseModel):
-    programas: List[ProgramaResponse]
+    programas: list[ProgramaResponse]
     total: int
     page: int
     page_size: int

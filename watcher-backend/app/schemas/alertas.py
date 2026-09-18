@@ -2,42 +2,43 @@
 Schemas for Alertas endpoints
 """
 
-from pydantic import BaseModel
-from typing import Optional, List
 from datetime import datetime
+
+from pydantic import BaseModel
+
 
 class AlertaBase(BaseModel):
     tipo_alerta: str
     nivel_severidad: str
     organismo: str
-    programa: Optional[str] = None
+    programa: str | None = None
     titulo: str
     descripcion: str
-    valor_detectado: Optional[float] = None
-    valor_esperado: Optional[float] = None
-    porcentaje_desvio: Optional[float] = None
+    valor_detectado: float | None = None
+    valor_esperado: float | None = None
+    porcentaje_desvio: float | None = None
 
 class AlertaCreate(AlertaBase):
-    boletin_id: Optional[int] = None
-    ejecucion_id: Optional[int] = None
-    acciones_sugeridas: Optional[dict] = None
+    boletin_id: int | None = None
+    ejecucion_id: int | None = None
+    acciones_sugeridas: dict | None = None
 
 class AlertaUpdate(BaseModel):
-    estado: Optional[str] = None
-    observaciones_revision: Optional[str] = None
+    estado: str | None = None
+    observaciones_revision: str | None = None
 
 class AlertaResponse(AlertaBase):
     id: int
     fecha_deteccion: datetime
     estado: str
     created_at: datetime
-    acciones_sugeridas: Optional[dict] = None
+    acciones_sugeridas: dict | None = None
 
     class Config:
         from_attributes = True
 
 class AlertasListResponse(BaseModel):
-    alertas: List[AlertaResponse]
+    alertas: list[AlertaResponse]
     total: int
     page: int
     page_size: int

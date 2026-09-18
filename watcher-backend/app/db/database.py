@@ -6,11 +6,11 @@ The driver is selected automatically based on DATABASE_URL.
 """
 
 import logging
-from sqlalchemy import event, text
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import declarative_base, sessionmaker
 
 from app.core.config import settings
+from sqlalchemy import event, text
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
 
 logger = logging.getLogger(__name__)
 

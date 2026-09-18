@@ -1,11 +1,12 @@
 """
 Router para acceso a texto de documentos procesados
 """
+from pathlib import Path as PathLib
+
+from app.core.config import settings
 from fastapi import APIRouter, HTTPException, Path
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from pathlib import Path as PathLib
-from app.core.config import settings
 
 router = APIRouter(prefix="/documentos", tags=["documentos"])
 
@@ -26,33 +27,33 @@ async def get_document_text(
 ):
     """
     Obtiene el texto extraído de un documento
-    
+
     Args:
         filename: Nombre del archivo PDF original
-        
+
     Returns:
         Contenido de texto del documento procesado
     """
     # Construir path al archivo de texto
     txt_filename = filename.replace('.pdf', '.txt')
     txt_path = PROCESSED_DIR / txt_filename
-    
+
     if not txt_path.exists():
         raise HTTPException(
             status_code=404,
             detail=f"Texto no encontrado para documento: {filename}"
         )
-    
+
     try:
         # Leer contenido
         content = txt_path.read_text(encoding='utf-8')
-        
+
         return DocumentTextResponse(
             filename=filename,
             content=content,
             size_bytes=txt_path.stat().st_size
         )
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=500,
@@ -69,13 +70,13 @@ async def download_document_text(
     """
     txt_filename = filename.replace('.pdf', '.txt')
     txt_path = PROCESSED_DIR / txt_filename
-    
+
     if not txt_path.exists():
         raise HTTPException(
             status_code=404,
             detail=f"Texto no encontrado para documento: {filename}"
         )
-    
+
     return FileResponse(
         path=str(txt_path),
         filename=txt_filename,
@@ -91,14 +92,14 @@ async def get_pdf_document(
     Obtiene el PDF original (si está disponible)
     """
     boletines_dir = settings.BOLETINES_DIR
-    
+
     # El filename puede venir como 20260203_1_Secc.pdf
     # Buscar por año/mes/dia en la estructura de directorios
     if len(filename) >= 8:
         year = filename[:4]
         month = filename[4:6]
         day = filename[6:8]
-        
+
         # Buscar en estructura de directorios
         possible_paths = [
             boletines_dir / year / month / day / filename,
@@ -106,7 +107,7 @@ async def get_pdf_document(
             boletines_dir / year / filename,
             boletines_dir / filename
         ]
-        
+
         for pdf_path in possible_paths:
             if pdf_path.exists():
                 return FileResponse(
@@ -114,7 +115,7 @@ async def get_pdf_document(
                     media_type='application/pdf',
                     headers={"Content-Disposition": "inline"},
                 )
-    
+
     raise HTTPException(
         status_code=404,
         detail=f"PDF no encontrado: {filename}"

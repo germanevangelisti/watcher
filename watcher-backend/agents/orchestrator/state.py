@@ -1,10 +1,11 @@
 """
 Estado compartido para workflows de agentes
 """
-from typing import Dict, List, Any, Optional
 from datetime import datetime
-from pydantic import BaseModel, Field
 from enum import Enum
+from typing import Any
+
+from pydantic import BaseModel, Field
 
 
 class AgentType(str, Enum):
@@ -35,7 +36,7 @@ class AgentMessage(BaseModel):
     from_agent: AgentType
     to_agent: AgentType
     message_type: str
-    content: Dict[str, Any]
+    content: dict[str, Any]
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     requires_approval: bool = False
 
@@ -45,16 +46,16 @@ class TaskDefinition(BaseModel):
     task_id: str
     task_type: str
     agent: AgentType
-    parameters: Dict[str, Any]
+    parameters: dict[str, Any]
     status: TaskStatus = TaskStatus.PENDING
     priority: int = 0
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    result: Optional[Dict[str, Any]] = None
-    error: Optional[str] = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    result: dict[str, Any] | None = None
+    error: str | None = None
     requires_approval: bool = False
-    approval_status: Optional[str] = None
+    approval_status: str | None = None
 
 
 class WorkflowState(BaseModel):
@@ -63,47 +64,47 @@ class WorkflowState(BaseModel):
     workflow_name: str
     status: TaskStatus = TaskStatus.PENDING
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+
     # Configuración
-    config: Dict[str, Any] = Field(default_factory=dict)
-    
+    config: dict[str, Any] = Field(default_factory=dict)
+
     # Tareas del workflow
-    tasks: List[TaskDefinition] = Field(default_factory=list)
-    
+    tasks: list[TaskDefinition] = Field(default_factory=list)
+
     # Mensajes entre agentes
-    messages: List[AgentMessage] = Field(default_factory=list)
-    
+    messages: list[AgentMessage] = Field(default_factory=list)
+
     # Estado compartido entre agentes
-    shared_state: Dict[str, Any] = Field(default_factory=dict)
-    
+    shared_state: dict[str, Any] = Field(default_factory=dict)
+
     # Métricas
-    metrics: Dict[str, Any] = Field(default_factory=dict)
-    
+    metrics: dict[str, Any] = Field(default_factory=dict)
+
     # Logs para observabilidad
-    logs: List[str] = Field(default_factory=list)
-    
+    logs: list[str] = Field(default_factory=list)
+
     class Config:
         json_encoders = {
             datetime: lambda v: v.isoformat()
         }
-    
+
     def add_log(self, message: str) -> None:
         """Agrega un log con timestamp"""
         timestamp = datetime.utcnow().isoformat()
         self.logs.append(f"[{timestamp}] {message}")
-    
-    def get_task(self, task_id: str) -> Optional[TaskDefinition]:
+
+    def get_task(self, task_id: str) -> TaskDefinition | None:
         """Obtiene una tarea por ID"""
         for task in self.tasks:
             if task.task_id == task_id:
                 return task
         return None
-    
-    def update_task_status(self, task_id: str, status: TaskStatus, 
-                          result: Optional[Dict[str, Any]] = None,
-                          error: Optional[str] = None) -> None:
+
+    def update_task_status(self, task_id: str, status: TaskStatus,
+                          result: dict[str, Any] | None = None,
+                          error: str | None = None) -> None:
         """Actualiza el estado de una tarea"""
         task = self.get_task(task_id)
         if task:
@@ -116,26 +117,26 @@ class WorkflowState(BaseModel):
                 task.started_at = datetime.utcnow()
             elif status in [TaskStatus.COMPLETED, TaskStatus.FAILED, TaskStatus.CANCELLED]:
                 task.completed_at = datetime.utcnow()
-    
-    def get_pending_tasks(self) -> List[TaskDefinition]:
+
+    def get_pending_tasks(self) -> list[TaskDefinition]:
         """Obtiene tareas pendientes ordenadas por prioridad"""
         pending = [t for t in self.tasks if t.status == TaskStatus.PENDING]
         return sorted(pending, key=lambda x: x.priority, reverse=True)
-    
-    def get_tasks_awaiting_approval(self) -> List[TaskDefinition]:
+
+    def get_tasks_awaiting_approval(self) -> list[TaskDefinition]:
         """Obtiene tareas esperando aprobación"""
         return [t for t in self.tasks if t.status == TaskStatus.WAITING_APPROVAL]
-    
+
     def is_completed(self) -> bool:
         """Verifica si el workflow está completo"""
         if not self.tasks:
             return False
         return all(t.status in [TaskStatus.COMPLETED, TaskStatus.CANCELLED] for t in self.tasks)
-    
+
     def has_failed_tasks(self) -> bool:
         """Verifica si hay tareas fallidas"""
         return any(t.status == TaskStatus.FAILED for t in self.tasks)
-    
+
     def progress_percentage(self) -> float:
         """Calcula el porcentaje de progreso"""
         if not self.tasks:

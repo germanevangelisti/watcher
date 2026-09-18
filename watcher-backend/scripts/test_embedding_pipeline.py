@@ -13,9 +13,9 @@ Uso:
     python ../../scripts/test_embedding_pipeline.py
 """
 
+import asyncio
 import os
 import sys
-import asyncio
 from pathlib import Path
 
 # Asegurar que el backend esté en el path
@@ -24,6 +24,7 @@ sys.path.insert(0, str(BACKEND_DIR))
 
 # Cargar .env ANTES de cualquier import del backend
 from dotenv import load_dotenv
+
 load_dotenv(BACKEND_DIR / ".env")
 
 PASS = "✅ PASS"

@@ -4,16 +4,15 @@ Incluye sync global y sync por jurisdicción.
 """
 
 import logging
-from typing import Dict, List, Optional
-from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends, Query
-from pydantic import BaseModel, Field
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
-from app.db.database import get_db
-from app.db.models import JurisdiccionSyncConfig, Jurisdiccion
-from app.services.sync_service import SyncService
 from app.core.scheduler import reconfigure_scheduler
+from app.db.database import get_db
+from app.db.models import Jurisdiccion, JurisdiccionSyncConfig
+from app.services.sync_service import SyncService
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -30,16 +29,16 @@ class SyncScheduleConfig(BaseModel):
 class SyncStartRequest(BaseModel):
     """Request para iniciar sincronización."""
     process_after_download: bool = Field(
-        default=True, 
+        default=True,
         description="Si debe procesar los boletines después de descargar"
     )
 
 
 @router.get("/status")
-async def get_sync_status(db: AsyncSession = Depends(get_db)) -> Dict:
+async def get_sync_status(db: AsyncSession = Depends(get_db)) -> dict:
     """
     Obtiene el estado actual de sincronización.
-    
+
     Returns:
         Estado completo de sincronización incluyendo:
         - status: Estado actual (idle, syncing, processing, error)
@@ -54,7 +53,7 @@ async def get_sync_status(db: AsyncSession = Depends(get_db)) -> Dict:
         sync_service = SyncService(db)
         status = await sync_service.get_sync_status()
         return status
-    
+
     except Exception as e:
         logger.error(f"Error obteniendo estado de sync: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -65,45 +64,45 @@ async def start_sync(
     request: SyncStartRequest,
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db)
-) -> Dict:
+) -> dict:
     """
     Inicia una sincronización manual.
-    
+
     La sincronización se ejecuta en background:
     1. Detecta el último boletín descargado
     2. Calcula fechas faltantes hasta hoy
     3. Descarga los boletines faltantes
     4. Opcionalmente los procesa con IA
-    
+
     Args:
         request: Configuración de la sincronización
         background_tasks: Tareas en background de FastAPI
         db: Sesión de base de datos
-        
+
     Returns:
         Mensaje de confirmación
     """
     try:
         sync_service = SyncService(db)
-        
+
         # Verificar si ya hay una sync en progreso
         if sync_service.is_syncing:
             raise HTTPException(
-                status_code=409, 
+                status_code=409,
                 detail="Ya hay una sincronización en progreso"
             )
-        
+
         # Iniciar sync en background
         background_tasks.add_task(
             sync_service.sync_to_today,
             process_after_download=request.process_after_download
         )
-        
+
         return {
             "message": "Sincronización iniciada",
             "process_after_download": request.process_after_download
         }
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -112,31 +111,31 @@ async def start_sync(
 
 
 @router.post("/stop")
-async def stop_sync(db: AsyncSession = Depends(get_db)) -> Dict:
+async def stop_sync(db: AsyncSession = Depends(get_db)) -> dict:
     """
     Cancela la sincronización en progreso.
-    
+
     La cancelación es "graceful": el sistema terminará la operación
     actual antes de detenerse completamente.
-    
+
     Returns:
         Mensaje de confirmación
     """
     try:
         sync_service = SyncService(db)
-        
+
         if not sync_service.is_syncing:
             raise HTTPException(
                 status_code=400,
                 detail="No hay sincronización en progreso"
             )
-        
+
         await sync_service.cancel_sync()
-        
+
         return {
             "message": "Cancelación solicitada. La sincronización se detendrá en breve."
         }
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -148,19 +147,19 @@ async def stop_sync(db: AsyncSession = Depends(get_db)) -> Dict:
 async def update_schedule(
     config: SyncScheduleConfig,
     db: AsyncSession = Depends(get_db)
-) -> Dict:
+) -> dict:
     """
     Actualiza la configuración del scheduler automático.
-    
+
     Permite configurar:
     - Si el sync automático está habilitado
     - Frecuencia: daily (diario) o weekly (semanal)
     - Hora del día para ejecutar (0-23)
-    
+
     Args:
         config: Configuración del scheduler
         db: Sesión de base de datos
-        
+
     Returns:
         Configuración actualizada y próxima ejecución
     """
@@ -171,21 +170,21 @@ async def update_schedule(
                 status_code=400,
                 detail="Frecuencia inválida. Debe ser: daily, weekly, o manual"
             )
-        
+
         sync_service = SyncService(db)
-        
+
         await sync_service.update_schedule_config(
             enabled=config.enabled,
             frequency=config.frequency,
             hour=config.hour
         )
-        
+
         # Reconfigurar el scheduler para aplicar cambios
         await reconfigure_scheduler()
-        
+
         # Obtener estado actualizado
         status = await sync_service.get_sync_status()
-        
+
         return {
             "message": "Configuración de scheduler actualizada",
             "config": {
@@ -195,7 +194,7 @@ async def update_schedule(
             },
             "next_scheduled_sync": status["next_scheduled_sync"]
         }
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -207,14 +206,14 @@ async def update_schedule(
 async def get_sync_history(
     limit: int = 10,
     db: AsyncSession = Depends(get_db)
-) -> Dict:
+) -> dict:
     """
     Obtiene el historial de sincronizaciones.
-    
+
     Args:
         limit: Número máximo de registros a retornar
         db: Sesión de base de datos
-        
+
     Returns:
         Lista de sincronizaciones históricas
     """
@@ -223,7 +222,7 @@ async def get_sync_history(
         # En el futuro, podríamos crear una tabla sync_history
         sync_service = SyncService(db)
         current_status = await sync_service.get_sync_status()
-        
+
         history = []
         if current_status.get("last_sync_timestamp"):
             history.append({
@@ -233,12 +232,12 @@ async def get_sync_history(
                 "boletines_processed": current_status["boletines_processed"],
                 "boletines_failed": current_status["boletines_failed"]
             })
-        
+
         return {
             "history": history,
             "total": len(history)
         }
-    
+
     except Exception as e:
         logger.error(f"Error obteniendo historial: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -250,34 +249,34 @@ async def get_sync_history(
 
 class JurisdiccionSyncConfigRequest(BaseModel):
     """Request para crear o actualizar configuración de sync por jurisdicción."""
-    source_url_template: Optional[str] = Field(None, description="URL template con {year}, {month}, {day}, {section}")
+    source_url_template: str | None = Field(None, description="URL template con {year}, {month}, {day}, {section}")
     scraper_type: str = Field(default="generic", description="Tipo de scraper: provincial, municipal, national, generic")
     sync_enabled: bool = Field(default=False)
     sync_frequency: str = Field(default="manual", description="manual, daily, weekly")
-    sections_to_sync: Optional[List[str]] = Field(None, description='Secciones a sincronizar, e.g. ["1_Secc", "2_Secc"]')
-    extra_config: Optional[Dict] = Field(None, description="Configuración adicional del scraper")
+    sections_to_sync: list[str] | None = Field(None, description='Secciones a sincronizar, e.g. ["1_Secc", "2_Secc"]')
+    extra_config: dict | None = Field(None, description="Configuración adicional del scraper")
 
 
 class JurisdiccionSyncConfigResponse(BaseModel):
     """Response para configuración de sync."""
     id: int
     jurisdiccion_id: int
-    jurisdiccion_nombre: Optional[str] = None
-    source_url_template: Optional[str]
+    jurisdiccion_nombre: str | None = None
+    source_url_template: str | None
     scraper_type: str
     sync_enabled: bool
     sync_frequency: str
-    last_sync_date: Optional[str]
+    last_sync_date: str | None
     last_sync_status: str
-    last_sync_error: Optional[str]
-    sections_to_sync: Optional[List[str]]
-    extra_config: Optional[Dict]
+    last_sync_error: str | None
+    sections_to_sync: list[str] | None
+    extra_config: dict | None
 
 
 @router.get("/jurisdictions/configs")
 async def list_jurisdiction_sync_configs(
     db: AsyncSession = Depends(get_db)
-) -> List[Dict]:
+) -> list[dict]:
     """
     Lista todas las configuraciones de sync por jurisdicción.
     """
@@ -287,7 +286,7 @@ async def list_jurisdiction_sync_configs(
         )
         result = await db.execute(stmt)
         rows = result.all()
-        
+
         configs = []
         for config, nombre in rows:
             configs.append({
@@ -304,9 +303,9 @@ async def list_jurisdiction_sync_configs(
                 "sections_to_sync": config.sections_to_sync,
                 "extra_config": config.extra_config,
             })
-        
+
         return configs
-    
+
     except Exception as e:
         logger.error(f"Error listing sync configs: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -316,7 +315,7 @@ async def list_jurisdiction_sync_configs(
 async def get_jurisdiction_sync_config(
     jurisdiccion_id: int,
     db: AsyncSession = Depends(get_db)
-) -> Dict:
+) -> dict:
     """
     Obtiene la configuración de sync para una jurisdicción.
     """
@@ -326,14 +325,14 @@ async def get_jurisdiction_sync_config(
         )
         result = await db.execute(stmt)
         config = result.scalar_one_or_none()
-        
+
         if not config:
             return {
                 "jurisdiccion_id": jurisdiccion_id,
                 "configured": False,
                 "message": "No hay configuración de sync para esta jurisdicción"
             }
-        
+
         return {
             "id": config.id,
             "jurisdiccion_id": config.jurisdiccion_id,
@@ -348,7 +347,7 @@ async def get_jurisdiction_sync_config(
             "extra_config": config.extra_config,
             "configured": True,
         }
-    
+
     except Exception as e:
         logger.error(f"Error getting sync config: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -359,7 +358,7 @@ async def upsert_jurisdiction_sync_config(
     jurisdiccion_id: int,
     request: JurisdiccionSyncConfigRequest,
     db: AsyncSession = Depends(get_db)
-) -> Dict:
+) -> dict:
     """
     Crea o actualiza la configuración de sync para una jurisdicción.
     """
@@ -368,17 +367,17 @@ async def upsert_jurisdiction_sync_config(
         j_stmt = select(Jurisdiccion).where(Jurisdiccion.id == jurisdiccion_id)
         j_result = await db.execute(j_stmt)
         jurisdiccion = j_result.scalar_one_or_none()
-        
+
         if not jurisdiccion:
             raise HTTPException(status_code=404, detail=f"Jurisdicción {jurisdiccion_id} no encontrada")
-        
+
         # Check existing config
         stmt = select(JurisdiccionSyncConfig).where(
             JurisdiccionSyncConfig.jurisdiccion_id == jurisdiccion_id
         )
         result = await db.execute(stmt)
         config = result.scalar_one_or_none()
-        
+
         if config:
             # Update existing
             config.source_url_template = request.source_url_template
@@ -399,10 +398,10 @@ async def upsert_jurisdiction_sync_config(
                 extra_config=request.extra_config,
             )
             db.add(config)
-        
+
         await db.commit()
         await db.refresh(config)
-        
+
         return {
             "message": "Configuración de sync actualizada",
             "id": config.id,
@@ -411,7 +410,7 @@ async def upsert_jurisdiction_sync_config(
             "sync_enabled": config.sync_enabled,
             "scraper_type": config.scraper_type,
         }
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -425,7 +424,7 @@ async def trigger_jurisdiction_sync(
     background_tasks: BackgroundTasks,
     process_after_download: bool = Query(True),
     db: AsyncSession = Depends(get_db)
-) -> Dict:
+) -> dict:
     """
     Trigger sync for a specific jurisdiction.
     Downloads boletines from the configured source and optionally processes them.
@@ -437,35 +436,35 @@ async def trigger_jurisdiction_sync(
         )
         result = await db.execute(stmt)
         config = result.scalar_one_or_none()
-        
+
         if not config:
             raise HTTPException(
                 status_code=404,
                 detail=f"No hay configuración de sync para jurisdicción {jurisdiccion_id}"
             )
-        
+
         if not config.sync_enabled:
             raise HTTPException(
                 status_code=400,
                 detail="La sincronización está deshabilitada para esta jurisdicción"
             )
-        
+
         if config.last_sync_status == "syncing":
             raise HTTPException(
                 status_code=409,
                 detail="Ya hay una sincronización en progreso para esta jurisdicción"
             )
-        
+
         # Mark as syncing
         config.last_sync_status = "syncing"
         config.last_sync_error = None
         await db.commit()
-        
+
         # Get jurisdiction info
         j_stmt = select(Jurisdiccion).where(Jurisdiccion.id == jurisdiccion_id)
         j_result = await db.execute(j_stmt)
         jurisdiccion = j_result.scalar_one_or_none()
-        
+
         # Start sync in background
         background_tasks.add_task(
             _run_jurisdiction_sync,
@@ -475,14 +474,14 @@ async def trigger_jurisdiction_sync(
             sections=config.sections_to_sync,
             process_after_download=process_after_download,
         )
-        
+
         return {
             "message": f"Sincronización iniciada para {jurisdiccion.nombre if jurisdiccion else jurisdiccion_id}",
             "jurisdiccion_id": jurisdiccion_id,
             "scraper_type": config.scraper_type,
             "process_after_download": process_after_download,
         }
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -493,14 +492,15 @@ async def trigger_jurisdiction_sync(
 async def _run_jurisdiction_sync(
     jurisdiccion_id: int,
     scraper_type: str,
-    source_url_template: Optional[str],
-    sections: Optional[List[str]],
+    source_url_template: str | None,
+    sections: list[str] | None,
     process_after_download: bool,
 ):
     """Background task: run sync for a specific jurisdiction."""
+    from datetime import date, datetime
+
     from app.db.session import async_session_maker
-    from datetime import datetime, date
-    
+
     async with async_session_maker() as db:
         try:
             # Get config record
@@ -509,30 +509,30 @@ async def _run_jurisdiction_sync(
             )
             result = await db.execute(stmt)
             config = result.scalar_one_or_none()
-            
+
             if not config:
                 return
-            
+
             # Use existing SyncService for the actual sync work
             sync_service = SyncService(db)
-            
+
             # For now, delegate to the existing global sync
             # In the future, this can be customized per scraper_type
             logger.info(f"Starting sync for jurisdiction {jurisdiccion_id} with scraper={scraper_type}")
-            
+
             await sync_service.sync_to_today(
                 process_after_download=process_after_download
             )
-            
+
             # Update config with results
             config.last_sync_status = "completed"
             config.last_sync_date = date.today()
             config.last_sync_timestamp = datetime.utcnow()
             config.last_sync_error = None
             await db.commit()
-            
+
             logger.info(f"Sync completed for jurisdiction {jurisdiccion_id}")
-        
+
         except Exception as e:
             logger.error(f"Sync failed for jurisdiction {jurisdiccion_id}: {e}")
             try:

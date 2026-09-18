@@ -20,12 +20,11 @@ Lectura:
 import json
 import logging
 import re as _re
-from typing import List, Dict, Any, Optional
+from typing import Any
 
 import networkx as nx
-from neo4j import AsyncSession as Neo4jAsyncSession
-
 from app.db.graph_driver import run_query
+from neo4j import AsyncSession as Neo4jAsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -61,11 +60,11 @@ async def upsert_entity(
     tipo: str,
     nombre_normalizado: str,
     nombre_display: str,
-    variantes: List[str],
+    variantes: list[str],
     total_menciones: int,
-    primera_aparicion: Optional[str],
-    ultima_aparicion: Optional[str],
-    metadata_extra: Optional[Dict],
+    primera_aparicion: str | None,
+    ultima_aparicion: str | None,
+    metadata_extra: dict | None,
 ) -> None:
     """MERGE un nodo :Entidad por nombre_normalizado, actualiza todas las propiedades."""
     await run_query(
@@ -106,8 +105,8 @@ async def upsert_relationship(
     boletin_pg_id: int,
     fecha: str,
     confianza: float,
-    contexto: Optional[str],
-    metadata_extra: Optional[Dict],
+    contexto: str | None,
+    metadata_extra: dict | None,
 ) -> None:
     """
     MERGE una arista dirigida entre dos nodos :Entidad.
@@ -172,8 +171,8 @@ async def get_graph_overview(
     session: Neo4jAsyncSession,
     max_nodes: int = 50,
     min_mentions: int = 3,
-    entity_types: Optional[List[str]] = None,
-) -> Dict[str, Any]:
+    entity_types: list[str] | None = None,
+) -> dict[str, Any]:
     """
     Grafo de conocimiento para visualización.
     Mantiene el mismo response shape que el endpoint PostgreSQL existente.
@@ -235,7 +234,7 @@ async def get_graph_overview(
 async def get_entity_relationships(
     session: Neo4jAsyncSession,
     pg_id: int,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Vecindad de 1 salto de una entidad.
     Mismo response shape que el endpoint PostgreSQL existente.
@@ -286,7 +285,7 @@ async def find_shortest_path(
     pg_id_a: int,
     pg_id_b: int,
     max_depth: int = 6,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Camino más corto entre dos entidades (multi-salto nativo Neo4j)."""
     result = await session.run(
         """
@@ -324,7 +323,7 @@ async def get_neighborhood(
     session: Neo4jAsyncSession,
     pg_id: int,
     depth: int = 2,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Subgrafo de vecinos a N saltos (multi-hop nativo Neo4j)."""
     result = await run_query(session, "neighborhood", {"pg_id": pg_id, "depth": depth})
     record = await result.single()
@@ -405,7 +404,7 @@ async def load_graph_into_networkx(
 async def compute_pagerank(
     session: Neo4jAsyncSession,
     top_n: int = 20,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """
     Calcula PageRank via NetworkX sobre el grafo cargado desde Neo4j.
     Retorna top N entidades ordenadas por score.
@@ -430,7 +429,7 @@ async def compute_pagerank(
 
 async def compute_communities(
     session: Neo4jAsyncSession,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """
     Detección de comunidades Louvain via python-louvain sobre NetworkX.
     Requiere: pip install python-louvain
@@ -449,7 +448,7 @@ async def compute_communities(
     G_undirected = G_directed.to_undirected()
     partition = community_louvain.best_partition(G_undirected)
 
-    communities: Dict[int, List] = {}
+    communities: dict[int, list] = {}
     for pg_id, community_id in partition.items():
         communities.setdefault(community_id, []).append(pg_id)
 

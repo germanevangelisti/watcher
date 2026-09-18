@@ -9,7 +9,8 @@ Este servicio maneja:
 """
 
 import logging
-from typing import List, Optional, Any
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -23,7 +24,7 @@ class ChunkingConfig(BaseModel):
     strategy: str = Field(default="recursive", description="Estrategia de chunking")
 
     # Separadores jerárquicos (de mayor a menor prioridad)
-    separators: List[str] = Field(
+    separators: list[str] = Field(
         default=[
             # Actos administrativos individuales (máxima prioridad)
             "\nDECRETO N",
@@ -57,7 +58,7 @@ class ChunkResult(BaseModel):
     start_char: int = Field(description="Posición inicial en el texto original")
     end_char: int = Field(description="Posición final en el texto original")
     num_chars: int = Field(description="Número de caracteres en el chunk")
-    entity_anchors: Optional[List[Any]] = None  # List[EntityResult] from entity_service
+    entity_anchors: list[Any] | None = None  # List[EntityResult] from entity_service
 
     class Config:
         frozen = False  # Allow modification
@@ -66,21 +67,21 @@ class ChunkResult(BaseModel):
 class ChunkingService:
     """
     Servicio para dividir texto en chunks con estrategia recursiva.
-    
+
     Implementa una estrategia similar a RecursiveCharacterTextSplitter
     de langchain, pero adaptada a boletines oficiales argentinos.
     """
-    
-    def __init__(self, config: Optional[ChunkingConfig] = None):
+
+    def __init__(self, config: ChunkingConfig | None = None):
         """
         Inicializar ChunkingService.
-        
+
         Args:
             config: Configuración de chunking (usa defaults si no se proporciona)
         """
         self.config = config or ChunkingConfig()
-    
-    def chunk(self, text: str, config: Optional[ChunkingConfig] = None, document_id: str = "", entity_map=None) -> List[ChunkResult]:
+
+    def chunk(self, text: str, config: ChunkingConfig | None = None, document_id: str = "", entity_map=None) -> list[ChunkResult]:
         """
         Dividir texto en chunks usando estrategia recursiva.
 
@@ -134,8 +135,8 @@ class ChunkingService:
 
         logger.info(f"Texto dividido en {len(results)} chunks")
         return results
-    
-    def _recursive_split(self, text: str, config: ChunkingConfig, entity_map=None) -> List[str]:
+
+    def _recursive_split(self, text: str, config: ChunkingConfig, entity_map=None) -> list[str]:
         """
         Divide texto recursivamente usando separadores jerárquicos.
 
@@ -236,25 +237,25 @@ class ChunkingService:
 
         # Si no se pudo dividir con separadores, dividir por tamaño fijo
         return self._split_by_size(text, config.chunk_size)
-    
-    def _split_text_by_separator(self, text: str, separator: str, entity_map=None) -> List[str]:
+
+    def _split_text_by_separator(self, text: str, separator: str, entity_map=None) -> list[str]:
         """
         Divide texto por separador, manteniendo el separador.
-        
+
         Args:
             text: Texto a dividir
             separator: Separador
-            
+
         Returns:
             Lista de partes
         """
         if separator == " ":
             # Caso especial: dividir por espacio es simplemente split
             return text.split(separator)
-        
+
         # Dividir manteniendo el separador
         parts = text.split(separator)
-        
+
         # Re-agregar el separador excepto en la primera parte
         result = []
         for i, part in enumerate(parts):
@@ -262,17 +263,17 @@ class ChunkingService:
                 result.append(part)
             else:
                 result.append(part)  # El separador se agregará al hacer join
-        
+
         return [p for p in result if p]  # Filtrar vacíos
-    
-    def _split_by_size(self, text: str, chunk_size: int) -> List[str]:
+
+    def _split_by_size(self, text: str, chunk_size: int) -> list[str]:
         """
         Divide texto por tamaño fijo (último recurso).
-        
+
         Args:
             text: Texto a dividir
             chunk_size: Tamaño de cada chunk
-            
+
         Returns:
             Lista de chunks
         """
@@ -285,22 +286,22 @@ class ChunkingService:
 
 
 # Instancia global por defecto
-_chunking_service: Optional[ChunkingService] = None
+_chunking_service: ChunkingService | None = None
 
 
-def get_chunking_service(config: Optional[ChunkingConfig] = None) -> ChunkingService:
+def get_chunking_service(config: ChunkingConfig | None = None) -> ChunkingService:
     """
     Obtener instancia global de ChunkingService.
-    
+
     Args:
         config: Configuración opcional (solo se usa en primera llamada)
-        
+
     Returns:
         Instancia de ChunkingService
     """
     global _chunking_service
-    
+
     if _chunking_service is None:
         _chunking_service = ChunkingService(config)
-    
+
     return _chunking_service

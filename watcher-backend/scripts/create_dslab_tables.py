@@ -2,25 +2,26 @@
 """
 Script para crear las tablas del DS Lab en la base de datos
 """
-import sys
 import asyncio
+import sys
 from pathlib import Path
 
 # Agregar el directorio raíz al path
 backend_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_dir))
 
-from app.db.database import engine, Base
+from app.db.database import Base, engine
+
 
 async def create_tables():
     """Crear tablas del DS Lab"""
     print("🚀 Creando tablas del DS Lab...")
-    
+
     try:
         # Crear todas las tablas usando el engine asíncrono
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
-        
+
         print("✅ Tablas creadas exitosamente:")
         print("   • boletin_documents")
         print("   • analysis_configs")
@@ -28,9 +29,9 @@ async def create_tables():
         print("   • analysis_results")
         print("   • red_flags")
         print("   • analysis_comparisons")
-        
+
         return True
-        
+
     except Exception as e:
         print(f"❌ Error creando tablas: {e}")
         import traceback

@@ -109,9 +109,7 @@ class LocalEmbeddingFunction:
         self.model_name = model_name
         device = local_device()
         self.model = SentenceTransformer(model_name, device=device)
-        dim_fn = getattr(self.model, "get_embedding_dimension", None) or getattr(
-            self.model, "get_sentence_embedding_dimension"
-        )
+        dim_fn = getattr(self.model, "get_embedding_dimension", None) or self.model.get_sentence_embedding_dimension
         self.dim = int(dim_fn())
         logger.info("Local embeddings on %s (%s, %s dims)", device, model_name, self.dim)
 
@@ -131,12 +129,12 @@ class LocalEmbeddingFunction:
 class EmbeddingService:
     """
     Service for generating and managing document embeddings.
-    
+
     Supports multiple embedding providers:
     - Google AI (gemini-embedding-001, 3072 dims) - default
     - Local models (sentence-transformers)
     """
-    
+
     def __init__(
         self,
         persist_directory: str | None = None,
@@ -147,7 +145,7 @@ class EmbeddingService:
     ):
         """
         Initialize embedding service.
-        
+
         Args:
             persist_directory: Directory for ChromaDB persistence
             collection_name: Name of the collection
@@ -158,7 +156,7 @@ class EmbeddingService:
         self.collection_name = collection_name
         self.embedding_provider = embedding_provider
         self.enable_text_cleaning = enable_text_cleaning
-        
+
         # Initialize TextCleaner
         self.text_cleaner = None
         if enable_text_cleaning and TEXT_CLEANER_AVAILABLE:
@@ -166,21 +164,21 @@ class EmbeddingService:
             logger.info("Text cleaning enabled")
         elif enable_text_cleaning:
             logger.warning("Text cleaning requested but TextCleaner not available")
-        
+
         # Initialize ChunkingService
         if not CHUNKING_SERVICE_AVAILABLE:
             raise ImportError("ChunkingService is required. Ensure chunking_service.py is available.")
-        
+
         self.chunking_service = ChunkingService()
         logger.info("ChunkingService initialized")
-        
+
         # Set up persist directory
         if persist_directory is None:
             persist_directory = str(Path.home() / ".watcher" / "chromadb")
-        
+
         self.persist_directory = persist_directory
         Path(self.persist_directory).mkdir(parents=True, exist_ok=True)
-        
+
         # Initialize embedding function
         self.embedding_fn = None
         self.google_model = EMBEDDING_MODEL
@@ -220,7 +218,7 @@ class EmbeddingService:
         # Initialize ChromaDB client
         self.client = None
         self.collection = None
-        
+
         if CHROMADB_AVAILABLE:
             try:
                 self.client = chromadb.PersistentClient(
@@ -230,7 +228,7 @@ class EmbeddingService:
                         allow_reset=True
                     )
                 )
-                
+
                 # Get or create collection WITH embedding function
                 collection_kwargs = {
                     "name": collection_name,
@@ -262,14 +260,14 @@ class EmbeddingService:
                 self.client = None
         else:
             logger.warning("ChromaDB not available. Vector search features disabled.")
-        
+
         self.stats = {
             "embeddings_created": 0,
             "documents_added": 0,
             "searches_performed": 0,
             "errors": 0
         }
-    
+
     def chunk_text(
         self,
         text: str,
@@ -278,41 +276,41 @@ class EmbeddingService:
     ) -> list[str]:
         """
         Split text into overlapping chunks using ChunkingService.
-        
+
         Args:
             text: Text to chunk
             chunk_size: Size of each chunk in characters
             overlap: Overlap between chunks
-            
+
         Returns:
             List of text chunks
         """
         if not text:
             return []
-        
+
         config = ChunkingConfig(
             chunk_size=chunk_size,
             chunk_overlap=overlap
         )
         chunk_results = self.chunking_service.chunk(text, config)
         return [cr.text for cr in chunk_results]
-    
+
     async def generate_embedding(
         self,
         text: str
     ) -> list[float] | None:
         """
         Generate embedding for a text.
-        
+
         Args:
             text: Text to embed
-            
+
         Returns:
             Embedding vector or None if failed
         """
         if not text or not text.strip():
             return None
-        
+
         try:
             if self.embedding_provider == "google" and GOOGLE_AI_AVAILABLE:
                 # Google's gemini-embedding-001 produces 3072-dimensional vectors
@@ -332,12 +330,12 @@ class EmbeddingService:
 
             logger.warning("No embedding function available for provider %s", self.embedding_provider)
             return None
-        
+
         except Exception as e:
             logger.error(f"Error generating embedding: {e}")
             self.stats["errors"] += 1
             return None
-    
+
     async def add_document(
         self,
         document_id: str,
@@ -350,7 +348,7 @@ class EmbeddingService:
     ) -> dict[str, Any]:
         """
         Add a document to the vector store.
-        
+
         Args:
             document_id: Unique document identifier
             content: Document content
@@ -359,7 +357,7 @@ class EmbeddingService:
             db_session: Optional SQLAlchemy session for persisting ChunkRecords
             persist_chunks: Whether to persist chunks to database (requires db_session)
             use_triple_indexing: Use new IndexingService for atomic triple indexing (recommended)
-            
+
         Returns:
             Result dict with success status
         """
@@ -368,25 +366,25 @@ class EmbeddingService:
                 "success": False,
                 "error": "ChromaDB not initialized"
             }
-        
+
         if not content:
             return {
                 "success": False,
                 "error": "No content provided"
             }
-        
+
         # Use new triple indexing service if available and requested
         if use_triple_indexing and persist_chunks and db_session:
             try:
                 from .indexing_service import get_indexing_service
-                
+
                 # Clean text before chunking
                 cleaned_content = content
                 if self.text_cleaner and self.enable_text_cleaning:
                     logger.info(f"Cleaning text for document {document_id}")
                     cleaned_content = self.text_cleaner.clean(content)
                     logger.info(f"Text cleaned: {len(content)} -> {len(cleaned_content)} chars")
-                
+
                 # Chunk the content
                 chunk_results = []
                 if chunk:
@@ -400,25 +398,25 @@ class EmbeddingService:
                         end_char=len(cleaned_content),
                         num_chars=len(cleaned_content)
                     )]
-                
+
                 # Use IndexingService for triple indexing
                 indexing_service = get_indexing_service(db_session)
                 boletin_id = metadata.get("boletin_id") if metadata else None
-                
+
                 result = await indexing_service.index_document(
                     document_id,
                     chunk_results,
                     metadata,
                     boletin_id
                 )
-                
+
                 if result.success:
                     self.stats["documents_added"] += 1
                     self.stats["embeddings_created"] += result.chunks_indexed
                     logger.info(f"✓ Triple-indexed document {document_id} with {result.chunks_indexed} chunks")
                 else:
                     logger.error(f"Error triple-indexing document {document_id}: {result.error}")
-                
+
                 return {
                     "success": result.success,
                     "document_id": document_id,
@@ -426,7 +424,7 @@ class EmbeddingService:
                     "error": result.error,
                     "triple_indexed": True
                 }
-            
+
             except Exception as e:
                 logger.error(f"Error using triple indexing: {e}", exc_info=True)
                 return {
@@ -434,29 +432,29 @@ class EmbeddingService:
                     "error": str(e),
                     "triple_indexed": False
                 }
-        
+
         # Fallback: simple direct indexing without db persistence
         logger.info(f"Adding document {document_id} without triple indexing")
-        
+
         try:
             # Clean text if enabled
             cleaned_content = content
             if self.text_cleaner and self.enable_text_cleaning:
                 cleaned_content = self.text_cleaner.clean(content)
-            
+
             # Generate chunks
             chunks_to_add = []
             if chunk:
                 chunks_to_add = self.chunk_text(cleaned_content)
             else:
                 chunks_to_add = [cleaned_content]
-            
+
             if not chunks_to_add:
                 return {
                     "success": False,
                     "error": "No chunks generated (text may be too short)"
                 }
-            
+
             # Add to ChromaDB
             chunk_ids = [f"{document_id}_{i}" for i in range(len(chunks_to_add))]
             chunk_metadatas = []
@@ -467,25 +465,25 @@ class EmbeddingService:
                     **(metadata or {})
                 }
                 chunk_metadatas.append(chunk_meta)
-            
+
             self.collection.add(
                 ids=chunk_ids,
                 documents=chunks_to_add,
                 metadatas=chunk_metadatas
             )
-            
+
             self.stats["documents_added"] += 1
             self.stats["embeddings_created"] += len(chunks_to_add)
-            
+
             logger.info(f"✓ Added document {document_id} with {len(chunks_to_add)} chunks (simple mode)")
-            
+
             return {
                 "success": True,
                 "document_id": document_id,
                 "chunks_created": len(chunks_to_add),
                 "triple_indexed": False
             }
-        
+
         except Exception as e:
             logger.error(f"Error adding document: {e}", exc_info=True)
             self.stats["errors"] += 1
@@ -494,7 +492,7 @@ class EmbeddingService:
                 "error": str(e),
                 "triple_indexed": False
             }
-    
+
     async def search(
         self,
         query: str,
@@ -503,22 +501,22 @@ class EmbeddingService:
     ) -> list[dict[str, Any]]:
         """
         Perform semantic search.
-        
+
         Args:
             query: Search query
             n_results: Number of results to return
             filter: Optional metadata filter
-            
+
         Returns:
             List of matching documents with scores
         """
         if not self.collection:
             logger.warning("ChromaDB not initialized")
             return []
-        
+
         if not query:
             return []
-        
+
         try:
             # Perform search
             results = self.collection.query(
@@ -526,12 +524,12 @@ class EmbeddingService:
                 n_results=n_results,
                 where=filter
             )
-            
+
             self.stats["searches_performed"] += 1
-            
+
             # Format results
             formatted_results = []
-            
+
             if results and 'ids' in results and results['ids']:
                 for i in range(len(results['ids'][0])):
                     formatted_results.append({
@@ -540,26 +538,26 @@ class EmbeddingService:
                         "metadata": results['metadatas'][0][i] if 'metadatas' in results else None,
                         "distance": results['distances'][0][i] if 'distances' in results else None,
                     })
-            
+
             logger.info(f"Search for '{query}' returned {len(formatted_results)} results")
-            
+
             return formatted_results
-        
+
         except Exception as e:
             logger.error(f"Error performing search: {e}", exc_info=True)
             self.stats["errors"] += 1
             return []
-    
+
     async def delete_document(
         self,
         document_id: str
     ) -> dict[str, Any]:
         """
         Delete a document and all its chunks from vector store.
-        
+
         Args:
             document_id: Document identifier
-            
+
         Returns:
             Result dict
         """
@@ -568,18 +566,18 @@ class EmbeddingService:
                 "success": False,
                 "error": "ChromaDB not initialized"
             }
-        
+
         try:
             # Find all chunks for this document
             results = self.collection.get(
                 where={"document_id": document_id}
             )
-            
+
             if results and 'ids' in results and results['ids']:
                 self.collection.delete(ids=results['ids'])
-                
+
                 logger.info(f"Deleted document {document_id} with {len(results['ids'])} chunks")
-                
+
                 return {
                     "success": True,
                     "document_id": document_id,
@@ -590,7 +588,7 @@ class EmbeddingService:
                     "success": False,
                     "error": f"Document {document_id} not found"
                 }
-        
+
         except Exception as e:
             logger.error(f"Error deleting document: {e}")
             self.stats["errors"] += 1
@@ -598,16 +596,16 @@ class EmbeddingService:
                 "success": False,
                 "error": str(e)
             }
-    
+
     def get_stats(self) -> dict[str, Any]:
         """Get service statistics."""
         stats = self.stats.copy()
-        
+
         if self.collection:
             stats["total_documents"] = self.collection.count()
-        
+
         return stats
-    
+
     def reset_collection(self):
         """Reset the collection (delete all data)."""
         if self.client and self.collection:

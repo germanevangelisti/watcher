@@ -10,12 +10,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from app.db.models import EjecucionPresupuestaria
+from app.services.ejecucion_ledger import upsert_boletin_ejecucion
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-
-from app.db.models import EjecucionPresupuestaria
-from app.services.ejecucion_ledger import upsert_boletin_ejecucion
 
 DB = Path(__file__).resolve().parent.parent / "sqlite.db"
 

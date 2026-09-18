@@ -4,11 +4,12 @@ Unit tests for PDS (Portal Data Scrapers) layer.
 Tests the scraper interfaces and provincial scraper implementation.
 """
 
-import pytest
+import sys
 from datetime import date
 from pathlib import Path
 from unittest.mock import patch
-import sys
+
+import pytest
 
 # Add backend to path
 backend_path = Path(__file__).resolve().parent.parent.parent / "watcher-monolith" / "backend"
@@ -16,13 +17,12 @@ sys.path.insert(0, str(backend_path))
 
 from app.scrapers.base_scraper import (
     BaseScraper,
+    DocumentType,
     ScraperConfig,
     ScraperResult,
     ScraperType,
-    DocumentType
 )
 from app.scrapers.pds_prov import ProvincialScraper, create_provincial_scraper
-
 
 # ============================================================================
 # Base Scraper Tests
@@ -51,7 +51,7 @@ def test_scraper_result_creation():
         url="https://test.com/test.pdf",
         metadata={"test": True}
     )
-    
+
     assert result.filename == "test.pdf"
     assert result.status == "downloaded"
     assert result.size == 1024
@@ -66,7 +66,7 @@ def test_scraper_result_creation():
 def test_provincial_scraper_init(sample_scraper_config):
     """Test ProvincialScraper initialization."""
     scraper = ProvincialScraper(sample_scraper_config)
-    
+
     assert scraper.config == sample_scraper_config
     assert scraper.config.scraper_type == ScraperType.PROVINCIAL
     assert scraper.stats["total_requested"] == 0
@@ -77,7 +77,7 @@ def test_provincial_scraper_init(sample_scraper_config):
 def test_provincial_scraper_init_default():
     """Test ProvincialScraper with default config."""
     scraper = ProvincialScraper()
-    
+
     assert scraper.config is not None
     assert scraper.config.scraper_type == ScraperType.PROVINCIAL
     assert scraper.config.sections == [1, 2, 3, 4, 5]
@@ -87,14 +87,14 @@ def test_provincial_scraper_init_default():
 def test_provincial_scraper_get_file_path():
     """Test file path generation."""
     scraper = create_provincial_scraper(output_dir=Path("/test"))
-    
+
     target_date = date(2026, 1, 15)
     filepath = scraper.get_file_path(
         target_date=target_date,
         document_type=DocumentType.BOLETIN,
         section=1
     )
-    
+
     assert filepath == Path("/test/2026/01/20260115_1_Secc.pdf")
     assert filepath.parent == Path("/test/2026/01")
 
@@ -103,11 +103,11 @@ def test_provincial_scraper_get_file_path():
 def test_provincial_scraper_validate_file_valid(temp_output_dir):
     """Test file validation with valid file."""
     scraper = create_provincial_scraper()
-    
+
     # Create a valid file (>10KB)
     test_file = temp_output_dir / "test.pdf"
     test_file.write_bytes(b"x" * 20000)  # 20KB
-    
+
     assert scraper.validate_file(test_file) is True
 
 
@@ -115,11 +115,11 @@ def test_provincial_scraper_validate_file_valid(temp_output_dir):
 def test_provincial_scraper_validate_file_invalid(temp_output_dir):
     """Test file validation with invalid file."""
     scraper = create_provincial_scraper()
-    
+
     # Create an invalid file (<10KB)
     test_file = temp_output_dir / "test.pdf"
     test_file.write_bytes(b"x" * 5000)  # 5KB
-    
+
     assert scraper.validate_file(test_file) is False
 
 
@@ -127,9 +127,9 @@ def test_provincial_scraper_validate_file_invalid(temp_output_dir):
 def test_provincial_scraper_validate_file_nonexistent():
     """Test file validation with non-existent file."""
     scraper = create_provincial_scraper()
-    
+
     test_file = Path("/nonexistent/file.pdf")
-    
+
     assert scraper.validate_file(test_file) is False
 
 
@@ -138,14 +138,14 @@ def test_provincial_scraper_validate_file_nonexistent():
 async def test_provincial_scraper_download_single(temp_output_dir, mock_http_client):
     """Test single bulletin download with mock HTTP client."""
     scraper = create_provincial_scraper(output_dir=temp_output_dir)
-    
+
     with patch("httpx.AsyncClient", return_value=mock_http_client):
         result = await scraper.download_single(
             target_date=date(2026, 1, 15),
             document_type=DocumentType.BOLETIN,
             section=1
         )
-    
+
     assert result.filename == "20260115_1_Secc.pdf"
     assert result.status == "downloaded"
     assert result.size > 0
@@ -157,19 +157,19 @@ async def test_provincial_scraper_download_single(temp_output_dir, mock_http_cli
 async def test_provincial_scraper_download_single_existing_valid(temp_output_dir):
     """Test download when file already exists and is valid."""
     scraper = create_provincial_scraper(output_dir=temp_output_dir)
-    
+
     # Pre-create a valid file
     target_date = date(2026, 1, 15)
     filepath = scraper.get_file_path(target_date, DocumentType.BOLETIN, section=1)
     filepath.parent.mkdir(parents=True, exist_ok=True)
     filepath.write_bytes(b"x" * 20000)  # Valid file
-    
+
     result = await scraper.download_single(
         target_date=target_date,
         document_type=DocumentType.BOLETIN,
         section=1
     )
-    
+
     assert result.status == "exists"
     assert result.filename == "20260115_1_Secc.pdf"
 
@@ -182,11 +182,11 @@ async def test_provincial_scraper_download_range_skip_weekends(temp_output_dir, 
     scraper.config.skip_weekends = True
     scraper.config.sections = [1]
     scraper.config.rate_limit_delay = 0.01  # Fast for testing
-    
+
     # Jan 4-5, 2026 is a weekend (Saturday-Sunday)
     start_date = date(2026, 1, 2)  # Friday
     end_date = date(2026, 1, 6)    # Tuesday
-    
+
     with patch("httpx.AsyncClient", return_value=mock_http_client):
         results = await scraper.download_range(
             start_date=start_date,
@@ -194,10 +194,10 @@ async def test_provincial_scraper_download_range_skip_weekends(temp_output_dir, 
             document_type=DocumentType.BOLETIN,
             sections=[1]
         )
-    
+
     # Should have 3 results (Fri, Mon, Tue) - no weekend
     assert len(results) == 3
-    
+
     # Verify no weekend dates
     for result in results:
         date_str = result.filename[:8]  # YYYYMMDD
@@ -212,13 +212,13 @@ async def test_provincial_scraper_download_range_skip_weekends(temp_output_dir, 
 def test_scraper_stats_tracking(sample_scraper_config):
     """Test that scraper statistics are tracked correctly."""
     scraper = ProvincialScraper(sample_scraper_config)
-    
+
     # Initial stats
     stats = scraper.get_stats()
     assert stats["total_requested"] == 0
     assert stats["downloaded"] == 0
     assert stats["failed"] == 0
-    
+
     # Simulate a successful download
     result = ScraperResult(
         filename="test.pdf",
@@ -226,12 +226,12 @@ def test_scraper_stats_tracking(sample_scraper_config):
         size=1024
     )
     scraper._update_stats(result)
-    
+
     stats = scraper.get_stats()
     assert stats["total_requested"] == 1
     assert stats["downloaded"] == 1
     assert stats["failed"] == 0
-    
+
     # Simulate a failed download
     result_failed = ScraperResult(
         filename="test2.pdf",
@@ -239,7 +239,7 @@ def test_scraper_stats_tracking(sample_scraper_config):
         error="Test error"
     )
     scraper._update_stats(result_failed)
-    
+
     stats = scraper.get_stats()
     assert stats["total_requested"] == 2
     assert stats["downloaded"] == 1
@@ -251,9 +251,9 @@ def test_scraper_stats_tracking(sample_scraper_config):
 def test_provincial_scraper_get_available_sections():
     """Test getting available sections."""
     scraper = create_provincial_scraper()
-    
+
     sections = scraper.get_available_sections()
-    
+
     assert sections == [1, 2, 3, 4, 5]
     assert len(sections) == 5
 
@@ -264,7 +264,7 @@ def test_create_provincial_scraper_factory():
     scraper = create_provincial_scraper(
         output_dir=Path("/custom/path")
     )
-    
+
     assert isinstance(scraper, ProvincialScraper)
     assert scraper.config.output_dir == Path("/custom/path")
 
@@ -273,16 +273,16 @@ def test_create_provincial_scraper_factory():
 def test_scraper_reset_stats():
     """Test resetting scraper statistics."""
     scraper = create_provincial_scraper()
-    
+
     # Add some stats
     result = ScraperResult(filename="test.pdf", status="downloaded", size=1024)
     scraper._update_stats(result)
-    
+
     assert scraper.get_stats()["downloaded"] == 1
-    
+
     # Reset
     scraper.reset_stats()
-    
+
     stats = scraper.get_stats()
     assert stats["total_requested"] == 0
     assert stats["downloaded"] == 0

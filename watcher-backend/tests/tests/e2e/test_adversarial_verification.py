@@ -5,10 +5,11 @@ Test E2E: Adversarial Verification Pipeline
 Objetivo: VCP > 0.85 procesando datos reales de los boletines base.
 Mocks: Gemini/VertexAI (CI cost limits). Servicios de dominio: reales.
 """
-import pytest
 import sys
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 # ── path setup ────────────────────────────────────────────────────────────────
 BACKEND = Path(__file__).resolve().parent.parent.parent
@@ -102,8 +103,8 @@ class TestEntityAnchoring:
         assert found is not None  # list (possibly empty for narrow range, but not error)
 
     def test_chunking_with_entity_map_no_error(self):
-        from app.services.entity_service import EntityService
         from app.services.chunking_service import ChunkingService
+        from app.services.entity_service import EntityService
 
         svc = EntityService()
         chunker = ChunkingService()
@@ -118,9 +119,9 @@ class TestEntityAnchoring:
             assert hasattr(chunk, "entity_anchors"), "ChunkResult must have entity_anchors"
 
     def test_chunk_enricher_uses_anchored_entities(self):
-        from app.services.entity_service import EntityService
-        from app.services.chunking_service import ChunkingService
         from app.services.chunk_enricher import ChunkEnricher
+        from app.services.chunking_service import ChunkingService
+        from app.services.entity_service import EntityService
 
         svc = EntityService()
         chunker = ChunkingService()
@@ -252,8 +253,8 @@ class TestVerificationAgent:
         Core assertion: VCP > 0.85 when corpus contains the boletín data.
         Mock retrieval returns score=0.9 (VERIFIED threshold=0.7).
         """
-        from app.services.aiu_service import AIUService
         from agents.verification.agent import VerificationAgent
+        from app.services.aiu_service import AIUService
 
         aiu_svc = AIUService()
         aius = aiu_svc.decompose_acto(SAMPLE_ACTO)
@@ -272,8 +273,8 @@ class TestVerificationAgent:
     @pytest.mark.anyio
     async def test_vcp_below_threshold_triggers_human_review(self):
         """Low retrieval scores → VCP < 0.85 → requires_human_review=True."""
-        from app.services.aiu_service import AIUService
         from agents.verification.agent import VerificationAgent
+        from app.services.aiu_service import AIUService
 
         aiu_svc = AIUService()
         aius = aiu_svc.decompose_acto(SAMPLE_ACTO)
@@ -298,8 +299,8 @@ class TestVerificationAgent:
     @pytest.mark.anyio
     async def test_verification_is_non_blocking_on_retrieval_error(self):
         """Agent handles retrieval failures gracefully — no exception propagates."""
-        from app.services.aiu_service import AIUService
         from agents.verification.agent import VerificationAgent
+        from app.services.aiu_service import AIUService
 
         aiu_svc = AIUService()
         aius = aiu_svc.decompose_acto(SAMPLE_ACTO)
@@ -379,11 +380,11 @@ class TestFullPipelineE2E:
         Usa SAMPLE_BOLETIN_TEXT como stand-in para cada boletín.
         Objetivo: VCP agregado > 0.85
         """
-        from app.services.entity_service import EntityService
-        from app.services.chunking_service import ChunkingService
-        from app.services.chunk_enricher import ChunkEnricher
-        from app.services.aiu_service import AIUService
         from agents.verification.agent import VerificationAgent
+        from app.services.aiu_service import AIUService
+        from app.services.chunk_enricher import ChunkEnricher
+        from app.services.chunking_service import ChunkingService
+        from app.services.entity_service import EntityService
 
         entity_svc = EntityService()
         chunker = ChunkingService()
@@ -455,8 +456,8 @@ class TestFullPipelineE2E:
     @pytest.mark.e2e
     async def test_orchestrator_has_verification_handler(self):
         """Verificar que el OrchestatorAgent registró el VerificationAgent."""
-        from agents.orchestrator.state import AgentType
         from agents.orchestrator.agent import AgentOrchestrator
+        from agents.orchestrator.state import AgentType
 
         assert hasattr(AgentType, "VERIFICATION"), "AgentType debe tener VERIFICATION"
         assert AgentType.VERIFICATION == "verification"

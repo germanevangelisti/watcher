@@ -1,20 +1,19 @@
 """
 🧪 DS Lab - Endpoints para gestión de documentos
 """
-from fastapi import APIRouter, HTTPException, Depends, Query
-from sqlalchemy.orm import Session
-from sqlalchemy import func, desc, and_
-from typing import List, Optional
 from datetime import datetime
 
+from app.db.models import AnalysisResult, BoletinDocument
 from app.db.sync_session import get_sync_db
-from app.db.models import BoletinDocument, AnalysisResult
 from app.schemas.dslab import (
     BoletinDocumentCreate,
-    BoletinDocumentUpdate,
     BoletinDocumentResponse,
-    DocumentStats
+    BoletinDocumentUpdate,
+    DocumentStats,
 )
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import and_, desc, func
+from sqlalchemy.orm import Session
 
 router = APIRouter()
 
@@ -31,25 +30,25 @@ async def register_document(
     existing = db.query(BoletinDocument).filter(
         BoletinDocument.filename == document.filename
     ).first()
-    
+
     if existing:
         raise HTTPException(status_code=409, detail="Documento ya existe")
-    
+
     # Crear nuevo documento
     db_document = BoletinDocument(**document.dict())
     db.add(db_document)
     db.commit()
     db.refresh(db_document)
-    
+
     return db_document
 
 
-@router.get("/documents", response_model=List[BoletinDocumentResponse])
+@router.get("/documents", response_model=list[BoletinDocumentResponse])
 async def list_documents(
-    year: Optional[int] = None,
-    month: Optional[int] = None,
-    section: Optional[int] = None,
-    status: Optional[str] = None,
+    year: int | None = None,
+    month: int | None = None,
+    section: int | None = None,
+    status: str | None = None,
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     db: Session = Depends(get_sync_db)
@@ -58,7 +57,7 @@ async def list_documents(
     Listar documentos con filtros opcionales
     """
     query = db.query(BoletinDocument)
-    
+
     if year:
         query = query.filter(BoletinDocument.year == year)
     if month:
@@ -67,13 +66,13 @@ async def list_documents(
         query = query.filter(BoletinDocument.section == section)
     if status:
         query = query.filter(BoletinDocument.analysis_status == status)
-    
+
     documents = query.order_by(
         desc(BoletinDocument.year),
         desc(BoletinDocument.month),
         desc(BoletinDocument.day)
     ).offset(skip).limit(limit).all()
-    
+
     return documents
 
 
@@ -88,10 +87,10 @@ async def get_document(
     document = db.query(BoletinDocument).filter(
         BoletinDocument.id == document_id
     ).first()
-    
+
     if not document:
         raise HTTPException(status_code=404, detail="Documento no encontrado")
-    
+
     return document
 
 
@@ -107,19 +106,19 @@ async def update_document(
     document = db.query(BoletinDocument).filter(
         BoletinDocument.id == document_id
     ).first()
-    
+
     if not document:
         raise HTTPException(status_code=404, detail="Documento no encontrado")
-    
+
     # Actualizar campos
     update_dict = update_data.dict(exclude_unset=True)
     for key, value in update_dict.items():
         setattr(document, key, value)
-    
+
     document.updated_at = datetime.utcnow()
     db.commit()
     db.refresh(document)
-    
+
     return document
 
 
@@ -134,15 +133,15 @@ async def get_document_history(
     document = db.query(BoletinDocument).filter(
         BoletinDocument.id == document_id
     ).first()
-    
+
     if not document:
         raise HTTPException(status_code=404, detail="Documento no encontrado")
-    
+
     # Obtener todos los análisis del documento
     results = db.query(AnalysisResult).filter(
         AnalysisResult.document_id == document_id
     ).order_by(desc(AnalysisResult.analyzed_at)).all()
-    
+
     return {
         "document": document,
         "total_analyses": len(results),
@@ -162,20 +161,20 @@ async def get_document_history(
 
 @router.get("/documents/stats", response_model=DocumentStats)
 async def get_documents_stats(
-    year: Optional[int] = None,
+    year: int | None = None,
     db: Session = Depends(get_sync_db)
 ):
     """
     Obtener estadísticas de documentos
     """
     query = db.query(BoletinDocument)
-    
+
     if year:
         query = query.filter(BoletinDocument.year == year)
-    
+
     # Total documentos
     total_documents = query.count()
-    
+
     # Por status
     status_stats = db.query(
         BoletinDocument.analysis_status,
@@ -183,9 +182,9 @@ async def get_documents_stats(
     ).filter(
         BoletinDocument.year == year if year else True
     ).group_by(BoletinDocument.analysis_status).all()
-    
+
     by_status = {status: count for status, count in status_stats}
-    
+
     # Por mes
     month_stats = db.query(
         BoletinDocument.year,
@@ -197,18 +196,18 @@ async def get_documents_stats(
         BoletinDocument.year,
         BoletinDocument.month
     ).all()
-    
+
     by_month = {f"{y}-{m:02d}": count for y, m, count in month_stats}
-    
+
     # Tamaño total
     total_size_bytes = db.query(
         func.sum(BoletinDocument.file_size_bytes)
     ).filter(
         BoletinDocument.year == year if year else True
     ).scalar() or 0
-    
+
     total_size_mb = total_size_bytes / (1024 * 1024)
-    
+
     # Promedio de páginas
     avg_pages = db.query(
         func.avg(BoletinDocument.num_pages)
@@ -218,7 +217,7 @@ async def get_documents_stats(
             BoletinDocument.year == year if year else True
         )
     ).scalar()
-    
+
     return DocumentStats(
         total_documents=total_documents,
         by_status=by_status,
@@ -230,7 +229,7 @@ async def get_documents_stats(
 
 @router.post("/documents/batch-register")
 async def batch_register_documents(
-    documents: List[BoletinDocumentCreate],
+    documents: list[BoletinDocumentCreate],
     db: Session = Depends(get_sync_db)
 ):
     """
@@ -239,36 +238,36 @@ async def batch_register_documents(
     registered = []
     skipped = []
     errors = []
-    
+
     for doc_data in documents:
         try:
             # Verificar si ya existe
             existing = db.query(BoletinDocument).filter(
                 BoletinDocument.filename == doc_data.filename
             ).first()
-            
+
             if existing:
                 skipped.append(doc_data.filename)
                 continue
-            
+
             # Crear documento
             db_document = BoletinDocument(**doc_data.dict())
             db.add(db_document)
             registered.append(doc_data.filename)
-            
+
         except Exception as e:
             errors.append({
                 "filename": doc_data.filename,
                 "error": str(e)
             })
-    
+
     # Commit en batch
     try:
         db.commit()
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error en commit: {str(e)}")
-    
+
     return {
         "registered": len(registered),
         "skipped": len(skipped),

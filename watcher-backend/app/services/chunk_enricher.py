@@ -8,10 +8,10 @@ Este servicio maneja:
 - Extracción básica de entidades
 """
 
+import hashlib
 import logging
 import re
-import hashlib
-from typing import Dict, Any, Optional, List
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -19,11 +19,11 @@ logger = logging.getLogger(__name__)
 class ChunkEnricher:
     """
     Servicio para enriquecer chunks con metadata.
-    
+
     Analiza el contenido del chunk y extrae metadata útil para
     búsqueda y filtrado.
     """
-    
+
     # Patrones para detectar section_type
     SECTION_PATTERNS = {
         "licitacion": [
@@ -56,7 +56,7 @@ class ChunkEnricher:
             r"\bcr[eé]dito\s+presupuestario\b",
         ],
     }
-    
+
     # Patrones para detectar montos
     AMOUNT_PATTERNS = [
         r"\$\s*\d+",  # $1000
@@ -65,14 +65,14 @@ class ChunkEnricher:
         r"\$\d+[\.,]\d+",  # $1,000.00
         r"ARS\s*\d+",  # ARS 1000
     ]
-    
+
     # Patrones para detectar tablas (tabulación o alineación)
     TABLE_PATTERNS = [
         r"\t",  # Tab character
         r"\n\s{4,}\S",  # Multiple spaces at line start (indentation)
         r"\|\s*\w+\s*\|",  # Pipe-separated columns
     ]
-    
+
     def __init__(self):
         """Inicializar ChunkEnricher."""
         # Compilar patrones para eficiencia
@@ -80,23 +80,23 @@ class ChunkEnricher:
             section: [re.compile(pattern, re.IGNORECASE) for pattern in patterns]
             for section, patterns in self.SECTION_PATTERNS.items()
         }
-        
+
         self._amount_patterns_compiled = [
             re.compile(pattern, re.IGNORECASE) for pattern in self.AMOUNT_PATTERNS
         ]
-        
+
         self._table_patterns_compiled = [
             re.compile(pattern) for pattern in self.TABLE_PATTERNS
         ]
-    
+
     def enrich(
         self,
         chunk_text: str,
         chunk_index: int,
         document_id: str,
-        context: Optional[Dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
         anchored_entities=None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Enriquecer un chunk con metadata.
 
@@ -156,20 +156,20 @@ class ChunkEnricher:
         }
 
         return metadata
-    
+
     def _detect_section_type(self, text: str) -> str:
         """
         Detectar el tipo de sección basándose en keywords.
-        
+
         Args:
             text: Texto del chunk
-            
+
         Returns:
             Tipo de sección detectado o "general"
         """
         # Contar matches por cada tipo
         scores = {}
-        
+
         for section_type, patterns in self._section_patterns_compiled.items():
             matches = 0
             for pattern in patterns:
@@ -177,20 +177,20 @@ class ChunkEnricher:
                     matches += 1
             if matches > 0:
                 scores[section_type] = matches
-        
+
         # Retornar el tipo con más matches
         if scores:
             return max(scores.items(), key=lambda x: x[1])[0]
-        
+
         return "general"
-    
+
     def _detect_amounts(self, text: str) -> bool:
         """
         Detectar si el chunk contiene montos.
-        
+
         Args:
             text: Texto del chunk
-            
+
         Returns:
             True si contiene montos
         """
@@ -198,14 +198,14 @@ class ChunkEnricher:
             if pattern.search(text):
                 return True
         return False
-    
+
     def _detect_tables(self, text: str) -> bool:
         """
         Detectar si el chunk contiene tablas.
-        
+
         Args:
             text: Texto del chunk
-            
+
         Returns:
             True si contiene tablas
         """
@@ -213,17 +213,17 @@ class ChunkEnricher:
             if pattern.search(text):
                 return True
         return False
-    
-    def _extract_basic_entities(self, text: str) -> Optional[Dict[str, List[str]]]:
+
+    def _extract_basic_entities(self, text: str) -> dict[str, list[str]] | None:
         """
         Extraer entidades básicas del chunk.
-        
+
         Extracción simple basada en patrones. Para extracción más
         sofisticada, usar EntityService.
-        
+
         Args:
             text: Texto del chunk
-            
+
         Returns:
             Dict con listas de entidades por tipo, o None si no hay
         """
@@ -232,12 +232,12 @@ class ChunkEnricher:
             "organismos": [],
             "personas": [],
         }
-        
+
         # Extraer montos
         for pattern in self._amount_patterns_compiled:
             matches = pattern.findall(text)
             entities["montos"].extend(matches[:5])  # Limitar a 5
-        
+
         # Extraer organismos (simple: palabras capitalizadas seguidas de keywords)
         org_pattern = re.compile(
             r"\b([A-Z][a-záéíóúñ]+(?:\s+[A-Z][a-záéíóúñ]+)*)\s+(?:de|del|Provincia|Municipal)",
@@ -245,7 +245,7 @@ class ChunkEnricher:
         )
         org_matches = org_pattern.findall(text)
         entities["organismos"].extend(org_matches[:5])
-        
+
         # Extraer personas (muy básico: patrón de nombre + apellido en mayúsculas)
         person_pattern = re.compile(
             r"\b([A-Z][a-záéíóúñ]+\s+[A-Z][a-záéíóúñ]+)\b",
@@ -256,31 +256,31 @@ class ChunkEnricher:
         stop_words = {"Boletín Oficial", "Provincia Córdoba", "Ciudad Córdoba"}
         person_matches = [p for p in person_matches if p not in stop_words]
         entities["personas"].extend(person_matches[:5])
-        
+
         # Si no hay entidades, retornar None
         if not any(entities.values()):
             return None
-        
+
         # Limpiar listas vacías
         entities = {k: v for k, v in entities.items() if v}
-        
+
         return entities if entities else None
 
 
 # Instancia global
-_chunk_enricher: Optional[ChunkEnricher] = None
+_chunk_enricher: ChunkEnricher | None = None
 
 
 def get_chunk_enricher() -> ChunkEnricher:
     """
     Obtener instancia global de ChunkEnricher.
-    
+
     Returns:
         Instancia de ChunkEnricher
     """
     global _chunk_enricher
-    
+
     if _chunk_enricher is None:
         _chunk_enricher = ChunkEnricher()
-    
+
     return _chunk_enricher

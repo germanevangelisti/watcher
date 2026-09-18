@@ -23,7 +23,7 @@ import sqlite3
 import sys
 from datetime import date, datetime
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Any
 
 # La consola de Windows usa cp1252 y este script imprime "→" y acentos, lo que
 # aborta la corrida con UnicodeEncodeError antes de parsear nada.
@@ -35,17 +35,19 @@ if hasattr(sys.stdout, "reconfigure"):
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import pdfplumber
-from sqlalchemy import select, func, delete
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from app.db.models import PresupuestoBase
-
-# Reuse OrganismoNormalizer from the Excel script
-from scripts.parse_excel_presupuesto import OrganismoNormalizer
 from app.services.presupuesto_matching import (
     _normalize as _strip_accents,
+)
+from app.services.presupuesto_matching import (
     canonical_organismo,
     is_truncated_organismo,
 )
+
+# Reuse OrganismoNormalizer from the Excel script
+from scripts.parse_excel_presupuesto import OrganismoNormalizer
+from sqlalchemy import delete, func, select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -276,7 +278,7 @@ def _is_jurisdiction_header(text: str) -> bool:
     return bool(re.match(r'^\d+\.\d+\s*[-–]', text.strip()))
 
 
-def _words_to_rows(words: List[Dict]) -> List[Dict[str, str]]:
+def _words_to_rows(words: list[dict]) -> list[dict[str, str]]:
     """
     Group words by approximate vertical position and assign to columns.
     Returns list of row-dicts keyed by column name.
@@ -290,8 +292,8 @@ def _words_to_rows(words: List[Dict]) -> List[Dict[str, str]]:
     data_words.sort(key=lambda w: (w["top"], w["x0"]))
 
     # Group into logical rows using tolerance
-    rows: List[List[Dict]] = []
-    current_group: List[Dict] = []
+    rows: list[list[dict]] = []
+    current_group: list[dict] = []
     group_min_top: float = 0.0
 
     for word in data_words:
@@ -311,9 +313,9 @@ def _words_to_rows(words: List[Dict]) -> List[Dict[str, str]]:
         rows.append(current_group)
 
     # Convert each word-group into a column-keyed dict
-    result: List[Dict[str, str]] = []
+    result: list[dict[str, str]] = []
     for word_group in rows:
-        row_dict: Dict[str, List[str]] = {}
+        row_dict: dict[str, list[str]] = {}
         for w in word_group:
             col = _col_for_x(w["x0"])
             if col not in row_dict:
@@ -324,7 +326,7 @@ def _words_to_rows(words: List[Dict]) -> List[Dict[str, str]]:
     return result
 
 
-def parse_pdf(pdf_path: Path) -> List[Dict]:
+def parse_pdf(pdf_path: Path) -> list[dict]:
     """
     Extract budget program records from Mapas-por-Programas.pdf using
     word-position based column reconstruction (pdfplumber extract_tables
@@ -332,7 +334,7 @@ def parse_pdf(pdf_path: Path) -> List[Dict]:
 
     Returns a list of dicts ready to be loaded into presupuesto_base.
     """
-    records: List[Dict] = []
+    records: list[dict] = []
     current_jurisdiccion: str = ""
     current_programa: str = ""
     current_unidad_org: str = ""
@@ -429,7 +431,7 @@ def parse_pdf(pdf_path: Path) -> List[Dict]:
 # DB loader
 # ---------------------------------------------------------------------------
 
-async def load_into_db(records: List[Dict], engine: Any, force: bool = False) -> int:
+async def load_into_db(records: list[dict], engine: Any, force: bool = False) -> int:
     """Load parsed records into presupuesto_base. Returns count loaded."""
     async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
@@ -452,7 +454,7 @@ async def load_into_db(records: List[Dict], engine: Any, force: bool = False) ->
                 return 0
 
         # Deduplicate by (organismo, programa, subprograma) — keep last seen
-        seen: Dict[str, Dict] = {}
+        seen: dict[str, dict] = {}
         for rec in records:
             key = f"{rec['organismo']}|{rec['programa']}|{rec.get('subprograma') or ''}"
             seen[key] = rec
@@ -604,7 +606,7 @@ async def main() -> None:
         await engine.dispose()
 
 
-def _print_sample(records: List[Dict]) -> None:
+def _print_sample(records: list[dict]) -> None:
     print("\nMuestra de primeros 5 registros:")
     for r in records[:5]:
         print(f"  organismo:   {r['organismo']}")

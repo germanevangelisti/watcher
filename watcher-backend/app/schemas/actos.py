@@ -2,31 +2,32 @@
 Schemas for Actos Administrativos endpoints
 """
 
-from pydantic import BaseModel
-from typing import Optional, List
 from datetime import date, datetime
+
+from pydantic import BaseModel
+
 
 class ActoBase(BaseModel):
     tipo_acto: str
-    numero: Optional[str] = None
-    fecha: Optional[date] = None
+    numero: str | None = None
+    fecha: date | None = None
     organismo: str
-    beneficiario: Optional[str] = None
-    monto: Optional[float] = None
-    partida: Optional[str] = None
+    beneficiario: str | None = None
+    monto: float | None = None
+    partida: str | None = None
     descripcion: str
     nivel_riesgo: str
 
 class ActoCreate(ActoBase):
-    boletin_id: Optional[int] = None
-    keywords: Optional[str] = None
+    boletin_id: int | None = None
+    keywords: str | None = None
     fragmento_original: str
-    pagina: Optional[int] = None
+    pagina: int | None = None
 
 class ActoResponse(ActoBase):
     id: int
     created_at: datetime
-    keywords: Optional[str] = None
+    keywords: str | None = None
 
     class Config:
         from_attributes = True
@@ -37,19 +38,19 @@ class VinculoResponse(BaseModel):
     programa_id: int
     score_confianza: float
     metodo_matching: str
-    detalles_json: Optional[dict] = None
-    programa: Optional[dict] = None  # Will include programa details
+    detalles_json: dict | None = None
+    programa: dict | None = None  # Will include programa details
 
     class Config:
         from_attributes = True
 
 class ActoDetailResponse(ActoResponse):
-    vinculos: List[VinculoResponse]
+    vinculos: list[VinculoResponse]
     fragmento_original: str
-    pagina: Optional[int] = None
+    pagina: int | None = None
 
 class ActosListResponse(BaseModel):
-    actos: List[ActoResponse]
+    actos: list[ActoResponse]
     total: int
     page: int
     page_size: int

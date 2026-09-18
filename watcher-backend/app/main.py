@@ -8,14 +8,13 @@ import logging
 import os
 import time
 
+from app.api.v1.api import api_router
+from app.core.config import settings
+from app.core.scheduler import configure_scheduler_from_db, start_scheduler, stop_scheduler
+from app.db.database import init_db
+from app.middleware import CUITMaskingMiddleware, SecurityHeadersMiddleware
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-
-from app.core.config import settings
-from app.api.v1.api import api_router
-from app.db.database import init_db
-from app.core.scheduler import start_scheduler, stop_scheduler, configure_scheduler_from_db
-from app.middleware import CUITMaskingMiddleware, SecurityHeadersMiddleware
 
 logging.basicConfig(
     level=logging.INFO,
@@ -108,9 +107,9 @@ async def _reset_stale_documents():
     son transitorios — si el server arranca y los encuentra, significa que el
     proceso fue interrumpido. Se resetean a 'pending' para que puedan reprocesarse.
     """
-    from sqlalchemy import update as sa_update
-    from app.db.models import Boletin
     from app.db.database import AsyncSessionLocal
+    from app.db.models import Boletin
+    from sqlalchemy import update as sa_update
 
     _STALE_STATUSES = ("extracting", "cleaning", "entity_mapping", "chunking", "indexing", "analyzing")
 

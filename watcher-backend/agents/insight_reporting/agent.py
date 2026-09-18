@@ -4,16 +4,17 @@ Insight & Reporting Agent
 Genera insights accionables, reportes y responde queries en lenguaje natural
 """
 import logging
-from typing import Dict, List, Any, Optional
-from datetime import datetime
 import os
+from datetime import datetime
+from typing import Any
 
 from app.core.agent_config import InsightReportingConfig
-from agents.orchestrator.state import WorkflowState, TaskDefinition, AgentType
-from agents.tools.database_tools import DatabaseTools
-from agents.tools.analysis_tools import AnalysisTools
 from app.db.database import AsyncSessionLocal
 from app.services.reference_firewall import ReferenceFirewallService
+
+from agents.orchestrator.state import AgentType, TaskDefinition, WorkflowState
+from agents.tools.analysis_tools import AnalysisTools
+from agents.tools.database_tools import DatabaseTools
 
 try:
     import google.generativeai as genai
@@ -27,51 +28,51 @@ logger = logging.getLogger(__name__)
 class InsightReportingAgent:
     """
     Agente especializado en generación de insights y reportes
-    
+
     Capacidades:
     - Agregación de métricas
     - Generación de narrativas (NLG)
     - Respuestas a queries en lenguaje natural
     - Creación de reportes
     """
-    
-    def __init__(self, config: Optional[InsightReportingConfig] = None):
+
+    def __init__(self, config: InsightReportingConfig | None = None):
         """
         Inicializa el agente
-        
+
         Args:
             config: Configuración del agente
         """
         self.config = config or InsightReportingConfig()
         self.agent_type = AgentType.INSIGHT_REPORTING
-        
+
         # Cliente Google Gemini para generación de texto
         self.model = None
         if GOOGLE_AI_AVAILABLE:
             # Intentar obtener API key del config, luego de env, luego de agent_config
             api_key = os.getenv('GOOGLE_API_KEY')
-            
+
             # Si no está en env, intentar desde DEFAULT_AGENT_CONFIG
             if not api_key:
                 from app.core.agent_config import DEFAULT_AGENT_CONFIG
                 api_key = DEFAULT_AGENT_CONFIG.google_api_key
-            
+
             if api_key and api_key != "":
                 # genai.configure() is called once at app startup in main.py
                 self.model = genai.GenerativeModel("gemini-2.0-flash")
                 logger.info("Google Gemini client inicializado correctamente")
             else:
                 logger.warning("Google API key no encontrada - chat funcionará con fallback")
-        
+
         # Retrieval is lazy so importing the API does not download HF models.
         self.retrieval_service = None
         self._retrieval_init_attempted = False
-        
+
         # Historial de conversación
-        self.conversation_history: List[Dict[str, str]] = []
+        self.conversation_history: list[dict[str, str]] = []
 
         # Reference Firewall (Fase IV) — set externally via set_firewall()
-        self._firewall: Optional[ReferenceFirewallService] = None
+        self._firewall: ReferenceFirewallService | None = None
 
         logger.info("InsightReportingAgent inicializado")
 
@@ -87,24 +88,24 @@ class InsightReportingAgent:
         except Exception as e:
             logger.warning("No se pudo inicializar RetrievalService: %s", e)
         return self.retrieval_service
-    
-    async def execute(self, workflow: WorkflowState, 
-                     task: TaskDefinition) -> Dict[str, Any]:
+
+    async def execute(self, workflow: WorkflowState,
+                     task: TaskDefinition) -> dict[str, Any]:
         """
         Ejecuta una tarea del agente
-        
+
         Args:
             workflow: Estado del workflow
             task: Tarea a ejecutar
-        
+
         Returns:
             Resultado de la ejecución
         """
         task_type = task.task_type
         parameters = task.parameters
-        
+
         logger.info(f"Ejecutando tarea: {task_type}")
-        
+
         if task_type == "generate_report":
             return await self.generate_report(
                 parameters.get("data"),
@@ -133,16 +134,16 @@ class InsightReportingAgent:
             )
         else:
             raise ValueError(f"Tipo de tarea no soportado: {task_type}")
-    
-    async def generate_report(self, data: Dict[str, Any],
-                             report_type: str = "executive") -> Dict[str, Any]:
+
+    async def generate_report(self, data: dict[str, Any],
+                             report_type: str = "executive") -> dict[str, Any]:
         """
         Genera un reporte basado en datos
-        
+
         Args:
             data: Datos para el reporte
             report_type: Tipo de reporte (executive, detailed, comparative)
-        
+
         Returns:
             Reporte generado
         """
@@ -155,23 +156,23 @@ class InsightReportingAgent:
                 return await self._generate_comparative_report(data)
             else:
                 raise ValueError(f"Tipo de reporte no soportado: {report_type}")
-                
+
         except Exception as e:
             logger.error(f"Error generando reporte: {e}", exc_info=True)
             return {
                 "success": False,
                 "error": str(e)
             }
-    
-    async def answer_query(self, query: str, 
-                          context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+
+    async def answer_query(self, query: str,
+                          context: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Responde una query en lenguaje natural
-        
+
         Args:
             query: Pregunta del usuario
             context: Contexto adicional (datos, documentos, etc.)
-        
+
         Returns:
             Respuesta generada
         """
@@ -181,24 +182,24 @@ class InsightReportingAgent:
                 "role": "user",
                 "content": query
             })
-            
+
             # Limitar historial
             if len(self.conversation_history) > self.config.max_conversation_history * 2:
                 self.conversation_history = self.conversation_history[-self.config.max_conversation_history * 2:]
-            
+
             # Generar respuesta
             if self.model:
                 response_text = await self._generate_ai_response(query, context)
             else:
                 response_text = self._generate_fallback_response(query, context)
-            
+
             # Agregar respuesta al historial
             self.conversation_history.append({
                 "role": "assistant",
                 "content": response_text
             })
 
-            result: Dict[str, Any] = {
+            result: dict[str, Any] = {
                 "success": True,
                 "query": query,
                 "response": response_text,
@@ -222,34 +223,34 @@ class InsightReportingAgent:
                     logger.debug(f"Firewall check skipped: {e}")
 
             return result
-            
+
         except Exception as e:
             logger.error(f"Error respondiendo query: {e}", exc_info=True)
             return {
                 "success": False,
                 "error": str(e)
             }
-    
-    async def generate_summary(self, data: Dict[str, Any]) -> Dict[str, Any]:
+
+    async def generate_summary(self, data: dict[str, Any]) -> dict[str, Any]:
         """
         Genera un resumen ejecutivo de datos
-        
+
         Args:
             data: Datos a resumir
-        
+
         Returns:
             Resumen generado
         """
         return await self._generate_executive_summary(data)
-    
-    async def _generate_executive_summary(self, data: Dict[str, Any]) -> Dict[str, Any]:
+
+    async def _generate_executive_summary(self, data: dict[str, Any]) -> dict[str, Any]:
         """Genera resumen ejecutivo"""
         # Extraer métricas clave
         metrics = self._extract_key_metrics(data)
-        
+
         # Generar narrativa
         narrative = await self._create_narrative(metrics)
-        
+
         return {
             "success": True,
             "report_type": "executive",
@@ -259,8 +260,8 @@ class InsightReportingAgent:
             "narrative": narrative,
             "recommendations": self._generate_recommendations(metrics)
         }
-    
-    async def _generate_detailed_report(self, data: Dict[str, Any]) -> Dict[str, Any]:
+
+    async def _generate_detailed_report(self, data: dict[str, Any]) -> dict[str, Any]:
         """Genera reporte detallado"""
         return {
             "success": True,
@@ -270,8 +271,8 @@ class InsightReportingAgent:
             "data": data,
             "analysis": "Análisis detallado en desarrollo"
         }
-    
-    async def _generate_comparative_report(self, data: Dict[str, Any]) -> Dict[str, Any]:
+
+    async def _generate_comparative_report(self, data: dict[str, Any]) -> dict[str, Any]:
         """Genera reporte comparativo"""
         return {
             "success": True,
@@ -280,8 +281,8 @@ class InsightReportingAgent:
             "generated_at": datetime.utcnow().isoformat(),
             "comparison": "Comparación en desarrollo"
         }
-    
-    def _extract_key_metrics(self, data: Dict[str, Any]) -> Dict[str, Any]:
+
+    def _extract_key_metrics(self, data: dict[str, Any]) -> dict[str, Any]:
         """Extrae métricas clave de los datos"""
         metrics = {
             "total_documents": 0,
@@ -291,16 +292,16 @@ class InsightReportingAgent:
             "low_risk_cases": 0,
             "average_transparency_score": 0.0
         }
-        
+
         # Extraer de los datos
         if "results" in data:
             results = data["results"]
             metrics["total_documents"] = len(results)
-            
+
             for result in results:
                 if "red_flags" in result:
                     metrics["red_flags_detected"] += len(result["red_flags"])
-                
+
                 risk = result.get("risk_level", "low")
                 if risk == "high":
                     metrics["high_risk_cases"] += 1
@@ -308,33 +309,33 @@ class InsightReportingAgent:
                     metrics["medium_risk_cases"] += 1
                 else:
                     metrics["low_risk_cases"] += 1
-        
+
         return metrics
-    
-    async def _create_narrative(self, metrics: Dict[str, Any]) -> str:
+
+    async def _create_narrative(self, metrics: dict[str, Any]) -> str:
         """Crea narrativa basada en métricas"""
         if self.model:
             return await self._generate_ai_narrative(metrics)
         else:
             return self._generate_template_narrative(metrics)
-    
-    async def _generate_ai_narrative(self, metrics: Dict[str, Any]) -> str:
+
+    async def _generate_ai_narrative(self, metrics: dict[str, Any]) -> str:
         """Genera narrativa con IA"""
         prompt = f"""
         Genera un resumen ejecutivo basado en estas métricas de análisis de transparencia:
-        
+
         - Total de documentos analizados: {metrics.get('total_documents', 0)}
         - Red flags detectadas: {metrics.get('red_flags_detected', 0)}
         - Casos de riesgo alto: {metrics.get('high_risk_cases', 0)}
         - Casos de riesgo medio: {metrics.get('medium_risk_cases', 0)}
         - Casos de riesgo bajo: {metrics.get('low_risk_cases', 0)}
-        
+
         Genera un párrafo de 3-4 oraciones, profesional y directo.
         """
-        
+
         try:
             import asyncio
-            
+
             response = await asyncio.to_thread(
                 self.model.generate_content,
                 prompt,
@@ -343,56 +344,56 @@ class InsightReportingAgent:
                     max_output_tokens=self.config.max_tokens
                 )
             )
-            
+
             return response.text.strip()
-            
+
         except Exception as e:
             logger.error(f"Error generando narrativa con IA: {e}")
             return self._generate_template_narrative(metrics)
-    
-    def _generate_template_narrative(self, metrics: Dict[str, Any]) -> str:
+
+    def _generate_template_narrative(self, metrics: dict[str, Any]) -> str:
         """Genera narrativa con template"""
         total = metrics.get('total_documents', 0)
         flags = metrics.get('red_flags_detected', 0)
         high = metrics.get('high_risk_cases', 0)
-        
+
         narrative = f"Se analizaron {total} documentos oficiales. "
         narrative += f"Se detectaron {flags} red flags en total. "
-        
+
         if high > 0:
             narrative += f"Se identificaron {high} casos de riesgo alto que requieren atención inmediata. "
         else:
             narrative += "No se identificaron casos de riesgo alto. "
-        
+
         narrative += "Se recomienda revisar los casos priorizados por nivel de riesgo."
-        
+
         return narrative
-    
-    def _generate_recommendations(self, metrics: Dict[str, Any]) -> List[str]:
+
+    def _generate_recommendations(self, metrics: dict[str, Any]) -> list[str]:
         """Genera recomendaciones basadas en métricas"""
         recommendations = []
-        
+
         high = metrics.get('high_risk_cases', 0)
         flags = metrics.get('red_flags_detected', 0)
-        
+
         if high > 0:
             recommendations.append(f"Revisar inmediatamente los {high} casos de riesgo alto")
-        
+
         if flags > 10:
             recommendations.append("Considerar ajustar thresholds de detección para reducir falsos positivos")
-        
+
         if metrics.get('total_documents', 0) > 0:
             recommendations.append("Continuar con monitoreo regular de boletines oficiales")
-        
+
         return recommendations if recommendations else ["No hay recomendaciones específicas"]
-    
-    async def query_with_data(self, query: str) -> Dict[str, Any]:
+
+    async def query_with_data(self, query: str) -> dict[str, Any]:
         """
         Responde una query consultando los datos reales de la base de datos
-        
+
         Args:
             query: Pregunta del usuario
-        
+
         Returns:
             Respuesta con datos reales
         """
@@ -400,32 +401,32 @@ class InsightReportingAgent:
             async with AsyncSessionLocal() as db:
                 # Detectar tipo de consulta y obtener datos relevantes
                 query_lower = query.lower()
-                
+
                 data_context = {}
-                
+
                 # Estadísticas generales
                 if any(word in query_lower for word in ['estadísticas', 'stats', 'general', 'resumen', 'cuántos']):
                     data_context['statistics'] = await DatabaseTools.get_statistics(db)
-                
+
                 # Documentos de alto riesgo
                 if any(word in query_lower for word in ['riesgo', 'alto riesgo', 'crítico', 'peligroso']):
                     data_context['top_risk'] = await AnalysisTools.get_top_risk_documents(db, limit=10)
-                
+
                 # Red flags
                 if any(word in query_lower for word in ['red flag', 'alerta', 'problema', 'irregularidad']):
                     data_context['red_flag_distribution'] = await AnalysisTools.get_red_flag_distribution(db)
                     data_context['red_flags'] = await DatabaseTools.get_red_flags(db, severity='high', limit=20)
-                
+
                 # Tendencias
                 if any(word in query_lower for word in ['tendencia', 'evolución', 'cambio', 'comparar']):
                     data_context['trends'] = await AnalysisTools.get_transparency_trends(
                         db, 2025, 1, 2025, 11
                     )
-                
+
                 # Entidades
                 if any(word in query_lower for word in ['beneficiario', 'entidad', 'empresa', 'organismo']):
                     data_context['entities'] = await AnalysisTools.get_entity_analysis(db, 'beneficiaries')
-                
+
                 # Agregar contexto de búsqueda semántica si está disponible
                 if self._ensure_retrieval():
                     try:
@@ -446,17 +447,17 @@ class InsightReportingAgent:
                             logger.info(f"Agregado contexto semántico: {len(search_results)} chunks")
                     except Exception as e:
                         logger.warning(f"Error en búsqueda semántica: {e}")
-                
+
                 # Si no se encontró contexto específico, obtener estadísticas
                 if not data_context:
                     data_context['statistics'] = await DatabaseTools.get_statistics(db)
-                
+
                 # Generar respuesta usando IA con el contexto de datos
                 if self.model:
                     response_text = await self._generate_ai_response(query, data_context)
                 else:
                     response_text = self._generate_fallback_response(query, data_context)
-                
+
                 return {
                     "success": True,
                     "query": query,
@@ -464,7 +465,7 @@ class InsightReportingAgent:
                     "data_used": list(data_context.keys()),
                     "timestamp": datetime.utcnow().isoformat()
                 }
-                
+
         except Exception as e:
             logger.error(f"Error consultando datos: {e}", exc_info=True)
             return {
@@ -472,29 +473,29 @@ class InsightReportingAgent:
                 "error": str(e),
                 "query": query
             }
-    
-    async def _generate_ai_response(self, query: str, 
-                                   context: Optional[Dict[str, Any]] = None) -> str:
+
+    async def _generate_ai_response(self, query: str,
+                                   context: dict[str, Any] | None = None) -> str:
         """Genera respuesta con IA"""
         context_str = ""
         if context:
             context_str = f"\n\nContexto adicional:\n{str(context)}"
-        
+
         messages = [
             {"role": "system", "content": "Eres un asistente experto en análisis de transparencia gubernamental. Responde de forma clara y concisa."}
         ] + self.conversation_history[-6:] + [  # Últimos 3 turnos
             {"role": "user", "content": query + context_str}
         ]
-        
+
         try:
             import asyncio
-            
+
             # Convertir el historial de mensajes a formato Gemini
             conversation_text = "\n\n".join([
-                f"{msg['role'].upper()}: {msg['content']}" 
+                f"{msg['role'].upper()}: {msg['content']}"
                 for msg in messages
             ])
-            
+
             response = await asyncio.to_thread(
                 self.model.generate_content,
                 conversation_text,
@@ -503,18 +504,18 @@ class InsightReportingAgent:
                     max_output_tokens=self.config.max_tokens
                 )
             )
-            
+
             return response.text.strip()
-            
+
         except Exception as e:
             logger.error(f"Error generando respuesta con IA: {e}")
             return self._generate_fallback_response(query, context)
-    
-    def _generate_fallback_response(self, query: str, 
-                                   context: Optional[Dict[str, Any]] = None) -> str:
+
+    def _generate_fallback_response(self, query: str,
+                                   context: dict[str, Any] | None = None) -> str:
         """Genera respuesta fallback sin IA"""
         return f"He recibido tu consulta: '{query}'. En este momento, la funcionalidad de chat requiere configurar la API de Google. Por favor, consulta los datos directamente en el dashboard."
-    
+
     def set_firewall(self, fw: "ReferenceFirewallService") -> None:
         """Attach a ReferenceFirewallService for answer validation (Fase IV)."""
         self._firewall = fw
@@ -523,16 +524,16 @@ class InsightReportingAgent:
         """Limpia el historial de conversación"""
         self.conversation_history.clear()
         logger.info("Historial de conversación limpiado")
-    
-    async def generate_monthly_summary(self, year: int = 2025, 
-                                       month: int = 8) -> Dict[str, Any]:
+
+    async def generate_monthly_summary(self, year: int = 2025,
+                                       month: int = 8) -> dict[str, Any]:
         """
         Genera resumen mensual de análisis
-        
+
         Args:
             year: Año a analizar
             month: Mes a analizar
-        
+
         Returns:
             Resumen mensual generado
         """
@@ -540,7 +541,7 @@ class InsightReportingAgent:
             async with AsyncSessionLocal() as db:
                 # Obtener resumen mensual
                 summary = await AnalysisTools.get_monthly_summary(db, year, month)
-                
+
                 # Generar narrativa
                 narrative = f"""
                 Resumen del mes {month}/{year}:
@@ -549,9 +550,9 @@ class InsightReportingAgent:
                 - Score promedio de transparencia: {summary.get('avg_transparency_score', 0):.1f}
                 - Documentos de alto riesgo: {summary.get('high_risk_count', 0)}
                 """
-                
+
                 logger.info(f"Resumen mensual generado para {month}/{year}")
-                
+
                 return {
                     "success": True,
                     "task_type": "monthly_summary",
@@ -560,25 +561,25 @@ class InsightReportingAgent:
                     "narrative": narrative.strip(),
                     "timestamp": datetime.utcnow().isoformat()
                 }
-                
+
         except Exception as e:
             logger.error(f"Error generando resumen mensual: {e}", exc_info=True)
             return {
                 "success": False,
                 "error": str(e)
             }
-    
+
     async def generate_trend_analysis(self, start_year: int, start_month: int,
-                                     end_year: int, end_month: int) -> Dict[str, Any]:
+                                     end_year: int, end_month: int) -> dict[str, Any]:
         """
         Genera análisis de tendencias
-        
+
         Args:
             start_year: Año inicial
             start_month: Mes inicial
             end_year: Año final
             end_month: Mes final
-        
+
         Returns:
             Análisis de tendencias
         """
@@ -588,7 +589,7 @@ class InsightReportingAgent:
                 trends = await AnalysisTools.get_transparency_trends(
                     db, start_year, start_month, end_year, end_month
                 )
-                
+
                 # Calcular cambios
                 if len(trends) >= 2:
                     first_score = trends[0].get('avg_score', 0)
@@ -598,16 +599,16 @@ class InsightReportingAgent:
                 else:
                     change = 0
                     change_pct = 0
-                
+
                 narrative = f"""
                 Análisis de tendencias {start_month}/{start_year} - {end_month}/{end_year}:
                 - Períodos analizados: {len(trends)}
                 - Cambio en transparencia: {change:+.1f} puntos ({change_pct:+.1f}%)
                 - Tendencia: {'Mejorando' if change > 0 else 'Empeorando' if change < 0 else 'Estable'}
                 """
-                
+
                 logger.info(f"Análisis de tendencias generado: {len(trends)} períodos")
-                
+
                 return {
                     "success": True,
                     "task_type": "trend_analysis",
@@ -618,8 +619,8 @@ class InsightReportingAgent:
                     "narrative": narrative.strip(),
                     "timestamp": datetime.utcnow().isoformat()
                 }
-                
-            
+
+
         except Exception as e:
             logger.error(f"Error generando análisis de tendencias: {e}", exc_info=True)
             return {

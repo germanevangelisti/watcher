@@ -23,10 +23,9 @@ Nota sobre extracción de PDF:
   con el sumario (columna izquierda). El parser filtra ese ruido a nivel de regex.
 """
 
-import re
 import logging
-from dataclasses import dataclass, field, asdict
-from typing import List, Optional, Tuple
+import re
+from dataclasses import asdict, dataclass, field
 
 logger = logging.getLogger(__name__)
 
@@ -41,10 +40,10 @@ class SumarioEntry:
     nombre: str
     pagina_inicio: int
     tipo: str                          # "organismo" | "categoria" | "acto"
-    organismo: Optional[str] = None    # Solo Tipo A: organismo padre del acto
-    tipo_acto: Optional[str] = None    # Solo Tipo A: "decreto" | "resolucion" | "acuerdo"
-    numero_acto: Optional[str] = None  # Solo Tipo A: "272" | "2132"
-    letra: Optional[str] = None        # Solo Tipo A: "D" | "C" (serie)
+    organismo: str | None = None    # Solo Tipo A: organismo padre del acto
+    tipo_acto: str | None = None    # Solo Tipo A: "decreto" | "resolucion" | "acuerdo"
+    numero_acto: str | None = None  # Solo Tipo A: "272" | "2132"
+    letra: str | None = None        # Solo Tipo A: "D" | "C" (serie)
 
 
 @dataclass
@@ -52,7 +51,7 @@ class SumarioResult:
     """Resultado del parseo del sumario."""
     found: bool
     format_type: str         # "organismo_jerarquia" | "categorias_simples" | "categorias_judiciales" | "unknown"
-    entries: List[SumarioEntry] = field(default_factory=list)
+    entries: list[SumarioEntry] = field(default_factory=list)
     sumario_page: int = 0    # Estimado: 1 si está en los primeros ~2500 chars
     raw_text: str = ""
     confidence: float = 0.0
@@ -171,7 +170,7 @@ class SumarioParser:
     # Localización del bloque
     # ---------------------------------------------------------------------------
 
-    def _find_sumario_block(self, text: str) -> Optional[Tuple[int, str]]:
+    def _find_sumario_block(self, text: str) -> tuple[int, str] | None:
         """Localiza el bloque de texto que sigue al header SUMARIO."""
         match = self._RE_HEADER.search(text)
         if not match:
@@ -251,14 +250,14 @@ class SumarioParser:
     # Parsers por formato
     # ---------------------------------------------------------------------------
 
-    def _parse_organismo_jerarquia(self, text: str) -> List[SumarioEntry]:
+    def _parse_organismo_jerarquia(self, text: str) -> list[SumarioEntry]:
         """
         Parsea sumarios con estructura jerárquica:
           MINISTERIO DE EDUCACIÓN         ← organismo header (todo caps)
           Resolución N° 1813 - Letra:D .. Pag. 1  ← acto (sin indent en PDFs reales)
         """
-        entries: List[SumarioEntry] = []
-        current_organismo: Optional[str] = None
+        entries: list[SumarioEntry] = []
+        current_organismo: str | None = None
         seen_organismos: set = set()
 
         for line in text.split('\n'):
@@ -303,7 +302,7 @@ class SumarioParser:
 
         return entries
 
-    def _parse_categorias(self, text: str) -> List[SumarioEntry]:
+    def _parse_categorias(self, text: str) -> list[SumarioEntry]:
         """
         Parsea sumarios con categorías simples:
           Licitaciones .......... Pag. 1
@@ -313,7 +312,7 @@ class SumarioParser:
         - Nombres demasiado largos (texto de cuerpo infiltrado)
         - Nombres todo en mayúsculas (headers, no entradas)
         """
-        entries: List[SumarioEntry] = []
+        entries: list[SumarioEntry] = []
         seen: set = set()
 
         for match in self._RE_CATEGORIA.finditer(text):
@@ -389,7 +388,7 @@ class SumarioParser:
             return "ordenanza"
         return raw_lower
 
-    def _calculate_confidence(self, entries: List[SumarioEntry], format_type: str) -> float:
+    def _calculate_confidence(self, entries: list[SumarioEntry], format_type: str) -> float:
         """Estima la confianza del parseo según cantidad y calidad de entries."""
         if not entries:
             return 0.0
