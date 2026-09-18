@@ -19,7 +19,11 @@ from collections import defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from app.services.gasto_classifier import ETAPAS_COMPROMISO, ETAPAS_EJECUCION
+from app.services.gasto_classifier import (
+    ETAPA_LLAMADO,
+    ETAPAS_COMPROMISO,
+    ETAPAS_EJECUCION,
+)
 from app.services.presupuesto_matching import (
     canonical_organismo_name,
     preferred_organismo_display,
@@ -100,6 +104,10 @@ class OrganismoContrast:
     sobre_compromiso: bool
     sobre_ejecucion: bool
     matched: bool
+    # Portion of `monto_compromiso` that is only a tender call.  Disclosed, not
+    # subtracted: the published pct and the alert keep their V.2 definition, so
+    # separating the series cannot silently retire an alert.
+    monto_llamado: float = 0.0
 
 
 def aggregate_organismos(
@@ -115,6 +123,7 @@ def aggregate_organismos(
     acc: dict[str, dict[str, float]] = defaultdict(
         lambda: {
             "count": 0.0,
+            "llamado": 0.0,
             BUCKET_COMPROMISO: 0.0,
             BUCKET_EJECUCION: 0.0,
             BUCKET_OTRO: 0.0,
@@ -125,6 +134,8 @@ def aggregate_organismos(
         bucket = bucket_etapa(etapa)
         acc[key]["count"] += count
         acc[key][bucket] += monto
+        if etapa == ETAPA_LLAMADO:
+            acc[key]["llamado"] += monto
 
     out: list[OrganismoContrast] = []
     for org, vals in acc.items():
@@ -148,7 +159,46 @@ def aggregate_organismos(
                 sobre_compromiso=is_sobre(pct_c),
                 sobre_ejecucion=is_sobre(pct_e),
                 matched=matched,
+                monto_llamado=vals["llamado"],
             )
         )
     out.sort(key=lambda item: item.monto_compromiso, reverse=True)
     return out
+
+
+@dataclass(frozen=True)
+class Cobertura:
+    """How much of the measured spend has a denominator to be measured against.
+
+    The contrast can only state a percentage where `presupuesto_base` has a
+    matching organism; everything else is publication without a ceiling.  The
+    ledger is not wrong about that spend — it just cannot be contrasted, and the
+    UI must say so rather than drop it from the list.
+    """
+
+    monto_total: float
+    monto_con_denominador: float
+    monto_sin_denominador: float
+    count_sin_denominador: int
+    pct_sin_denominador: float
+
+
+def aggregate_cobertura(contrast: Iterable[OrganismoContrast]) -> Cobertura:
+    """Coverage over an already-aggregated contrast (no extra query needed)."""
+    total = con = sin = 0.0
+    count_sin = 0
+    for item in contrast:
+        total += item.monto_total
+        if item.matched:
+            con += item.monto_total
+        else:
+            sin += item.monto_total
+            count_sin += item.count
+    pct = round(100.0 * sin / total, 2) if total > 0 else 0.0
+    return Cobertura(
+        monto_total=total,
+        monto_con_denominador=con,
+        monto_sin_denominador=sin,
+        count_sin_denominador=count_sin,
+        pct_sin_denominador=pct,
+    )
