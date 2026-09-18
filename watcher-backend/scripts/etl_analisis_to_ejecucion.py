@@ -41,7 +41,9 @@ from app.services.presupuesto_matching import (
     _normalize_acto,
     _token_jaccard,
     build_presupuesto_index,
+    dedup_keys,
     extract_numero_acto,
+    extract_obra_code,
     first_beneficiario,
     looks_like_publication_id,
     match_organismo,
@@ -60,7 +62,9 @@ __all__ = [
     "_token_jaccard",
     "build_presupuesto_index",
     "classify_gasto",
+    "dedup_keys",
     "extract_numero_acto",
+    "extract_obra_code",
     "first_beneficiario",
     "looks_like_publication_id",
     "match_organismo",
@@ -227,16 +231,17 @@ def run_etl(dry_run: bool = False) -> None:
         org = row["organismo"] or ""
         org_norm = _normalize(org)
 
-        # Deduplication check
+        # Deduplication check: an acto key and, when the boletín names the obra,
+        # an obra-code key.  Either one matching means we already counted this act.
         acto_norm = _normalize_acto(row.get("numero_acto"))
-        key = _dedup_key(org_norm, monto, acto_norm)
+        keys = dedup_keys(org_norm, monto, acto_norm, row.get("descripcion"), row.get("fragmento"))
         is_duplicate = 0
-        if acto_norm is not None:
-            if key in seen_dedup_keys:
+        if keys:
+            if any(k in seen_dedup_keys for k in keys):
                 is_duplicate = 1
                 duplicates += 1
             else:
-                seen_dedup_keys.add(key)
+                seen_dedup_keys.update(keys)
 
         # Accumulate only for canonical rows — duplicates don't add to totals
         year = fecha.year

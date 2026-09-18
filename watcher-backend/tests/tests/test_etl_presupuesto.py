@@ -26,6 +26,8 @@ from etl_analisis_to_ejecucion import (
     _normalize,
     _normalize_acto,
     _token_jaccard,
+    dedup_keys,
+    extract_obra_code,
     first_beneficiario,
     looks_like_publication_id,
     match_organismo,
@@ -1002,3 +1004,95 @@ class TestDedupKey:
         k1 = _dedup_key("EPEC", 5_000_000.0, None)
         k2 = _dedup_key("EPEC", 5_000_000.0, None)
         assert k1 == k2  # keys are equal, but ETL won't add None-acto rows to seen_set
+
+    def test_legal_suffix_and_paren_variant_collapses(self):
+        # Real case: E.T. James Craik 132/33/13,2 kV republished the next day as
+        # "...S.A.U (EPEC)" vs "...S.A.U".  Same acto 5543, same $20.03B, and the
+        # organism spelling was the only component of the key that changed.
+        k1 = _dedup_key(_normalize("EMPRESA PROVINCIAL DE ENERGIA DE CORDOBA S.A.U (EPEC)"),
+                        20_027_700_000.0, "5543")
+        k2 = _dedup_key(_normalize("EMPRESA PROVINCIAL DE ENERGIA DE CORDOBA S.A.U"),
+                        20_027_700_000.0, "5543")
+        assert k1 == k2
+
+    def test_alias_variant_collapses(self):
+        # "EPEC" and the full name are the same entity in _ORGANISMO_ALIASES.
+        k1 = _dedup_key(_normalize("EPEC"), 140_000_000.0, "1243")
+        k2 = _dedup_key(_normalize("EMPRESA PROVINCIAL DE ENERGÍA DE CÓRDOBA"),
+                        140_000_000.0, "1243")
+        assert k1 == k2
+
+    def test_distinct_organisms_never_merge(self):
+        # The guard against over-merging: same monto, same acto, different
+        # organisms must stay two rows.  Two licitaciones can carry an identical
+        # amount without being the same act (EPEC zona III vs zona IV suroeste).
+        k1 = _dedup_key(_normalize("SECRETARIA DE ASUNTOS INSTITUCIONALES"),
+                        34_026_000_000.0, "660649")
+        k2 = _dedup_key(
+            _normalize(
+                "Secretaría General de la Gobernación - Ministerio de Economía"
+                " y Gestión Pública"
+            ),
+            34_026_000_000.0,
+            "660649",
+        )
+        assert k1 != k2
+
+
+class TestObraCodeDedup:
+    """The obra-code tier: links republications the acto number cannot reach."""
+
+    def test_extracts_s_code(self):
+        assert extract_obra_code("obra de pavimentación de caminos S-511, T294-06") == "S-511"
+
+    def test_extracts_tramo_code(self):
+        assert extract_obra_code("mejora del camino T294-06 en Río Cuarto") == "T294-06"
+
+    def test_no_code_returns_none(self):
+        # EPEC's LED tenders name no obra code; they must stay out of this tier.
+        zona = (
+            "MEJORAMIENTO DEL SISTEMA DE ALUMBRADO PÚBLICO E INSTALACION DE"
+            " LUMINARIAS LED - CIUDAD DE CORDOBA - ZONA IV SURESTE"
+        )
+        assert extract_obra_code(zona) is None
+
+    def test_same_obra_different_acto_shares_obra_key(self):
+        # Real case: the S-511 obra was published as a tender ("S-511") and as an
+        # "apertura de registro de oposición" ("RESOLUCION 056/2026"), under four
+        # different organismo names, each row carrying the full $25.34B.
+        monto = 25_341_354_989.0
+        a = dedup_keys(
+            _normalize("LAS PEÑAS SUD – LAS ISLETILLAS"),
+            monto,
+            "S511",
+            "obra de pavimentación de caminos S-511, T294-06 y T323-14",
+        )
+        b = dedup_keys(
+            _normalize("DIRECCIÓN DE INTELIGENCIA FISCAL"),
+            monto,
+            "RESOLUCION0562026",
+            "Apertura de registro de oposición para la obra de pavimentación de"
+            " caminos S-511, T294-06 y T323-14",
+        )
+        assert set(a) & set(b) == {("OBRA", "S-511", 25341)}
+
+    def test_zonas_do_not_merge_despite_equal_monto(self):
+        # Zona III suroeste and Zona IV sureste are different tenders with an
+        # identical amount.  A "same monto + similar text" rule would merge them;
+        # the acto key keeps them apart and the obra tier never sees them.
+        monto = 4_623_000_000.0
+        zona_iii = (
+            "MEJORAMIENTO DEL SISTEMA DE ALUMBRADO PUBLICO E INSTALACION DE"
+            " LUMINARIAS LED - CIUDAD DE CORDOBA - ZONA III SUROESTE"
+        )
+        zona_iv = zona_iii.replace("ZONA III SUROESTE", "ZONA IV SURESTE")
+        a = dedup_keys(_normalize("EMPRESA PROVINCIAL DE ENERGIA DE CORDOBA S.A.U"),
+                       monto, "LICITACIÓNPÚBLICANO5558", zona_iii)
+        b = dedup_keys(_normalize("EMPRESA PROVINCIAL DE ENERGIA DE CORDOBA"),
+                       monto, "LICITACIÓNPÚBLICANO5560", zona_iv)
+        assert not set(a) & set(b)
+
+    def test_no_identity_means_no_dedup(self):
+        assert dedup_keys(_normalize("EPEC"), 1000.0, None, "sin identificadores") == []
+
+
