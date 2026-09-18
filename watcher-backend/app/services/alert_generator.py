@@ -45,7 +45,7 @@ class AlertGenerator:
     def __init__(self, config: dict | None = None):
         """
         Inicializa el generador de alertas
-        
+
         Args:
             config: Configuración de umbrales (opcional)
         """
@@ -273,13 +273,13 @@ class AlertGenerator:
     ) -> list[AlertaCiudadana]:
         """
         Genera todas las alertas aplicables a un acto
-        
+
         Args:
             acto: Diccionario con datos del acto
             vinculos: Lista de vínculos del acto con programas
             programas: Diccionario de programas (id -> datos)
             baseline_marzo: Datos de baseline de marzo (opcional)
-        
+
         Returns:
             Lista de alertas generadas
         """

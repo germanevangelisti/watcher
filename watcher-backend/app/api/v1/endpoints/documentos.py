@@ -27,10 +27,10 @@ async def get_document_text(
 ):
     """
     Obtiene el texto extraído de un documento
-    
+
     Args:
         filename: Nombre del archivo PDF original
-        
+
     Returns:
         Contenido de texto del documento procesado
     """

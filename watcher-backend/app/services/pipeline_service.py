@@ -66,7 +66,7 @@ except ImportError:
 class PipelineService:
     """
     Service for orchestrating the complete document processing pipeline.
-    
+
     Handles extraction, cleaning, chunking, enrichment, and indexing.
     Uses AsyncSession for database operations.
     """
@@ -74,7 +74,7 @@ class PipelineService:
     def __init__(self, db_session: AsyncSession):
         """
         Initialize pipeline service.
-        
+
         Args:
             db_session: SQLAlchemy AsyncSession
         """
@@ -100,11 +100,11 @@ class PipelineService:
     ) -> PipelineResponse:
         """
         Process a document through the complete pipeline.
-        
+
         Args:
             file_id: ID of the file/document to process
             options: Optional configuration for pipeline stages
-        
+
         Returns:
             PipelineResponse with results and timing
         """
@@ -332,10 +332,10 @@ class PipelineService:
     async def _get_file_path(self, file_id: int) -> str | None:
         """
         Get the file path for a file ID by querying the database.
-        
+
         Args:
             file_id: Boletin ID
-        
+
         Returns:
             File path or None
         """
@@ -372,11 +372,11 @@ class PipelineService:
     ) -> list[PipelineResponse]:
         """
         Process multiple files through the pipeline.
-        
+
         Args:
             file_ids: List of file IDs to process
             options: Optional configuration
-        
+
         Returns:
             List of PipelineResponse objects
         """
@@ -410,10 +410,10 @@ class PipelineService:
 def get_pipeline_service(db_session: AsyncSession) -> PipelineService:
     """
     Get PipelineService instance.
-    
+
     Args:
         db_session: SQLAlchemy AsyncSession
-    
+
     Returns:
         PipelineService instance
     """

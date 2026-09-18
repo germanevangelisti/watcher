@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class HistoricalIntelligenceAgent:
     """
     Agente de inteligencia histórica
-    
+
     Analiza documentos considerando el contexto histórico de las entidades mencionadas.
     """
 
@@ -33,11 +33,11 @@ class HistoricalIntelligenceAgent:
     async def execute(self, workflow: Any, task: Any) -> dict[str, Any]:
         """
         Ejecuta una tarea del agente
-        
+
         Args:
             workflow: Estado del workflow (puede ser None)
             task: Definición de la tarea con tipo y parámetros
-            
+
         Returns:
             Resultado de la ejecución
         """
@@ -87,11 +87,11 @@ class HistoricalIntelligenceAgent:
     ) -> dict[str, Any]:
         """
         Construye timeline de apariciones de una entidad
-        
+
         Args:
             entity_id: ID de la entidad
             db: Sesión de base de datos
-            
+
         Returns:
             Timeline con eventos ordenados cronológicamente
         """
@@ -190,7 +190,7 @@ class HistoricalIntelligenceAgent:
     ) -> dict[str, Any]:
         """
         Obtiene grafo de relaciones de una entidad
-        
+
         Returns:
             Nodos y edges para visualización de red
         """
@@ -295,11 +295,11 @@ class HistoricalIntelligenceAgent:
     ) -> dict[str, Any]:
         """
         Detecta patrones sospechosos en los datos
-        
+
         Args:
             pattern_ids: IDs de patrones específicos (None = todos)
             db: Sesión de base de datos
-            
+
         Returns:
             Patrones detectados con detalles
         """
@@ -371,7 +371,7 @@ class HistoricalIntelligenceAgent:
     ) -> dict[str, Any]:
         """
         Analiza historial completo de una entidad por nombre
-        
+
         Returns:
             Análisis comprehensivo con timeline, relaciones y patrones
         """
@@ -440,11 +440,11 @@ class HistoricalIntelligenceAgent:
     ) -> dict[str, Any]:
         """
         Detecta anomalías en período reciente
-        
+
         Args:
             days_back: Días hacia atrás para analizar
             db: Sesión de base de datos
-            
+
         Returns:
             Anomalías detectadas con severidad
         """

@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 class NationalScraper(BaseScraper):
     """
     Placeholder scraper for national-level data.
-    
+
     Future implementation will support:
     - National bulletins (Boletín Oficial de la Nación)
     - National budget data
@@ -28,7 +28,7 @@ class NationalScraper(BaseScraper):
     def __init__(self, config: ScraperConfig | None = None):
         """
         Initialize national scraper.
-        
+
         Args:
             config: Optional configuration
         """
@@ -64,7 +64,7 @@ class NationalScraper(BaseScraper):
     ) -> ScraperResult:
         """
         Download single national document.
-        
+
         NOTE: This is a placeholder implementation.
         """
         logger.warning("National scraper not yet implemented")
@@ -84,7 +84,7 @@ class NationalScraper(BaseScraper):
     ) -> list[ScraperResult]:
         """
         Download national documents for date range.
-        
+
         NOTE: This is a placeholder implementation.
         """
         logger.warning("National scraper not yet implemented")

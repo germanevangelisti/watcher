@@ -47,7 +47,7 @@ class IndexadorEmbeddingsMasivo:
     ):
         """
         Indexa embeddings de boletines completados
-        
+
         Args:
             year: Filtrar por año (YYYY)
             month: Filtrar por mes (MM)

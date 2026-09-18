@@ -79,7 +79,7 @@ def parse_filename(filename: str) -> dict[str, Any]:
     """
     Parse filename to extract date and section.
     Expected format: YYYYMMDD_N_Secc.pdf
-    
+
     Returns:
         Dict with 'date', 'section', and 'valid' flag
     """
@@ -113,12 +113,12 @@ async def save_uploaded_file(
 ) -> Path:
     """
     Save uploaded file to organized directory structure.
-    
+
     Args:
         filename: Name of the file
         content: File content bytes
         date: Optional date in YYYYMMDD format
-        
+
     Returns:
         Path where file was saved
     """
@@ -151,9 +151,9 @@ async def upload_files(
 ):
     """
     Upload one or more PDF files with automatic deduplication.
-    
+
     Epic 1.2 - Batch file upload
-    
+
     Features:
     - Accepts multiple files via multipart/form-data
     - Validates PDF format (magic bytes)
@@ -161,7 +161,7 @@ async def upload_files(
     - Parses filename to extract date/section (if format matches)
     - Organizes files by year/month
     - Returns detailed results for each file
-    
+
     Example filename: 20250210_1_Secc.pdf
     """
     if not files:
@@ -306,16 +306,16 @@ async def download_from_url(
 ):
     """
     Download a PDF from a URL with automatic deduplication.
-    
+
     Epic 1.3 - Generic URL download
-    
+
     Features:
     - Downloads file from any URL
     - Validates PDF format
     - Computes SHA256 for deduplication
     - Supports filename, date, section overrides
     - Times out after 60 seconds
-    
+
     Example:
     ```json
     {
@@ -433,15 +433,15 @@ async def download_from_urls(
 ):
     """
     Download multiple PDFs from URLs with rate limiting.
-    
+
     Epic 1.3 - Batch URL download
-    
+
     Features:
     - Downloads from multiple URLs sequentially
     - Rate limiting (1 second between requests)
     - Automatic deduplication
     - Returns summary of all downloads
-    
+
     Example:
     ```json
     {

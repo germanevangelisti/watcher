@@ -322,14 +322,14 @@ if __name__ == "__main__":
     # Texto de ejemplo
     texto_ejemplo = """
     DECRETO N° 1234/2025
-    
+
     MINISTERIO DE OBRAS PÚBLICAS
-    
+
     ARTÍCULO 1°.- Apruébase la contratación directa por un monto de $15.000.000,00
-    (PESOS QUINCE MILLONES) a favor de la empresa CONSTRUCTORA XYZ S.A. para la 
-    realización de obras de emergencia en la Ruta Provincial 19, con cargo a la 
+    (PESOS QUINCE MILLONES) a favor de la empresa CONSTRUCTORA XYZ S.A. para la
+    realización de obras de emergencia en la Ruta Provincial 19, con cargo a la
     Partida 1.2.3.4.5.
-    
+
     ARTÍCULO 2°.- La presente contratación se realiza en virtud de la situación de
     urgencia declarada por Resolución 567/2025.
     """

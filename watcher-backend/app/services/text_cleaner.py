@@ -37,7 +37,7 @@ class CleaningConfig(BaseModel):
 class TextCleaner:
     """
     Servicio para limpieza y normalización de texto extraído de PDFs.
-    
+
     Aplica múltiples pasos de limpieza configurables para mejorar
     la calidad del texto antes del chunking y embedding.
     """
@@ -45,7 +45,7 @@ class TextCleaner:
     def __init__(self, config: CleaningConfig | None = None):
         """
         Inicializar TextCleaner.
-        
+
         Args:
             config: Configuración de limpieza (usa defaults si no se proporciona)
         """
@@ -58,10 +58,10 @@ class TextCleaner:
     def clean(self, text: str) -> str:
         """
         Pipeline completo de limpieza de texto.
-        
+
         Args:
             text: Texto a limpiar
-            
+
         Returns:
             Texto limpio
         """
@@ -95,10 +95,10 @@ class TextCleaner:
     def fix_encoding(self, text: str) -> str:
         """
         Corregir problemas de encoding (mojibake) usando ftfy.
-        
+
         Args:
             text: Texto con posibles problemas de encoding
-            
+
         Returns:
             Texto con encoding corregido
         """
@@ -116,13 +116,13 @@ class TextCleaner:
     def normalize_unicode(self, text: str) -> str:
         """
         Normalizar Unicode a forma NFKC (compatibilidad).
-        
+
         NFKC combina caracteres compuestos y normaliza variantes.
         Ejemplo: "ñ" (dos caracteres) -> "ñ" (un caracter)
-        
+
         Args:
             text: Texto a normalizar
-            
+
         Returns:
             Texto normalizado
         """
@@ -137,15 +137,15 @@ class TextCleaner:
     def normalize_whitespace(self, text: str) -> str:
         """
         Normalizar espacios en blanco y saltos de línea.
-        
+
         - Colapsa múltiples espacios en uno
         - Normaliza diferentes tipos de espacios a espacio estándar
         - Colapsa múltiples saltos de línea (más de 3) a 2
         - Remueve espacios al inicio/fin de líneas
-        
+
         Args:
             text: Texto a normalizar
-            
+
         Returns:
             Texto con whitespace normalizado
         """
@@ -172,15 +172,15 @@ class TextCleaner:
     def remove_artifacts(self, text: str) -> str:
         """
         Remover artifacts comunes de PDFs.
-        
+
         - Números de página sueltos
         - Headers/footers repetidos
         - Líneas de guiones o underscores repetidos
         - Marcas de agua comunes
-        
+
         Args:
             text: Texto con posibles artifacts
-            
+
         Returns:
             Texto sin artifacts
         """
@@ -220,14 +220,14 @@ class TextCleaner:
     def normalize_legal_text(self, text: str) -> str:
         """
         Normalización específica para boletines oficiales.
-        
+
         - Normaliza abreviaturas comunes (Art., Inc., etc.)
         - Normaliza formato de artículos y decretos
         - Normaliza símbolos de moneda
-        
+
         Args:
             text: Texto legal a normalizar
-            
+
         Returns:
             Texto normalizado
         """
@@ -270,10 +270,10 @@ _text_cleaner: TextCleaner | None = None
 def get_text_cleaner(config: CleaningConfig | None = None) -> TextCleaner:
     """
     Obtener instancia global de TextCleaner.
-    
+
     Args:
         config: Configuración opcional (solo se usa en primera llamada)
-        
+
     Returns:
         Instancia de TextCleaner
     """

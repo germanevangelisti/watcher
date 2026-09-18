@@ -129,7 +129,7 @@ class LocalEmbeddingFunction:
 class EmbeddingService:
     """
     Service for generating and managing document embeddings.
-    
+
     Supports multiple embedding providers:
     - Google AI (gemini-embedding-001, 3072 dims) - default
     - Local models (sentence-transformers)
@@ -145,7 +145,7 @@ class EmbeddingService:
     ):
         """
         Initialize embedding service.
-        
+
         Args:
             persist_directory: Directory for ChromaDB persistence
             collection_name: Name of the collection
@@ -276,12 +276,12 @@ class EmbeddingService:
     ) -> list[str]:
         """
         Split text into overlapping chunks using ChunkingService.
-        
+
         Args:
             text: Text to chunk
             chunk_size: Size of each chunk in characters
             overlap: Overlap between chunks
-            
+
         Returns:
             List of text chunks
         """
@@ -301,10 +301,10 @@ class EmbeddingService:
     ) -> list[float] | None:
         """
         Generate embedding for a text.
-        
+
         Args:
             text: Text to embed
-            
+
         Returns:
             Embedding vector or None if failed
         """
@@ -348,7 +348,7 @@ class EmbeddingService:
     ) -> dict[str, Any]:
         """
         Add a document to the vector store.
-        
+
         Args:
             document_id: Unique document identifier
             content: Document content
@@ -357,7 +357,7 @@ class EmbeddingService:
             db_session: Optional SQLAlchemy session for persisting ChunkRecords
             persist_chunks: Whether to persist chunks to database (requires db_session)
             use_triple_indexing: Use new IndexingService for atomic triple indexing (recommended)
-            
+
         Returns:
             Result dict with success status
         """
@@ -501,12 +501,12 @@ class EmbeddingService:
     ) -> list[dict[str, Any]]:
         """
         Perform semantic search.
-        
+
         Args:
             query: Search query
             n_results: Number of results to return
             filter: Optional metadata filter
-            
+
         Returns:
             List of matching documents with scores
         """
@@ -554,10 +554,10 @@ class EmbeddingService:
     ) -> dict[str, Any]:
         """
         Delete a document and all its chunks from vector store.
-        
+
         Args:
             document_id: Document identifier
-            
+
         Returns:
             Result dict
         """

@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 class AgentOrchestrator:
     """
     Coordinador central que gestiona el flujo de trabajo entre agentes
-    
+
     Responsabilidades:
     - Gestionar cola de tareas y prioridades
     - Decidir qué agente debe actuar en cada momento
@@ -37,7 +37,7 @@ class AgentOrchestrator:
     def __init__(self, config: dict[str, Any] | None = None):
         """
         Inicializa el orquestador
-        
+
         Args:
             config: Configuración del orquestador
         """
@@ -66,7 +66,7 @@ class AgentOrchestrator:
                                handler: Callable) -> None:
         """
         Registra un handler para un tipo de agente
-        
+
         Args:
             agent_type: Tipo de agente
             handler: Función handler asíncrona
@@ -77,7 +77,7 @@ class AgentOrchestrator:
     def set_approval_callback(self, callback: Callable) -> None:
         """
         Configura callback para solicitar aprobaciones humanas
-        
+
         Args:
             callback: Función callback asíncrona que devuelve (approved, modifications)
         """
@@ -89,12 +89,12 @@ class AgentOrchestrator:
                              config: dict[str, Any] | None = None) -> WorkflowState:
         """
         Crea un nuevo workflow
-        
+
         Args:
             workflow_name: Nombre descriptivo del workflow
             tasks: Lista de definiciones de tareas
             config: Configuración específica del workflow
-        
+
         Returns:
             WorkflowState inicializado
         """
@@ -134,10 +134,10 @@ class AgentOrchestrator:
     async def execute_workflow(self, workflow_id: str) -> WorkflowState:
         """
         Ejecuta un workflow completo
-        
+
         Args:
             workflow_id: ID del workflow a ejecutar
-        
+
         Returns:
             WorkflowState actualizado
         """
@@ -217,7 +217,7 @@ class AgentOrchestrator:
                            task: TaskDefinition) -> None:
         """
         Ejecuta una tarea individual
-        
+
         Args:
             workflow: Estado del workflow
             task: Tarea a ejecutar
@@ -289,12 +289,12 @@ class AgentOrchestrator:
                           modifications: dict[str, Any] | None = None) -> bool:
         """
         Aprueba una tarea manualmente
-        
+
         Args:
             workflow_id: ID del workflow
             task_id: ID de la tarea
             modifications: Modificaciones a aplicar a los parámetros
-        
+
         Returns:
             True si la aprobación fue exitosa
         """
@@ -320,12 +320,12 @@ class AgentOrchestrator:
                          reason: str | None = None) -> bool:
         """
         Rechaza una tarea manualmente
-        
+
         Args:
             workflow_id: ID del workflow
             task_id: ID de la tarea
             reason: Razón del rechazo
-        
+
         Returns:
             True si el rechazo fue exitoso
         """
@@ -353,7 +353,7 @@ class AgentOrchestrator:
     def get_workflow_status(self, workflow_id: str) -> dict[str, Any] | None:
         """
         Obtiene el estado resumido de un workflow
-        
+
         Returns:
             Diccionario con estado resumido
         """
@@ -379,10 +379,10 @@ class AgentOrchestrator:
     def list_workflows(self, status_filter: TaskStatus | None = None) -> list[dict[str, Any]]:
         """
         Lista todos los workflows activos
-        
+
         Args:
             status_filter: Filtrar por estado (opcional)
-        
+
         Returns:
             Lista de workflows con estado resumido
         """

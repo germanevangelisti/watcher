@@ -26,7 +26,7 @@ class ContentExtractor:
     def __init__(self, min_section_chars: int = 500):
         """
         Inicializa el extractor.
-        
+
         Args:
             min_section_chars: Tamaño mínimo para considerar una sección completa
         """
@@ -36,10 +36,10 @@ class ContentExtractor:
         """
         Extrae contenido de un PDF y lo organiza en secciones lógicas.
         DEPRECADO: Usar ExtractorRegistry.extract(path, detect_sections=True)
-        
+
         Args:
             pdf_path: Ruta al archivo PDF
-            
+
         Returns:
             Lista de secciones con su contenido y metadatos
         """

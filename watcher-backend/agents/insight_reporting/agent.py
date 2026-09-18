@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 class InsightReportingAgent:
     """
     Agente especializado en generación de insights y reportes
-    
+
     Capacidades:
     - Agregación de métricas
     - Generación de narrativas (NLG)
@@ -39,7 +39,7 @@ class InsightReportingAgent:
     def __init__(self, config: InsightReportingConfig | None = None):
         """
         Inicializa el agente
-        
+
         Args:
             config: Configuración del agente
         """
@@ -93,11 +93,11 @@ class InsightReportingAgent:
                      task: TaskDefinition) -> dict[str, Any]:
         """
         Ejecuta una tarea del agente
-        
+
         Args:
             workflow: Estado del workflow
             task: Tarea a ejecutar
-        
+
         Returns:
             Resultado de la ejecución
         """
@@ -139,11 +139,11 @@ class InsightReportingAgent:
                              report_type: str = "executive") -> dict[str, Any]:
         """
         Genera un reporte basado en datos
-        
+
         Args:
             data: Datos para el reporte
             report_type: Tipo de reporte (executive, detailed, comparative)
-        
+
         Returns:
             Reporte generado
         """
@@ -168,11 +168,11 @@ class InsightReportingAgent:
                           context: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Responde una query en lenguaje natural
-        
+
         Args:
             query: Pregunta del usuario
             context: Contexto adicional (datos, documentos, etc.)
-        
+
         Returns:
             Respuesta generada
         """
@@ -234,10 +234,10 @@ class InsightReportingAgent:
     async def generate_summary(self, data: dict[str, Any]) -> dict[str, Any]:
         """
         Genera un resumen ejecutivo de datos
-        
+
         Args:
             data: Datos a resumir
-        
+
         Returns:
             Resumen generado
         """
@@ -323,13 +323,13 @@ class InsightReportingAgent:
         """Genera narrativa con IA"""
         prompt = f"""
         Genera un resumen ejecutivo basado en estas métricas de análisis de transparencia:
-        
+
         - Total de documentos analizados: {metrics.get('total_documents', 0)}
         - Red flags detectadas: {metrics.get('red_flags_detected', 0)}
         - Casos de riesgo alto: {metrics.get('high_risk_cases', 0)}
         - Casos de riesgo medio: {metrics.get('medium_risk_cases', 0)}
         - Casos de riesgo bajo: {metrics.get('low_risk_cases', 0)}
-        
+
         Genera un párrafo de 3-4 oraciones, profesional y directo.
         """
 
@@ -390,10 +390,10 @@ class InsightReportingAgent:
     async def query_with_data(self, query: str) -> dict[str, Any]:
         """
         Responde una query consultando los datos reales de la base de datos
-        
+
         Args:
             query: Pregunta del usuario
-        
+
         Returns:
             Respuesta con datos reales
         """
@@ -529,11 +529,11 @@ class InsightReportingAgent:
                                        month: int = 8) -> dict[str, Any]:
         """
         Genera resumen mensual de análisis
-        
+
         Args:
             year: Año a analizar
             month: Mes a analizar
-        
+
         Returns:
             Resumen mensual generado
         """
@@ -573,13 +573,13 @@ class InsightReportingAgent:
                                      end_year: int, end_month: int) -> dict[str, Any]:
         """
         Genera análisis de tendencias
-        
+
         Args:
             start_year: Año inicial
             start_month: Mes inicial
             end_year: Año final
             end_month: Mes final
-        
+
         Returns:
             Análisis de tendencias
         """

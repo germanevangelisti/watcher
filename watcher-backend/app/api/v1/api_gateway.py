@@ -41,7 +41,7 @@ class GatewayResponse(BaseModel):
 class APIGateway:
     """
     API Gateway implementation.
-    
+
     Routes requests to:
     - PDS (Portal Data Scrapers)
     - DIA (Data Integration Adapters)
@@ -87,10 +87,10 @@ class APIGateway:
     ) -> GatewayResponse:
         """
         Route a request to the appropriate service.
-        
+
         Args:
             request: Gateway request
-            
+
         Returns:
             Gateway response
         """
@@ -303,7 +303,7 @@ async def gateway_endpoint(
 ) -> GatewayResponse:
     """
     Unified API Gateway endpoint.
-    
+
     Routes requests to appropriate service layers:
     - PDS: Portal Data Scrapers
     - DIA: Data Integration Adapters

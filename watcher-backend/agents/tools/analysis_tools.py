@@ -27,14 +27,14 @@ class AnalysisTools:
     ) -> list[dict[str, Any]]:
         """
         Analiza tendencias de transparencia en un período
-        
+
         Args:
             db: Sesión de base de datos async
             start_year: Año inicial
             start_month: Mes inicial
             end_year: Año final
             end_month: Mes final
-        
+
         Returns:
             Lista con promedios por mes
         """
@@ -87,12 +87,12 @@ class AnalysisTools:
     ) -> dict[str, Any]:
         """
         Analiza la distribución de red flags
-        
+
         Args:
             db: Sesión de base de datos async
             year: Filtrar por año
             month: Filtrar por mes
-        
+
         Returns:
             Distribución de red flags por tipo, severidad y categoría
         """
@@ -129,11 +129,11 @@ class AnalysisTools:
     ) -> list[dict[str, Any]]:
         """
         Obtiene los documentos con mayor riesgo
-        
+
         Args:
             db: Sesión de base de datos async
             limit: Límite de resultados
-        
+
         Returns:
             Lista de documentos ordenados por riesgo
         """
@@ -174,11 +174,11 @@ class AnalysisTools:
     ) -> list[dict[str, Any]]:
         """
         Analiza las entidades extraídas más frecuentes
-        
+
         Args:
             db: Sesión de base de datos async
             entity_type: Tipo de entidad a analizar
-        
+
         Returns:
             Lista de entidades con frecuencia y scores asociados
         """
@@ -233,14 +233,14 @@ class AnalysisTools:
     ) -> dict[str, Any]:
         """
         Compara métricas entre dos períodos
-        
+
         Args:
             db: Sesión de base de datos async
             period1_year: Año del primer período
             period1_month: Mes del primer período
             period2_year: Año del segundo período
             period2_month: Mes del segundo período
-        
+
         Returns:
             Comparación de métricas
         """
@@ -301,12 +301,12 @@ class AnalysisTools:
     ) -> list[dict[str, Any]]:
         """
         Detecta patrones anómalos en los análisis
-        
+
         Args:
             db: Sesión de base de datos async
             threshold_score: Score mínimo para considerar anómalo
             min_red_flags: Mínimo de red flags
-        
+
         Returns:
             Lista de patrones anómalos detectados
         """
@@ -352,12 +352,12 @@ class AnalysisTools:
     ) -> dict[str, Any]:
         """
         Genera un resumen mensual completo
-        
+
         Args:
             db: Sesión de base de datos async
             year: Año
             month: Mes
-        
+
         Returns:
             Resumen completo del mes
         """

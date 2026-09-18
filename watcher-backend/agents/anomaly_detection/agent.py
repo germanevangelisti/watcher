@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class AnomalyDetectionAgent:
     """
     Agente especializado en detección de anomalías
-    
+
     Capacidades:
     - Detección de anomalías estadísticas
     - Scoring de transparencia
@@ -29,7 +29,7 @@ class AnomalyDetectionAgent:
     def __init__(self, config: AnomalyDetectionConfig | None = None):
         """
         Inicializa el agente
-        
+
         Args:
             config: Configuración del agente
         """
@@ -45,11 +45,11 @@ class AnomalyDetectionAgent:
                      task: TaskDefinition) -> dict[str, Any]:
         """
         Ejecuta una tarea del agente
-        
+
         Args:
             workflow: Estado del workflow
             task: Tarea a ejecutar
-        
+
         Returns:
             Resultado de la ejecución
         """
@@ -87,12 +87,12 @@ class AnomalyDetectionAgent:
                               document_id: str | None = None) -> dict[str, Any]:
         """
         Análisis completo de un documento
-        
+
         Args:
             text: Texto del documento
             entities: Entidades extraídas
             document_id: ID del documento
-        
+
         Returns:
             Análisis completo con red flags y scores
         """
@@ -141,11 +141,11 @@ class AnomalyDetectionAgent:
                                           entities: dict[str, Any]) -> float:
         """
         Calcula el score de transparencia
-        
+
         Args:
             text: Texto del documento
             entities: Entidades extraídas
-        
+
         Returns:
             Score de transparencia (0-100)
         """
@@ -155,12 +155,12 @@ class AnomalyDetectionAgent:
                               transparency_score: float) -> list[dict[str, Any]]:
         """
         Detecta red flags en el documento
-        
+
         Args:
             text: Texto del documento
             entities: Entidades extraídas
             transparency_score: Score de transparencia
-        
+
         Returns:
             Lista de red flags detectadas
         """
@@ -373,11 +373,11 @@ class AnomalyDetectionAgent:
                                          limit: int = 20) -> dict[str, Any]:
         """
         Analiza documentos con alto riesgo (bajo score de transparencia)
-        
+
         Args:
             threshold: Score máximo de transparencia para considerar alto riesgo
             limit: Número máximo de documentos a analizar
-        
+
         Returns:
             Análisis de documentos de alto riesgo
         """

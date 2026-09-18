@@ -29,7 +29,7 @@ class SyncService:
     def __init__(self, db: AsyncSession):
         """
         Inicializa el servicio de sincronización.
-        
+
         Args:
             db: Sesión de base de datos
         """
@@ -59,7 +59,7 @@ class SyncService:
     async def detect_last_synced_date(self) -> date | None:
         """
         Detecta la última fecha con boletines descargados escaneando el filesystem.
-        
+
         Returns:
             La fecha más reciente encontrada o None si no hay boletines
         """
@@ -113,11 +113,11 @@ class SyncService:
         """
         Calcula las fechas faltantes entre start_date y end_date (o hoy).
         Excluye fines de semana.
-        
+
         Args:
             start_date: Fecha de inicio (no incluida)
             end_date: Fecha de fin (incluida), por defecto hoy
-            
+
         Returns:
             Lista de fechas faltantes (días hábiles)
         """
@@ -138,10 +138,10 @@ class SyncService:
     async def sync_to_today(self, process_after_download: bool = True) -> dict:
         """
         Sincroniza boletines hasta hoy: detecta faltantes, descarga y procesa.
-        
+
         Args:
             process_after_download: Si debe procesar los boletines después de descargar
-            
+
         Returns:
             Estadísticas de la sincronización
         """
@@ -356,7 +356,7 @@ class SyncService:
     async def get_sync_status(self) -> dict:
         """
         Obtiene el estado actual de sincronización.
-        
+
         Returns:
             Diccionario con el estado completo
         """
@@ -397,7 +397,7 @@ class SyncService:
     ):
         """
         Actualiza la configuración del scheduler.
-        
+
         Args:
             enabled: Si está habilitado el sync automático
             frequency: Frecuencia (daily, weekly, manual)

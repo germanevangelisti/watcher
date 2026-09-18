@@ -34,7 +34,7 @@ class ReportType(str, Enum):
 class ReportGenerator:
     """
     Report Generator Service (RPA Layer).
-    
+
     Responsibilities:
     - Generate executive summaries
     - Create detailed analysis reports
@@ -61,13 +61,13 @@ class ReportGenerator:
     ) -> dict[str, Any]:
         """
         Generate a report.
-        
+
         Args:
             report_type: Type of report to generate
             data: Data for the report
             format: Output format
             metadata: Optional metadata
-            
+
         Returns:
             Generated report
         """
@@ -337,10 +337,10 @@ class ReportGenerator:
     ) -> list[dict[str, Any]]:
         """
         Generate multiple reports in batch.
-        
+
         Args:
             reports: List of report specifications
-            
+
         Returns:
             List of generated reports
         """

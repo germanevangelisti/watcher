@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 class ChunkEnricher:
     """
     Servicio para enriquecer chunks con metadata.
-    
+
     Analiza el contenido del chunk y extrae metadata útil para
     búsqueda y filtrado.
     """
@@ -160,10 +160,10 @@ class ChunkEnricher:
     def _detect_section_type(self, text: str) -> str:
         """
         Detectar el tipo de sección basándose en keywords.
-        
+
         Args:
             text: Texto del chunk
-            
+
         Returns:
             Tipo de sección detectado o "general"
         """
@@ -187,10 +187,10 @@ class ChunkEnricher:
     def _detect_amounts(self, text: str) -> bool:
         """
         Detectar si el chunk contiene montos.
-        
+
         Args:
             text: Texto del chunk
-            
+
         Returns:
             True si contiene montos
         """
@@ -202,10 +202,10 @@ class ChunkEnricher:
     def _detect_tables(self, text: str) -> bool:
         """
         Detectar si el chunk contiene tablas.
-        
+
         Args:
             text: Texto del chunk
-            
+
         Returns:
             True si contiene tablas
         """
@@ -217,13 +217,13 @@ class ChunkEnricher:
     def _extract_basic_entities(self, text: str) -> dict[str, list[str]] | None:
         """
         Extraer entidades básicas del chunk.
-        
+
         Extracción simple basada en patrones. Para extracción más
         sofisticada, usar EntityService.
-        
+
         Args:
             text: Texto del chunk
-            
+
         Returns:
             Dict con listas de entidades por tipo, o None si no hay
         """
@@ -274,7 +274,7 @@ _chunk_enricher: ChunkEnricher | None = None
 def get_chunk_enricher() -> ChunkEnricher:
     """
     Obtener instancia global de ChunkEnricher.
-    
+
     Returns:
         Instancia de ChunkEnricher
     """

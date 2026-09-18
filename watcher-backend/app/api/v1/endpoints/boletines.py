@@ -24,7 +24,7 @@ def _find_pdf_path(filename: str) -> Path | None:
     """
     Find a PDF file across all known directories.
     Returns the Path if found, None otherwise.
-    
+
     Search order:
     1. boletines/{year}/{month}/ - main download location (organized by date)
     2. data/raw/ - legacy flat directory
@@ -86,7 +86,7 @@ async def list_boletines(
 ) -> list[dict]:
     """
     Lista todos los boletines con información básica.
-    
+
     Args:
         skip: Número de registros a omitir
         limit: Número máximo de registros a devolver
@@ -96,7 +96,7 @@ async def list_boletines(
         month: Filtrar por mes (formato MM)
         day: Filtrar por día (formato DD)
         db: Sesión de base de datos
-    
+
     Returns:
         Lista de boletines con su información básica
     """
@@ -328,11 +328,11 @@ async def get_boletin(
 ) -> dict:
     """
     Obtiene un boletín específico por ID.
-    
+
     Args:
         boletin_id: ID del boletín
         db: Sesión de base de datos
-    
+
     Returns:
         Información del boletín
     """
@@ -386,7 +386,7 @@ async def import_boletines(
 ) -> dict:
     """
     Importa y procesa boletines desde un directorio.
-    
+
     Args:
         source_dir: Ruta al directorio con los PDFs
         batch_size: Tamaño del lote para procesamiento
@@ -423,7 +423,7 @@ async def get_boletines_status(
 ) -> dict:
     """
     Obtiene el estado de todos los boletines.
-    
+
     Args:
         skip: Número de registros a omitir
         limit: Número máximo de registros a devolver
@@ -491,7 +491,7 @@ async def process_boletin(
 ) -> dict:
     """
     Procesa un boletín específico.
-    
+
     Args:
         filename: Nombre del archivo PDF
         background_tasks: Tareas en segundo plano
@@ -527,7 +527,7 @@ async def process_batch(
 ) -> dict:
     """
     Procesa un lote de boletines.
-    
+
     Args:
         filenames: Lista de nombres de archivo
         background_tasks: Tareas en segundo plano
@@ -575,7 +575,7 @@ async def get_monthly_stats(
 ) -> dict:
     """
     Obtiene estadísticas agrupadas por mes.
-    
+
     Args:
         db: Sesión de base de datos
     """
@@ -632,7 +632,7 @@ async def get_boletin_analisis(
 ) -> dict:
     """
     Obtiene los análisis de un boletín específico.
-    
+
     Args:
         boletin_id: ID del boletín
         skip: Número de registros a omitir
@@ -764,7 +764,7 @@ async def process_batch_by_date(
     """
     Procesa boletines por lotes con filtros opcionales de fecha.
     NUEVO: Retorna inmediatamente y procesa en background para evitar timeouts.
-    
+
     Args:
         status: Estado de los boletines a procesar. Si es None, procesa TODOS (permite reprocesar).
         limit: Límite máximo de boletines a procesar por sesión (máx: 100)
@@ -773,7 +773,7 @@ async def process_batch_by_date(
         day: Día para filtrar (formato: '01', '02', etc.)
         background_tasks: Tareas en segundo plano
         db: Sesión de base de datos
-    
+
     Returns:
         Respuesta inmediata con session_id para tracking
     """
@@ -1026,7 +1026,7 @@ async def get_boletines_count(
 async def get_wizard_stats(db: AsyncSession = Depends(get_db)) -> dict:
     """
     Obtiene estadísticas para el wizard de procesamiento.
-    
+
     Returns:
         Estadísticas de boletines por estado (pending, completed, failed)
     """

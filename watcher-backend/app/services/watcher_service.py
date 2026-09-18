@@ -227,7 +227,7 @@ class WatcherService:
     async def analyze_fragment(self, content: str, metadata: dict) -> dict:
         """
         Analiza un fragmento individual de contenido usando structured output.
-        
+
         Returns:
             Dict con formato FragmentAnalysis: {"actos": [...], "resumen_general": "..."}
         """
@@ -373,7 +373,7 @@ class WatcherService:
     async def analyze_content(self, content: str, metadata: dict) -> list[dict]:
         """
         Analiza contenido dividiéndolo en fragmentos si es necesario.
-        
+
         Returns:
             Lista de actos extraídos (cada uno es un dict con los campos de ActoExtraido).
             Cada acto incluye metadata adicional del fragmento.

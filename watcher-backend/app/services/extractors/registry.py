@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class ExtractorRegistry:
     """
     Registry central de extractores de PDF con Strategy Pattern.
-    
+
     Permite seleccionar dinámicamente el extractor a utilizar y
     proporciona una interfaz unificada para la extracción de contenido.
     """
@@ -79,7 +79,7 @@ class ExtractorRegistry:
     def register(cls, name: str, extractor: PDFExtractor) -> None:
         """
         Registra un nuevo extractor.
-        
+
         Args:
             name: Nombre del extractor
             extractor: Instancia del extractor
@@ -92,13 +92,13 @@ class ExtractorRegistry:
     def get(cls, name: str | None = None) -> PDFExtractor:
         """
         Obtiene un extractor por nombre.
-        
+
         Args:
             name: Nombre del extractor. Si es None, usa el default.
-            
+
         Returns:
             PDFExtractor correspondiente
-            
+
         Raises:
             ValueError: Si el extractor no existe
         """
@@ -125,10 +125,10 @@ class ExtractorRegistry:
     def set_default(cls, name: str) -> None:
         """
         Cambia el extractor por defecto.
-        
+
         Args:
             name: Nombre del extractor a usar como default
-            
+
         Raises:
             ValueError: Si el extractor no existe
         """
@@ -160,29 +160,29 @@ class ExtractorRegistry:
     ) -> ExtractedContent:
         """
         Extrae contenido de un PDF usando el extractor especificado.
-        
+
         Este es el método principal para extraer contenido. Si no se
         especifica un método, se usa el extractor por defecto.
-        
+
         Args:
             file_path: Ruta al archivo PDF
             method: Nombre del extractor a usar (None = default)
             detect_sections: Si True, detecta secciones lógicas
             **kwargs: Argumentos adicionales para el extractor
-            
+
         Returns:
             ExtractedContent con el contenido extraído
-            
+
         Example:
             # Usar extractor por defecto
             content = await ExtractorRegistry.extract(Path("doc.pdf"))
-            
+
             # Usar PyPDF2 específicamente
             content = await ExtractorRegistry.extract(
                 Path("doc.pdf"),
                 method="pypdf2"
             )
-            
+
             # Con detección de secciones
             content = await ExtractorRegistry.extract(
                 Path("doc.pdf"),
@@ -217,19 +217,19 @@ async def extract_pdf(
 ) -> ExtractedContent:
     """
     Función helper para extraer contenido de un PDF.
-    
+
     Args:
         file_path: Ruta al archivo PDF
         method: Método de extracción ("pypdf2" o "pdfplumber")
         detect_sections: Si True, detecta secciones lógicas
         **kwargs: Argumentos adicionales
-        
+
     Returns:
         ExtractedContent con el contenido extraído
-        
+
     Example:
         from app.services.extractors.registry import extract_pdf
-        
+
         content = await extract_pdf(Path("boletin.pdf"))
         print(f"Extraídas {content.stats.total_pages} páginas")
     """

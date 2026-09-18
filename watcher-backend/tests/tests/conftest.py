@@ -153,10 +153,10 @@ def sample_text_for_chunking():
     return """
     Este es un texto de prueba para testing de chunking.
     Contiene múltiples oraciones y párrafos.
-    
+
     El objetivo es verificar que el chunking funciona correctamente.
     Debe respetar los límites de oraciones cuando sea posible.
-    
+
     Este es el tercer párrafo del texto de prueba.
     Contiene información adicional para los tests.
     """ * 10  # Repetir para hacer el texto más largo

@@ -15,11 +15,11 @@ async def get_processing_logs(
 ) -> list[dict]:
     """
     Obtiene los logs de procesamiento más recientes.
-    
+
     Args:
         session_id: ID de sesión opcional para filtrar
         limit: Número máximo de logs (default: 100)
-    
+
     Returns:
         Lista de logs con timestamp, level, message y session_id
     """
@@ -30,10 +30,10 @@ async def get_processing_logs(
 async def clear_session_logs(session_id: str) -> dict:
     """
     Limpia los logs de una sesión específica.
-    
+
     Args:
         session_id: ID de la sesión a limpiar
-    
+
     Returns:
         Mensaje de confirmación
     """
@@ -44,7 +44,7 @@ async def clear_session_logs(session_id: str) -> dict:
 async def get_active_sessions() -> dict:
     """
     Obtiene información sobre las sesiones activas.
-    
+
     Returns:
         Información de sesiones
     """

@@ -20,7 +20,7 @@ class DSLabAnalyzer:
     def __init__(self, config_parameters: dict[str, Any]):
         """
         Inicializar analizador con parámetros de configuración
-        
+
         Args:
             config_parameters: Parámetros de AnalysisConfig.parameters
         """
@@ -33,7 +33,7 @@ class DSLabAnalyzer:
     async def analyze_document(self, file_path: str) -> dict[str, Any]:
         """
         Analizar un documento completo
-        
+
         Returns:
             Dict con:
             - transparency_score: float

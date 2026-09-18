@@ -44,7 +44,7 @@ async def get_compliance_checks(
 ):
     """
     Obtiene la lista de compliance checks.
-    
+
     Parámetros:
     - active_only: Solo checks activos (default: True)
     - priority: Filtrar por prioridad (critical, high, medium, low)
@@ -121,7 +121,7 @@ async def get_check_results(
 ):
     """
     Obtiene resultados de checks.
-    
+
     Parámetros:
     - check_id: ID del check
     - jurisdiccion_id: ID de la jurisdicción
@@ -181,7 +181,7 @@ async def get_check_evidence(
 ):
     """
     Obtiene todas las evidencias de un resultado de check.
-    
+
     Permite trazabilidad completa de cómo se llegó a un resultado.
     """
     from sqlalchemy import select
@@ -232,13 +232,13 @@ async def get_compliance_scorecard(
 ):
     """
     Genera el scorecard de compliance completo.
-    
+
     Incluye:
     - Score general ponderado
     - Desglose por checks
     - Red flags (checks en estado FAIL o WARN)
     - Nivel de compliance (excellent, good, acceptable, deficient)
-    
+
     Parámetros:
     - jurisdiccion_id: Si se especifica, genera scorecard para esa jurisdicción
     """
@@ -261,11 +261,11 @@ async def execute_compliance_checks(
 ):
     """
     Ejecuta checks de compliance.
-    
+
     Parámetros:
     - check_codes: Lista de códigos de checks a ejecutar. Si no se especifica, ejecuta todos.
     - jurisdiccion_id: ID de la jurisdicción a evaluar
-    
+
     Nota: Por ahora, los checks retornan estado UNKNOWN hasta que se implementen
     los validadores específicos.
     """
@@ -326,7 +326,7 @@ async def sync_checks_from_config(
 ):
     """
     Sincroniza los checks desde el archivo config/checks.json a la base de datos.
-    
+
     Útil cuando se actualizan las definiciones de checks en el JSON.
     """
     try:
@@ -364,7 +364,7 @@ async def get_compliance_stats(
 ):
     """
     Obtiene estadísticas generales del sistema de compliance.
-    
+
     Incluye conteo de checks por categoría, prioridad, resultados por estado, etc.
     """
     from sqlalchemy import select
@@ -418,7 +418,7 @@ async def sync_required_documents(
 ):
     """
     Sincroniza documentos requeridos desde config/required_documents.json a la DB.
-    
+
     Carga el inventario de documentos que cada jurisdicción debe tener según las leyes.
     """
     try:
@@ -453,7 +453,7 @@ async def get_required_documents(
 ):
     """
     Obtiene lista de documentos requeridos con filtros.
-    
+
     Permite ver qué documentos se necesitan, cuáles están descargados, y cuáles procesados.
     """
     from sqlalchemy import select
@@ -488,7 +488,7 @@ async def get_documents_overview(
 ):
     """
     Obtiene overview completo de documentos por todas las jurisdicciones.
-    
+
     Muestra cobertura, documentos faltantes, y estado general del inventario.
     """
     tracker = DocumentTracker(db)
@@ -525,7 +525,7 @@ async def get_jurisdiction_documents_summary(
 ):
     """
     Obtiene resumen de documentos para una jurisdicción específica.
-    
+
     Incluye estadísticas de cobertura y desglose por tipo de documento.
     """
     tracker = DocumentTracker(db)

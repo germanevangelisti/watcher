@@ -20,13 +20,13 @@ async def list_analisis(
 ) -> list[dict]:
     """
     Lista análisis realizados.
-    
+
     Args:
         skip: Número de registros a omitir
         limit: Número máximo de registros a devolver
         boletin_id: Filtrar por ID de boletín específico
         db: Sesión de base de datos
-    
+
     Returns:
         Lista de análisis
     """
@@ -70,7 +70,7 @@ async def get_analisis_stats(
 ) -> dict:
     """
     Obtiene estadísticas de análisis.
-    
+
     Returns:
         Estadísticas generales de análisis
     """

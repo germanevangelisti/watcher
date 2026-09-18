@@ -210,7 +210,7 @@ async def procesar_menciones(
 ) -> ProcesamientoResponse:
     """
     Inicia el procesamiento de menciones en boletines.
-    
+
     Procesa un lote de boletines para extraer menciones jurisdiccionales.
     El procesamiento se ejecuta en background.
     """

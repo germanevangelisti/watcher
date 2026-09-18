@@ -60,7 +60,7 @@ class ScraperResult:
 class BaseScraper(ABC):
     """
     Abstract base class for all scrapers.
-    
+
     Each scraper must implement the core methods for downloading,
     validating, and organizing data from a specific source.
     """
@@ -68,7 +68,7 @@ class BaseScraper(ABC):
     def __init__(self, config: ScraperConfig):
         """
         Initialize the scraper with configuration.
-        
+
         Args:
             config: ScraperConfig with scraper settings
         """
@@ -90,12 +90,12 @@ class BaseScraper(ABC):
     ) -> ScraperResult:
         """
         Download a single document for a specific date.
-        
+
         Args:
             target_date: Date of the document
             document_type: Type of document to download
             **kwargs: Additional parameters specific to the scraper
-            
+
         Returns:
             ScraperResult with download status
         """
@@ -111,13 +111,13 @@ class BaseScraper(ABC):
     ) -> list[ScraperResult]:
         """
         Download documents for a date range.
-        
+
         Args:
             start_date: Start of date range
             end_date: End of date range (inclusive)
             document_type: Type of documents to download
             **kwargs: Additional parameters specific to the scraper
-            
+
         Returns:
             List of ScraperResult objects
         """
@@ -127,10 +127,10 @@ class BaseScraper(ABC):
     def validate_file(self, filepath: Path) -> bool:
         """
         Validate that a downloaded file is valid.
-        
+
         Args:
             filepath: Path to file to validate
-            
+
         Returns:
             True if file is valid, False otherwise
         """
@@ -145,12 +145,12 @@ class BaseScraper(ABC):
     ) -> Path:
         """
         Get the expected file path for a document.
-        
+
         Args:
             target_date: Date of the document
             document_type: Type of document
             **kwargs: Additional parameters for path generation
-            
+
         Returns:
             Path where the file should be stored
         """
@@ -159,7 +159,7 @@ class BaseScraper(ABC):
     def get_stats(self) -> dict[str, Any]:
         """
         Get scraping statistics.
-        
+
         Returns:
             Dictionary with statistics
         """

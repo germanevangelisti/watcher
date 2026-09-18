@@ -140,10 +140,10 @@ class EntityService:
     def extract_entities(self, text: str) -> list[EntityResult]:
         """
         Extrae todas las entidades del texto
-        
+
         Args:
             text: Texto completo del boletín
-            
+
         Returns:
             Lista de EntityResult con todas las entidades encontradas
         """
@@ -651,7 +651,7 @@ class EntityService:
     ) -> dict[str, int]:
         """
         Persiste entidades en la base de datos
-        
+
         Returns:
             Dict con estadísticas de creación/actualización
         """
@@ -759,7 +759,7 @@ class EntityService:
     ) -> int:
         """
         Persiste relaciones entre entidades
-        
+
         Returns:
             Número de relaciones creadas
         """

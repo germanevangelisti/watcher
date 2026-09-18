@@ -56,7 +56,7 @@ class ConnectionManager:
     async def broadcast(self, message: str, event_type: str = None):
         """
         Broadcast a todas las conexiones o a las suscritas a un evento
-        
+
         Args:
             message: Mensaje a enviar
             event_type: Tipo de evento (opcional, para filtrado)

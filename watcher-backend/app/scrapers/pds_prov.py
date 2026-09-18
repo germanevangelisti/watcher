@@ -32,7 +32,7 @@ DEFAULT_USER_AGENTS = [
 class ProvincialScraper(BaseScraper):
     """
     Scraper for Boletín Oficial de Córdoba (Provincial level).
-    
+
     Downloads official bulletins from:
     https://boletinoficial.cba.gov.ar/
     """
@@ -43,7 +43,7 @@ class ProvincialScraper(BaseScraper):
     def __init__(self, config: ScraperConfig | None = None):
         """
         Initialize provincial scraper.
-        
+
         Args:
             config: Optional configuration. If not provided, uses defaults.
         """
@@ -74,12 +74,12 @@ class ProvincialScraper(BaseScraper):
     ) -> Path:
         """
         Get the file path for a provincial bulletin.
-        
+
         Args:
             target_date: Date of the bulletin
             document_type: Type of document (should be BOLETIN)
             section: Section number (1-5)
-            
+
         Returns:
             Path where the file should be stored
         """
@@ -94,10 +94,10 @@ class ProvincialScraper(BaseScraper):
     def validate_file(self, filepath: Path) -> bool:
         """
         Validate that a downloaded bulletin is valid.
-        
+
         Args:
             filepath: Path to the file
-            
+
         Returns:
             True if file exists and is larger than 10KB
         """
@@ -117,12 +117,12 @@ class ProvincialScraper(BaseScraper):
     ) -> ScraperResult:
         """
         Download a single bulletin for a specific date and section.
-        
+
         Args:
             target_date: Date of the bulletin
             document_type: Type of document (BOLETIN)
             section: Section number (1-5)
-            
+
         Returns:
             ScraperResult with download status
         """
@@ -240,13 +240,13 @@ class ProvincialScraper(BaseScraper):
     ) -> list[ScraperResult]:
         """
         Download bulletins for a date range.
-        
+
         Args:
             start_date: Start date
             end_date: End date (inclusive)
             document_type: Type of document
             sections: List of sections to download (default: [1,2,3,4,5])
-            
+
         Returns:
             List of ScraperResult objects
         """
@@ -289,7 +289,7 @@ class ProvincialScraper(BaseScraper):
     def get_available_sections(self) -> list[int]:
         """
         Get list of available sections for provincial bulletins.
-        
+
         Returns:
             List of section numbers
         """
@@ -303,11 +303,11 @@ def create_provincial_scraper(
 ) -> ProvincialScraper:
     """
     Create a provincial scraper with custom configuration.
-    
+
     Args:
         output_dir: Optional output directory
         **kwargs: Additional configuration parameters
-        
+
     Returns:
         Configured ProvincialScraper instance
     """

@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 class PyPDF2Extractor(PDFExtractor):
     """
     Extractor de PDF usando la biblioteca PyPDF2.
-    
+
     PyPDF2 es rápido y eficiente para PDFs simples con texto plano.
     Ideal para documentos sin tablas complejas o layouts especiales.
     """
@@ -37,7 +37,7 @@ class PyPDF2Extractor(PDFExtractor):
     def __init__(self, calculate_tokens: bool = True):
         """
         Inicializa el extractor PyPDF2.
-        
+
         Args:
             calculate_tokens: Si True, calcula tokens usando tiktoken
         """
@@ -65,12 +65,12 @@ class PyPDF2Extractor(PDFExtractor):
     ) -> ExtractedContent:
         """
         Extrae contenido de un PDF usando PyPDF2.
-        
+
         Args:
             file_path: Ruta al archivo PDF
             detect_sections: Si True, detecta secciones lógicas
             **kwargs: Argumentos adicionales (ignorados)
-            
+
         Returns:
             ExtractedContent con el contenido extraído
         """

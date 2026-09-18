@@ -69,7 +69,7 @@ async def listar_jurisdicciones(
 ) -> list[JurisdiccionResponse]:
     """
     Lista todas las jurisdicciones con filtros opcionales.
-    
+
     Args:
         tipo: Filtrar por tipo (provincia, capital, municipalidad, comuna)
         departamento: Filtrar por departamento
@@ -77,7 +77,7 @@ async def listar_jurisdicciones(
         offset: Offset para paginación
         buscar: Buscar por nombre (case-insensitive)
         db: Sesión de base de datos
-        
+
     Returns:
         Lista de jurisdicciones
     """
@@ -118,7 +118,7 @@ async def estadisticas_jurisdicciones(
 ) -> list[JurisdiccionStats]:
     """
     Obtiene estadísticas de actividad por jurisdicción.
-    
+
     Muestra cuántos boletines y menciones tiene cada jurisdicción.
     """
     try:
@@ -296,7 +296,7 @@ async def jurisdicciones_cercanas(
 ) -> list[dict]:
     """
     Encuentra jurisdicciones cercanas a unas coordenadas.
-    
+
     Usa fórmula de Haversine para calcular distancia.
     """
     try:

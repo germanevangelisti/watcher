@@ -25,12 +25,12 @@ async def create_boletin(
 ) -> Boletin:
     """
     Crea un nuevo registro de boletín o actualiza existente.
-    
+
     Deduplication logic (Epic 1.1):
     1. If file_hash is provided, check for duplicate by hash first
     2. If hash duplicate found, return existing record (even if filename differs)
     3. Otherwise, check by filename as before
-    
+
     Args:
         db: Database session
         filename: Name of the file
@@ -39,7 +39,7 @@ async def create_boletin(
         status: Status of the boletin
         file_hash: Optional SHA256 hash for deduplication
         file_size_bytes: Optional file size in bytes
-        
+
     Returns:
         Boletin record (existing or newly created)
     """
@@ -134,7 +134,7 @@ async def update_boletin_status(
 def _parse_monto_string(monto_str: str) -> float | None:
     """
     Parse an Argentine monto string to a float.
-    
+
     Handles formats like:
     - "pesos 3.010.523.733,29" -> 3010523733.29
     - "$1.066.200.000,00" -> 1066200000.0
@@ -173,7 +173,7 @@ async def create_analisis(
 ) -> Analisis:
     """
     Crea un nuevo registro de análisis.
-    
+
     Supports both legacy format (v1: single flat dict) and new format
     (v2: ActoExtraido with tipo_acto, numero, organismo, etc.)
     """

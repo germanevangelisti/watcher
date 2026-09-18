@@ -68,7 +68,7 @@ async def download_single_boletin(
 ) -> dict:
     """
     Descarga un boletín específico usando el Provincial Scraper.
-    
+
     This function now delegates to the PDS-PROV scraper for actual downloading.
     """
     scraper = create_provincial_scraper(output_dir=output_dir or BOLETINES_BASE_DIR)
@@ -99,7 +99,7 @@ async def download_boletines_task(
 ):
     """
     Tarea en background para descargar boletines usando el Provincial Scraper.
-    
+
     Refactored to use PDS-PROV for better modularity and maintainability.
     """
     # Asegurar que existe el directorio base

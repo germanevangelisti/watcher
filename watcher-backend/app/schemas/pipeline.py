@@ -2,8 +2,8 @@
 Pipeline Schemas - Models for document processing pipeline
 
 The pipeline processes documents through these stages:
-1. uploaded -> 2. extracting -> 3. extracted -> 4. cleaning -> 5. cleaned 
--> 6. chunking -> 7. chunked -> 8. enriching -> 9. enriched 
+1. uploaded -> 2. extracting -> 3. extracted -> 4. cleaning -> 5. cleaned
+-> 6. chunking -> 7. chunked -> 8. enriching -> 9. enriched
 -> 10. indexing -> 11. indexed (or failed)
 """
 

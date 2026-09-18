@@ -37,9 +37,9 @@ class DocumentProcessor:
         """
         Extrae texto de un PDF usando ExtractorRegistry (wrapper de compatibilidad).
         DEPRECADO: Usar ExtractorRegistry directamente.
-        
+
         NOTA: En notebooks, usar extract_text_from_pdf_async()
-        
+
         Retorna diccionario con texto, páginas, y estadísticas.
         """
         import asyncio
@@ -142,7 +142,7 @@ class DocumentProcessor:
     def chunk_text(self, text: str, chunk_size: int = 1000, overlap: int = 200) -> list[dict[str, Any]]:
         """
         Divide texto en chunks con overlap para embeddings.
-        
+
         DEPRECATED: This method is deprecated. Use ChunkingService instead.
         Kept for backward compatibility only.
         """

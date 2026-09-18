@@ -816,7 +816,7 @@ class JurisdiccionSyncConfig(Base):
 class MencionJurisdiccional(Base):
     """
     Tracking de menciones de jurisdicciones dentro de boletines.
-    
+
     Ejemplo: Boletín provincial sección 5 menciona "Municipalidad de Alta Gracia"
     """
 
@@ -1285,13 +1285,13 @@ class RequiredDocument(Base):
 class ChunkRecord(Base):
     """
     Registro persistente de chunks de texto con metadata enriquecida.
-    
+
     Cada chunk es una porción de un documento (boletin) que ha sido:
     - Limpiado y normalizado
     - Dividido con estrategia recursiva
     - Enriquecido con metadata (section_type, entities, etc.)
     - Indexado con embeddings
-    
+
     Epic 3 (Feature Engineering): Provee metadata rica para búsqueda filtrada.
     Epic 4 (Indexación): Registra información de embedding.
     Epic 5 (Retrieval): Permite búsqueda por metadata.

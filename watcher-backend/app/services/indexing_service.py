@@ -86,7 +86,7 @@ class IndexingResult:
 class IndexingService:
     """
     Service for orchestrating triple indexing across ChromaDB, SQLite, and FTS5.
-    
+
     Ensures atomic indexing with rollback on failure.
     Uses AsyncSession for database operations.
     """
@@ -94,7 +94,7 @@ class IndexingService:
     def __init__(self, db_session: AsyncSession, embedding_service: EmbeddingService | None = None):
         """
         Initialize indexing service.
-        
+
         Args:
             db_session: SQLAlchemy AsyncSession
             embedding_service: Optional EmbeddingService instance (will create if not provided)
@@ -121,19 +121,19 @@ class IndexingService:
     ) -> tuple[bool, ChunkRecord | None, str | None]:
         """
         Index a single chunk in all three locations atomically.
-        
+
         Process:
         1. Create ChunkRecord in SQLite (triggers FTS5 insert automatically)
         2. Generate embedding
         3. Insert in ChromaDB
         4. Update indexed_at timestamp
-        
+
         Args:
             document_id: Unique document identifier
             chunk_result: ChunkResult with chunk data
             metadata: Optional metadata for the chunk
             boletin_id: Optional boletin ID for foreign key
-        
+
         Returns:
             Tuple of (success, chunk_record, error_message)
         """
@@ -259,13 +259,13 @@ class IndexingService:
     ) -> IndexingResult:
         """
         Index all chunks of a document with rollback on failure.
-        
+
         Args:
             document_id: Unique document identifier
             chunks: List of ChunkResult objects
             metadata: Optional metadata to attach to chunks
             boletin_id: Optional boletin ID for foreign key
-        
+
         Returns:
             IndexingResult with success status and statistics
         """
@@ -502,10 +502,10 @@ class IndexingService:
 def get_indexing_service(db_session: AsyncSession) -> IndexingService:
     """
     Get IndexingService instance.
-    
+
     Args:
         db_session: SQLAlchemy AsyncSession
-    
+
     Returns:
         IndexingService instance
     """

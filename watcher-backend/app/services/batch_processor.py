@@ -24,7 +24,7 @@ class BatchProcessor:
     def __init__(self, db: AsyncSession):
         """
         Inicializa el procesador.
-        
+
         Args:
             db: Sesión de base de datos
         """
@@ -57,12 +57,12 @@ class BatchProcessor:
     ) -> dict:
         """
         Procesa directorio con historial acumulativo y comparación presupuestaria.
-        
+
         Args:
             source_dir: Directorio con PDFs
             batch_size: Tamaño del lote
             filtros: Filtros opcionales (fechas, organismos, etc.)
-            
+
         Returns:
             Estadísticas del procesamiento
         """
@@ -413,11 +413,11 @@ class BatchProcessor:
         }
 
         sql = """
-        INSERT INTO ejecucion_presupuestaria 
-        (boletin_id, fecha_boletin, organismo, beneficiario, concepto, 
-         monto, tipo_operacion, categoria_watcher, riesgo_watcher, 
+        INSERT INTO ejecucion_presupuestaria
+        (boletin_id, fecha_boletin, organismo, beneficiario, concepto,
+         monto, tipo_operacion, categoria_watcher, riesgo_watcher,
          requiere_revision, created_at)
-        VALUES 
+        VALUES
         (:boletin_id, :fecha_boletin, :organismo, :beneficiario, :concepto,
          :monto, :tipo_operacion, :categoria_watcher, :riesgo_watcher,
          :requiere_revision, :created_at)
@@ -431,10 +431,10 @@ class BatchProcessor:
     async def _crear_alerta_sql(self, ejecucion_data: dict, boletin_id: int):
         """Crea una alerta usando SQL directo."""
         sql = """
-        INSERT INTO alertas_gestion 
-        (tipo_alerta, nivel_severidad, organismo, titulo, descripcion, 
+        INSERT INTO alertas_gestion
+        (tipo_alerta, nivel_severidad, organismo, titulo, descripcion,
          valor_detectado, boletin_id, created_at)
-        VALUES 
+        VALUES
         (:tipo_alerta, :nivel_severidad, :organismo, :titulo, :descripcion,
          :valor_detectado, :boletin_id, :created_at)
         """

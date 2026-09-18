@@ -50,7 +50,7 @@ class GoogleGeminiProvider(LLMProvider):
     def __init__(self, api_key: str | None = None, model: str = "gemini-2.0-flash"):
         """
         Initialize Google Gemini provider
-        
+
         Args:
             api_key: Google API key (reads from GOOGLE_API_KEY env var if not provided)
             model: Model name (default: gemini-2.0-flash)
@@ -132,7 +132,7 @@ class AnthropicProvider(LLMProvider):
     def __init__(self, api_key: str | None = None, model: str = "claude-3-5-sonnet-20241022"):
         """
         Initialize Anthropic provider
-        
+
         Args:
             api_key: Anthropic API key (reads from ANTHROPIC_API_KEY env var if not provided)
             model: Model name (default: claude-3-5-sonnet-20241022)
@@ -227,15 +227,15 @@ class LLMProviderFactory:
     ) -> LLMProvider:
         """
         Create an LLM provider instance
-        
+
         Args:
             provider_type: Type of provider (google or anthropic)
             api_key: API key (optional, reads from env var if not provided)
             model: Model name (optional, uses default if not provided)
-        
+
         Returns:
             LLMProvider instance
-        
+
         Raises:
             ValueError: If provider type is not supported
         """
@@ -250,10 +250,10 @@ class LLMProviderFactory:
     def create_from_env() -> LLMProvider:
         """
         Create an LLM provider based on environment configuration
-        
+
         Reads LLM_PROVIDER environment variable (default: google)
         Reads LLM_MODEL environment variable for model selection
-        
+
         Returns:
             LLMProvider instance
         """
@@ -275,10 +275,10 @@ def get_llm_provider(
 ) -> LLMProvider:
     """
     Get an LLM provider instance
-    
+
     Args:
         provider_type: Optional provider type. If not specified, reads from LLM_PROVIDER env var
-    
+
     Returns:
         LLMProvider instance
     """

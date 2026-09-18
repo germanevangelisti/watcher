@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 class PdfPlumberExtractor(PDFExtractor):
     """
     Extractor de PDF usando la biblioteca pdfplumber.
-    
+
     pdfplumber ofrece mejor manejo de PDFs complejos con tablas,
     layouts de múltiples columnas y formatos especiales.
     Es más lento que PyPDF2 pero produce mejor output en documentos complejos.
@@ -43,10 +43,10 @@ class PdfPlumberExtractor(PDFExtractor):
     def __init__(self, calculate_tokens: bool = True):
         """
         Inicializa el extractor pdfplumber.
-        
+
         Args:
             calculate_tokens: Si True, calcula tokens usando tiktoken
-        
+
         Raises:
             ImportError: Si pdfplumber no está instalado
         """
@@ -80,12 +80,12 @@ class PdfPlumberExtractor(PDFExtractor):
     ) -> ExtractedContent:
         """
         Extrae contenido de un PDF usando pdfplumber.
-        
+
         Args:
             file_path: Ruta al archivo PDF
             detect_sections: Si True, detecta secciones lógicas
             **kwargs: Argumentos adicionales (ignorados)
-            
+
         Returns:
             ExtractedContent con el contenido extraído
         """

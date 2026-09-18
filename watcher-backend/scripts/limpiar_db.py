@@ -22,14 +22,14 @@ from sqlalchemy import text
 async def limpiar_base_datos():
     """
     Limpia la base de datos manteniendo estructura y boletines básicos.
-    
+
     Elimina:
     - Todos los análisis
     - Todas las menciones jurisdiccionales
     - Estados de sincronización
     - Workflows y ejecuciones
     - Análisis de agentes
-    
+
     Mantiene:
     - Estructura de tablas
     - Boletines descargados
@@ -97,7 +97,7 @@ async def limpiar_base_datos():
 
             # Resetear status a 'pending' y limpiar mensajes de error
             await db.execute(text("""
-                UPDATE boletines 
+                UPDATE boletines
                 SET status = 'pending',
                     error_message = NULL,
                     updated_at = CURRENT_TIMESTAMP
@@ -113,8 +113,8 @@ async def limpiar_base_datos():
             # 8. Verificar boletines por fuente
             print("\n📊 Distribución de boletines por fuente:")
             result = await db.execute(text("""
-                SELECT fuente, COUNT(*) as count 
-                FROM boletines 
+                SELECT fuente, COUNT(*) as count
+                FROM boletines
                 GROUP BY fuente
             """))
             for row in result:

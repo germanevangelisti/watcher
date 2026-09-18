@@ -37,7 +37,7 @@ class SemanticMatcher:
     def __init__(self, vocabulario_path: Path | None = None):
         """
         Inicializa el matcher
-        
+
         Args:
             vocabulario_path: Ruta al vocabulario semántico fiscal
         """
@@ -93,7 +93,7 @@ class SemanticMatcher:
     def match_by_partida(self, acto_partida: str, programa_partida: str) -> tuple[float, dict]:
         """
         Match directo por partida presupuestaria
-        
+
         Returns:
             (score, detalles)
         """
@@ -125,7 +125,7 @@ class SemanticMatcher:
     def match_by_organismo(self, acto_organismo: str, programa_organismo: str) -> tuple[float, dict]:
         """
         Match por organismo emisor
-        
+
         Returns:
             (score, detalles)
         """
@@ -169,7 +169,7 @@ class SemanticMatcher:
     def match_by_keywords(self, acto_keywords: list[str], programa_keywords: list[str]) -> tuple[float, dict]:
         """
         Match por keywords comunes
-        
+
         Returns:
             (score, detalles)
         """
@@ -233,12 +233,12 @@ class SemanticMatcher:
     ) -> tuple[float, str, dict]:
         """
         Calcula match completo entre acto y programa usando todos los métodos
-        
+
         Args:
             acto: Diccionario con datos del acto
             programa: Diccionario con datos del programa
             usar_vocabulario: Si usar vocabulario para expandir keywords
-        
+
         Returns:
             (score_final, metodo_principal, detalles_completos)
         """
@@ -309,12 +309,12 @@ class SemanticMatcher:
     ) -> list[VinculoActoPresupuesto]:
         """
         Busca los mejores matches de un acto con lista de programas
-        
+
         Args:
             acto: Diccionario con datos del acto
             programas: Lista de programas disponibles
             top_n: Cantidad de matches a retornar
-        
+
         Returns:
             Lista de VinculoActoPresupuesto ordenados por score
         """

@@ -98,13 +98,13 @@ async def reset_all_pipeline_data(
 ):
     """
     Reset ALL processed data. Requires confirmation header.
-    
+
     This is a destructive operation that will:
     - Delete all chunk_records from SQLite
     - Clear ChromaDB collection
     - Delete all .txt files from data/processed/
     - Reset all boletines to status='pending'
-    
+
     Requires header: X-Confirm-Reset: RESET_ALL_DATA
     """
     if x_confirm_reset != "RESET_ALL_DATA":
@@ -207,7 +207,7 @@ async def reset_document_pipeline(
 ):
     """
     Reset processed data for a single document.
-    
+
     Deletes chunks, embeddings, and extracted text for this document,
     then resets its status to 'pending'.
     Useful for reprocessing with different pipeline configurations.
@@ -322,7 +322,7 @@ async def process_single_document(
 ):
     """
     Process a single document through the pipeline with optional configuration.
-    
+
     Runs as a background task. Status updates are emitted via WebSocket.
     """
     try:
@@ -384,7 +384,7 @@ async def process_all_pending(
 ):
     """
     Process all pending documents through the pipeline.
-    
+
     Runs as a background task. Status updates are emitted via WebSocket.
     Returns immediately with session_id for tracking.
     """
@@ -656,7 +656,7 @@ async def trigger_month(
 async def get_pipeline_status():
     """
     Get current pipeline status and statistics.
-    
+
     Uses its own DB session to avoid cursor conflicts with background
     pipeline tasks that commit on the shared aiosqlite connection.
     """
@@ -990,7 +990,7 @@ async def _process_all_pipeline(
 def _find_pdf(filename: str) -> Path | None:
     """
     Find a PDF file across all known directories.
-    
+
     Search order:
     1. boletines/{year}/{month}/ - main download location (organized by date)
     2. data/raw/ - legacy flat directory

@@ -35,7 +35,7 @@ class DocumentCategory(str, Enum):
 class DocumentSchema:
     """
     Unified schema for documents from any source.
-    
+
     This schema normalizes data from different portals into a common format.
     """
     # Core identification
@@ -114,7 +114,7 @@ class AdapterResult:
 class BaseAdapter(ABC):
     """
     Abstract base class for data adapters.
-    
+
     Each adapter transforms data from a specific source format
     into the unified DocumentSchema.
     """
@@ -122,7 +122,7 @@ class BaseAdapter(ABC):
     def __init__(self, source_type: SourceType):
         """
         Initialize adapter.
-        
+
         Args:
             source_type: Type of data source this adapter handles
         """
@@ -142,11 +142,11 @@ class BaseAdapter(ABC):
     ) -> AdapterResult:
         """
         Transform raw scraped data into normalized DocumentSchema.
-        
+
         Args:
             raw_data: Raw data from scraper
             **kwargs: Additional context for adaptation
-            
+
         Returns:
             AdapterResult with normalized document
         """
@@ -160,11 +160,11 @@ class BaseAdapter(ABC):
     ) -> list[AdapterResult]:
         """
         Transform a batch of raw documents.
-        
+
         Args:
             raw_data_list: List of raw data from scraper
             **kwargs: Additional context for adaptation
-            
+
         Returns:
             List of AdapterResult objects
         """
@@ -174,10 +174,10 @@ class BaseAdapter(ABC):
     def validate_document(self, document: DocumentSchema) -> bool:
         """
         Validate that a document has all required fields.
-        
+
         Args:
             document: Document to validate
-            
+
         Returns:
             True if valid, False otherwise
         """

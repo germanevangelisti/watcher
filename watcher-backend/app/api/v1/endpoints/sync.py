@@ -38,7 +38,7 @@ class SyncStartRequest(BaseModel):
 async def get_sync_status(db: AsyncSession = Depends(get_db)) -> dict:
     """
     Obtiene el estado actual de sincronización.
-    
+
     Returns:
         Estado completo de sincronización incluyendo:
         - status: Estado actual (idle, syncing, processing, error)
@@ -67,18 +67,18 @@ async def start_sync(
 ) -> dict:
     """
     Inicia una sincronización manual.
-    
+
     La sincronización se ejecuta en background:
     1. Detecta el último boletín descargado
     2. Calcula fechas faltantes hasta hoy
     3. Descarga los boletines faltantes
     4. Opcionalmente los procesa con IA
-    
+
     Args:
         request: Configuración de la sincronización
         background_tasks: Tareas en background de FastAPI
         db: Sesión de base de datos
-        
+
     Returns:
         Mensaje de confirmación
     """
@@ -114,10 +114,10 @@ async def start_sync(
 async def stop_sync(db: AsyncSession = Depends(get_db)) -> dict:
     """
     Cancela la sincronización en progreso.
-    
+
     La cancelación es "graceful": el sistema terminará la operación
     actual antes de detenerse completamente.
-    
+
     Returns:
         Mensaje de confirmación
     """
@@ -150,16 +150,16 @@ async def update_schedule(
 ) -> dict:
     """
     Actualiza la configuración del scheduler automático.
-    
+
     Permite configurar:
     - Si el sync automático está habilitado
     - Frecuencia: daily (diario) o weekly (semanal)
     - Hora del día para ejecutar (0-23)
-    
+
     Args:
         config: Configuración del scheduler
         db: Sesión de base de datos
-        
+
     Returns:
         Configuración actualizada y próxima ejecución
     """
@@ -209,11 +209,11 @@ async def get_sync_history(
 ) -> dict:
     """
     Obtiene el historial de sincronizaciones.
-    
+
     Args:
         limit: Número máximo de registros a retornar
         db: Sesión de base de datos
-        
+
     Returns:
         Lista de sincronizaciones históricas
     """

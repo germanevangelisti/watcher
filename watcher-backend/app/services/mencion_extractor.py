@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class MencionExtractor:
     """
     Extractor de menciones jurisdiccionales en texto.
-    
+
     Identifica referencias a municipalidades, comunas y otras jurisdicciones
     en el texto de boletines oficiales usando patrones de regex y NLP básico.
     """
@@ -67,7 +67,7 @@ class MencionExtractor:
     async def load_jurisdicciones(self, db: AsyncSession):
         """
         Carga jurisdicciones desde la base de datos para búsqueda.
-        
+
         Args:
             db: Sesión de base de datos
         """
@@ -96,10 +96,10 @@ class MencionExtractor:
     def _generar_variantes_nombre(self, nombre: str) -> list[str]:
         """
         Genera variantes del nombre de una jurisdicción para búsqueda.
-        
+
         Args:
             nombre: Nombre original de la jurisdicción
-            
+
         Returns:
             Lista de variantes del nombre
         """
@@ -148,11 +148,11 @@ class MencionExtractor:
     ) -> list[dict]:
         """
         Extrae menciones de jurisdicciones en un texto.
-        
+
         Args:
             texto: Texto donde buscar menciones
             contexto_chars: Caracteres de contexto alrededor de la mención
-            
+
         Returns:
             Lista de menciones encontradas con metadatos
         """
@@ -212,12 +212,12 @@ class MencionExtractor:
     ) -> list[tuple[int, str]]:
         """
         Busca todas las ocurrencias de un patrón en el texto.
-        
+
         Args:
             texto: Texto donde buscar
             patron: Patrón a buscar
             contexto_chars: Caracteres de contexto
-            
+
         Returns:
             Lista de tuplas (posicion, fragmento_con_contexto)
         """
@@ -242,10 +242,10 @@ class MencionExtractor:
     def _clasificar_tipo_mencion(self, fragmento: str) -> str:
         """
         Clasifica el tipo de mención según el contexto.
-        
+
         Args:
             fragmento: Fragmento de texto con la mención
-            
+
         Returns:
             Tipo de mención identificado
         """
@@ -266,13 +266,13 @@ class MencionExtractor:
     ) -> bool:
         """
         Verifica si una mención es duplicada (misma jurisdicción muy cercana).
-        
+
         Args:
             menciones: Lista de menciones ya encontradas
             jurisdiccion_id: ID de la jurisdicción actual
             posicion: Posición en el texto
             threshold: Umbral de distancia para considerar duplicado
-            
+
         Returns:
             True si es duplicado, False en caso contrario
         """
@@ -285,10 +285,10 @@ class MencionExtractor:
     def generar_resumen_menciones(self, menciones: list[dict]) -> dict:
         """
         Genera un resumen estadístico de las menciones encontradas.
-        
+
         Args:
             menciones: Lista de menciones
-            
+
         Returns:
             Diccionario con resumen estadístico
         """

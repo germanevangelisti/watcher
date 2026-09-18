@@ -36,7 +36,7 @@ class AlertChannel(str, Enum):
 class AlertDispatcher:
     """
     Alert Dispatcher Service (ALA Layer).
-    
+
     Responsibilities:
     - Generate alerts from analysis results
     - Prioritize alerts based on severity and rules
@@ -48,7 +48,7 @@ class AlertDispatcher:
     def __init__(self, db_session: AsyncSession | None = None):
         """
         Initialize alert dispatcher.
-        
+
         Args:
             db_session: Optional database session
         """
@@ -95,7 +95,7 @@ class AlertDispatcher:
     ) -> dict[str, Any]:
         """
         Create a new alert.
-        
+
         Args:
             title: Alert title
             message: Alert message
@@ -103,7 +103,7 @@ class AlertDispatcher:
             category: Alert category
             metadata: Optional metadata
             db: Optional database session
-            
+
         Returns:
             Created alert data
         """
@@ -162,12 +162,12 @@ class AlertDispatcher:
     ) -> dict[str, Any]:
         """
         Dispatch an alert to specified channels.
-        
+
         Args:
             alert_id: Alert ID
             channels: List of channels to dispatch to
             recipients: Optional list of recipients
-            
+
         Returns:
             Dispatch results
         """
@@ -207,12 +207,12 @@ class AlertDispatcher:
     ) -> dict[str, Any]:
         """
         Dispatch alert to a specific channel.
-        
+
         Args:
             alert_id: Alert ID
             channel: Channel to dispatch to
             recipients: Optional recipients
-            
+
         Returns:
             Dispatch result
         """
@@ -278,7 +278,7 @@ class AlertDispatcher:
     ) -> dict[str, Any]:
         """
         Create and immediately dispatch an alert.
-        
+
         Args:
             title: Alert title
             message: Alert message
@@ -286,7 +286,7 @@ class AlertDispatcher:
             category: Alert category
             metadata: Optional metadata
             db: Optional database session
-            
+
         Returns:
             Combined creation and dispatch results
         """
@@ -337,11 +337,11 @@ class AlertDispatcher:
     ) -> dict[str, Any]:
         """
         Process analysis results and generate appropriate alerts.
-        
+
         Args:
             analysis_results: List of analysis results
             db: Optional database session
-            
+
         Returns:
             Processing results
         """

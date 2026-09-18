@@ -83,7 +83,7 @@ class Event:
 class EventBus:
     """
     Bus de eventos para comunicación asíncrona entre componentes
-    
+
     Patrón Pub/Sub para desacoplar agentes y permitir observabilidad
     """
 
@@ -95,7 +95,7 @@ class EventBus:
     def subscribe(self, event_type: EventType, callback: Callable) -> None:
         """
         Suscribe un callback a un tipo de evento
-        
+
         Args:
             event_type: Tipo de evento a escuchar
             callback: Función callback (puede ser sync o async)
@@ -109,7 +109,7 @@ class EventBus:
     def unsubscribe(self, event_type: EventType, callback: Callable) -> None:
         """
         Desuscribe un callback de un tipo de evento
-        
+
         Args:
             event_type: Tipo de evento
             callback: Función callback a remover
@@ -125,7 +125,7 @@ class EventBus:
                    source: str | None = None) -> None:
         """
         Emite un evento a todos los suscriptores
-        
+
         Args:
             event_type: Tipo de evento
             data: Datos del evento
@@ -156,11 +156,11 @@ class EventBus:
                          limit: int = 100) -> list[dict[str, Any]]:
         """
         Obtiene el historial de eventos
-        
+
         Args:
             event_type: Filtrar por tipo de evento (opcional)
             limit: Límite de eventos a retornar
-        
+
         Returns:
             Lista de eventos como diccionarios
         """

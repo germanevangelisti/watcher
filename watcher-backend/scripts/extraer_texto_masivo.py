@@ -45,7 +45,7 @@ class ExtractorTextoMasivo:
     ):
         """
         Extrae texto de boletines pendientes
-        
+
         Args:
             year: Filtrar por año (YYYY)
             month: Filtrar por mes (MM)

@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 class PersistenceAdapter:
     """
     Unified persistence adapter for SQL and Vector databases.
-    
+
     Provides methods to:
     - Save documents to SQL database
     - Generate and store embeddings in Vector DB
@@ -34,7 +34,7 @@ class PersistenceAdapter:
     def __init__(self, db_session: AsyncSession | None = None):
         """
         Initialize persistence adapter.
-        
+
         Args:
             db_session: Optional SQLAlchemy async session
         """
@@ -63,11 +63,11 @@ class PersistenceAdapter:
     ) -> dict[str, Any]:
         """
         Save a document to SQL database.
-        
+
         Args:
             document: Normalized document to save
             db: Optional database session
-            
+
         Returns:
             Dict with save result including database ID
         """
@@ -162,11 +162,11 @@ class PersistenceAdapter:
     ) -> list[dict[str, Any]]:
         """
         Save multiple documents in batch.
-        
+
         Args:
             documents: List of documents to save
             db: Optional database session
-            
+
         Returns:
             List of save results
         """
@@ -188,11 +188,11 @@ class PersistenceAdapter:
     ) -> dict[str, Any] | None:
         """
         Retrieve a document by its database ID.
-        
+
         Args:
             document_id: Database ID
             db: Optional database session
-            
+
         Returns:
             Document data as dict or None
         """
@@ -236,12 +236,12 @@ class PersistenceAdapter:
     ) -> list[dict[str, Any]]:
         """
         Query documents with filters.
-        
+
         Args:
             filters: Dict with filter criteria (e.g., {'status': 'completed', 'jurisdiction_id': 1})
             db: Optional database session
             limit: Maximum number of results
-            
+
         Returns:
             List of matching documents
         """
@@ -299,12 +299,12 @@ class PersistenceAdapter:
     ) -> dict[str, Any]:
         """
         Create and store an embedding for a document.
-        
+
         Args:
             document_id: Database ID of document
             content: Text content to embed
             metadata: Optional metadata to store with embedding
-            
+
         Returns:
             Result dict
         """
@@ -343,12 +343,12 @@ class PersistenceAdapter:
     ) -> list[dict[str, Any]]:
         """
         Perform semantic search using embeddings.
-        
+
         Args:
             query: Search query
             limit: Maximum results
             filters: Optional filters
-            
+
         Returns:
             List of matching documents with similarity scores
         """

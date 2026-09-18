@@ -37,7 +37,7 @@ from raga_agent import RAGAgent
 async def test_full_download_to_alert(temp_output_dir, mock_http_client):
     """
     Test complete pipeline: Download -> Adapt -> Analyze -> Alert.
-    
+
     Simulates the full workflow from downloading a bulletin to generating an alert.
     """
     # Step 1: Download bulletin
@@ -92,7 +92,7 @@ async def test_full_download_to_alert(temp_output_dir, mock_http_client):
 async def test_semantic_search_e2e(temp_output_dir, sample_bulletin_data):
     """
     Test semantic search pipeline: Document -> Embedding -> Search.
-    
+
     Tests the complete flow for semantic search functionality.
     """
     # Step 1: Adapt document
@@ -127,7 +127,7 @@ async def test_semantic_search_e2e(temp_output_dir, sample_bulletin_data):
 async def test_report_generation_e2e():
     """
     Test report generation pipeline: Data -> Aggregate -> Format -> Report.
-    
+
     Tests the complete flow for generating reports from processed data.
     """
     # Step 1: Simulate aggregated data from multiple sources
@@ -187,7 +187,7 @@ async def test_report_generation_e2e():
 async def test_gateway_full_workflow():
     """
     Test complete workflow via API Gateway.
-    
+
     Tests multiple operations routed through the unified gateway.
     """
     gateway = APIGateway()
@@ -250,7 +250,7 @@ async def test_gateway_full_workflow():
 async def test_multi_document_processing_pipeline(temp_output_dir, mock_http_client):
     """
     Test processing multiple documents through complete pipeline.
-    
+
     Tests batch processing capabilities across all layers.
     """
     # Step 1: Download multiple bulletins
@@ -321,7 +321,7 @@ async def test_multi_document_processing_pipeline(temp_output_dir, mock_http_cli
 def test_system_performance_baseline():
     """
     Baseline performance test for system components.
-    
+
     Ensures that basic operations complete within acceptable time limits.
     """
     from app.adapters.sca_prov import create_provincial_adapter

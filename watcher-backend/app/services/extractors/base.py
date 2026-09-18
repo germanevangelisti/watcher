@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class PDFExtractor(ABC):
     """
     Interfaz base abstracta para extractores de PDF.
-    
+
     Todos los extractores concretos deben implementar esta interfaz
     para garantizar una API consistente independientemente del método
     de extracción utilizado.
@@ -37,12 +37,12 @@ class PDFExtractor(ABC):
     ) -> ExtractedContent:
         """
         Extrae contenido de un archivo PDF.
-        
+
         Args:
             file_path: Ruta al archivo PDF
             detect_sections: Si True, intenta detectar secciones lógicas
             **kwargs: Argumentos adicionales específicos del extractor
-            
+
         Returns:
             ExtractedContent con el contenido extraído
         """
@@ -51,13 +51,13 @@ class PDFExtractor(ABC):
     def _detect_section_type(self, text: str) -> SectionType:
         """
         Detecta el tipo de sección basado en patrones en el texto.
-        
+
         Este método es compartido por todos los extractores para garantizar
         detección consistente de secciones.
-        
+
         Args:
             text: Texto de la sección a analizar
-            
+
         Returns:
             SectionType detectado
         """
@@ -87,12 +87,12 @@ class PDFExtractor(ABC):
     ) -> list[ContentSection]:
         """
         Segmenta el texto completo en secciones lógicas.
-        
+
         Args:
             full_text: Texto completo del documento
             pages_text: Lista de textos por página (para tracking de páginas)
             min_section_chars: Tamaño mínimo para considerar una sección
-            
+
         Returns:
             Lista de ContentSection
         """

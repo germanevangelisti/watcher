@@ -52,7 +52,7 @@ class SearchResult:
 class RetrievalService:
     """
     Service for document retrieval using multiple techniques.
-    
+
     Supports:
     - Semantic search via embeddings
     - Keyword search via BM25
@@ -62,7 +62,7 @@ class RetrievalService:
     def __init__(self, db_session: Session | None = None):
         """
         Initialize retrieval service.
-        
+
         Args:
             db_session: SQLAlchemy session (required for keyword search)
         """
@@ -78,12 +78,12 @@ class RetrievalService:
     ) -> list[SearchResult]:
         """
         Semantic search using vector embeddings.
-        
+
         Args:
             query: Search query
             top_k: Number of results to return
             filters: Optional ChromaDB metadata filters
-        
+
         Returns:
             List of SearchResult ordered by semantic similarity
         """
@@ -128,12 +128,12 @@ class RetrievalService:
     ) -> list[SearchResult]:
         """
         Keyword search using BM25 (SQLite FTS5).
-        
+
         Args:
             query: Search query
             top_k: Number of results to return
             filters: Optional filters (document_id, section_type, etc.)
-        
+
         Returns:
             List of SearchResult ordered by BM25 score
         """
@@ -191,7 +191,7 @@ class RetrievalService:
     ) -> list[SearchResult]:
         """
         Hybrid search combining semantic + keyword with RRF fusion.
-        
+
         Args:
             query: Search query
             top_k: Final number of results to return
@@ -200,7 +200,7 @@ class RetrievalService:
             rrf_k: RRF constant (default 60)
             rerank: Whether to apply re-ranking (default False)
             rerank_strategy: Reranker strategy ("google", "cross-encoder", "noop", or None for auto)
-        
+
         Returns:
             List of SearchResult ordered by fused RRF score (or re-ranked score)
         """
@@ -249,13 +249,13 @@ class RetrievalService:
     ) -> list[SearchResult]:
         """
         Apply re-ranking to search results.
-        
+
         Args:
             query: Original search query
             results: List of search results to re-rank
             top_k: Number of top results to return
             strategy: Reranker strategy (None for auto-select)
-        
+
         Returns:
             Re-ranked list of top_k results
         """
@@ -281,13 +281,13 @@ class RetrievalService:
     ) -> list[SearchResult]:
         """
         Reciprocal Rank Fusion - fuses multiple ranked lists.
-        
+
         Formula: score(d) = Σ 1/(k + rank_i(d))
-        
+
         Args:
             result_lists: List of ranked result lists from different methods
             k: RRF constant (default 60, standard value)
-        
+
         Returns:
             Single fused and re-ranked list
         """
@@ -338,10 +338,10 @@ class RetrievalService:
 def get_retrieval_service(db_session: Session | None = None) -> RetrievalService:
     """
     Get a retrieval service instance.
-    
+
     Args:
         db_session: SQLAlchemy session (required for keyword/hybrid search)
-    
+
     Returns:
         RetrievalService instance
     """

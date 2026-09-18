@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 def backfill_fts5_index(db_path: str = None):
     """
     Backfill FTS5 index with all existing chunk_records.
-    
+
     Args:
         db_path: Path to SQLite database (default: sqlite.db in backend)
     """
@@ -47,7 +47,7 @@ def backfill_fts5_index(db_path: str = None):
     try:
         # Check if FTS5 table exists
         check_sql = text("""
-            SELECT name FROM sqlite_master 
+            SELECT name FROM sqlite_master
             WHERE type='table' AND name='chunk_records_fts'
         """)
         result = session.execute(check_sql)

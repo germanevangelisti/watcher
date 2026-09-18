@@ -1,7 +1,7 @@
 """Add chunk_records table for Epic 3
 
 Revision ID: add_chunk_records
-Revises: 
+Revises:
 Create Date: 2026-02-10 12:00:00.000000
 
 """

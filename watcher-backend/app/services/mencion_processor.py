@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class MencionProcessor:
     """
     Procesador de menciones en boletines.
-    
+
     Extrae menciones jurisdiccionales del contenido de boletines
     y las almacena en la base de datos.
     """
@@ -41,12 +41,12 @@ class MencionProcessor:
     ) -> dict:
         """
         Procesa un boletín individual para extraer menciones.
-        
+
         Args:
             boletin: Boletín a procesar
             db: Sesión de base de datos
             forzar: Si True, procesa aunque ya tenga menciones
-            
+
         Returns:
             Diccionario con resultados del procesamiento
         """
@@ -143,10 +143,10 @@ class MencionProcessor:
     async def _obtener_contenido_boletin(self, boletin: Boletin) -> str | None:
         """
         Obtiene el contenido de texto de un boletín.
-        
+
         Args:
             boletin: Boletín del cual obtener contenido
-            
+
         Returns:
             Contenido de texto o None si no se puede leer
         """
@@ -214,14 +214,14 @@ class MencionProcessor:
     ) -> dict:
         """
         Procesa un lote de boletines para extraer menciones.
-        
+
         Args:
             limite: Número máximo de boletines a procesar
             db: Sesión de base de datos
             forzar: Si True, reprocesa boletines ya procesados
             filtro_fecha_desde: Filtrar boletines desde esta fecha
             filtro_fecha_hasta: Filtrar boletines hasta esta fecha
-            
+
         Returns:
             Diccionario con estadísticas del procesamiento
         """

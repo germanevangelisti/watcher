@@ -86,7 +86,7 @@ class ExtractionStats(BaseModel):
 class ExtractedContent(BaseModel):
     """
     Modelo unificado de contenido extraído de un documento PDF.
-    
+
     Este modelo es retornado por todos los extractores de PDF del sistema,
     garantizando una interfaz consistente independientemente del método de extracción.
     """

@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 class DocumentIntelligenceAgent:
     """
     Agente especializado en extracción y clasificación de documentos
-    
+
     Capacidades:
     - Extracción de texto multi-modal
     - Clasificación automática de secciones
@@ -37,7 +37,7 @@ class DocumentIntelligenceAgent:
     def __init__(self, config: DocumentIntelligenceConfig | None = None):
         """
         Inicializa el agente
-        
+
         Args:
             config: Configuración del agente
         """
@@ -53,11 +53,11 @@ class DocumentIntelligenceAgent:
                      task: TaskDefinition) -> dict[str, Any]:
         """
         Ejecuta una tarea del agente
-        
+
         Args:
             workflow: Estado del workflow
             task: Tarea a ejecutar
-        
+
         Returns:
             Resultado de la ejecución
         """
@@ -92,11 +92,11 @@ class DocumentIntelligenceAgent:
                               document_id: str | None = None) -> dict[str, Any]:
         """
         Extrae texto y metadata de un documento PDF
-        
+
         Args:
             file_path: Ruta al archivo PDF
             document_id: ID del documento (opcional)
-        
+
         Returns:
             Diccionario con texto extraído y metadata
         """
@@ -151,11 +151,11 @@ class DocumentIntelligenceAgent:
                               metadata: dict | None = None) -> dict[str, Any]:
         """
         Clasifica el contenido del texto
-        
+
         Args:
             text: Texto a clasificar
             metadata: Metadata adicional
-        
+
         Returns:
             Clasificación del contenido
         """
@@ -171,10 +171,10 @@ class DocumentIntelligenceAgent:
     async def extract_entities(self, text: str) -> dict[str, Any]:
         """
         Extrae entidades del texto
-        
+
         Args:
             text: Texto del que extraer entidades
-        
+
         Returns:
             Entidades extraídas
         """
@@ -392,11 +392,11 @@ class DocumentIntelligenceAgent:
                              entity_value: str = "") -> dict[str, Any]:
         """
         Busca entidades específicas en los documentos
-        
+
         Args:
             entity_type: Tipo de entidad (beneficiaries, amounts, contracts)
             entity_value: Valor a buscar (opcional)
-        
+
         Returns:
             Resultados de búsqueda
         """

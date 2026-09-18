@@ -59,10 +59,10 @@ class PDFProcessor:
     async def process_pdf(self, pdf_path: Path) -> Path:
         """
         Convierte un PDF a texto de forma asíncrona.
-        
+
         Args:
             pdf_path: Ruta al archivo PDF
-            
+
         Returns:
             Ruta al archivo de texto generado
         """
@@ -96,7 +96,7 @@ class PDFProcessor:
         """
         Extrae texto de un PDF usando ExtractorRegistry (wrapper de compatibilidad).
         DEPRECADO: Usar ExtractorRegistry directamente.
-        
+
         NOTA: En notebooks, usar el método async _extract_text_from_pdf_async()
         """
         import asyncio

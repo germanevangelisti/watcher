@@ -21,7 +21,7 @@ scheduler = AsyncIOScheduler()
 async def scheduled_sync_job():
     """
     Job de sincronización programado.
-    
+
     Se ejecuta según la configuración del usuario (diario/semanal).
     """
     from app.db.database import AsyncSessionLocal
@@ -52,7 +52,7 @@ async def scheduled_sync_job():
 async def configure_scheduler_from_db():
     """
     Configura el scheduler basándose en la configuración de la base de datos.
-    
+
     Lee la configuración de SyncState y ajusta los jobs del scheduler.
     """
     from app.db.database import AsyncSessionLocal
@@ -122,7 +122,7 @@ def stop_scheduler():
 async def reconfigure_scheduler():
     """
     Reconfigura el scheduler.
-    
+
     Debe llamarse cuando el usuario actualiza la configuración
     desde el endpoint /sync/schedule.
     """

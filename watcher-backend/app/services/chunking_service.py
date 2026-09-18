@@ -67,7 +67,7 @@ class ChunkResult(BaseModel):
 class ChunkingService:
     """
     Servicio para dividir texto en chunks con estrategia recursiva.
-    
+
     Implementa una estrategia similar a RecursiveCharacterTextSplitter
     de langchain, pero adaptada a boletines oficiales argentinos.
     """
@@ -75,7 +75,7 @@ class ChunkingService:
     def __init__(self, config: ChunkingConfig | None = None):
         """
         Inicializar ChunkingService.
-        
+
         Args:
             config: Configuración de chunking (usa defaults si no se proporciona)
         """
@@ -241,11 +241,11 @@ class ChunkingService:
     def _split_text_by_separator(self, text: str, separator: str, entity_map=None) -> list[str]:
         """
         Divide texto por separador, manteniendo el separador.
-        
+
         Args:
             text: Texto a dividir
             separator: Separador
-            
+
         Returns:
             Lista de partes
         """
@@ -269,11 +269,11 @@ class ChunkingService:
     def _split_by_size(self, text: str, chunk_size: int) -> list[str]:
         """
         Divide texto por tamaño fijo (último recurso).
-        
+
         Args:
             text: Texto a dividir
             chunk_size: Tamaño de cada chunk
-            
+
         Returns:
             Lista de chunks
         """
@@ -292,10 +292,10 @@ _chunking_service: ChunkingService | None = None
 def get_chunking_service(config: ChunkingConfig | None = None) -> ChunkingService:
     """
     Obtener instancia global de ChunkingService.
-    
+
     Args:
         config: Configuración opcional (solo se usa en primera llamada)
-        
+
     Returns:
         Instancia de ChunkingService
     """

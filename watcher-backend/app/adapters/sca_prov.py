@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 class ProvincialAdapter(BaseAdapter):
     """
     Adapter for Provincial Bulletin data.
-    
+
     Transforms boletines from Córdoba province into unified schema.
     """
 
@@ -36,11 +36,11 @@ class ProvincialAdapter(BaseAdapter):
     ) -> AdapterResult:
         """
         Transform a single provincial bulletin into DocumentSchema.
-        
+
         Args:
             raw_data: Dict with keys like 'filename', 'date', 'section', 'content', etc.
             **kwargs: Additional context
-            
+
         Returns:
             AdapterResult with normalized document
         """
@@ -126,11 +126,11 @@ class ProvincialAdapter(BaseAdapter):
     ) -> list[AdapterResult]:
         """
         Transform a batch of provincial bulletins.
-        
+
         Args:
             raw_data_list: List of raw bulletin data
             **kwargs: Additional context
-            
+
         Returns:
             List of AdapterResult objects
         """
@@ -148,10 +148,10 @@ class ProvincialAdapter(BaseAdapter):
     def validate_document(self, document: DocumentSchema) -> bool:
         """
         Validate provincial document.
-        
+
         Args:
             document: Document to validate
-            
+
         Returns:
             True if valid
         """

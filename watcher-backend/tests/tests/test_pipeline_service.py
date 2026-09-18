@@ -39,14 +39,14 @@ def test_file():
     """Create a temporary test file."""
     content = """
     DECRETO PROVINCIAL 456/2024
-    
+
     ARTÍCULO 1: Se establece un subsidio para pequeñas empresas.
     El monto total asignado es de $10.000.000.
-    
+
     ARTÍCULO 2: Las empresas deberán presentar la documentación antes del 31/12/2024.
-    
+
     RESOLUCIÓN ADMINISTRATIVA
-    
+
     Se aprueba la licitación para la construcción de una nueva escuela.
     Presupuesto estimado: $50.000.000.
     """

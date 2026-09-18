@@ -115,7 +115,7 @@ class ComplianceEngine:
     ) -> CheckResult:
         """
         Ejecuta un check de compliance.
-        
+
         Por ahora, esta es una implementación básica que marca checks como UNKNOWN
         y retorna un placeholder. En futuras iteraciones, implementaremos lógica
         específica de validación por tipo de check.
@@ -177,7 +177,7 @@ class ComplianceEngine:
     ) -> dict[str, Any]:
         """
         Calcula el score de compliance ponderado.
-        
+
         Formula: score = sum(weight_i * value_i) / sum(weight_i)
         Donde: PASS=1.0, WARN=0.5, FAIL=0.0, UNKNOWN=None (no suma)
         """

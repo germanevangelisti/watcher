@@ -35,7 +35,7 @@ class FeedbackRecord:
 class LearningAgent:
     """
     Agente de aprendizaje continuo
-    
+
     Capacidades:
     - Registrar feedback humano
     - Ajustar thresholds automáticamente
@@ -79,7 +79,7 @@ class LearningAgent:
                        metadata: dict | None = None) -> dict[str, Any]:
         """
         Registra feedback del usuario
-        
+
         Args:
             feedback_type: Tipo de feedback
             entity_type: Tipo de entidad
@@ -87,7 +87,7 @@ class LearningAgent:
             feedback_value: Valor del feedback
             user_notes: Notas adicionales del usuario
             metadata: Metadata adicional
-        
+
         Returns:
             Resultado del registro
         """
@@ -123,12 +123,12 @@ class LearningAgent:
                          user_notes: str | None = None) -> dict[str, Any]:
         """
         Valida una red flag
-        
+
         Args:
             red_flag_id: ID de la red flag
             is_valid: Si la red flag es un verdadero positivo
             user_notes: Notas del usuario
-        
+
         Returns:
             Resultado de la validación
         """
@@ -147,13 +147,13 @@ class LearningAgent:
                            user_notes: str | None = None) -> dict[str, Any]:
         """
         Registra corrección de clasificación
-        
+
         Args:
             document_id: ID del documento
             predicted_class: Clase predicha
             actual_class: Clase correcta
             user_notes: Notas del usuario
-        
+
         Returns:
             Resultado del registro
         """
@@ -249,10 +249,10 @@ class LearningAgent:
     def apply_adjustment(self, adjustment_id: int) -> dict[str, Any]:
         """
         Marca un ajuste como aplicado
-        
+
         Args:
             adjustment_id: Índice del ajuste en la lista
-        
+
         Returns:
             Resultado de la aplicación
         """
@@ -276,11 +276,11 @@ class LearningAgent:
                             limit: int = 100) -> list[dict]:
         """
         Obtiene historial de feedback
-        
+
         Args:
             entity_type: Filtrar por tipo de entidad
             limit: Límite de registros
-        
+
         Returns:
             Lista de feedbacks
         """
@@ -307,7 +307,7 @@ class LearningAgent:
     def get_learning_insights(self) -> dict[str, Any]:
         """
         Genera insights sobre el aprendizaje del sistema
-        
+
         Returns:
             Insights y estadísticas
         """

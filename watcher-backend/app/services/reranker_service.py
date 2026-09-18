@@ -50,12 +50,12 @@ class BaseReranker(ABC):
     ) -> list[SearchResultProtocol]:
         """
         Re-rank search results based on query relevance.
-        
+
         Args:
             query: Original search query
             results: List of search results to re-rank
             top_k: Number of top results to return
-        
+
         Returns:
             Re-ranked list of results (top_k items)
         """
@@ -77,14 +77,14 @@ class NoopReranker(BaseReranker):
 class GoogleReranker(BaseReranker):
     """
     Google-based re-ranker using Gemini for relevance scoring.
-    
+
     Uses Google Gemini to score each result's relevance to the query.
     """
 
     def __init__(self, api_key: str | None = None, model: str = "gemini-2.0-flash"):
         """
         Initialize Google re-ranker.
-        
+
         Args:
             api_key: Google API key (defaults to GOOGLE_API_KEY env var)
             model: Gemini model to use for scoring
@@ -107,7 +107,7 @@ class GoogleReranker(BaseReranker):
     ) -> list[SearchResultProtocol]:
         """
         Re-rank results using Google Gemini relevance scoring.
-        
+
         For each result, asks Gemini to score relevance on 0-10 scale.
         """
         if not results:
@@ -183,7 +183,7 @@ class CrossEncoderReranker(BaseReranker):
     ) -> list[SearchResultProtocol]:
         """
         Re-rank results using cross-encoder model.
-        
+
         Cross-encoders jointly encode query and document for better relevance.
         """
         if not results:
@@ -214,7 +214,7 @@ class CrossEncoderReranker(BaseReranker):
 class RerankerService:
     """
     Service for re-ranking search results.
-    
+
     Automatically selects best available strategy:
     1. Local profile: cross-encoder, then Google, then noop
     2. Cloud profile: Google, then cross-encoder, then noop
@@ -288,12 +288,12 @@ class RerankerService:
     ) -> list[SearchResultProtocol]:
         """
         Re-rank search results.
-        
+
         Args:
             query: Original search query
             results: List of search results to re-rank
             top_k: Number of top results to return (default 5)
-        
+
         Returns:
             Re-ranked list of top_k results
         """
@@ -303,10 +303,10 @@ class RerankerService:
 def get_reranker_service(strategy: str | None = None) -> RerankerService:
     """
     Get a reranker service instance.
-    
+
     Args:
         strategy: Reranker strategy ("google", "cross-encoder", "noop", or None for auto)
-    
+
     Returns:
         RerankerService instance
     """

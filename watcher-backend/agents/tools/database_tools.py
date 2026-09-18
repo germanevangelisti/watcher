@@ -33,14 +33,14 @@ class DatabaseTools:
     ) -> list[dict[str, Any]]:
         """
         Obtiene documentos de la base de datos
-        
+
         Args:
             db: Sesión de base de datos async
             year: Filtrar por año
             month: Filtrar por mes
             status: Filtrar por estado
             limit: Límite de resultados
-        
+
         Returns:
             Lista de documentos
         """
@@ -84,7 +84,7 @@ class DatabaseTools:
     ) -> list[dict[str, Any]]:
         """
         Obtiene resultados de análisis
-        
+
         Args:
             db: Sesión de base de datos async
             document_id: Filtrar por documento
@@ -92,7 +92,7 @@ class DatabaseTools:
             min_score: Score mínimo de transparencia
             min_red_flags: Mínimo de red flags
             limit: Límite de resultados
-        
+
         Returns:
             Lista de resultados
         """
@@ -136,13 +136,13 @@ class DatabaseTools:
     ) -> list[dict[str, Any]]:
         """
         Obtiene red flags
-        
+
         Args:
             db: Sesión de base de datos async
             severity: Filtrar por severidad (high, medium, low)
             category: Filtrar por categoría
             limit: Límite de resultados
-        
+
         Returns:
             Lista de red flags
         """
@@ -179,10 +179,10 @@ class DatabaseTools:
     async def get_statistics(db: AsyncSession) -> dict[str, Any]:
         """
         Obtiene estadísticas generales del sistema
-        
+
         Args:
             db: Sesión de base de datos async
-        
+
         Returns:
             Diccionario con estadísticas
         """
@@ -266,11 +266,11 @@ class DatabaseTools:
     ) -> dict[str, Any] | None:
         """
         Obtiene un documento con todos sus resultados de análisis
-        
+
         Args:
             db: Sesión de base de datos async
             document_id: ID del documento
-        
+
         Returns:
             Diccionario con documento y resultados
         """
@@ -340,13 +340,13 @@ class DatabaseTools:
     ) -> list[dict[str, Any]]:
         """
         Busca documentos que contengan una entidad específica
-        
+
         Args:
             db: Sesión de base de datos async
             entity_type: Tipo de entidad (beneficiaries, amounts, contracts, etc.)
             entity_value: Valor a buscar
             limit: Límite de resultados
-        
+
         Returns:
             Lista de documentos con la entidad
         """
@@ -389,14 +389,14 @@ class DatabaseTools:
     ) -> list[dict[str, Any]]:
         """
         Busca documentos usando el RetrievalService (hybrid/semantic/keyword)
-        
+
         Args:
             query: Consulta de búsqueda
             technique: Técnica de búsqueda (semantic, keyword, hybrid)
             top_k: Número de resultados a retornar
             rerank: Si se debe aplicar reranking
             filters: Filtros opcionales de metadata
-        
+
         Returns:
             Lista de resultados de búsqueda
         """

@@ -19,7 +19,7 @@ async def process_directory(
 ) -> dict:
     """
     Procesa un directorio de boletines en lotes.
-    
+
     Args:
         request: Datos de la solicitud
         db: Sesión de base de datos

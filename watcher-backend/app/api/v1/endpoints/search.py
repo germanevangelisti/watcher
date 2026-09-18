@@ -41,7 +41,7 @@ AVAILABLE_MODELS = {
 class SearchFilters(BaseModel):
     """
     Filtros para búsqueda (semántica, keyword, o híbrida)
-    
+
     Soporta filtrado por cualquier campo de ChunkRecord metadata.
     Todos los filtros se combinan con lógica AND.
     """
@@ -130,14 +130,14 @@ class UnifiedSearchResponse(BaseModel):
 def build_chromadb_filters(filters: SearchFilters | None) -> dict[str, Any] | None:
     """
     Construye filtros ChromaDB where clause desde SearchFilters.
-    
+
     ChromaDB soporta estos operadores:
     - Igualdad: {"field": "value"} o {"field": {"$eq": "value"}}
     - Comparación: {"field": {"$gt": value, "$lt": value, "$gte": value, "$lte": value}}
     - Pertenencia: {"field": {"$in": [values]}}
     - Negación: {"field": {"$ne": value, "$nin": [values]}}
     - Lógica: {"$and": [...], "$or": [...]}
-    
+
     IMPORTANTE: ChromaDB NO soporta $regex. Para filtros de fecha que requieren
     regex, necesitamos metadata con campos year/month separados, o usar solo FTS5.
     """
@@ -191,7 +191,7 @@ def build_chromadb_filters(filters: SearchFilters | None) -> dict[str, Any] | No
 def build_fts_filters(filters: SearchFilters | None) -> dict[str, Any] | None:
     """
     Construye filtros para FTSService.search_bm25() desde SearchFilters.
-    
+
     FTSService usa un dict simple que se traduce a WHERE clauses SQL.
     """
     if not filters:
@@ -235,12 +235,12 @@ def build_fts_filters(filters: SearchFilters | None) -> dict[str, Any] | None:
 def generate_highlight(text: str, query: str, context_chars: int = 150) -> str:
     """
     Generate a highlighted snippet from text matching the query.
-    
+
     Args:
         text: Full text to search in
         query: Query terms to highlight
         context_chars: Characters of context before/after match
-    
+
     Returns:
         Snippet with query terms wrapped in <mark> tags
     """
@@ -294,20 +294,20 @@ def generate_highlight(text: str, query: str, context_chars: int = 150) -> str:
 async def search_unified(request: UnifiedSearchRequest, db: Session = Depends(get_sync_db)):
     """
     🔍 ENDPOINT UNIFICADO DE BÚSQUEDA (RECOMENDADO)
-    
+
     Este es el endpoint principal para búsqueda. Soporta:
-    
+
     **Técnicas de búsqueda:**
     - `semantic`: Búsqueda por similitud semántica (embeddings)
     - `keyword`: Búsqueda por palabras clave (BM25)
     - `hybrid`: Combinación de ambas con RRF ⭐ RECOMENDADO
-    
+
     **Características:**
     - Filtros avanzados por metadata (topic, language, has_tables, etc.)
     - Re-ranking opcional para mejorar precisión
     - Snippets con términos destacados
     - Normalización de scores a [0, 1]
-    
+
     **Uso recomendado:**
     ```json
     {
@@ -322,7 +322,7 @@ async def search_unified(request: UnifiedSearchRequest, db: Session = Depends(ge
         }
     }
     ```
-    
+
     **Performance:**
     - Semantic: ~200-500ms
     - Keyword: ~50-100ms
@@ -434,10 +434,10 @@ async def search_unified(request: UnifiedSearchRequest, db: Session = Depends(ge
 async def search_semantic(request: SearchRequest):
     """
     Búsqueda semántica en documentos indexados
-    
+
     Usa embeddings en ChromaDB para encontrar los fragmentos de texto
     más relevantes según la consulta del usuario.
-    
+
     Modelos disponibles:
     - default: all-MiniLM-L6-v2 (equilibrado)
     - multilingual: paraphrase-multilingual-MiniLM-L12-v2 (mejor para español)
@@ -509,15 +509,15 @@ async def search_semantic(request: SearchRequest):
 def search_keyword(request: SearchRequest, db: Session = Depends(get_sync_db)):
     """
     Búsqueda por palabras clave usando BM25 (SQLite FTS5)
-    
+
     Usa full-text search con algoritmo BM25 para encontrar fragmentos
     que contengan las palabras clave de la consulta.
-    
+
     Ideal para:
     - Búsqueda de términos exactos
     - Nombres propios, códigos, números de ley
     - Consultas con palabras específicas
-    
+
     Los resultados se retornan en el mismo formato que semantic search
     para permitir fusión híbrida.
     """
@@ -582,18 +582,18 @@ def search_keyword(request: SearchRequest, db: Session = Depends(get_sync_db)):
 async def search_hybrid(request: SearchRequest, db: Session = Depends(get_sync_db)):
     """
     Búsqueda híbrida combinando semántica (ChromaDB) y keyword (BM25) con RRF
-    
+
     Ejecuta semantic search y keyword search en paralelo, luego fusiona
     los resultados usando Reciprocal Rank Fusion (RRF).
-    
+
     RRF combina múltiples rankings usando la fórmula:
     score(d) = Σ 1/(k + rank_i(d)) donde k=60
-    
+
     Esta es la técnica recomendada por defecto ya que:
     - Combina precisión semántica con recall de keywords
     - Maneja bien consultas ambiguas
     - No requiere tuning de pesos
-    
+
     Los resultados fusionados tienen mejor calidad que cada método individual.
     """
     start_time = time.time()

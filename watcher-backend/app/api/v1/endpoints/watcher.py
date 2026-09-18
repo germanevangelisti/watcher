@@ -18,7 +18,7 @@ async def analyze_text(
 ) -> dict:
     """
     Analiza un texto directamente.
-    
+
     Args:
         text: Texto a analizar
         max_fragments: Número máximo de fragmentos a procesar
@@ -50,7 +50,7 @@ async def analyze_file(
 ) -> dict:
     """
     Analiza un archivo subido.
-    
+
     Args:
         file: Archivo de texto a analizar
         max_fragments: Número máximo de fragmentos a procesar

@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 class MunicipalScraper(BaseScraper):
     """
     Placeholder scraper for municipal-level data.
-    
+
     Future implementation will support:
     - Municipal bulletins
     - Local budgets
@@ -28,7 +28,7 @@ class MunicipalScraper(BaseScraper):
     def __init__(self, config: ScraperConfig | None = None):
         """
         Initialize municipal scraper.
-        
+
         Args:
             config: Optional configuration
         """
@@ -65,7 +65,7 @@ class MunicipalScraper(BaseScraper):
     ) -> ScraperResult:
         """
         Download single municipal document.
-        
+
         NOTE: This is a placeholder implementation.
         """
         logger.warning("Municipal scraper not yet implemented")
@@ -85,7 +85,7 @@ class MunicipalScraper(BaseScraper):
     ) -> list[ScraperResult]:
         """
         Download municipal documents for date range.
-        
+
         NOTE: This is a placeholder implementation.
         """
         logger.warning("Municipal scraper not yet implemented")
