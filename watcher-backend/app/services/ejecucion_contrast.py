@@ -17,8 +17,13 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
+from collections.abc import Iterable
 
 from app.services.gasto_classifier import ETAPAS_COMPROMISO, ETAPAS_EJECUCION
+from app.services.presupuesto_matching import (
+    canonical_organismo_name,
+    preferred_organismo_display,
+)
 
 BUCKET_COMPROMISO = "compromiso"
 BUCKET_EJECUCION = "ejecucion"
@@ -43,6 +48,43 @@ def pct_vs_vigente(numerador: float, vigente: float | None) -> float | None:
 
 def is_sobre(pct: float | None, umbral: float = 100.0) -> bool:
     return pct is not None and pct > umbral
+
+
+def vigente_por_organismo_canonico(
+    rows: Iterable[tuple[str | None, float]],
+) -> tuple[dict[str, float], dict[str, str]]:
+    """Sum vigente by canonical organism; return (display→vigente, canon→display).
+
+    `PODER JUDICIAL` and `PODER JUDICIAL -` share a bucket.  Truncated stubs
+    like `MINISTERIO DE` stay in their own bucket and are not a match target.
+    """
+    names_by_canon: dict[str, list[str]] = defaultdict(list)
+    totals: dict[str, float] = defaultdict(float)
+    for org, vigente in rows:
+        if not org:
+            continue
+        key = canonical_organismo_name(org)
+        if not key:
+            continue
+        totals[key] += vigente
+        names_by_canon[key].append(org)
+    display_by_canon = {
+        key: preferred_organismo_display(names) for key, names in names_by_canon.items()
+    }
+    vigente_por_org = {
+        display_by_canon[key]: total for key, total in totals.items()
+    }
+    return vigente_por_org, display_by_canon
+
+
+def remap_organismo_key(
+    raw: str | None, display_by_canon: dict[str, str]
+) -> str:
+    """Map a ledger/presupuesto name onto the contrast display key."""
+    if not raw:
+        return "(sin organismo)"
+    key = canonical_organismo_name(raw)
+    return display_by_canon.get(key, raw)
 
 
 @dataclass(frozen=True)

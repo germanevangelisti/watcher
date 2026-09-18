@@ -35,6 +35,99 @@ def _token_jaccard(a: str, b: str) -> float:
     return len(ta & tb) / len(ta | tb)
 
 
+# Tokens that appear in almost every provincial organism name.  A Jaccard of
+# 0.40 on {DIRECCION, DE} vs {DIRECCION, DE, MINISTERIO} is how S-511 landed
+# on Inteligencia Fiscal and how unrelated secretarías hung $50B off a $1.9B
+# program.  Matching must score the distinctive remainder.
+_STOPWORDS = {
+    "DE", "DEL", "LA", "LAS", "EL", "LOS", "Y", "E", "PARA", "AL", "DA", "EN",
+}
+_GENERIC_ORG_TOKENS = {
+    "MINISTERIO",
+    "SECRETARIA",
+    "DIRECCION",
+    "SUBSECRETARIA",
+    "GENERAL",
+    "NACIONAL",
+    "PROVINCIAL",
+    "PROVINCIA",
+    "CORDOBA",
+    "UNIDAD",
+    "JURISDICCION",
+    "JUR",
+}
+_RE_TRAILING_HYPHEN = re.compile(r"[\s\-–—]+$")
+
+
+def canonical_organismo(org_norm: str) -> str:
+    """Collapse parser artifacts on an already-normalized organismo name."""
+    if not org_norm:
+        return ""
+    s = _RE_TRAILING_HYPHEN.sub("", org_norm).strip(" -")
+    tokens = s.split()
+    out: list[str] = []
+    seen: set[str] = set()
+    for token in tokens:
+        if token in _STOPWORDS:
+            if out and out[-1] in _STOPWORDS:
+                continue
+            out.append(token)
+            continue
+        if token in seen:
+            continue
+        seen.add(token)
+        out.append(token)
+    while out and out[-1] in _STOPWORDS:
+        out.pop()
+    return " ".join(out)
+
+
+def canonical_organismo_name(name: str | None) -> str:
+    """Normalize + collapse a raw organismo name into the grouping key."""
+    return canonical_organismo(_normalize(name or ""))
+
+
+def _distinctive_tokens(org_norm: str) -> set[str]:
+    canon = canonical_organismo(org_norm)
+    return {
+        t for t in canon.split()
+        if t not in _STOPWORDS and t not in _GENERIC_ORG_TOKENS
+    }
+
+
+def is_truncated_organismo(name: str | None) -> bool:
+    """True when the name is a Mapas column stub, not a matchable organism."""
+    canon = canonical_organismo_name(name)
+    if not canon:
+        return True
+    if canon.endswith((" DE", " DEL", " Y")):
+        return True
+    return not _distinctive_tokens(canon)
+
+
+def preferred_organismo_display(names: list[str]) -> str:
+    """Pick a human-facing label for a canonical organism bucket."""
+    if not names:
+        return ""
+
+    def rank(raw: str) -> tuple:
+        stripped = raw.strip(" -–—")
+        norm = _normalize(raw)
+        trunc = is_truncated_organismo(norm)
+        messy = canonical_organismo(norm) != norm
+        return (trunc, messy, -len(stripped), stripped)
+
+    return min(names, key=rank).strip(" -–—")
+
+
+def _distinctive_jaccard(a: str, b: str) -> float:
+    ta = _distinctive_tokens(a)
+    tb = _distinctive_tokens(b)
+    if not ta or not tb:
+        return 0.0
+    return len(ta & tb) / len(ta | tb)
+
+
 # ── Organismo matching ─────────────────────────────────────────────────────────
 
 # Generic placeholder names in analisis that must not match any presupuesto_base organism
@@ -96,9 +189,12 @@ def build_presupuesto_index(
     exact lookups.  Callers fetch the rows however they like (sqlite3 cursor or
     SQLAlchemy) and hand them over already materialized.
     """
-    pb_index = [(r[0], _normalize(r[1]), r[2], r[3]) for r in rows]
+    pb_index = [
+        (r[0], canonical_organismo(_normalize(r[1])), r[2], r[3]) for r in rows
+    ]
     pb_exact = {
-        pb_norm: (pb_id, programa, partida) for pb_id, pb_norm, programa, partida in pb_index
+        pb_norm: (pb_id, programa, partida)
+        for pb_id, pb_norm, programa, partida in pb_index
     }
     return pb_index, pb_exact
 
@@ -131,6 +227,13 @@ def match_organismo(
     elif collapsed and collapsed != org_norm:
         org_norm = collapsed
 
+    org_norm = canonical_organismo(org_norm)
+
+    # Truncated stubs ("MINISTERIO DE", "DIRECCION DE MINISTERIO") are not
+    # organisms. Exact against them would keep the S-511 295% false positive.
+    if is_truncated_organismo(org_norm):
+        return None, 0.0, None, None, None
+
     # O(1) exact match
     if org_norm in pb_exact:
         pb_id, programa, partida = pb_exact[org_norm]
@@ -140,6 +243,15 @@ def match_organismo(
     best = (None, 0.0, None, None, None)
 
     for pb_id, pb_norm, programa, partida in pb_index:
+        pb_norm = canonical_organismo(pb_norm)
+        if not pb_norm or is_truncated_organismo(pb_norm):
+            continue
+
+        dist_q = _distinctive_tokens(org_norm)
+        dist_t = _distinctive_tokens(pb_norm)
+        if not dist_q or not dist_t or not (dist_q & dist_t):
+            continue
+
         # Substring match
         if org_norm in pb_norm or pb_norm in org_norm:
             score = min(len(org_norm), len(pb_norm)) / max(len(org_norm), len(pb_norm))
@@ -147,8 +259,7 @@ def match_organismo(
                 best = (pb_id, score, "substring", programa, partida)
             continue
 
-        # Token Jaccard
-        jac = _token_jaccard(org_norm, pb_norm)
+        jac = _distinctive_jaccard(org_norm, pb_norm)
         if jac > best[1]:
             best = (pb_id, jac, "jaccard", programa, partida)
 

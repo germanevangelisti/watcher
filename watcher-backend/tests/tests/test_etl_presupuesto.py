@@ -41,6 +41,8 @@ from parse_pdf_presupuesto_2026 import (
     _is_jurisdiction_header,
     _col_for_x,
     _words_to_rows,
+    clean_jurisdiccion,
+    organismo_from_jurisdiccion,
     LEY_11088_ENTES,
 )
 
@@ -137,9 +139,9 @@ class TestMatchOrganismo:
 
     def _make_index(self, entries):
         """entries: list of (pb_id, org_raw, programa, partida)"""
-        pb_index = [(pid, _normalize(org), prog, part) for pid, org, prog, part in entries]
-        pb_exact = {pb_norm: (pid, prog, part) for pid, pb_norm, prog, part in pb_index}
-        return pb_index, pb_exact
+        from app.services.presupuesto_matching import build_presupuesto_index
+
+        return build_presupuesto_index(entries)
 
     def test_exact_match(self):
         pb_index, pb_exact = self._make_index([(1, "Ministerio de Salud", "P1", None)])
@@ -297,7 +299,66 @@ class TestMatchOrganismo:
         assert epec["monto_vigente"] == 2_627_774_687_000.0
         assert acif["monto_vigente"] == 573_294_933_000.0
         assert epec["ejercicio"] == 2026
-        assert acif["ejercicio"] == 2026
+
+    def test_s511_inteligencia_fiscal_does_not_match_direccion_de_ministerio(self):
+        """V.2.2: S-511 labelled Inteligencia Fiscal must not hit pb_id 54."""
+        pb_index, pb_exact = self._make_index([
+            (54, "DIRECCIÓN DE MINISTERIO", "156 - INTELIGENCIA FISCAL", None),
+            (35, "MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA", "16 - APORTES", None),
+        ])
+        for org in (
+            "DIRECCIÓN DE INTELIGENCIA FISCAL",
+            "UNIDAD EJECUTORA",
+            "LAS PEÑAS SUD - LAS ISLETILLAS",
+        ):
+            pb_id, *_ = match_organismo(_normalize(org), pb_index, pb_exact)
+            assert pb_id is None, org
+
+    def test_truncated_secretaria_de_desarrollo_is_not_a_fuzzy_sink(self):
+        """V.2.4: unrelated secretarías must not hang off SECRETARÍA DE DESARROLLO."""
+        pb_index, pb_exact = self._make_index([
+            (7, "SECRETARÍA DE DESARROLLO", "556 - CIRCULAR AMBIENTE", None),
+            (80, "SECRETARÍA DE DESARROLLO SOSTENIBLE", "557 - SOSTENIBLE", None),
+        ])
+        for org in (
+            "SECRETARIA DE ASUNTOS INSTITUCIONALES",
+            "SECRETARÍA GENERAL DE HÁBITAT Y DESARROLLO EMPRENDEDOR",
+            "SECRETARIA DE PLANEAMIENTO FÍSICO",
+        ):
+            pb_id, *_ = match_organismo(_normalize(org), pb_index, pb_exact)
+            assert pb_id is None, org
+
+    def test_economia_canonical_exact_collapses_duplicate_ministerio(self):
+        """Parser duplicate 'MINISTERIO' still exact-matches the ministry."""
+        pb_index, pb_exact = self._make_index([
+            (
+                35,
+                "MINISTERIO DE ECONOMÍA MINISTERIO Y GESTIÓN PÚBLICA",
+                "16 - APORTES",
+                None,
+            ),
+        ])
+        pb_id, score, method, _, _ = match_organismo(
+            _normalize("MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA"),
+            pb_index,
+            pb_exact,
+        )
+        assert pb_id == 35
+        assert score == 1.0
+        assert method == "exact"
+
+    def test_truncated_ministerio_de_is_not_a_fuzzy_target(self):
+        pb_index, pb_exact = self._make_index([
+            (99, "MINISTERIO DE", "267 - DESARROLLO", None),
+            (23, "MINISTERIO DE SEGURIDAD", "774 - SERVICIOS", None),
+        ])
+        pb_id, *_ = match_organismo(_normalize("MINISTERIO DE"), pb_index, pb_exact)
+        assert pb_id is None
+        pb_id, score, method, _, _ = match_organismo(
+            _normalize("MINISTERIO DE SEGURIDAD"), pb_index, pb_exact
+        )
+        assert pb_id == 23
+        assert method == "exact"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -415,6 +476,39 @@ class TestIsJurisdictionHeader:
         assert not _is_jurisdiction_header("ACTIVIDADES CENTRALES")
         assert not _is_jurisdiction_header("TOTAL")
         assert not _is_jurisdiction_header("")
+
+
+class TestCleanJurisdiccion:
+    def test_strips_table_header_bleed(self):
+        raw = (
+            "1.15 - Ministerio De Economía Y Gestión Pública Código "
+            "Denominación Naturaleza Unidad Unidad Servicio Fin-Fun- "
+            "Fuente de Monto de Organización Ejecutora Administrativo Det "
+            "Financiamiento"
+        )
+        assert clean_jurisdiccion(raw) == (
+            "1.15 - Ministerio De Economía Y Gestión Pública"
+        )
+
+    def test_truncated_unidad_falls_back_to_jurisdiction(self):
+        jur = "1.55 - Ministerio De Infraestructura Y Servicios Públicos"
+        assert organismo_from_jurisdiccion(jur) == (
+            "MINISTERIO DE INFRAESTRUCTURA Y SERVICIOS PUBLICOS"
+        )
+
+    def test_repair_promotes_ministerio_de_stub(self):
+        from parse_pdf_presupuesto_2026 import repair_organismo_record
+
+        rec = repair_organismo_record({
+            "organismo": "MINISTERIO DE",
+            "jurisdiccion": (
+                "1.15 - Ministerio De Economía Y Gestión Pública Código "
+                "Denominación Naturaleza"
+            ),
+            "programa": "150 - MINISTERIO",
+        })
+        assert rec["organismo"] == "MINISTERIO DE ECONOMIA Y GESTION PUBLICA"
+        assert rec["jurisdiccion"] == "1.15 - Ministerio De Economía Y Gestión Pública"
 
 
 class TestColForX:

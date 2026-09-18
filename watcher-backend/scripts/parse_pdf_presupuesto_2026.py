@@ -7,15 +7,19 @@ Extrae tablas del PDF de programas presupuestarios de la Provincia de Córdoba
 Uso:
     cd watcher-backend
     python scripts/parse_pdf_presupuesto_2026.py [--dry-run] [--force]
+    python scripts/parse_pdf_presupuesto_2026.py --repair-db
 
 Flags:
-    --dry-run   Solo parsea el PDF y guarda JSON, sin tocar la DB
-    --force     Elimina registros 2026 existentes antes de cargar
+    --dry-run    Solo parsea el PDF y guarda JSON, sin tocar la DB
+    --force      Elimina registros 2026 existentes antes de cargar
+    --repair-db  Reescribe organismos truncos desde la jurisdicción del JSON
+                 (no requiere el PDF; no cambia ids)
 """
 
 import asyncio
 import json
 import re
+import sqlite3
 import sys
 from datetime import date, datetime
 from pathlib import Path
@@ -37,6 +41,11 @@ from app.db.models import PresupuestoBase
 
 # Reuse OrganismoNormalizer from the Excel script
 from scripts.parse_excel_presupuesto import OrganismoNormalizer
+from app.services.presupuesto_matching import (
+    _normalize as _strip_accents,
+    canonical_organismo,
+    is_truncated_organismo,
+)
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -93,7 +102,101 @@ _normalizer = OrganismoNormalizer()
 
 
 def _normalize_org(name: str) -> str:
-    return _normalizer.normalize(name or "")
+    expanded = _normalizer.normalize(name or "")
+    return canonical_organismo(_strip_accents(expanded))
+
+
+_JURISDICCION_JUNK = re.compile(
+    r"\s+C[oó]digo\b.*$",
+    re.IGNORECASE,
+)
+
+
+def clean_jurisdiccion(header_text: str) -> str:
+    """Keep '1.15 - Ministerio De Economía Y Gestión Pública', drop table headers."""
+    if not header_text:
+        return ""
+    match = re.search(r"(\d+\.\d+\s*[-–]\s*.+)", header_text)
+    if not match:
+        return header_text.strip()
+    raw = match.group(1).strip()
+    return _JURISDICCION_JUNK.sub("", raw).strip()
+
+
+def organismo_from_jurisdiccion(jurisdiccion: str) -> str:
+    match = re.search(r"\d+\.\d+\s*[-–]\s*(.+)$", jurisdiccion or "")
+    name = (match.group(1) if match else jurisdiccion or "").strip()
+    return _normalize_org(name)
+
+
+def repair_organismo_record(rec: dict) -> dict:
+    """Fill truncated unidad names from the page jurisdiction header."""
+    out = dict(rec)
+    jur = clean_jurisdiccion(out.get("jurisdiccion") or "")
+    if jur:
+        out["jurisdiccion"] = jur
+    org = _normalize_org(out.get("organismo") or "")
+    if is_truncated_organismo(org) and jur:
+        fallback = organismo_from_jurisdiccion(jur)
+        if fallback:
+            org = fallback
+    out["organismo"] = org
+    return out
+
+
+def apply_json_repair_to_sqlite(db_path: Path, json_path: Path) -> tuple[int, int]:
+    """Update organismo in place from repaired JSON. Keeps presupuesto_base ids.
+
+    Returns (rows_updated, rows_already_repaired).
+    """
+    records = json.loads(json_path.read_text(encoding="utf-8"))
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+    updated = 0
+    already = 0
+    for rec in records:
+        original = rec.get("organismo") or ""
+        repaired = repair_organismo_record(rec)
+        new_org = repaired["organismo"]
+        if new_org == original:
+            continue
+        cur.execute(
+            """
+            UPDATE presupuesto_base
+            SET organismo = ?
+            WHERE ejercicio = 2026
+              AND programa = ?
+              AND ABS(COALESCE(monto_vigente, 0) - ?) < 0.5
+              AND organismo = ?
+            """,
+            (
+                new_org,
+                rec.get("programa"),
+                rec.get("monto_vigente") or 0,
+                original,
+            ),
+        )
+        if cur.rowcount:
+            updated += cur.rowcount
+            continue
+        already_n = cur.execute(
+            """
+            SELECT COUNT(*) FROM presupuesto_base
+            WHERE ejercicio = 2026
+              AND programa = ?
+              AND ABS(COALESCE(monto_vigente, 0) - ?) < 0.5
+              AND organismo = ?
+            """,
+            (
+                rec.get("programa"),
+                rec.get("monto_vigente") or 0,
+                new_org,
+            ),
+        ).fetchone()[0]
+        already += already_n
+    conn.commit()
+    conn.close()
+    return updated, already
 
 
 def _parse_monto(monto_str: Any) -> float:
@@ -246,7 +349,7 @@ def parse_pdf(pdf_path: Path) -> List[Dict]:
             header_text = " ".join(w["text"] for w in header_words)
             m = re.search(r'(\d+\.\d+\s*[-–].+)', header_text)
             if m:
-                current_jurisdiccion = m.group(1).strip()
+                current_jurisdiccion = clean_jurisdiccion(m.group(1))
 
             rows = _words_to_rows(words)
 
@@ -290,8 +393,14 @@ def parse_pdf(pdf_path: Path) -> List[Dict]:
                 # For SUBPROGRAMA, inherit parent context if cells are empty
                 effective_unidad_org = unidad_org or current_unidad_org
                 effective_unidad_ejec = unidad_ejec or current_unidad_ejec
-                organismo_raw = effective_unidad_ejec or effective_unidad_org or current_jurisdiccion
+                organismo_raw = (
+                    effective_unidad_ejec or effective_unidad_org or current_jurisdiccion
+                )
                 organismo = _normalize_org(organismo_raw)
+                if is_truncated_organismo(organismo) and current_jurisdiccion:
+                    organismo = organismo_from_jurisdiccion(current_jurisdiccion)
+                    if organismo:
+                        organismo_raw = current_jurisdiccion
 
                 # Skip rows with neither monto nor known naturaleza (likely header fragments)
                 if not naturaleza and monto == 0:
@@ -429,10 +538,29 @@ async def verify(n_loaded: int, engine: Any) -> None:
 async def main() -> None:
     dry_run = "--dry-run" in sys.argv
     force = "--force" in sys.argv
+    repair_db = "--repair-db" in sys.argv
 
     print(f"\n{'#'*60}")
     print("# PARSE PDF PRESUPUESTO 2026 → presupuesto_base")
     print(f"{'#'*60}\n")
+
+    if repair_db:
+        db_path = Path(__file__).resolve().parent.parent / "sqlite.db"
+        if not OUTPUT_JSON.exists():
+            print(f"❌ JSON no encontrado: {OUTPUT_JSON}")
+            sys.exit(1)
+        n_updated, n_already = apply_json_repair_to_sqlite(db_path, OUTPUT_JSON)
+        print(
+            f"✅ --repair-db: {n_updated} filas actualizadas, "
+            f"{n_already} ya tenían el organismo reparado"
+        )
+        if n_updated == 0 and n_already:
+            print(
+                "  Nada que hacer: presupuesto_base ya está reparado. "
+                "Seguí con etl_analisis_to_ejecucion.py si el ledger "
+                "todavía tiene pb_id viejos."
+            )
+        return
 
     if not PDF_PATH.exists():
         print(f"❌ PDF no encontrado: {PDF_PATH}")

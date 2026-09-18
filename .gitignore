@@ -87,3 +87,6 @@ watcher-backend/data/raw/
 *.db
 *.db-shm
 *.db-wal
+
+# uv lockfile (regenerable, no versionado por decisión de proyecto)
+uv.lock

@@ -2,7 +2,7 @@
 
 **Épica:** V — Verificación / ground truth (capa B: ledger vs Ley)  
 **Puntos:** 5 (tomar por slices)  
-**Estado:** refinado  
+**Estado:** hecho  
 **Rama sugerida:** `feature/V.2-matching-denominador` desde `main` (o desde V.1 mergeada)  
 **Depende de:** V.1 hecho + abril 2026 procesado  
 **Handoff:** [next-session.md](../current/next-session.md)  
@@ -14,7 +14,7 @@
 
 Que el `%` de `/presupuesto/ejecucion` use el **denominador correcto** (organismo / programa de la Ley 11.088) y no dispare sobre-compromiso por matching basura.
 
-Hoy la pantalla mide bien **qué** (compromiso BO vs ejecución BO) y mal **contra quién** en cuatro alertas >100%. Más meses no arreglan eso: multiplican el error.
+Hoy la pantalla mide bien **qué** (compromiso BO vs ejecución BO). V.2 corrigió **contra quién**: 0 alertas >100% en el corte abril post-repair + ETL.
 
 ## Por qué es producto
 
@@ -24,21 +24,21 @@ P.7.4 agrupó por organismo cuando hay match. Abril demostró que el match apunt
 
 ## Criterio de aceptación (epígrafe)
 
-- [ ] Los 4 sobre-compromiso del corte 2026-09-15 tienen bitácora reproducible (query + `presupuesto_base_id` + vigente vs CGE/Ley).
-- [ ] Pliego S-511 / `UNIDAD EJECUTORA` / Las Peñas **no** matchea `DIRECCIÓN DE MINISTERIO` (pb_id 54). Tras re-upsert, la alerta 295% desaparece o queda unmatched explícito.
-- [ ] Poder Judicial usa el vigente de la **jurisdicción/organismo** (~programas PJ en `presupuesto_base`), no un programa de ~$11B. El % deja de ser 163% por denominador.
-- [ ] Nombres truncos (`MINISTERIO DE`, `SECRETARÍA DE DESARROLLO`) no cuelgan $50B de un programa de $1.9B. O se corrige el parser de Mapas, o el match exige nombre de organismo completo.
-- [ ] Tests en `presupuesto_matching` / `ejecucion_contrast` cubren S-511, PJ y un trunco. No se silencia la alerta >100% en UI.
-- [ ] `knowledgebase/current/` actualizado (corte UI + ancla). No se commitea `sqlite.db`.
+- [x] Los 4 sobre-compromiso del corte 2026-09-15 tienen bitácora reproducible (query + `presupuesto_base_id` + vigente vs CGE/Ley).
+- [x] Pliego S-511 / `UNIDAD EJECUTORA` / Las Peñas **no** matchea `DIRECCIÓN DE MINISTERIO` (pb_id 54). Tras re-upsert, la alerta 295% desaparece o queda unmatched explícito.
+- [x] Poder Judicial usa el vigente de la **jurisdicción/organismo** (~programas PJ en `presupuesto_base`), no un programa de ~$11B. El % deja de ser 163% por denominador.
+- [x] Nombres truncos (`MINISTERIO DE`, `SECRETARÍA DE DESARROLLO`) no cuelgan $50B de un programa de $1.9B. O se corrige el parser de Mapas, o el match exige nombre de organismo completo.
+- [x] Tests en `presupuesto_matching` / `ejecucion_contrast` cubren S-511, PJ y un trunco. No se silencia la alerta >100% en UI.
+- [x] `knowledgebase/current/` actualizado (corte UI + ancla). No se commitea `sqlite.db`.
 
 ## Slices (orden)
 
 | Slice | Pts | Entrega | Estado |
 |---|---|---|---|
-| **V.2.1** Bitácora de las 4 alertas | 1 | Script/query: organismo UI → filas ledger → `pb_id` → vigente | ⬜ |
-| **V.2.2** S-511 / Unidad Ejecutora | 1 | Blocklist o regla: no pegar a Inteligencia Fiscal | ⬜ |
-| **V.2.3** Denominador por organismo | 2 | `%` vs suma `monto_vigente` del organismo canónico (o programa correcto) | ⬜ |
-| **V.2.4** Truncados en `presupuesto_base` | 1 | `MINISTERIO DE` / secretarías partidas: parser o filtro de match | ⬜ |
+| **V.2.1** Bitácora de las 4 alertas | 1 | Script/query: organismo UI → filas ledger → `pb_id` → vigente | ✅ |
+| **V.2.2** S-511 / Unidad Ejecutora | 1 | Blocklist o regla: no pegar a Inteligencia Fiscal | ✅ |
+| **V.2.3** Denominador por organismo | 2 | `%` vs suma `monto_vigente` del organismo canónico (o programa correcto) | ✅ |
+| **V.2.4** Truncados en `presupuesto_base` | 1 | `MINISTERIO DE` / secretarías partidas: parser o filtro de match | ✅ |
 
 No ingest de mayo–dic en esta historia. No mezclar CGE en la barra. No re-entrenar el LLM.
 
@@ -67,11 +67,15 @@ No ingest de mayo–dic en esta historia. No mezclar CGE en la barra. No re-entr
 - Código en inglés, docs en español. Línea ≤ 100.
 - No commitear `sqlite.db`, PDFs, xlsx CGE.
 
-## Cómo seguir
+## Cómo operar el denominador
 
 ```powershell
 cd C:\Users\germa\watcher\watcher-backend
-uv run python scripts/lote_status.py
+uv run python scripts/parse_pdf_presupuesto_2026.py --repair-db
+uv run python scripts/etl_analisis_to_ejecucion.py
+uv run python scripts/bitacora_alertas_v2.py
+uv run python scripts/ancla_ley_11088.py
 # UI: http://localhost:5173/presupuesto/ejecucion
-# Arrancar V.2.1: listar las 4 alertas con pb_id y monto_vigente
 ```
+
+No commitear `sqlite.db`. El matching nuevo aplica igual sin `--repair-db`; el techo de Economía/PJ queda completo después del repair.
