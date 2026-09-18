@@ -2,7 +2,7 @@
 
 **Épica:** V — Verificación / ground truth (capa B: ledger vs Ley)
 **Puntos:** 8 (tomar por slices)
-**Estado:** en curso — V.4.1 ✅ · V.4.2 ✅ · V.4.3 ⬜
+**Estado:** hecho — V.4.1 ✅ · V.4.2 ✅ · V.4.3 ✅
 **Rama:** `feature/V.4-limites-del-cociente` desde `main` (`4a28e2e`)
 **Depende de:** V.3 hecho (V.3 hizo honesto cada lado del cociente; V.4 hace honesto el cociente)
 **Handoff:** [next-session.md](../current/next-session.md)
@@ -139,6 +139,52 @@ como sospechosa (H4 de V.3: leche en polvo y logística a $34B, plausible; la mi
 cifra para una plataforma de trabajo en altura, absurda). O sea: **la alerta puede
 estar bien y el monto mal**. V.4 no la silencia; decide si el organismo es real.
 
+### H3 — reparación: qué se pudo y qué no (V.4.3)
+
+Corrido `--repair-db` sobre `sqlite.db` (backup previo, diff fila por fila):
+
+| | antes | después |
+|---|---|---|
+| Filas de `presupuesto_base` 2026 | 480 | **480** (ids idénticos) |
+| Total monto_vigente | $7,531907T | **$7,531907T** |
+| Organismos truncos | 74 ($706,6B) | **0** |
+| Organismos con acento | 375 | 0 |
+| Denominador sin dueño (endpoint) | $706,6B · 74 · 9,38% | **$0 · 0 · 0%** |
+| Alertas >100% | 1 | 0 |
+
+**Qué cambió de verdad, y cuánto:** de los 89 organismos del contraste, 11 cambian
+de nombre (el fantasma de H4 + 10 re-normalizaciones) y **exactamente uno** cambia
+de denominador: el fantasma de Economía, $23,72B → $80,86B. Nada más se movió —
+ni el gasto medido ($537,32B), ni la cobertura ($397,72B con denominador /
+$140,72B sin), ni la cantidad de organismos.
+
+**Los 295 renombres cosméticos.** El reparo no sólo arregla truncos: vuelve a pasar
+`_normalize_org` sobre todos los registros, así que 295 filas que estaban guardadas
+con acentos pasan a la forma canónica del parser (`SECRETARÍA DE SALUD` →
+`SECRETARIA DE SALUD`). Lo acepté en vez de escribir un script a medida, y digo por
+qué: es el camino del propio pipeline y no uno inventado, deja la tabla **uniforme**
+(480 de 480 en la misma forma; antes era mixta), el matching es insensible a
+acentos — por eso no mueve ni un porcentaje, verificado arriba — y el diff se puede
+auditar porque lo que importa no es el rótulo sino el único denominador que cambió.
+El costo es cosmético: la pantalla muestra los organismos del techo sin acentos.
+El docstring de `--repair-db` ahora declara este alcance; antes decía "organismos
+truncos" y no era cierto.
+
+**La unidad ejecutora exacta no se recupera por este camino**, y hay que decirlo:
+el nombre completo está en el PDF, pero repartido en 2–3 líneas visuales de la
+misma celda, y el agrupado por tolerancia vertical (14px) tira la tercera. Probé dos
+reagrupados alternativos —cortar por la columna `monto`, y re-adherir las líneas
+huérfanas a la fila de arriba— y los dos movían el total entre **$3,2T y $3,5T**
+(7,57T → 4,08T y 4,37T): pierden o fusionan filas. Descartados. Pagar $3T de techo
+por una etiqueta más fina es exactamente el intercambio que esta épica prohíbe. La
+jurisdicción es el dueño más preciso que la fuente permite sostener.
+
+**Y una especulación de H3 que la medición refutó:** escribí que parte del "gasto sin
+denominador" de V.3 podía tener techo entre las filas trunco. No: el gasto sin
+denominador quedó igual ($140,72B / 140 actos). Ninguna de esas filas le dio techo a
+nada, ni siquiera después de recuperarlas. Tercera vez en la épica que medir corrige
+una hipótesis mía.
+
 ## Criterio de aceptación (epígrafe)
 
 - [x] **La pantalla declara el período del numerador.** Se ve "3 de 12 meses" y
@@ -151,12 +197,21 @@ estar bien y el monto mal**. V.4 no la silencia; decide si el organismo es real.
       como "presupuesto sin organismo identificado", separados del techo
       verificable ($6,825T). El % no cambia por declararlos; cambia lo que el
       ciudadano sabe. Verificado contra el endpoint: 74 · $706.582,9M · 9,38%.
-- [ ] **Los nombres perdidos se intentan recuperar desde la fuente** (Mapas /
-      `parse_pdf_presupuesto_2026.py`). Si el parseo no los puede recuperar, queda
-      documentado por qué y el criterio anterior sigue en pie.
-- [ ] **La última alerta se resuelve o se explica.** Si
-      `MINISTERIO DE ECONOMÍA MINISTERIO Y GESTIÓN PÚBLICA` es un organismo real,
-      se corrige el nombre; si es artefacto, se documenta. **No se silencia.**
+- [x] **Los nombres perdidos se recuperan desde la fuente** (Mapas /
+      `parse_pdf_presupuesto_2026.py --repair-db`): **74 truncos → 0**, cada uno
+      con el nombre de la jurisdicción que el propio PDF declara en el encabezado
+      de su página. Total, cantidad de filas e ids: idénticos. La unidad ejecutora
+      exacta **no** es recuperable sin rehacer el agrupado de filas, y los dos
+      prototipos que probé movían el total entre $3,2T y $3,5T — documentado en
+      "H3 — reparación" y descartado: no se toca el techo para ganar una etiqueta.
+- [x] **La última alerta se resuelve con evidencia.** `MINISTERIO DE ECONOMÍA
+      MINISTERIO Y GESTIÓN PÚBLICA` era un artefacto (unidad de organización +
+      cola de la jurisdicción pegadas por el parser), y el reparo lo devolvió a su
+      nombre real: `MINISTERIO DE ECONOMIA Y GESTION PUBLICA`. Efecto medido: su
+      techo pasó de $23,72B a **$80,86B** y la alerta de **145,25% a 42,61%**.
+      El numerador no se tocó ($34,45B, el mismo acto de V.3): lo que estaba mal
+      era el denominador. Alertas: 1 → 0, con el motivo escrito acá y en el
+      commit. **No se silenció: se midió.**
 - [ ] `make test` / lint sin errores nuevos (A/B con `git stash`, como V.3).
 - [ ] `knowledgebase/current/` actualizado. No se commitea `sqlite.db`.
 
@@ -166,7 +221,7 @@ estar bien y el monto mal**. V.4 no la silencia; decide si el organismo es real.
 |---|---|---|---|
 | **V.4.1** Declarar el período y el calendario | 3 | Cobertura temporal en el endpoint + la pantalla: meses cubiertos, meses vencidos sin ingerir, días del período y el % rotulado como "contra la Ley anual". Read-only. | ✅ |
 | **V.4.2** Declarar el denominador sin dueño | 3 | $706,6B / 74 programas separados del techo verificable ($6,825T), en el endpoint y la pantalla. Read-only. | ✅ |
-| **V.4.3** Recuperar los nombres perdidos | 2 | Reparar el parseo de Mapas; si no se puede, documentar la causa y el techo queda declarado | ⬜ |
+| **V.4.3** Recuperar los nombres perdidos | 2 | `--repair-db`: 74 truncos → 0, con la jurisdicción que declara el PDF. Reescribe `organismo` y nada más. | ✅ |
 
 Empezar por **V.4.1**: es read-only, no toca la DB, y es el que cambia lo que
 significa el número que ya está en pantalla. V.4.3 es el único que escribe.

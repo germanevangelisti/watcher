@@ -12,8 +12,15 @@ Uso:
 Flags:
     --dry-run    Solo parsea el PDF y guarda JSON, sin tocar la DB
     --force      Elimina registros 2026 existentes antes de cargar
-    --repair-db  Reescribe organismos truncos desde la jurisdicción del JSON
-                 (no requiere el PDF; no cambia ids)
+    --repair-db  Reescribe la columna `organismo` desde la jurisdicción del JSON
+                 (no requiere el PDF; no cambia ids ni montos)
+
+                 Ojo con el alcance real: no sólo repara los truncos. Vuelve a
+                 pasar `_normalize_org` sobre TODOS los registros, así que
+                 también reescribe los que estaban guardados sin normalizar
+                 (acentos, tokens repetidos). Medido en 2026: 375 de 480 filas
+                 cambian de nombre; 80 recuperan un dueño real y 295 son
+                 re-normalizaciones cosméticas que no mueven ningún número.
 """
 
 import asyncio
@@ -148,6 +155,13 @@ def repair_organismo_record(rec: dict) -> dict:
 
 def apply_json_repair_to_sqlite(db_path: Path, json_path: Path) -> tuple[int, int]:
     """Update organismo in place from repaired JSON. Keeps presupuesto_base ids.
+
+    Only the `organismo` column is written: montos, programas and ids stay as
+    they are, so `ejecucion_presupuesto_base_id` links survive.  The rewrite is
+    not limited to truncated names — every record goes through `_normalize_org`
+    again, so already-loaded rows with accents or repeated tokens are rewritten
+    too.  That is the canonical form this parser writes; it is idempotent and
+    accent-insensitive matching means it moves no percentage.
 
     Returns (rows_updated, rows_already_repaired).
     """
