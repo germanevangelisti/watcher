@@ -265,6 +265,7 @@ export function EjecucionPresupuestariaPage() {
               items={organismos}
               serie={serie}
               cobertura={resumenQuery.data.cobertura}
+              temporal={resumenQuery.data.cobertura_temporal}
             />
           </CardContent>
         </Card>

@@ -2,7 +2,7 @@
 
 **Épica:** V — Verificación / ground truth (capa B: ledger vs Ley)
 **Puntos:** 8 (tomar por slices)
-**Estado:** pendiente
+**Estado:** en curso — V.4.1 ✅ · V.4.2 ⬜ · V.4.3 ⬜
 **Rama:** `feature/V.4-limites-del-cociente` desde `main` (`4a28e2e`)
 **Depende de:** V.3 hecho (V.3 hizo honesto cada lado del cociente; V.4 hace honesto el cociente)
 **Handoff:** [next-session.md](../current/next-session.md)
@@ -23,8 +23,9 @@ eliminó.
 Tres límites del cociente que hoy no se declaran en ninguna parte:
 
 1. **Período.** `feb–abr` (3 de 12 meses) dividido por la Ley anual.
-2. **Días fallidos dentro del período.** 2026-02-16 y 2026-02-17 están enteros en
-   `failed` y aportan **0 actos**.
+2. **Días del período.** 60 en total: 58 con publicación y 2 feriados en que el
+   boletín no salió (justificados). **Ninguno sin explicación** — se declara como
+   afirmación verificable, no como un hueco.
 3. **Denominador sin dueño.** **74 filas / $706,6B** cuyo organismo el parser
    perdió, y que el matcher por eso rechaza.
 
@@ -48,7 +49,7 @@ Base: `watcher-backend/sqlite.db`, `presupuesto_base` ejercicio 2026.
 |---|---|
 | Cobertura de boletines | **2026-02-02 → 2026-04-30** · 296 filas · 60 días |
 | Meses del año sin boletines | **202605 … 202609** (5 meses) |
-| Días del período con 0 actos | **2026-02-16, 2026-02-17** (10 boletines, todos `failed`) |
+| Días del período | **60** · 58 con publicación + 2 feriados justificados (Carnaval) · **0 faltantes** |
 | Denominador | 480 filas · **$7,532T** (anual, Ley 11.088) |
 | Gasto con denominador | $397,72B → **5,28%** del anual |
 | El mismo gasto contra 3/12 | $1.883B → **21,1%** |
@@ -71,11 +72,26 @@ todo 2026. El número no es falso: es **incomparable**, y nada en la pantalla lo
 dice. La diferencia es de ~4×, o sea del mismo orden que el total que el panel
 muestra.
 
-### H2 — Dos días enteros del período no aportan nada
+### H2 — CORREGIDO: dentro del período no falta ningún día
 
-2026-02-16 y 2026-02-17: 5 secciones cada uno, **las 10 en `failed`**, **0 actos
-extraídos**. El numerador cubre 58 de 60 días y lo presenta como si fueran 60. Es
-recuperable (re-procesar esos boletines) pero hoy nadie sabe que faltan.
+> **Corrección (2026-09-18, al leer el `error_message` en vez de contar los
+> `failed`).** Escribí que 2026-02-16 y 2026-02-17 eran dos días perdidos. **Es
+> falso.** Los 10 boletines de esas fechas dicen
+> `'justified: Carnaval 2026, HTTP 404 (no salió...)'`: **el boletín no se
+> publicó** y el pipeline lo registró como justificado. No hay hueco.
+
+Medido: 20 días por mes × 3 meses = **60 días**; **58 con publicación** y **2
+feriados justificados** (Carnaval). **0 días fallidos sin justificar** en todo el
+corpus (`failed sin 'justified:'` → 0).
+
+O sea que el único límite del numerador es el **período**, no su interior. Eso es
+una afirmación verificable y positiva, y V.4.1 la declara como tal. La regla de
+`'justified:'` también deja un gate: si algún día falla sin justificar, la pantalla
+lo tiene que mostrar en rojo en vez de contarlo como gasto cero.
+
+Segundo error de método de esta épica, y del mismo tipo que el H4 de V.3: conté
+estados (`failed`) y concluí un hecho sobre el mundo (días perdidos) sin leer el
+dato que lo explicaba. El `error_message` estaba ahí.
 
 ### H3 — El 9,4% del techo no tiene dueño
 
@@ -107,11 +123,12 @@ estar bien y el monto mal**. V.4 no la silencia; decide si el organismo es real.
 
 ## Criterio de aceptación (epígrafe)
 
-- [ ] **La pantalla declara el período del numerador.** Se ve "3 de 12 meses
-      (feb–abr)" junto al %, y queda explícito que el % es **contra la Ley anual**.
-      No se prorratea la Ley.
-- [ ] **Se declaran los días sin actos dentro del período.** 2026-02-16 y
-      2026-02-17 visibles como faltantes (58 de 60 días), no como cero gasto.
+- [x] **La pantalla declara el período del numerador.** Se ve "3 de 12 meses" y
+      "feb–abr 2026" junto al %, y queda explícito que el % es **contra la Ley
+      anual** y que por eso subestima. No se prorratea la Ley.
+- [x] **Se declara el calendario del período.** 58 días con publicación + 2
+      feriados justificados (Carnaval, el boletín no salió) = 60, **0 faltantes**.
+      Si algún día fallara sin justificar, la pantalla lo muestra en rojo.
 - [ ] **Se declara el denominador sin dueño.** $706,6B / 74 filas reportadas como
       "presupuesto sin organismo identificado", separadas del techo verificable.
       El % no cambia por declararlas; cambia lo que el ciudadano sabe.
@@ -128,7 +145,7 @@ estar bien y el monto mal**. V.4 no la silencia; decide si el organismo es real.
 
 | Slice | Pts | Entrega | Estado |
 |---|---|---|---|
-| **V.4.1** Declarar el período y los días faltantes | 3 | Cobertura temporal en el endpoint + la pantalla: meses cubiertos, días con 0 actos, y el % rotulado como "contra la Ley anual". Read-only. | ⬜ |
+| **V.4.1** Declarar el período y el calendario | 3 | Cobertura temporal en el endpoint + la pantalla: meses cubiertos, meses vencidos sin ingerir, días del período y el % rotulado como "contra la Ley anual". Read-only. | ✅ |
 | **V.4.2** Declarar el denominador sin dueño | 3 | $706,6B / 74 filas separadas del techo verificable, en el endpoint y la pantalla | ⬜ |
 | **V.4.3** Recuperar los nombres perdidos | 2 | Reparar el parseo de Mapas; si no se puede, documentar la causa y el techo queda declarado | ⬜ |
 

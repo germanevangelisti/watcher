@@ -202,3 +202,99 @@ def aggregate_cobertura(contrast: Iterable[OrganismoContrast]) -> Cobertura:
         count_sin_denominador=count_sin,
         pct_sin_denominador=pct,
     )
+
+
+@dataclass(frozen=True)
+class CoberturaTemporal:
+    """The period the numerator covers, and what it is actually divided by.
+
+    `presupuesto_base` holds the whole year's Ley, so a percentage built from
+    three months of boletines is divided by twelve.  That makes it incomparable
+    rather than wrong, and the caller has to say which it is.  Nothing here
+    prorates the Ley: budget execution is not uniform across the year, so a
+    prorated denominator would be an invented one.
+
+    Months outside the span are split by whether they are *due* yet.  A month
+    that has not happened is not missing data, and lumping it in with May —
+    which is overdue — would overstate the gap.
+    """
+
+    mes_desde: str | None
+    mes_hasta: str | None
+    meses_cubiertos: int
+    meses_del_ejercicio: int
+    meses_vencidos_sin_ingesta: tuple[str, ...]
+    meses_futuros: tuple[str, ...]
+    dias_con_publicacion: int
+    dias_justificados: int
+    dias_faltantes: int
+    denominador_es_anual: bool
+
+
+# A boletín that never came out (holiday, HTTP 404) is recorded as failed with
+# this prefix instead of silently counting as a day of zero spending.
+_JUSTIFIED_PREFIX = "justified:"
+
+
+def aggregate_cobertura_temporal(
+    rows: Iterable[tuple[str | None, str | None, str | None]],
+    ejercicio: int,
+    mes_desde: str | None = None,
+    mes_hasta: str | None = None,
+    mes_actual: str | None = None,
+) -> CoberturaTemporal:
+    """Summarize the publication calendar behind the numerator.
+
+    `rows` are (date, status, error_message) as stored in `boletines`.  A day is
+    *published* when any of its sections completed, *justified* when none did but
+    every failure says so, and *missing* otherwise — a real gap, which is the
+    only case that understates the numerator without saying so.
+    """
+    from collections import defaultdict
+
+    by_day: dict[str, list[tuple[str | None, str | None]]] = defaultdict(list)
+    for date, status, error in rows:
+        if date:
+            by_day[date].append((status, error))
+
+    con_publicacion = justificados = faltantes = 0
+    for sections in by_day.values():
+        if any(status == "completed" for status, _ in sections):
+            con_publicacion += 1
+        elif sections and all(
+            (error or "").startswith(_JUSTIFIED_PREFIX) for _, error in sections
+        ):
+            justificados += 1
+        else:
+            faltantes += 1
+
+    meses_cubiertos = 0
+    vencidos: list[str] = []
+    futuros: list[str] = []
+    if mes_desde and mes_hasta:
+        cubiertos = {
+            f"{ejercicio:04d}-{m:02d}"
+            for m in range(int(mes_desde[5:7]), int(mes_hasta[5:7]) + 1)
+        }
+        meses_cubiertos = len(cubiertos)
+        for m in range(1, 13):
+            mes = f"{ejercicio:04d}-{m:02d}"
+            if mes in cubiertos:
+                continue
+            if mes_actual is not None and mes > mes_actual:
+                futuros.append(mes)
+            else:
+                vencidos.append(mes)
+
+    return CoberturaTemporal(
+        mes_desde=mes_desde,
+        mes_hasta=mes_hasta,
+        meses_cubiertos=meses_cubiertos,
+        meses_del_ejercicio=12,
+        meses_vencidos_sin_ingesta=tuple(vencidos),
+        meses_futuros=tuple(futuros),
+        dias_con_publicacion=con_publicacion,
+        dias_justificados=justificados,
+        dias_faltantes=faltantes,
+        denominador_es_anual=True,
+    )

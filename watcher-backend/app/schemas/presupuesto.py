@@ -108,6 +108,21 @@ class CoberturaResumen(BaseModel):
     pct_sin_denominador: float = 0.0
 
 
+class CoberturaTemporalResumen(BaseModel):
+    """The period the numerator covers, against the annual Ley it is divided by."""
+
+    mes_desde: str | None = None
+    mes_hasta: str | None = None
+    meses_cubiertos: int = 0
+    meses_del_ejercicio: int = 12
+    meses_vencidos_sin_ingesta: list[str] = []
+    meses_futuros: list[str] = []
+    dias_con_publicacion: int = 0
+    dias_justificados: int = 0
+    dias_faltantes: int = 0
+    denominador_es_anual: bool = True
+
+
 class EjecucionResumenResponse(BaseModel):
     total_canonical: int
     total_duplicates: int
@@ -117,6 +132,7 @@ class EjecucionResumenResponse(BaseModel):
     monto_ejecucion: JsonMoney = 0.0
     sobre_compromiso_count: int = 0
     cobertura: CoberturaResumen = CoberturaResumen()
+    cobertura_temporal: CoberturaTemporalResumen = CoberturaTemporalResumen()
     por_organismo: list[OrgResumenItem]
     por_mes: list[MesResumenItem]
 

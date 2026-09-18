@@ -1,6 +1,11 @@
-import { AlertTriangle, Info } from "lucide-react"
+import { AlertTriangle, CalendarClock, Info } from "lucide-react"
 import { cn } from "@/lib/utils"
-import type { CoberturaResumen, OrgResumenItem, SerieGasto } from "@/types/presupuesto"
+import type {
+  CoberturaResumen,
+  CoberturaTemporalResumen,
+  OrgResumenItem,
+  SerieGasto,
+} from "@/types/presupuesto"
 import {
   barWidth,
   formatARS,
@@ -10,6 +15,27 @@ import {
 } from "@/lib/presupuesto-format"
 
 const MAX_VISIBLES = 12
+
+const MESES = [
+  "ene",
+  "feb",
+  "mar",
+  "abr",
+  "may",
+  "jun",
+  "jul",
+  "ago",
+  "sep",
+  "oct",
+  "nov",
+  "dic",
+]
+
+/** "2026-05" → "may". Falls back to the raw value rather than inventing one. */
+function mesCorto(ym: string): string {
+  const m = Number(ym.slice(5, 7))
+  return MESES[m - 1] ?? ym
+}
 
 function pctOf(
   numerador: number | string | null | undefined,
@@ -51,6 +77,82 @@ function PctBar({
       >
         {formatPct(pct)}
       </span>
+    </div>
+  )
+}
+
+function CoberturaTemporalBanner({
+  temporal,
+}: {
+  temporal: CoberturaTemporalResumen
+}) {
+  const { meses_cubiertos, meses_del_ejercicio } = temporal
+  const rango =
+    temporal.mes_desde && temporal.mes_hasta
+      ? `${mesCorto(temporal.mes_desde)}–${mesCorto(temporal.mes_hasta)} ${temporal.mes_desde.slice(0, 4)}`
+      : "sin período"
+  const faltan = temporal.meses_vencidos_sin_ingesta
+  return (
+    <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 space-y-2">
+      <div className="flex items-center justify-between gap-3">
+        <span className="inline-flex items-center gap-2 text-sm font-medium">
+          <CalendarClock className="h-4 w-4 text-amber-500/80" />
+          Período del gasto medido
+        </span>
+        <span className="text-xs font-mono text-muted-foreground">
+          {meses_cubiertos} de {meses_del_ejercicio} meses
+        </span>
+      </div>
+      <div className="flex h-3 rounded overflow-hidden bg-muted">
+        <div
+          className="h-full bg-amber-500/50"
+          style={{ width: `${(100 * meses_cubiertos) / meses_del_ejercicio}%` }}
+        />
+      </div>
+      <p className="text-xs text-muted-foreground">
+        El gasto medido cubre <span className="text-foreground">{rango}</span> (
+        {meses_cubiertos} de {meses_del_ejercicio} meses del ejercicio), pero el
+        porcentaje se calcula{" "}
+        <span className="text-foreground">contra la Ley anual completa</span>. Los dos
+        lados del cociente no cubren el mismo período, así que el %{" "}
+        <span className="text-foreground">subestima</span> el avance del año. No se
+        prorratea el presupuesto: la ejecución no es pareja mes a mes, y prorratear
+        sería inventar un denominador.
+      </p>
+      {faltan.length > 0 && (
+        <p className="text-xs text-muted-foreground">
+          Meses ya transcurridos sin ingerir ({faltan.length}):{" "}
+          <span className="font-mono text-foreground">
+            {faltan.map(mesCorto).join(", ")}
+          </span>
+          . Mientras falten, el gasto medido es un piso, no el total del año.
+        </p>
+      )}
+      {temporal.dias_faltantes === 0 && temporal.dias_con_publicacion > 0 && (
+        <p className="text-xs text-muted-foreground">
+          Dentro del período no falta ningún día:{" "}
+          <span className="font-mono text-foreground">
+            {temporal.dias_con_publicacion}
+          </span>{" "}
+          días con publicación
+          {temporal.dias_justificados > 0 && (
+            <>
+              {" + "}
+              <span className="font-mono text-foreground">
+                {temporal.dias_justificados}
+              </span>{" "}
+              feriados en que el boletín no salió (justificados)
+            </>
+          )}
+          , 0 días sin explicación.
+        </p>
+      )}
+      {temporal.dias_faltantes > 0 && (
+        <p className="text-xs text-red-400">
+          {temporal.dias_faltantes} día(s) del período fallaron sin justificación: ese
+          gasto falta y no está declarado en ningún otro lado.
+        </p>
+      )}
     </div>
   )
 }
@@ -131,10 +233,12 @@ export function OrganismoContrastList({
   items,
   serie,
   cobertura,
+  temporal,
 }: {
   items: OrgResumenItem[]
   serie: SerieGasto
   cobertura?: CoberturaResumen
+  temporal?: CoberturaTemporalResumen
 }) {
   const all = items ?? []
   const conDenominador = all.filter((item) => item.matched)
@@ -150,6 +254,7 @@ export function OrganismoContrastList({
 
   return (
     <div className="space-y-5">
+      {temporal && <CoberturaTemporalBanner temporal={temporal} />}
       {cobertura && <CoberturaBanner cobertura={cobertura} />}
 
       {visible.length === 0 ? (

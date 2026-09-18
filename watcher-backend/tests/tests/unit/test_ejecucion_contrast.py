@@ -5,6 +5,7 @@ from app.services.ejecucion_contrast import (
     BUCKET_EJECUCION,
     BUCKET_OTRO,
     aggregate_cobertura,
+    aggregate_cobertura_temporal,
     aggregate_organismos,
     bucket_etapa,
     is_sobre,
@@ -223,3 +224,72 @@ class TestCobertura:
         cob = aggregate_cobertura(items)
         assert cob.monto_con_denominador + cob.monto_sin_denominador == cob.monto_total
         assert cob.pct_sin_denominador == 75.0
+
+
+class TestCoberturaTemporal:
+    """The period behind the numerator, so the pct stops implying a full year."""
+
+    def _feb_abr(self):
+        """Feb–Apr 2026 as stored: 3 months, one justified holiday pair."""
+        rows = [("20260202", "completed", None)]
+        rows += [("20260216", "failed", "justified: Carnaval 2026, HTTP 404")]
+        rows += [("20260217", "failed", "justified: Carnaval 2026, HTTP 404")]
+        rows += [(f"2026030{d}", "completed", None) for d in range(2, 6)]
+        rows += [(f"2026040{d}", "completed", None) for d in range(2, 6)]
+        return rows
+
+    def test_counts_months_covered_against_the_year(self):
+        cob = aggregate_cobertura_temporal(
+            self._feb_abr(), 2026, "2026-02", "2026-04", mes_actual="2026-09"
+        )
+        assert cob.meses_cubiertos == 3
+        assert cob.meses_del_ejercicio == 12
+        assert cob.denominador_es_anual is True
+
+    def test_overdue_months_are_separate_from_future_ones(self):
+        cob = aggregate_cobertura_temporal(
+            self._feb_abr(), 2026, "2026-02", "2026-04", mes_actual="2026-09"
+        )
+        assert cob.meses_vencidos_sin_ingesta == ("2026-01", "2026-05", "2026-06",
+                                                 "2026-07", "2026-08", "2026-09")
+        assert cob.meses_futuros == ("2026-10", "2026-11", "2026-12")
+
+    def test_a_justified_holiday_is_not_a_missing_day(self):
+        cob = aggregate_cobertura_temporal(
+            self._feb_abr(), 2026, "2026-02", "2026-04", mes_actual="2026-09"
+        )
+        assert cob.dias_con_publicacion == 9
+        assert cob.dias_justificados == 2
+        assert cob.dias_faltantes == 0
+
+    def test_an_unjustified_failure_is_a_missing_day(self):
+        rows = [
+            ("20260302", "completed", None),
+            ("20260303", "failed", "HTTP 500"),
+        ]
+        cob = aggregate_cobertura_temporal(
+            rows, 2026, "2026-03", "2026-03", mes_actual="2026-09"
+        )
+        assert cob.dias_faltantes == 1
+        assert cob.dias_justificados == 0
+
+    def test_no_partial_day_counts_as_published(self):
+        # One section completing makes the day published, however many failed.
+        rows = [
+            ("20260302", "completed", None),
+            ("20260302", "failed", "HTTP 500"),
+        ]
+        cob = aggregate_cobertura_temporal(
+            rows, 2026, "2026-03", "2026-03", mes_actual="2026-09"
+        )
+        assert cob.dias_con_publicacion == 1
+        assert cob.dias_faltantes == 0
+
+    def test_empty_ledger_reports_no_period_rather_than_twelve_missing(self):
+        # With no span there is nothing to split: claiming "all 12 months are
+        # missing" would be a scarier and less useful statement than "no period".
+        cob = aggregate_cobertura_temporal([], 2026, None, None, mes_actual="2026-09")
+        assert cob.meses_cubiertos == 0
+        assert cob.meses_vencidos_sin_ingesta == ()
+        assert cob.meses_futuros == ()
+        assert cob.dias_con_publicacion == 0

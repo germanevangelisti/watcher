@@ -77,6 +77,21 @@ export interface CoberturaResumen {
   pct_sin_denominador: number;
 }
 
+export interface CoberturaTemporalResumen {
+  mes_desde: string | null;
+  mes_hasta: string | null;
+  meses_cubiertos: number;
+  meses_del_ejercicio: number;
+  /** Months already elapsed with no ingestion — a real gap. */
+  meses_vencidos_sin_ingesta: string[];
+  /** Months of the ejercicio that have not happened yet. */
+  meses_futuros: string[];
+  dias_con_publicacion: number;
+  dias_justificados: number;
+  dias_faltantes: number;
+  denominador_es_anual: boolean;
+}
+
 export interface EjecucionResumenResponse {
   total_canonical: number;
   total_duplicates: number;
@@ -86,6 +101,7 @@ export interface EjecucionResumenResponse {
   monto_ejecucion: number | string;
   sobre_compromiso_count: number;
   cobertura: CoberturaResumen;
+  cobertura_temporal: CoberturaTemporalResumen;
   por_organismo: OrgResumenItem[];
   por_mes: MesResumenItem[];
 }
