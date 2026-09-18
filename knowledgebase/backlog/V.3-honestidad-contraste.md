@@ -2,7 +2,7 @@
 
 **Épica:** V — Verificación / ground truth (capa B: ledger vs Ley)
 **Puntos:** 8 (tomar por slices)
-**Estado:** pendiente
+**Estado:** en curso — V.3.1 ✅ · V.3.2 ✅ · V.3.3 ⬜
 **Rama sugerida:** `feature/V.3-honestidad-contraste` desde `main`
 **Depende de:** V.2 hecho (matcher canónico) — **pero V.2 nunca aplicó su fix a los datos**
 **Handoff:** [next-session.md](../current/next-session.md)
@@ -102,26 +102,72 @@ El sufijo `(EPEC)` cambia `org_norm`. Idéntico patrón en `acto=5560` (8 filas,
 canónicas) y `acto=5558` (3 canónicas) — ahí las copias con ortografía **idéntica**
 sí se deduplicaron, lo que confirma que la falla es la normalización, no el dedup.
 
-### H4 — El mismo acto con dos identificadores distintos es indeduplicable
+### H4 — CORREGIDO: el par de $34.026.000.000 NO es una duplicación
 
-Peor que H3: hay actos que el boletín republica con **otro número**, así que ni
-normalizando el organismo se juntan. El caso de **$34.026.000.000** en 2 filas
-canónicas, ambas `etapa_gasto='llamado'` → **$68,05B** en la barra de compromiso:
+> **Corrección (2026-09-18, al mirar el texto y no sólo el monto).** Afirmé acá
+> que estas dos filas eran el mismo acto contado dos veces y que colapsarlas
+> cerraba la última alerta. **Es falso.** Son dos obras distintas:
 
-| fila | organismo | acto |
-|---|---|---|
-| id=399 | SECRETARIA DE ASUNTOS INSTITUCIONALES | `Licitación Pública N° 660649` |
-| id=411 | Secretaría General de la Gobernación - Ministerio de Economía y Gestión Pública | `Licitación Pública EXPEDIENTE N° 0378-219684/2026` |
+| fila | organismo | acto | qué es |
+|---|---|---|---|
+| id=399 | SECRETARIA DE ASUNTOS INSTITUCIONALES | `Licitación Pública N° 660649` | "plataforma de trabajo en altura para el Área de Infraestructura del Poder Judicial" |
+| id=411 | Secretaría General de la Gobernación - Ministerio de Economía y Gestión Pública | `Licitación Pública EXPEDIENTE N° 0378-219684/2026` | "adquisición de leche en polvo y contratación de servicio de logística y cadetería" |
 
-Mismo monto al peso, mismo tipo de acto, boletines distintos. `_normalize_acto`
-las ve como dos actos porque el número y el expediente no coinciden.
+Comparten el monto al peso y nada más. Lo que parece un problema de dedup es un
+problema de **atribución del monto**: $34.026.000.000 por una plataforma de
+trabajo en altura es absurdo; por leche en polvo y logística para una provincia
+es plausible. Al menos una de las dos filas tiene el monto mal extraído, y eso es
+un problema de **extracción** (fuera de alcance de V.3, como el recall).
 
-**Esta única duplicación es lo que mantiene viva la última alerta.** id=411 es la
-que matchea `substring score=0.53` contra `pb_id=35`, un organismo trunco de
-$1,37B (`MINISTERIO DE ECONOMÍA MINISTERIO Y GESTIÓN PÚBLICA`, programa *16 -
-APORTES AGENCIA PARA LA*). Si la duplicación se colapsa, el compromiso de ese
-organismo cae de $34,45B a $0,42B → 1,79% → **la alerta de 145,25% desaparece**.
-V.3.2 cierra la última alerta sin tocar el matcher.
+Lección de método: agrupar por monto y concluir "misma obra" es un atajo que
+falla. El texto es el que decide. Este error de diagnóstico sobrevivió una sesión
+entera porque comparé números sin leer las descripciones.
+
+### H5 — La duplicación que el acto no puede ver: código de obra
+
+Hay obras que el boletín republica con **otro número de acto**, así que ni
+normalizando el organismo se juntan. Pero todas citan el **código de obra**
+(`S-511`, `S-283`), que sí sobrevive a la republicación:
+
+| familia | filas | canónicas antes | monto real |
+|---|---:|---:|---:|
+| `S-511` (caminos, Las Peñas Sud – Las Isletillas) | 7 | **4** | $25.341.354.989 |
+| `S-283` (mejora camino, Gral. Roca) | 3 | **3** | $16.064.411.752 |
+
+En S-511 conviven dos identificadores (`S-511` y `RESOLUCION 056/2026`) bajo
+cuatro organismos distintos, cada fila con el monto completo: la barra de
+compromiso cargaba **$101,37B por una obra de $25,34B**. La familia S-283
+($32,13B contados por una obra de $16,06B) no aparecía en ningún diagnóstico
+previo porque todas sus filas tienen el mismo organismo — el acto era lo único
+distinto.
+
+#### Por qué la capa nueva es por código de obra y no por similitud de texto
+
+El primer diseño que consideré fue "mismo monto + texto parecido → misma obra".
+**Es peligroso y lo descarté con datos.** EPEC publicó "ZONA III SUROESTE" y
+"ZONA IV SURESTE" con el **mismo** $4.623B y textos que difieren en dos palabras:
+cualquier umbral de Jaccard las fusiona, y son licitaciones distintas (verificado
+leyendo ambas). La clave por acto las separa bien (`5558` ≠ `5560`).
+
+El código de obra no tiene ese modo de falla: sólo existe cuando el boletín nombra
+la obra. Los textos de las ZONA III/IV no contienen código, así que la capa nueva
+no los toca. Medido: la capa produjo **2 grupos en todo el corpus**, ambos
+correctos, y ningún organismo distinto se fusionó.
+
+### H4bis — La alerta que sobrevive no es de dedup ni de match
+
+Tras V.3.1 y V.3.2 queda **1** alerta, `MINISTERIO DE ECONOMÍA MINISTERIO Y
+GESTIÓN PÚBLICA` 145,25% ($34.450.820.322 / $23.718.656.000), y su monto **no
+cambió** con el dedup. Su causa: id=411 ($34,03B "leche en polvo") matchea
+`substring score=0.53` contra `pb_id=35`, un organismo **trunco** de $1,37B
+(programa *16 - APORTES AGENCIA PARA LA*). O sea: un monto real contra un techo
+que no es un techo.
+
+No se silencia (regla de la historia). Queda visible como lo que es —
+**denominador trunco**, no sobre-ejecución— y se documenta acá. Cerrarla requiere
+decidir si `MINISTERIO DE ECONOMÍA MINISTERIO Y GESTIÓN PÚBLICA` es un organismo
+o un stub del parser de Mapas (`is_truncated_organismo` hoy lo acepta porque sus
+tokens distintivos no están vacíos). Es una decisión de modelo, no de dedup.
 
 ## Resultado V.3.1 — re-upsert corrido (2026-09-18)
 
@@ -146,16 +192,56 @@ producto empeorando: antes afirmaba un % sobre un techo que no le correspondía.
 Nuevo script: `scripts/check_match_drift.py` (read-only, sale con código 1 si hay
 deriva). Es el gate del criterio de aceptación 1.
 
+## Resultado V.3.2 — dedup robusto (2026-09-18)
+
+Dos cambios en `presupuesto_matching.py`, compartidos por el ETL y el ledger vivo:
+
+1. **Organismo canónico en la clave.** `_resolve_alias()` (tabla de alias +
+   colapso de sufijo societario/paréntesis) se extrajo de `match_organismo` y
+   ahora alimenta también `_dedup_organismo()`. Matcher y dedup coinciden en
+   cuándo dos grafías son el mismo organismo. El comportamiento de
+   `match_organismo` no cambió (refactor puro, cubierto por los tests de V.2).
+2. **Capa por código de obra.** `dedup_keys()` devuelve una lista de claves
+   (acto y/u obra); una fila es duplicada si **cualquiera** coincide. La clave de
+   obra es `("OBRA", código, monto_redondeado)`.
+
+| Métrica | V.3.1 | V.3.2 parte A | V.3.2 parte B |
+|---|---:|---:|---:|
+| Filas canónicas provinciales | 369 | 351 | **346** |
+| Compromiso medido | $704,78B | $646,59B | **$538,44B** |
+| Gasto provincial sin denominador | $212,28B | $212,28B | **$104,13B** |
+| Alertas `sobre_compromiso` | 1 | 1 | **1** |
+| Deriva de match | 0 | 0 | **0** |
+
+**Doble conteo eliminado en V.3.2: $166,34B** ($704,78B → $538,44B), 23 filas
+canónicas de menos. Parte A colapsó las republicaciones con grafía distinta
+(EPEC con/sin `(EPEC)`, Poder Judicial, `acto=1255`, `acto=1243`); parte B las
+familias por código de obra (S-511: 4 → 1 fila, $25,341B **no** $101,37B; S-283:
+3 → 1 fila, $16,064B). Los $108,15B de la parte B salieron del **compromiso**:
+eran montos inflados, no gasto sin denominador.
+
+Verificación de que la capa no se pasó de larga: produjo **2 grupos** en todo el
+corpus, ambos revisados leyendo las descripciones. Las ZONA III/IV de EPEC
+(mismo monto, texto casi idéntico, licitaciones distintas) **no** se fusionaron.
+El par de $34.026B **tampoco**, y está bien que no: no es una duplicación (H4).
+
+Cumulative: el dedup pasó de ver el acto a ver el organismo y la obra. Lo que
+**no** puede ver —y por eso queda documentado y no silenciado— es un monto mal
+extraído.
+
 ## Criterio de aceptación (epígrafe)
 
 - [x] **Ninguna fila canónica conserva un `presupuesto_base_id` que el matcher
       actual no asigne.** 18 filas con deriva → **0**. Gate:
       `scripts/check_match_drift.py` (exit 1 si hay deriva).
 - [x] **Las 3 alertas artefacto desaparecen** de `bitacora-alertas-v2-post.md` con
-      el re-upsert corrido. Quedan **1**, y no es artefacto de match: es
-      duplicación (H4), con su `pb_id` y su score documentados.
-- [ ] **La obra S-511 cuenta 1 vez ($25,34B), no 4 ($101,37B)**, y `acto=5543`
-      cuenta 1 vez ($20,03B), no 2. Test con los ids 85/93/97/106 y 95/99.
+      el re-upsert corrido. Queda **1**, y no es artefacto de match ni de dedup:
+      es un **denominador trunco** sobre un monto real (H4bis), con su `pb_id` y
+      su score documentados. Se muestra, no se silencia.
+- [x] **La obra S-511 cuenta 1 vez ($25,34B), no 4 ($101,37B)**, y `acto=5543`
+      cuenta 1 vez ($20,03B), no 2. Tests en `TestDedupKey` y `TestObraCodeDedup`
+      (`test_same_obra_different_acto_shares_obra_key`, ids 85/93/97/106) y
+      `test_alias_variant_collapses` (ids 95/99). Medido en el ETL: S-511 4 → 1.
 - [ ] **La UI muestra el gasto sin denominador.** El 34,7% ($244B) es visible como
       cobertura, no oculto por el filtro `matched`. No se inventa un denominador
       para mostrarlo.
@@ -171,7 +257,7 @@ deriva). Es el gate del criterio de aceptación 1.
 | Slice | Pts | Entrega | Estado |
 |---|---|---|---|
 | **V.3.1** Revalidar el match persistido | 2 | Re-upsert: el ETL re-corre el matcher y deja `NULL` donde no hay match. Baja las 3 alertas | ✅ |
-| **V.3.2** Dedup robusto | 3 | Normalizar organismo (puntuación, tildes, sufijo entre paréntesis) antes de `_dedup_key`; y con identificador fuerte de acto, deduplicar por `(acto, monto)` sin exigir organismo | ⬜ |
+| **V.3.2** Dedup robusto | 3 | Organismo canónico (`_resolve_alias`) en la clave + capa por código de obra. Eliminó **$166,34B** de doble conteo (369 → 346 filas) | ✅ |
 | **V.3.3** UI honesta | 3 | Barra de cobertura (sin denominador) + separar `llamado` de compromiso real | ⬜ |
 
 Empezar por **V.3.1**: es el que cambia el titular y no requiere diseño nuevo.
@@ -184,6 +270,9 @@ V.3.2 toca el ETL y `presupuesto_matching` — **hacer backup de `sqlite.db` ant
 - Tercera barra "pagado CGE".
 - Scraper SIGAF acto a acto.
 - Silenciar alertas >100% reales: si tras V.3.1 queda alguna, se muestra.
+- **Corregir montos mal extraídos** (H4: $34,026B sobre "plataforma de trabajo en
+  altura"; H4bis: denominador trunco `pb_id=35`). Se documentan y se muestran;
+  arreglarlos es trabajo de extracción y de modelo de organismo, no de contraste.
 - Recall de extracción (44,4%) y DT-7 (residual de lint).
 - Re-entrenar el LLM.
 
