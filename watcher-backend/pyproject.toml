@@ -92,6 +92,9 @@ select = ["E", "F", "I", "N", "W", "UP", "B", "SIM"]
 [tool.ruff.lint.per-file-ignores]
 "scripts/*.py" = ["E402"]
 "tests/**/*.py" = ["E402"]
+# B008: FastAPI exige `Depends()` en los defaults de los endpoints; es el
+# idioma del framework, no un bug. Los 168 casos del repo están todos acá.
+"app/api/**/*.py" = ["B008"]
 
 [tool.mypy]
 python_version = "3.11"
