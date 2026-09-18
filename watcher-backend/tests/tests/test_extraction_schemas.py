@@ -6,7 +6,6 @@ Tests para los schemas de extracción de contenido.
 from datetime import datetime
 
 import pytest
-from pydantic import ValidationError
 from app.schemas.extraction import (
     ContentSection,
     ExtractedContent,
@@ -15,6 +14,7 @@ from app.schemas.extraction import (
     PageContent,
     SectionType,
 )
+from pydantic import ValidationError
 
 
 class TestExtractionMethod:
@@ -48,7 +48,15 @@ class TestSectionType:
     def test_enum_values(self):
         """Test que todos los tipos están presentes."""
         types = [t.value for t in SectionType]
-        expected = ["licitacion", "nombramiento", "resolucion", "subsidio", "presupuesto", "general", "unknown"]
+        expected = [
+            "licitacion",
+            "nombramiento",
+            "resolucion",
+            "subsidio",
+            "presupuesto",
+            "general",
+            "unknown",
+        ]
         for expected_type in expected:
             assert expected_type in types
 

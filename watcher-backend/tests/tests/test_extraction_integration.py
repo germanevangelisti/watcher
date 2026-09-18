@@ -185,9 +185,9 @@ class TestCompatibilityWrappers:
         a correr dentro de un event loop activo (guard para Jupyter), y este
         test es async.
         """
+        from app.services.pdf_service import PDFProcessor
         from reportlab.lib.pagesizes import letter
         from reportlab.pdfgen import canvas
-        from app.services.pdf_service import PDFProcessor
 
         pdf_path = tmp_path / "compat_test.pdf"
 
@@ -205,9 +205,9 @@ class TestCompatibilityWrappers:
 
     def test_document_processor_extract(self, tmp_path):
         """Test que DocumentProcessor.extract_text_from_pdf funciona con registry."""
+        from app.services.document_processor import DocumentProcessor
         from reportlab.lib.pagesizes import letter
         from reportlab.pdfgen import canvas
-        from app.services.document_processor import DocumentProcessor
 
         pdf_path = tmp_path / "doc_compat_test.pdf"
 
