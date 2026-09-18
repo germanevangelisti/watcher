@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils"
 import type {
   CoberturaResumen,
   CoberturaTemporalResumen,
+  DenominadorSinDuenoResumen,
   OrgResumenItem,
   SerieGasto,
 } from "@/types/presupuesto"
@@ -157,6 +158,66 @@ function CoberturaTemporalBanner({
   )
 }
 
+function DenominadorSinDuenoBanner({
+  denominador,
+}: {
+  denominador: DenominadorSinDuenoResumen
+}) {
+  const pct = denominador.pct_sin_dueno ?? 0
+  return (
+    <div className="rounded-lg border border-border bg-muted/40 p-4 space-y-2">
+      <div className="flex items-center justify-between gap-3">
+        <span className="inline-flex items-center gap-2 text-sm font-medium">
+          <Info className="h-4 w-4 text-muted-foreground" />
+          Techo de la Ley
+        </span>
+        <span className="text-xs font-mono text-muted-foreground">
+          {formatPct(pct)} sin organismo
+        </span>
+      </div>
+      <div className="flex h-3 rounded overflow-hidden bg-muted">
+        <div
+          className="h-full bg-emerald-500/50"
+          style={{ width: `${Math.max(0, 100 - pct)}%` }}
+        />
+        <div className="h-full bg-zinc-500/50" style={{ width: `${pct}%` }} />
+      </div>
+      <p className="text-xs text-muted-foreground">
+        De los <span className="font-mono text-foreground">{formatARS(denominador.monto_total)}</span>{" "}
+        de la Ley, <span className="font-mono text-foreground">{formatARS(denominador.monto_sin_dueno)}</span>{" "}
+        ({denominador.count_sin_dueno} programas) tienen el organismo truncado en la
+        fuente. El matcher no puede asignarlos a nadie, así que ese presupuesto{" "}
+        <span className="text-foreground">nunca puede ser el techo de un gasto</span>.
+        No se resta del denominador: el % que ves lo sigue dividiendo la Ley completa,
+        y restarlo movería todos los % a la vez. Pero el techo verificado es{" "}
+        <span className="font-mono text-foreground">
+          {formatARS(denominador.monto_verificable)}
+        </span>
+        , no el total. Recuperar esos nombres es trabajo sobre el parseo de los Mapas,
+        no sobre el contraste.
+      </p>
+      <div className="divide-y divide-border/60">
+        {denominador.por_organismo.slice(0, MAX_VISIBLES).map((item) => (
+          <div
+            key={item.organismo}
+            className="flex items-center justify-between gap-3 py-1.5 text-sm"
+          >
+            <span className="truncate pr-2 text-muted-foreground">
+              {item.organismo}
+            </span>
+            <div className="flex items-center gap-3 shrink-0 text-xs text-muted-foreground">
+              <span>{item.count} programas</span>
+              <span className="font-mono text-foreground">
+                {formatARS(item.monto_vigente)}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function CoberturaBanner({ cobertura }: { cobertura: CoberturaResumen }) {
   const sinPct = cobertura.pct_sin_denominador ?? 0
   const conPct = Math.max(0, 100 - sinPct)
@@ -234,11 +295,13 @@ export function OrganismoContrastList({
   serie,
   cobertura,
   temporal,
+  denominador,
 }: {
   items: OrgResumenItem[]
   serie: SerieGasto
   cobertura?: CoberturaResumen
   temporal?: CoberturaTemporalResumen
+  denominador?: DenominadorSinDuenoResumen
 }) {
   const all = items ?? []
   const conDenominador = all.filter((item) => item.matched)
@@ -256,6 +319,7 @@ export function OrganismoContrastList({
     <div className="space-y-5">
       {temporal && <CoberturaTemporalBanner temporal={temporal} />}
       {cobertura && <CoberturaBanner cobertura={cobertura} />}
+      {denominador && <DenominadorSinDuenoBanner denominador={denominador} />}
 
       {visible.length === 0 ? (
         <p className="text-sm text-muted-foreground">

@@ -26,6 +26,7 @@ from app.services.gasto_classifier import (
 )
 from app.services.presupuesto_matching import (
     canonical_organismo_name,
+    is_truncated_organismo,
     preferred_organismo_display,
 )
 
@@ -250,8 +251,6 @@ def aggregate_cobertura_temporal(
     every failure says so, and *missing* otherwise — a real gap, which is the
     only case that understates the numerator without saying so.
     """
-    from collections import defaultdict
-
     by_day: dict[str, list[tuple[str | None, str | None]]] = defaultdict(list)
     for date, status, error in rows:
         if date:
@@ -297,4 +296,89 @@ def aggregate_cobertura_temporal(
         dias_justificados=justificados,
         dias_faltantes=faltantes,
         denominador_es_anual=True,
+    )
+
+
+@dataclass(frozen=True)
+class DenominadorSinDuenoItem:
+    organismo: str
+    count: int
+    monto_vigente: float
+
+
+@dataclass(frozen=True)
+class DenominadorSinDueno:
+    """The slice of the Ley's ceiling that can never work as a denominator.
+
+    `match_organismo` rejects rows whose organism the Mapas parser truncated
+    ("MINISTERIO DE", "SECRETARÍA DE"), and it is right to: a stub matches
+    nothing.  The side effect is that the ceiling every percentage divides by
+    includes budget no spending can ever be measured against.
+
+    Declared, not subtracted.  Removing those rows would move every published
+    percentage at once, in the direction nobody would notice — the exact failure
+    this épica exists to stop.  The total stays; the split is stated beside it.
+    """
+
+    monto_total: float
+    monto_sin_dueno: float
+    monto_verificable: float
+    count_sin_dueno: int
+    pct_sin_dueno: float
+    por_organismo: tuple[DenominadorSinDuenoItem, ...]
+
+
+def aggregate_denominador_sin_dueno(
+    rows: Iterable[tuple[str | None, float]],
+) -> DenominadorSinDueno:
+    """Split the ceiling into verifiable budget and budget with no owner.
+
+    `rows` are (organismo, monto_vigente) from `presupuesto_base`, for one
+    ejercicio and with no date filter — the denominator is the whole Ley.
+    """
+    total = sin_dueno = 0.0
+    count_sin = 0
+    # key -> [rows, monto, {raw name: rows}]
+    groups: dict[str, list] = defaultdict(lambda: [0, 0.0, defaultdict(int)])
+    for organismo, monto in rows:
+        monto = float(monto or 0.0)
+        total += monto
+        if not is_truncated_organismo(organismo):
+            continue
+        sin_dueno += monto
+        count_sin += 1
+        bucket = groups[canonical_organismo_name(organismo)]
+        bucket[0] += 1
+        bucket[1] += monto
+        if organismo:
+            bucket[2][organismo] += 1
+    items = tuple(
+        sorted(
+            (
+                DenominadorSinDuenoItem(
+                    # The variant that appears most often: these are stubs, so
+                    # the most frequent spelling is the most faithful label for
+                    # "the parser lost this one".  Length and then name break the
+                    # tie so the same rows always produce the same label.
+                    organismo=min(
+                        variants.items(),
+                        key=lambda kv: (-kv[1], len(kv[0]), kv[0]),
+                    )[0],
+                    count=count,
+                    monto_vigente=monto,
+                )
+                for count, monto, variants in groups.values()
+            ),
+            key=lambda item: item.monto_vigente,
+            reverse=True,
+        )
+    )
+    pct = round(100.0 * sin_dueno / total, 2) if total > 0 else 0.0
+    return DenominadorSinDueno(
+        monto_total=total,
+        monto_sin_dueno=sin_dueno,
+        monto_verificable=total - sin_dueno,
+        count_sin_dueno=count_sin,
+        pct_sin_dueno=pct,
+        por_organismo=items,
     )

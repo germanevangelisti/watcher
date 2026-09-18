@@ -92,6 +92,21 @@ export interface CoberturaTemporalResumen {
   denominador_es_anual: boolean;
 }
 
+export interface DenominadorSinDuenoItemResumen {
+  organismo: string;
+  count: number;
+  monto_vigente: number | string;
+}
+
+export interface DenominadorSinDuenoResumen {
+  monto_total: number | string;
+  monto_sin_dueno: number | string;
+  monto_verificable: number | string;
+  count_sin_dueno: number;
+  pct_sin_dueno: number;
+  por_organismo: DenominadorSinDuenoItemResumen[];
+}
+
 export interface EjecucionResumenResponse {
   total_canonical: number;
   total_duplicates: number;
@@ -102,6 +117,7 @@ export interface EjecucionResumenResponse {
   sobre_compromiso_count: number;
   cobertura: CoberturaResumen;
   cobertura_temporal: CoberturaTemporalResumen;
+  denominador: DenominadorSinDuenoResumen;
   por_organismo: OrgResumenItem[];
   por_mes: MesResumenItem[];
 }

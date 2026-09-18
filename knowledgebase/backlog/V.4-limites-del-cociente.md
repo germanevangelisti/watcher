@@ -2,7 +2,7 @@
 
 **Épica:** V — Verificación / ground truth (capa B: ledger vs Ley)
 **Puntos:** 8 (tomar por slices)
-**Estado:** en curso — V.4.1 ✅ · V.4.2 ⬜ · V.4.3 ⬜
+**Estado:** en curso — V.4.1 ✅ · V.4.2 ✅ · V.4.3 ⬜
 **Rama:** `feature/V.4-limites-del-cociente` desde `main` (`4a28e2e`)
 **Depende de:** V.3 hecho (V.3 hizo honesto cada lado del cociente; V.4 hace honesto el cociente)
 **Handoff:** [next-session.md](../current/next-session.md)
@@ -109,6 +109,24 @@ podría tener techo entre estas filas y no lo sabemos.
 Mi primera lectura fue "basura del parser, limpiar". La medición la refutó: hay que
 **recuperar los nombres**, no borrar las filas.
 
+**Resuelto en V.4.2** (read-only). Dos decisiones, y las dos importan:
+
+1. **No se restan del denominador.** Restarlos movería *todos* los % a la vez y en
+   silencio, que es exactamente lo que esta épica existe para impedir. El % sigue
+   dividiendo por la Ley completa; lo que se declara al lado es que el techo
+   verificado es $6,825T y no $7,532T.
+2. **Se cuentan filas, no grupos.** La query del denominador agrupaba por organismo
+   (`group_by`), así que la misma pregunta "¿cuántas filas no tienen dueño?" daba
+   14 en vez de 74 — contaba *nombres truncados distintos*. El endpoint ahora trae
+   las filas crudas (480) y las agrupa después, lo que da el mismo total en pesos y
+   el recuento verdadero en filas. Un número que la pantalla afirma tiene que poder
+   contarse; agrupar antes de contar lo convierte en otra cosa.
+
+Resultado en pantalla: "Techo de la Ley" — $7,53T, barra partida al 9,38%, los 12
+stubs con su monto (MINISTERIO DE 27 · $291,2B; SECRETARÍA DE 22 · $207,3B;
+DIRECCIÓN GENERAL DE 5 · $56,6B…) y la frase que dice qué falta: recuperar esos
+nombres es trabajo sobre el parseo de los Mapas, no sobre el contraste.
+
 ### H4 — El stub que sostiene la última alerta
 
 La alerta de 145,25% que V.3 dejó viva se apoya en `MINISTERIO DE ECONOMÍA
@@ -129,9 +147,10 @@ estar bien y el monto mal**. V.4 no la silencia; decide si el organismo es real.
 - [x] **Se declara el calendario del período.** 58 días con publicación + 2
       feriados justificados (Carnaval, el boletín no salió) = 60, **0 faltantes**.
       Si algún día fallara sin justificar, la pantalla lo muestra en rojo.
-- [ ] **Se declara el denominador sin dueño.** $706,6B / 74 filas reportadas como
-      "presupuesto sin organismo identificado", separadas del techo verificable.
-      El % no cambia por declararlas; cambia lo que el ciudadano sabe.
+- [x] **Se declara el denominador sin dueño.** $706,6B / 74 programas reportados
+      como "presupuesto sin organismo identificado", separados del techo
+      verificable ($6,825T). El % no cambia por declararlos; cambia lo que el
+      ciudadano sabe. Verificado contra el endpoint: 74 · $706.582,9M · 9,38%.
 - [ ] **Los nombres perdidos se intentan recuperar desde la fuente** (Mapas /
       `parse_pdf_presupuesto_2026.py`). Si el parseo no los puede recuperar, queda
       documentado por qué y el criterio anterior sigue en pie.
@@ -146,7 +165,7 @@ estar bien y el monto mal**. V.4 no la silencia; decide si el organismo es real.
 | Slice | Pts | Entrega | Estado |
 |---|---|---|---|
 | **V.4.1** Declarar el período y el calendario | 3 | Cobertura temporal en el endpoint + la pantalla: meses cubiertos, meses vencidos sin ingerir, días del período y el % rotulado como "contra la Ley anual". Read-only. | ✅ |
-| **V.4.2** Declarar el denominador sin dueño | 3 | $706,6B / 74 filas separadas del techo verificable, en el endpoint y la pantalla | ⬜ |
+| **V.4.2** Declarar el denominador sin dueño | 3 | $706,6B / 74 programas separados del techo verificable ($6,825T), en el endpoint y la pantalla. Read-only. | ✅ |
 | **V.4.3** Recuperar los nombres perdidos | 2 | Reparar el parseo de Mapas; si no se puede, documentar la causa y el techo queda declarado | ⬜ |
 
 Empezar por **V.4.1**: es read-only, no toca la DB, y es el que cambia lo que

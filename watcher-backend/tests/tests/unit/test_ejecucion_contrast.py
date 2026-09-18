@@ -6,6 +6,7 @@ from app.services.ejecucion_contrast import (
     BUCKET_OTRO,
     aggregate_cobertura,
     aggregate_cobertura_temporal,
+    aggregate_denominador_sin_dueno,
     aggregate_organismos,
     bucket_etapa,
     is_sobre,
@@ -293,3 +294,54 @@ class TestCoberturaTemporal:
         assert cob.meses_vencidos_sin_ingesta == ()
         assert cob.meses_futuros == ()
         assert cob.dias_con_publicacion == 0
+
+
+class TestDenominadorSinDueno:
+    """The ceiling split into what can be a denominator and what cannot."""
+
+    def _rows(self):
+        return [
+            ("MINISTERIO DE SALUD", 1_000_000.0),
+            ("MINISTERIO DE SALUD", 500_000.0),
+            ("MINISTERIO DE", 600_000.0),  # 12 rows, same stub
+            ("MINISTERIO DE", 400_000.0),
+            ("SECRETARÍA DE", 200_000.0),
+            ("SECRETARIA DE", 100_000.0),  # same stub, no accent
+            ("PODER JUDICIAL -", 300_000.0),  # messy but not truncated
+        ]
+
+    def test_splits_total_into_verifiable_and_unowned(self):
+        d = aggregate_denominador_sin_dueno(self._rows())
+        assert d.monto_total == 3_100_000.0
+        assert d.monto_sin_dueno == 1_300_000.0
+        assert d.monto_verificable == 1_800_000.0
+        assert d.count_sin_dueno == 4
+        assert d.pct_sin_dueno == 41.94
+
+    def test_truncated_stubs_group_by_canonical_name(self):
+        # SECRETARÍA DE / SECRETARIA DE are one stub. The display is the variant
+        # that appears most often — here they tie, and the tie-breaks are length
+        # then name, so the label does not depend on row order — and the amounts
+        # add up either way.
+        d = aggregate_denominador_sin_dueno(self._rows())
+        by_name = {item.organismo: item for item in d.por_organismo}
+        assert set(by_name) == {"MINISTERIO DE", "SECRETARIA DE"}
+        assert by_name["MINISTERIO DE"].count == 2
+        assert by_name["MINISTERIO DE"].monto_vigente == 1_000_000.0
+        assert by_name["SECRETARIA DE"].monto_vigente == 300_000.0
+
+    def test_items_are_ordered_by_monto(self):
+        d = aggregate_denominador_sin_dueno(self._rows())
+        montos = [item.monto_vigente for item in d.por_organismo]
+        assert montos == sorted(montos, reverse=True)
+
+    def test_a_messy_but_complete_name_is_not_unowned(self):
+        # "PODER JUDICIAL -" is normalized, not lost: it keeps its denominator.
+        d = aggregate_denominador_sin_dueno([("PODER JUDICIAL -", 300_000.0)])
+        assert d.monto_sin_dueno == 0.0
+        assert d.por_organismo == ()
+
+    def test_empty_ceiling_does_not_divide_by_zero(self):
+        d = aggregate_denominador_sin_dueno([])
+        assert d.monto_total == 0.0
+        assert d.pct_sin_dueno == 0.0

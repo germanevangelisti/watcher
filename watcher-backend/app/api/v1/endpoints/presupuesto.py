@@ -11,6 +11,8 @@ from app.db.session import get_db
 from app.schemas.presupuesto import (
     CoberturaResumen,
     CoberturaTemporalResumen,
+    DenominadorSinDuenoItemResumen,
+    DenominadorSinDuenoResumen,
     EjecucionListResponse,
     EjecucionResponse,
     EjecucionResumenResponse,
@@ -26,6 +28,7 @@ from app.services.ejecucion_contrast import (
     BUCKET_EJECUCION,
     aggregate_cobertura,
     aggregate_cobertura_temporal,
+    aggregate_denominador_sin_dueno,
     aggregate_organismos,
     bucket_etapa,
     remap_organismo_key,
@@ -340,18 +343,18 @@ async def get_ejecucion_resumen(
             .group_by(org_key, EjecucionPresupuestaria.etapa_gasto)
         )
         org_rows = await db.execute(org_q)
+        # Raw rows, one per programa: the ceiling has to be countable in rows as
+        # well as in pesos, because "74 filas sin dueño" is a claim the UI makes.
+        # Both consumers below sum by canonical organism, so the totals are the
+        # same as the grouped query this replaces.
         vig_q = (
-            select(
-                PresupuestoBase.organismo,
-                func.coalesce(func.sum(PresupuestoBase.monto_vigente), 0),
-            )
+            select(PresupuestoBase.organismo, PresupuestoBase.monto_vigente)
             .where(PresupuestoBase.ejercicio == ejercicio)
-            .group_by(PresupuestoBase.organismo)
         )
         vig_result = await db.execute(vig_q)
-        vigente_por_org, display_by_canon = vigente_por_organismo_canonico(
-            [(r[0], float(r[1])) for r in vig_result.all()]
-        )
+        vig_rows = [(r[0], float(r[1] or 0.0)) for r in vig_result.all()]
+        vigente_por_org, display_by_canon = vigente_por_organismo_canonico(vig_rows)
+        denominador = aggregate_denominador_sin_dueno(vig_rows)
         spend_rows = [
             (
                 remap_organismo_key(r.org_key, display_by_canon),
@@ -459,6 +462,21 @@ async def get_ejecucion_resumen(
                 dias_justificados=temporal.dias_justificados,
                 dias_faltantes=temporal.dias_faltantes,
                 denominador_es_anual=temporal.denominador_es_anual,
+            ),
+            denominador=DenominadorSinDuenoResumen(
+                monto_total=denominador.monto_total,
+                monto_sin_dueno=denominador.monto_sin_dueno,
+                monto_verificable=denominador.monto_verificable,
+                count_sin_dueno=denominador.count_sin_dueno,
+                pct_sin_dueno=denominador.pct_sin_dueno,
+                por_organismo=[
+                    DenominadorSinDuenoItemResumen(
+                        organismo=item.organismo,
+                        count=item.count,
+                        monto_vigente=item.monto_vigente,
+                    )
+                    for item in denominador.por_organismo
+                ],
             ),
             por_organismo=por_organismo,
             por_mes=por_mes,

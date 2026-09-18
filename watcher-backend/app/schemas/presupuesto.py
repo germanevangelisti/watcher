@@ -123,6 +123,23 @@ class CoberturaTemporalResumen(BaseModel):
     denominador_es_anual: bool = True
 
 
+class DenominadorSinDuenoItemResumen(BaseModel):
+    organismo: str
+    count: int
+    monto_vigente: JsonMoney = 0.0
+
+
+class DenominadorSinDuenoResumen(BaseModel):
+    """The ceiling split into what can be a denominator and what cannot."""
+
+    monto_total: JsonMoney = 0.0
+    monto_sin_dueno: JsonMoney = 0.0
+    monto_verificable: JsonMoney = 0.0
+    count_sin_dueno: int = 0
+    pct_sin_dueno: float = 0.0
+    por_organismo: list[DenominadorSinDuenoItemResumen] = []
+
+
 class EjecucionResumenResponse(BaseModel):
     total_canonical: int
     total_duplicates: int
@@ -133,6 +150,7 @@ class EjecucionResumenResponse(BaseModel):
     sobre_compromiso_count: int = 0
     cobertura: CoberturaResumen = CoberturaResumen()
     cobertura_temporal: CoberturaTemporalResumen = CoberturaTemporalResumen()
+    denominador: DenominadorSinDuenoResumen = DenominadorSinDuenoResumen()
     por_organismo: list[OrgResumenItem]
     por_mes: list[MesResumenItem]
 
