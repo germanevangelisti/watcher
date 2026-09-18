@@ -180,6 +180,26 @@ def _collapse_organismo(org_norm: str) -> str:
     return re.sub(r"\s+", " ", collapsed).strip(" .,-")
 
 
+def _resolve_alias(org_norm: str) -> tuple[str, bool]:
+    """Apply the alias table and the legal-suffix collapse to a normalized name.
+
+    Shared by `match_organismo` and `_dedup_key` so both agree on when two
+    spellings name the same organismo.  Returns (name, aliased); `name` is empty
+    only when the alias table explicitly marks the entity as outside the
+    provincial central budget.
+    """
+    collapsed = _collapse_organismo(org_norm)
+    alias_key = org_norm if org_norm in _ORGANISMO_ALIASES else None
+    if alias_key is None and collapsed in _ORGANISMO_ALIASES:
+        alias_key = collapsed
+    if alias_key is None:
+        return (collapsed or org_norm), False
+    canonical = _ORGANISMO_ALIASES[alias_key]
+    if canonical is None:
+        return "", True  # explicitly non-matchable
+    return canonical, True
+
+
 def build_presupuesto_index(
     rows: list[tuple[int, str, str, str | None]],
 ) -> tuple[list[tuple[int, str, str, str | None]], dict[str, tuple[int, str, str | None]]]:
@@ -213,19 +233,9 @@ def match_organismo(
     if not org_norm or org_norm in _ANALISIS_NO_MATCH:
         return None, 0.0, None, None, None
 
-    collapsed = _collapse_organismo(org_norm)
-    aliased = False
-    alias_key = org_norm if org_norm in _ORGANISMO_ALIASES else None
-    if alias_key is None and collapsed in _ORGANISMO_ALIASES:
-        alias_key = collapsed
-    if alias_key is not None:
-        canonical = _ORGANISMO_ALIASES[alias_key]
-        if canonical is None:
-            return None, 0.0, None, None, None  # explicitly non-matchable
-        org_norm = canonical
-        aliased = True
-    elif collapsed and collapsed != org_norm:
-        org_norm = collapsed
+    org_norm, aliased = _resolve_alias(org_norm)
+    if not org_norm:
+        return None, 0.0, None, None, None  # explicitly non-matchable
 
     org_norm = canonical_organismo(org_norm)
 
@@ -285,13 +295,82 @@ def _normalize_acto(s: str | None) -> str | None:
     return norm
 
 
+def _dedup_organismo(org_norm: str) -> str:
+    """Organism component of the dedup key.
+
+    Coarser than matching on purpose: it has to merge spellings of one organism
+    ("...S.A.U (EPEC)" vs "...S.A.U"; "EPEC" vs "EMPRESA PROVINCIAL DE ENERGIA
+    DE CORDOBA") without ever merging two distinct ones.  Keying on the raw name
+    split one act into two canonical rows that both counted — the boletín
+    republishes a tender the next day under a variant spelling and the organism
+    was the only component of the key that changed.
+
+    Entities the alias table marks as outside the provincial budget still get a
+    stable key, so their own republications dedup among themselves.
+    """
+    name, _ = _resolve_alias(org_norm)
+    base = name or _collapse_organismo(org_norm) or org_norm
+    return canonical_organismo(base)
+
+
 def _dedup_key(org_norm: str, monto: float, acto_norm: str | None) -> tuple:
     """
     Returns a hashable deduplication key.
     Rounds monto to nearest 1M to absorb floating-point noise between publications.
     acto_norm=None means we can't deduplicate this row by acto number.
     """
-    return (org_norm, round(monto / 1e6), acto_norm)
+    return (_dedup_organismo(org_norm), round(monto / 1e6), acto_norm)
+
+
+# ── Obra-code dedup tier ───────────────────────────────────────────────────────
+
+# Public-works codes the boletín republishes verbatim while a tender is open:
+# "camino S-511", "tramo T294-06".  They survive the republication even when the
+# acto number changes (an "Apertura de registro de oposición" cites the obra code
+# and a resolución number instead of the original tender number), which is the one
+# case the (organismo, monto, acto) key cannot reach.
+#
+# Deliberately narrow.  A looser "same monto + similar text" rule would merge
+# EPEC's ZONA III SUROESTE with ZONA IV SURESTE — identical amount, near-identical
+# wording, different tenders.  A code that only exists when the boletín names the
+# obra does not have that failure mode.
+_RE_OBRA_CODE = re.compile(r"\b(S-\s?\d{2,6}(?:/\d{2,4})?)\b", re.IGNORECASE)
+_RE_TRAMO_CODE = re.compile(r"\b(T\d{2,4}-\d{2})\b", re.IGNORECASE)
+
+
+def extract_obra_code(*texts: str | None) -> str | None:
+    """Return the public-works code named in the text, if any."""
+    for pattern in (_RE_OBRA_CODE, _RE_TRAMO_CODE):
+        for text in texts:
+            if not text:
+                continue
+            match = pattern.search(text[:2000])
+            if match:
+                return re.sub(r"\s+", "", match.group(1)).upper()
+    return None
+
+
+def _obra_key(obra_code: str, monto: float) -> tuple:
+    return ("OBRA", obra_code, round(monto / 1e6))
+
+
+def dedup_keys(
+    org_norm: str,
+    monto: float,
+    acto_norm: str | None,
+    *texts: str | None,
+) -> list[tuple]:
+    """Every key that identifies this act.  A row is a duplicate if any matches.
+
+    Empty list means the row carries no stable identity and must not dedup.
+    """
+    keys: list[tuple] = []
+    if acto_norm is not None:
+        keys.append(_dedup_key(org_norm, monto, acto_norm))
+    obra_code = extract_obra_code(*texts)
+    if obra_code is not None:
+        keys.append(_obra_key(obra_code, monto))
+    return keys
 
 
 # ── numero_acto extraction ─────────────────────────────────────────────────────

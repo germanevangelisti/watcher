@@ -28,10 +28,10 @@ from app.services.gasto_classifier import (
     classify_gasto,
 )
 from app.services.presupuesto_matching import (
-    _dedup_key,
     _normalize,
     _normalize_acto,
     build_presupuesto_index,
+    dedup_keys,
     first_beneficiario,
     match_organismo,
     parse_date,
@@ -94,7 +94,12 @@ async def _load_seen_dedup_keys(db: AsyncSession, boletin_id: int) -> set[tuple]
     before `analisis_id` existed simply contribute no key.
     """
     result = await db.execute(
-        select(Analisis.organismo, Analisis.numero_acto, EjecucionPresupuestaria.monto)
+        select(
+            Analisis.organismo,
+            Analisis.numero_acto,
+            EjecucionPresupuestaria.monto,
+            EjecucionPresupuestaria.concepto,
+        )
         .join(Analisis, Analisis.id == EjecucionPresupuestaria.analisis_id)
         .where(
             EjecucionPresupuestaria.is_duplicate == 0,
@@ -102,11 +107,13 @@ async def _load_seen_dedup_keys(db: AsyncSession, boletin_id: int) -> set[tuple]
         )
     )
     seen: set[tuple] = set()
-    for organismo, numero_acto, monto in result.all():
-        acto_norm = _normalize_acto(numero_acto)
-        if acto_norm is None or monto is None:
+    for organismo, numero_acto, monto, concepto in result.all():
+        if monto is None:
             continue
-        seen.add(_dedup_key(_normalize(organismo or ""), float(monto), acto_norm))
+        acto_norm = _normalize_acto(numero_acto)
+        seen.update(
+            dedup_keys(_normalize(organismo or ""), float(monto), acto_norm, concepto)
+        )
     return seen
 
 
@@ -244,14 +251,16 @@ async def upsert_boletin_ejecucion(db: AsyncSession, boletin_id: int) -> LedgerR
             acto.numero_acto = numero_acto
 
         acto_norm = _normalize_acto(numero_acto)
-        key = _dedup_key(org_norm, monto, acto_norm)
+        keys = dedup_keys(
+            org_norm, monto, acto_norm, acto.descripcion, acto.fragmento
+        )
         is_duplicate = 0
-        if acto_norm is not None:
-            if key in seen_dedup_keys:
+        if keys:
+            if any(k in seen_dedup_keys for k in keys):
                 is_duplicate = 1
                 result.duplicates += 1
             else:
-                seen_dedup_keys.add(key)
+                seen_dedup_keys.update(keys)
 
         if not is_duplicate:
             monthly_acc[(org_norm, fecha.year, month)] += monto

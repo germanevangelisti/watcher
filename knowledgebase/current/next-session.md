@@ -1,8 +1,12 @@
 # Próxima sesión — Watcher Agent
 
-**Fecha del handoff:** 2026-09-15  
-**Trabajo cerrado esta sesión:** **V.2 matching / denominador** (V.2.1–V.2.4). 0 alertas >100% en el corte abril.  
-**Trabajo siguiente:** ingest mayo **o** UI huérfana / CI — el % vs Ley ya es defendible en las 4 alertas de abril.
+**Fecha del handoff:** 2026-09-18  
+**Trabajo cerrado esta sesión:** **V.3 honestidad del contraste** (V.3.1–V.3.3). Alertas 3 → 1; $166,34B de doble conteo eliminado; cobertura y `llamado` a la vista.  
+**Trabajo siguiente:** mergear la rama V.3 a `main`, después ingesta mayo–septiembre (el producto muestra abril y hoy es septiembre).
+
+> **Antes de seguir: leer [status.md](status.md) y [V.3-honestidad-contraste.md](../backlog/V.3-honestidad-contraste.md).**
+> El cuerpo de abajo es el handoff de V.2 y **ya no describe la DB de hoy**: los
+> números de $703.7B y "0 alertas >100%" corresponden al corte pre-V.3.
 
 ---
 

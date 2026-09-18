@@ -11,10 +11,10 @@
 
 | Campo | Valor |
 |---|---|
-| Release | v2.0.0 + H.1 + P.7 + V.1 + V.2 |
-| Estado | V.2 hecho; 0 alertas >100% en el corte abril |
+| Release | v2.0.0 + H.1 + P.7 + V.1 + V.2 + V.3 |
+| Estado | V.3 hecho (V.3.1/32/33); **1** alerta >100%, documentada como denominador trunco |
 | Stack LLM | Gemini (cloud) + LocalPro/Ollama (`qwen2.5:7b`) |
-| Pendiente inmediato | Mergear V.2 **sin** `sqlite.db`. Mayo+ opcional. |
+| Pendiente inmediato | Mergear la rama V.3 a `main`. Ingesta mayo–septiembre. |
 
 ---
 
@@ -31,7 +31,34 @@
 | Épica 7: Prod | En curso | H.1; CI/auth/UI huérfana siguen abiertos |
 | H.1 Hardware local | Hecho | Workers nproc-2, overlay Compose, LocalPro |
 | Épica P: Presupuesto | P.1–P.7.4 en `main` | Ledger + Ley 11.088 + UI dos barras |
-| Épica V: Ground truth | V.1 + V.2 hechos | Matching/denominador: 0 alertas >100% |
+| Épica V: Ground truth | V.1 + V.2 + V.3 hechos | El dato persistido y la pantalla ahora dicen lo mismo que el matcher |
+
+---
+
+## Corte V.3 (2026-09-18)
+
+Historia: [V.3-honestidad-contraste.md](../backlog/V.3-honestidad-contraste.md).
+Tres slices: revalidar el match persistido, dedup robusto, UI honesta.
+
+| Slice | Qué cambió | Medido |
+|---|---|---|
+| V.3.1 | El ETL re-corre el matcher: `presupuesto_base_id` deja de ser un campo que nadie revalida | Alertas **3 → 1**; deriva 18 filas/$86,11B → **0** |
+| V.3.2 | Dedup por organismo canónico + código de obra | **$166,34B** de doble conteo eliminado; 369 → **346** filas canónicas |
+| V.3.3 | Cobertura visible + `llamado` separado de compromiso real | **47** organismos en pantalla (antes 17); $104,13B sin denominador a la vista |
+
+**Titular del corte:** el gasto medido es **$501,85B**, de los cuales **$397,72B
+(79,25%) tiene denominador** y **$104,13B (20,75%, 53 actos) no**. De lo que tiene
+denominador, **99,86% es `llamado`** — licitación publicada, no compromiso
+asumido—; el compromiso real (adjudicación + contrato) es **$0,55B (0,14%)**. La
+barra ámbar rotulada "Compromiso" sobreafirmaba el compromiso por ~720×; la
+pantalla ahora muestra Publicado / Comprometido / Ejecución por separado.
+
+Nuevo gate: `scripts/check_match_drift.py` (read-only, exit 1 si el matcher vivo
+discrepa del `presupuesto_base_id` persistido).
+
+Queda **1** alerta >100% (MINISTERIO DE ECONOMÍA, 145,25%). **No se silencia:** el
+denominador es un stub trunco de $1,37B (`pb_id=35`) y el monto es real. Ver H4bis
+en la historia.
 
 ---
 
@@ -82,8 +109,8 @@ Ninguno de producto. Notion MCP no disponible — el tablero quedó sin actualiz
 4. DS Lab scoring a nivel documento vs per-acto.
 5. CI (`requirements.txt`, Py 3.10, tests `continue-on-error`).
 6. UI v2 sin compliance / menciones / jurisdicciones / mapa.
-7. ✅ Resuelto (DT-4/DT-5, 2026-09-18): la suite colecta entera. `reindex_google_embeddings.py` ya no hace `sys.exit(1)` al importarse; los 3 módulos con prefijo `watcher_monolith` se revivieron y los 3 de `kba_agent`/`raga_agent` usan `importorskip`. Suite: **15 failed, 637 passed, 7 skipped** (antes 6 errores de colección y ~50 tests que nunca corrían).
-8. Lint: causa raíz resuelta (DT-6 — `ruff.toml` tapaba `pyproject.toml`). Deuda real medida: **8.327 → 643 errores**. `make lint` **sigue sin pasar**: el residual (DT-7) es `E501` 439 + `B904` 97 + `N806` 34, sin autofix, diferido a historia propia.
+7. ✅ Resuelto (DT-4/DT-5, 2026-09-18): la suite colecta entera. `reindex_google_embeddings.py` ya no hace `sys.exit(1)` al importarse; los 3 módulos con prefijo `watcher_monolith` se revivieron y los 3 de `kba_agent`/`raga_agent` usan `importorskip`. Suite: **15 failed, 652 passed, 7 skipped** (los 15 son DT-2/DT-3, pre-existentes; verificado por A/B con `git stash`).
+8. Lint: causa raíz resuelta (DT-6 — `ruff.toml` tapaba `pyproject.toml`). Deuda real medida: **8.327 → 642 errores**. `make lint` **sigue sin pasar**: el residual (DT-7) es `E501` 439 + `B904` 97 + `N806` 34, sin autofix, diferido a historia propia. V.3 no agregó ninguno (A/B: 642 antes y después).
 
 ---
 
@@ -103,8 +130,8 @@ Medido sobre el ledger canónico del corte abril (`is_duplicate=0`):
 
 | Hallazgo | Evidencia |
 |---|---|
-| **"Compromiso" es 99,7% `llamado`** | $701.8B de $703.7B son licitaciones publicadas. Compromiso legal real (adjudicación + contrato) = **$1.9B = 0,27%** de la barra |
-| **34,7% del gasto no tiene denominador** | unmatched $244.0B / 141 filas vs matched $460.8B / 228 |
+| **"Compromiso" es 99,86% `llamado`** | $397,08B de $397,08B con denominador son licitaciones publicadas. Compromiso legal real (adjudicación + contrato) = **$0,55B = 0,14%** de la barra. *(Corregido por V.3.3; los números pre-dedup eran $701,8B/$703,7B y $1,9B.)* |
+| **20,75% del gasto no tiene denominador** | unmatched $104,13B / 53 filas vs matched $397,72B. *(Era 34,7% / $244,0B / 141 filas antes del dedup de V.3.2: parte del "sin denominador" era doble conteo.)* |
 | **La barra de ejecución está vacía** | `pago` = $1.115B contra $703.7B de compromiso (57 filas) |
 | **Denominador con artefactos** | 29 filas / **$1.09T (14,5% del presupuesto)** con texto en `partida_presupuestaria` (`'Recursos'`, `'Cuentas'`, `''`); caso 755 de Seguridad con fila basura ($94.45B) + fila real ($90.01B) para el mismo programa |
 | **Cobertura temporal** | `boletines` hasta 2026-04; hoy 2026-09-18 |

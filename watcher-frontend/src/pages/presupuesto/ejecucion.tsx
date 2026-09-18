@@ -252,12 +252,20 @@ export function EjecucionPresupuestariaPage() {
               % vs presupuesto vigente
             </CardTitle>
             <p className="text-sm text-muted-foreground">
-              Dos barras por organismo: compromiso (ámbar) y ejecución (azul).
-              El relleno se recorta al 100%; la etiqueta muestra el % real.
+              Tres barras por organismo: <strong>publicado</strong> (llamado +
+              adjudicación + contrato), <strong>comprometido</strong> (sólo
+              adjudicación y contrato) y <strong>ejecución</strong> (pagos). Una
+              licitación publicada no es un compromiso asumido, y la diferencia es
+              visible. El relleno se recorta al 100%; la etiqueta muestra el % real.
+              Los organismos sin denominador en la Ley se listan aparte, sin %.
             </p>
           </CardHeader>
           <CardContent>
-            <OrganismoContrastList items={organismos} serie={serie} />
+            <OrganismoContrastList
+              items={organismos}
+              serie={serie}
+              cobertura={resumenQuery.data.cobertura}
+            />
           </CardContent>
         </Card>
       )}

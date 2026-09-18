@@ -9,6 +9,7 @@ from pathlib import Path
 from app.db.models import EjecucionPresupuestaria, PresupuestoBase
 from app.db.session import get_db
 from app.schemas.presupuesto import (
+    CoberturaResumen,
     EjecucionListResponse,
     EjecucionResponse,
     EjecucionResumenResponse,
@@ -22,6 +23,7 @@ from app.schemas.presupuesto import (
 from app.services.ejecucion_contrast import (
     BUCKET_COMPROMISO,
     BUCKET_EJECUCION,
+    aggregate_cobertura,
     aggregate_organismos,
     bucket_etapa,
     remap_organismo_key,
@@ -373,9 +375,11 @@ async def get_ejecucion_resumen(
                 sobre_compromiso=c.sobre_compromiso,
                 sobre_ejecucion=c.sobre_ejecucion,
                 matched=c.matched,
+                monto_llamado=c.monto_llamado,
             )
             for c in contrast
         ]
+        cobertura = aggregate_cobertura(contrast)
 
         result = await db.execute(
             select(
@@ -404,6 +408,13 @@ async def get_ejecucion_resumen(
             monto_compromiso=monto_compromiso,
             monto_ejecucion=monto_ejecucion,
             sobre_compromiso_count=sobre_compromiso_count,
+            cobertura=CoberturaResumen(
+                monto_total=cobertura.monto_total,
+                monto_con_denominador=cobertura.monto_con_denominador,
+                monto_sin_denominador=cobertura.monto_sin_denominador,
+                count_sin_denominador=cobertura.count_sin_denominador,
+                pct_sin_denominador=cobertura.pct_sin_denominador,
+            ),
             por_organismo=por_organismo,
             por_mes=por_mes,
         )

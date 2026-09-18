@@ -4,6 +4,7 @@ from app.services.ejecucion_contrast import (
     BUCKET_COMPROMISO,
     BUCKET_EJECUCION,
     BUCKET_OTRO,
+    aggregate_cobertura,
     aggregate_organismos,
     bucket_etapa,
     is_sobre,
@@ -163,3 +164,62 @@ class TestVigentePorOrganismoCanonico:
         assert remap_organismo_key(
             "Ministerio de Economía y Gestión Pública", display
         ) == display[key]
+
+
+class TestLlamadoDisclosure:
+    """`llamado` stays inside the compromiso bucket but is reported apart.
+
+    The published pct and the >100% alert keep their V.2 definition; separating
+    the series must not silently retire an alert.
+    """
+
+    def test_llamado_is_reported_but_not_subtracted(self):
+        rows = [
+            ("EPEC", "llamado", 500.0, 3),
+            ("EPEC", "contrato", 7.0, 1),
+        ]
+        item = aggregate_organismos(rows, {"EPEC": 1000.0})[0]
+        assert item.monto_compromiso == 507.0
+        assert item.monto_llamado == 500.0
+        assert item.pct_compromiso == 50.7
+
+    def test_pago_is_not_llamado(self):
+        rows = [("EPEC", "pago", 42.0, 1)]
+        item = aggregate_organismos(rows, {"EPEC": 1000.0})[0]
+        assert item.monto_llamado == 0.0
+        assert item.monto_ejecucion == 42.0
+
+    def test_omitted_when_no_llamado_rows(self):
+        rows = [("EPEC", "adjudicacion", 9.0, 1)]
+        assert aggregate_organismos(rows, {"EPEC": 100.0})[0].monto_llamado == 0.0
+
+
+class TestCobertura:
+    def test_splits_matched_from_unmatched(self):
+        items = aggregate_organismos(
+            [
+                ("CON DENOMINADOR", "llamado", 300.0, 2),
+                ("SIN DENOMINADOR", "llamado", 100.0, 5),
+            ],
+            {"CON DENOMINADOR": 1000.0},
+        )
+        cob = aggregate_cobertura(items)
+        assert cob.monto_total == 400.0
+        assert cob.monto_con_denominador == 300.0
+        assert cob.monto_sin_denominador == 100.0
+        assert cob.count_sin_denominador == 5
+        assert cob.pct_sin_denominador == 25.0
+
+    def test_empty_contrast_is_zero_not_a_divide_by_zero(self):
+        cob = aggregate_cobertura([])
+        assert cob.monto_total == 0.0
+        assert cob.pct_sin_denominador == 0.0
+
+    def test_unmatched_spend_is_total_minus_matched(self):
+        items = aggregate_organismos(
+            [("A", "llamado", 250.0, 1), ("B", "pago", 750.0, 1)],
+            {"A": 1.0},
+        )
+        cob = aggregate_cobertura(items)
+        assert cob.monto_con_denominador + cob.monto_sin_denominador == cob.monto_total
+        assert cob.pct_sin_denominador == 75.0

@@ -59,12 +59,22 @@ export interface OrgResumenItem {
   sobre_compromiso: boolean;
   sobre_ejecucion: boolean;
   matched: boolean;
+  /** Portion of monto_compromiso that is only a tender call (intención). */
+  monto_llamado: number | string;
 }
 
 export interface MesResumenItem {
   mes: string; // "2026-02", "2026-03"
   count: number;
   monto_total: number | string;
+}
+
+export interface CoberturaResumen {
+  monto_total: number | string;
+  monto_con_denominador: number | string;
+  monto_sin_denominador: number | string;
+  count_sin_denominador: number;
+  pct_sin_denominador: number;
 }
 
 export interface EjecucionResumenResponse {
@@ -75,6 +85,7 @@ export interface EjecucionResumenResponse {
   monto_compromiso: number | string;
   monto_ejecucion: number | string;
   sobre_compromiso_count: number;
+  cobertura: CoberturaResumen;
   por_organismo: OrgResumenItem[];
   por_mes: MesResumenItem[];
 }

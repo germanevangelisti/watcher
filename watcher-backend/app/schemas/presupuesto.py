@@ -89,12 +89,23 @@ class OrgResumenItem(BaseModel):
     sobre_compromiso: bool = False
     sobre_ejecucion: bool = False
     matched: bool = False
+    monto_llamado: JsonMoney = 0.0
 
 
 class MesResumenItem(BaseModel):
     mes: str   # "2026-02", "2026-03", ...
     count: int
     monto_total: JsonMoney
+
+
+class CoberturaResumen(BaseModel):
+    """Share of measured spend that has a Ley denominator to be contrasted with."""
+
+    monto_total: JsonMoney = 0.0
+    monto_con_denominador: JsonMoney = 0.0
+    monto_sin_denominador: JsonMoney = 0.0
+    count_sin_denominador: int = 0
+    pct_sin_denominador: float = 0.0
 
 
 class EjecucionResumenResponse(BaseModel):
@@ -105,6 +116,7 @@ class EjecucionResumenResponse(BaseModel):
     monto_compromiso: JsonMoney = 0.0
     monto_ejecucion: JsonMoney = 0.0
     sobre_compromiso_count: int = 0
+    cobertura: CoberturaResumen = CoberturaResumen()
     por_organismo: list[OrgResumenItem]
     por_mes: list[MesResumenItem]
 
