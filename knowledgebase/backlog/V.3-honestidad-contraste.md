@@ -154,7 +154,7 @@ la obra. Los textos de las ZONA III/IV no contienen código, así que la capa nu
 no los toca. Medido: la capa produjo **2 grupos en todo el corpus**, ambos
 correctos, y ningún organismo distinto se fusionó.
 
-### H4bis — La alerta que sobrevive no es de dedup ni de match
+### H6 — La alerta que sobrevive no es de dedup ni de match
 
 Tras V.3.1 y V.3.2 queda **1** alerta, `MINISTERIO DE ECONOMÍA MINISTERIO Y
 GESTIÓN PÚBLICA` 145,25% ($34.450.820.322 / $23.718.656.000), y su monto **no
@@ -280,7 +280,7 @@ el ciudadano ahora ve que $34,0B de esos $34,5B son intención.
       `scripts/check_match_drift.py` (exit 1 si hay deriva).
 - [x] **Las 3 alertas artefacto desaparecen** de `bitacora-alertas-v2-post.md` con
       el re-upsert corrido. Queda **1**, y no es artefacto de match ni de dedup:
-      es un **denominador trunco** sobre un monto real (H4bis), con su `pb_id` y
+      es un **denominador trunco** sobre un monto real (H6), con su `pb_id` y
       su score documentados. Se muestra, no se silencia.
 - [x] **La obra S-511 cuenta 1 vez ($25,34B), no 4 ($101,37B)**, y `acto=5543`
       cuenta 1 vez ($20,03B), no 2. Tests en `TestDedupKey` y `TestObraCodeDedup`
@@ -320,7 +320,7 @@ V.3.2 toca el ETL y `presupuesto_matching` — **hacer backup de `sqlite.db` ant
 - Scraper SIGAF acto a acto.
 - Silenciar alertas >100% reales: si tras V.3.1 queda alguna, se muestra.
 - **Corregir montos mal extraídos** (H4: $34,026B sobre "plataforma de trabajo en
-  altura"; H4bis: denominador trunco `pb_id=35`). Se documentan y se muestran;
+  altura"; H6: denominador trunco `pb_id=35`). Se documentan y se muestran;
   arreglarlos es trabajo de extracción y de modelo de organismo, no de contraste.
 - Recall de extracción (44,4%) y DT-7 (residual de lint).
 - Re-entrenar el LLM.

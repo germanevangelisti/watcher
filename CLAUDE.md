@@ -38,5 +38,5 @@ Tipos: `feat` `fix` `refactor` `test` `docs` `chore`
 - [ ] KB actualizada si hubo cambios de arquitectura (ADR)
 
 ## Estado actual del proyecto
-H.1 (pipeline hardware local) está en `main`. Ver `knowledgebase/current/status.md`.
-**Próxima sesión:** mergear V.2 sin `sqlite.db`. Leer `knowledgebase/current/next-session.md` y `knowledgebase/backlog/V.2-matching-denominador.md`.
+V.1, V.2 y **V.3 (honestidad del contraste)** están hechas en `feature/V.3-honestidad-contraste`; H.1 ya está en `main`. Ver `knowledgebase/current/status.md`.
+**Próxima sesión:** mergear la rama V.3 a `main`, luego ingesta mayo–septiembre. Leer `knowledgebase/current/next-session.md`.
