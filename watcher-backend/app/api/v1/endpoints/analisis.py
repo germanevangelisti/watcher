@@ -2,12 +2,11 @@
 API endpoints para consulta de análisis
 """
 
-from typing import List, Dict, Optional
+
+from app.db import crud
+from app.db.session import get_db
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.db.session import get_db
-from app.db import crud
 
 router = APIRouter()
 
@@ -16,9 +15,9 @@ router = APIRouter()
 async def list_analisis(
     skip: int = 0,
     limit: int = 100,
-    boletin_id: Optional[int] = None,
+    boletin_id: int | None = None,
     db: AsyncSession = Depends(get_db)
-) -> List[Dict]:
+) -> list[dict]:
     """
     Lista análisis realizados.
     
@@ -37,13 +36,13 @@ async def list_analisis(
             analisis_list = await crud.get_analisis_by_boletin(db, boletin_id, limit=limit)
         else:
             # Obtener todos los análisis (con paginación)
-            from sqlalchemy import select
             from app.db.models import Analisis
-            
+            from sqlalchemy import select
+
             query = select(Analisis).offset(skip).limit(limit).order_by(Analisis.created_at.desc())
             result = await db.execute(query)
             analisis_list = result.scalars().all()
-        
+
         # Convertir a formato de respuesta
         analisis_data = []
         for analisis in analisis_list:
@@ -56,9 +55,9 @@ async def list_analisis(
                 "riesgo": analisis.riesgo if hasattr(analisis, 'riesgo') else None,
                 "created_at": analisis.created_at.isoformat() if hasattr(analisis, 'created_at') and analisis.created_at else None
             })
-        
+
         return analisis_data
-        
+
     except Exception as e:
         import traceback
         print(f"Error in list_analisis: {str(e)}")
@@ -68,7 +67,7 @@ async def list_analisis(
 @router.get("/stats")
 async def get_analisis_stats(
     db: AsyncSession = Depends(get_db)
-) -> Dict:
+) -> dict:
     """
     Obtiene estadísticas de análisis.
     

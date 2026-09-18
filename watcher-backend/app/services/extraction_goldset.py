@@ -10,8 +10,9 @@ check that remates and sociedades are not classified as gasto público.
 from __future__ import annotations
 
 import csv
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Any, Iterable
+from typing import Any
 
 from app.services.presupuesto_matching import _normalize, resolve_numero_acto
 

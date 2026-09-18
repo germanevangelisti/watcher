@@ -6,11 +6,11 @@ Existing imports of `from app.db.neo4j_client import ...` continue to work.
 """
 
 from app.db.graph_driver import (  # noqa: F401
-    init_neo4j,
     close_neo4j,
     get_driver,
     get_neo4j_session,
     get_neo4j_session_dep,
+    init_neo4j,
     run_query,
 )
 

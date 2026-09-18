@@ -2,14 +2,12 @@
 Herramientas de base de datos para los agentes
 """
 import logging
-from typing import List, Dict, Any, Optional
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import func, desc, select
+from typing import Any
 
-from app.db.models import (
-    BoletinDocument, AnalysisResult, RedFlag
-)
 from app.db.database import AsyncSessionLocal
+from app.db.models import AnalysisResult, BoletinDocument, RedFlag
+from sqlalchemy import desc, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -18,21 +16,21 @@ class DatabaseTools:
     """
     Herramientas para que los agentes accedan a la base de datos (async)
     """
-    
+
     @staticmethod
     async def get_db() -> AsyncSession:
         """Obtiene una sesión de base de datos async"""
         async with AsyncSessionLocal() as session:
             yield session
-    
+
     @staticmethod
     async def get_documents(
         db: AsyncSession,
-        year: Optional[int] = None,
-        month: Optional[int] = None,
-        status: Optional[str] = None,
+        year: int | None = None,
+        month: int | None = None,
+        status: str | None = None,
         limit: int = 100
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Obtiene documentos de la base de datos
         
@@ -47,18 +45,18 @@ class DatabaseTools:
             Lista de documentos
         """
         stmt = select(BoletinDocument)
-        
+
         if year:
             stmt = stmt.filter(BoletinDocument.year == year)
         if month:
             stmt = stmt.filter(BoletinDocument.month == month)
         if status:
             stmt = stmt.filter(BoletinDocument.analysis_status == status)
-        
+
         stmt = stmt.limit(limit)
         result = await db.execute(stmt)
         documents = result.scalars().all()
-        
+
         return [
             {
                 "id": doc.id,
@@ -74,16 +72,16 @@ class DatabaseTools:
             }
             for doc in documents
         ]
-    
+
     @staticmethod
     async def get_analysis_results(
         db: AsyncSession,
-        document_id: Optional[int] = None,
-        risk_level: Optional[str] = None,
-        min_score: Optional[float] = None,
-        min_red_flags: Optional[int] = None,
+        document_id: int | None = None,
+        risk_level: str | None = None,
+        min_score: float | None = None,
+        min_red_flags: int | None = None,
         limit: int = 100
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Obtiene resultados de análisis
         
@@ -99,7 +97,7 @@ class DatabaseTools:
             Lista de resultados
         """
         stmt = select(AnalysisResult)
-        
+
         if document_id:
             stmt = stmt.filter(AnalysisResult.document_id == document_id)
         if risk_level:
@@ -108,11 +106,11 @@ class DatabaseTools:
             stmt = stmt.filter(AnalysisResult.transparency_score >= min_score)
         if min_red_flags is not None:
             stmt = stmt.filter(AnalysisResult.num_red_flags >= min_red_flags)
-        
+
         stmt = stmt.order_by(desc(AnalysisResult.analyzed_at)).limit(limit)
         result = await db.execute(stmt)
         results = result.scalars().all()
-        
+
         return [
             {
                 "id": result.id,
@@ -128,14 +126,14 @@ class DatabaseTools:
             }
             for result in results
         ]
-    
+
     @staticmethod
     async def get_red_flags(
         db: AsyncSession,
-        severity: Optional[str] = None,
-        category: Optional[str] = None,
+        severity: str | None = None,
+        category: str | None = None,
         limit: int = 100
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Obtiene red flags
         
@@ -149,16 +147,16 @@ class DatabaseTools:
             Lista de red flags
         """
         stmt = select(RedFlag).join(AnalysisResult).join(BoletinDocument)
-        
+
         if severity:
             stmt = stmt.filter(RedFlag.severity == severity)
         if category:
             stmt = stmt.filter(RedFlag.category == category)
-        
+
         stmt = stmt.order_by(desc(RedFlag.created_at)).limit(limit)
         result = await db.execute(stmt)
         red_flags = result.scalars().all()
-        
+
         return [
             {
                 "id": rf.id,
@@ -176,9 +174,9 @@ class DatabaseTools:
             }
             for rf in red_flags
         ]
-    
+
     @staticmethod
-    async def get_statistics(db: AsyncSession) -> Dict[str, Any]:
+    async def get_statistics(db: AsyncSession) -> dict[str, Any]:
         """
         Obtiene estadísticas generales del sistema
         
@@ -191,7 +189,7 @@ class DatabaseTools:
         # Total documents
         result = await db.execute(select(func.count(BoletinDocument.id)))
         total_documents = result.scalar()
-        
+
         # Total analyzed
         result = await db.execute(
             select(func.count(BoletinDocument.id)).filter(
@@ -199,11 +197,11 @@ class DatabaseTools:
             )
         )
         total_analyzed = result.scalar()
-        
+
         # Total results
         result = await db.execute(select(func.count(AnalysisResult.id)))
         total_results = result.scalar()
-        
+
         # High risk documents
         result = await db.execute(
             select(func.count(AnalysisResult.id)).filter(
@@ -211,11 +209,11 @@ class DatabaseTools:
             )
         )
         high_risk = result.scalar()
-        
+
         # Total red flags
         result = await db.execute(select(func.count(RedFlag.id)))
         total_red_flags = result.scalar()
-        
+
         # High severity flags
         result = await db.execute(
             select(func.count(RedFlag.id)).filter(
@@ -223,11 +221,11 @@ class DatabaseTools:
             )
         )
         high_severity_flags = result.scalar()
-        
+
         # Average transparency score
         result = await db.execute(select(func.avg(AnalysisResult.transparency_score)))
         avg_transparency = result.scalar()
-        
+
         # Distribución por año y mes
         stmt = select(
             BoletinDocument.year,
@@ -242,7 +240,7 @@ class DatabaseTools:
         )
         result = await db.execute(stmt)
         docs_by_period = result.all()
-        
+
         return {
             "total_documents": total_documents or 0,
             "total_analyzed": total_analyzed or 0,
@@ -260,12 +258,12 @@ class DatabaseTools:
                 for year, month, count in docs_by_period
             ]
         }
-    
+
     @staticmethod
     async def get_document_with_results(
         db: AsyncSession,
         document_id: int
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """
         Obtiene un documento con todos sus resultados de análisis
         
@@ -280,20 +278,20 @@ class DatabaseTools:
         stmt = select(BoletinDocument).filter(BoletinDocument.id == document_id)
         result = await db.execute(stmt)
         document = result.scalar_one_or_none()
-        
+
         if not document:
             return None
-        
+
         # Get analysis results
         stmt = select(AnalysisResult).filter(AnalysisResult.document_id == document_id)
         result = await db.execute(stmt)
         results = result.scalars().all()
-        
+
         # Get red flags
         stmt = select(RedFlag).filter(RedFlag.document_id == document_id)
         result = await db.execute(stmt)
         red_flags = result.scalars().all()
-        
+
         return {
             "document": {
                 "id": document.id,
@@ -332,14 +330,14 @@ class DatabaseTools:
                 for rf in red_flags
             ]
         }
-    
+
     @staticmethod
     async def search_by_entity(
         db: AsyncSession,
         entity_type: str,
         entity_value: str,
         limit: int = 50
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Busca documentos que contengan una entidad específica
         
@@ -356,15 +354,15 @@ class DatabaseTools:
         stmt = select(AnalysisResult).join(BoletinDocument).filter(
             AnalysisResult.extracted_entities.isnot(None)
         ).limit(limit * 2)  # Obtener más para filtrar
-        
+
         result = await db.execute(stmt)
         results = result.scalars().all()
-        
+
         matching_results = []
         for result in results:
             entities = result.extracted_entities or {}
             entity_list = entities.get(entity_type, [])
-            
+
             # Buscar coincidencia (case-insensitive)
             if any(entity_value.lower() in str(e).lower() for e in entity_list):
                 matching_results.append({
@@ -375,20 +373,20 @@ class DatabaseTools:
                     "entities_found": entity_list,
                     "analyzed_at": result.analyzed_at.isoformat() if result.analyzed_at else None
                 })
-                
+
                 if len(matching_results) >= limit:
                     break
-        
+
         return matching_results
-    
+
     @staticmethod
     async def search_documents(
         query: str,
         technique: str = "hybrid",
         top_k: int = 10,
         rerank: bool = True,
-        filters: Optional[Dict[str, Any]] = None
-    ) -> List[Dict[str, Any]]:
+        filters: dict[str, Any] | None = None
+    ) -> list[dict[str, Any]]:
         """
         Busca documentos usando el RetrievalService (hybrid/semantic/keyword)
         
@@ -404,9 +402,9 @@ class DatabaseTools:
         """
         try:
             from app.services.retrieval_service import get_retrieval_service
-            
+
             service = get_retrieval_service()
-            
+
             if technique == 'hybrid':
                 results = await service.hybrid_search(
                     query=query,
@@ -425,7 +423,7 @@ class DatabaseTools:
                     top_k=top_k,
                     filters=filters
                 )
-            
+
             # Convertir SearchResult objects a dicts
             return [
                 {
@@ -438,7 +436,7 @@ class DatabaseTools:
                 }
                 for r in results
             ]
-            
+
         except Exception as e:
             logger.error(f"Error in search_documents: {e}")
             return []

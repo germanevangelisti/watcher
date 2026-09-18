@@ -12,11 +12,10 @@ Design contract (V1):
 - FTS fallback via fts_service.search_bm25() for acto-type references.
 """
 
+import logging
+import re
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Optional
-import re
-import logging
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -40,12 +39,12 @@ class Reference:
     ref_type: str       # "boletin", "decreto", "resolucion", "licitacion", "expediente", "organismo"
     normalized: str     # normalized string used for lookup
     status: ReferenceStatus = ReferenceStatus.UNVERIFIABLE
-    evidence: Optional[str] = None  # chunk text that confirms it
+    evidence: str | None = None  # chunk text that confirms it
 
 
 @dataclass
 class ReferenceValidationResult:
-    references: List[Reference] = field(default_factory=list)
+    references: list[Reference] = field(default_factory=list)
     verified_count: int = 0
     not_found_count: int = 0
     unverifiable_count: int = 0
@@ -154,13 +153,13 @@ class ReferenceFirewallService:
     # Extraction
     # ------------------------------------------------------------------
 
-    def _extract_references(self, text: str) -> List[Reference]:
+    def _extract_references(self, text: str) -> list[Reference]:
         """
         Apply all compiled patterns to *text* and return a deduplicated list
         of Reference objects.
         """
         seen: set = set()
-        refs: List[Reference] = []
+        refs: list[Reference] = []
 
         for pattern, ref_type in self._patterns:
             for match in pattern.finditer(text):
@@ -287,7 +286,7 @@ class ReferenceFirewallService:
     # Score computation
     # ------------------------------------------------------------------
 
-    def _compute_score(self, refs: List[Reference]) -> float:
+    def _compute_score(self, refs: list[Reference]) -> float:
         """
         Returns verified / (verified + not_found).
 

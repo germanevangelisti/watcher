@@ -8,20 +8,19 @@ import uuid
 from datetime import date, datetime
 from pathlib import Path
 
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.hardware import document_pipeline_concurrency
 from app.db import crud
 from app.db.models import ProcesamientoBatch
 from app.services.extractors import ExtractorRegistry
 from app.services.watcher_service import WatcherService
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
 class BatchProcessor:
     """Procesador optimizado de archivos PDF con historial acumulativo."""
-    
+
     def __init__(self, db: AsyncSession):
         """
         Inicializa el procesador.
@@ -33,7 +32,7 @@ class BatchProcessor:
         self.watcher_service = WatcherService()
         self.max_workers = document_pipeline_concurrency()
         self.batch_size = 10
-        
+
         # Patrones para extracción de montos
         self.monto_patterns = [
             r'\$\s*([0-9]{1,3}(?:\.[0-9]{3})*(?:,[0-9]{2})?)',  # $1.000.000,00
@@ -41,7 +40,7 @@ class BatchProcessor:
             r'suma\s+de\s+\$?\s*([0-9]{1,3}(?:\.[0-9]{3})*)',  # suma de $1.000.000
             r'monto\s+de\s+\$?\s*([0-9]{1,3}(?:\.[0-9]{3})*)',  # monto de $1.000.000
         ]
-        
+
         # Patrones para identificar organismos
         self.organismo_patterns = [
             r'ministerio\s+de\s+([^,\n\.]+)',
@@ -49,10 +48,10 @@ class BatchProcessor:
             r'direcci[óo]n\s+general\s+de\s+([^,\n\.]+)',
             r'subsecretar[ií]a\s+de\s+([^,\n\.]+)',
         ]
-    
+
     async def process_directory(
-        self, 
-        source_dir: Path, 
+        self,
+        source_dir: Path,
         batch_size: int = 10,
         filtros: dict | None = None
     ) -> dict:
@@ -69,46 +68,46 @@ class BatchProcessor:
         """
         # Crear registro de batch
         batch_id = f"batch_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
-        
+
         batch_record = ProcesamientoBatch(
             batch_id=batch_id,
             directorio_origen=str(source_dir),
             filtros_aplicados=filtros or {}
         )
-        
+
         self.db.add(batch_record)
         await self.db.commit()
-        
+
         logger.info(f"Iniciando procesamiento batch {batch_id}")
-        
+
         try:
             # Obtener archivos a procesar
             pdf_files = self._get_files_to_process(source_dir, filtros)
             total_files = len(pdf_files)
-            
+
             # Actualizar registro
             batch_record.total_archivos = total_files
             batch_record.estado = 'procesando'
             await self.db.commit()
-            
+
             logger.info(f"Procesando {total_files} archivos en lotes de {batch_size}")
-            
+
             # Estadísticas
             processed_count = 0
             failed_count = 0
             total_ejecuciones = 0
             monto_total = 0.0
             alertas_generadas = 0
-            
+
             start_time = datetime.now()
-            
+
             # Procesar en lotes
             for i in range(0, total_files, batch_size):
                 batch_files = pdf_files[i:i + batch_size]
-                
+
                 # Procesar lote en paralelo
                 batch_results = await self._process_batch(batch_files)
-                
+
                 for result in batch_results:
                     if result["status"] == "completed":
                         processed_count += 1
@@ -117,7 +116,7 @@ class BatchProcessor:
                         alertas_generadas += result.get("alertas_generadas", 0)
                     else:
                         failed_count += 1
-                
+
                 # Actualizar progreso
                 batch_record.archivos_procesados = processed_count
                 batch_record.archivos_fallidos = failed_count
@@ -125,20 +124,20 @@ class BatchProcessor:
                 batch_record.monto_total_procesado = monto_total
                 batch_record.alertas_generadas = alertas_generadas
                 await self.db.commit()
-                
+
                 logger.info(f"Lote {i//batch_size + 1} completado. Progreso: {processed_count}/{total_files}")
-            
+
             # Calcular métricas finales
             end_time = datetime.now()
             tiempo_total = (end_time - start_time).total_seconds()
-            
+
             # Actualizar registro final
             batch_record.fecha_fin = end_time
             batch_record.estado = 'completado'
             batch_record.tiempo_procesamiento_segundos = tiempo_total
             batch_record.archivos_por_segundo = total_files / tiempo_total if tiempo_total > 0 else 0
             await self.db.commit()
-            
+
             stats = {
                 "batch_id": batch_id,
                 "total": total_files,
@@ -150,29 +149,29 @@ class BatchProcessor:
                 "tiempo_procesamiento": tiempo_total,
                 "archivos_por_segundo": batch_record.archivos_por_segundo
             }
-            
+
             logger.info(f"Procesamiento batch {batch_id} completado: {stats}")
             return stats
-            
+
         except Exception as e:
             # Marcar batch como error
             batch_record.estado = 'error'
             batch_record.error_message = str(e)
             batch_record.fecha_fin = datetime.now()
             await self.db.commit()
-            
+
             logger.error(f"Error en procesamiento batch {batch_id}: {e}")
             raise
-    
+
     def _get_files_to_process(self, source_dir: Path, filtros: dict | None) -> list[Path]:
         """Obtiene archivos a procesar aplicando filtros."""
         pdf_files = sorted(list(source_dir.glob('*.pdf')))
-        
+
         if not filtros:
             return pdf_files
-        
+
         filtered_files = []
-        
+
         for pdf_file in pdf_files:
             # Filtro por fecha
             if 'fecha_desde' in filtros or 'fecha_hasta' in filtros:
@@ -183,7 +182,7 @@ class BatchProcessor:
                         continue
                     if 'fecha_hasta' in filtros and file_date > filtros['fecha_hasta']:
                         continue
-            
+
             # Filtro por sección
             if 'secciones' in filtros:
                 match = re.search(r'_(\d+)_Secc\.pdf$', pdf_file.name)
@@ -191,11 +190,11 @@ class BatchProcessor:
                     seccion = match.group(1)
                     if seccion not in filtros['secciones']:
                         continue
-            
+
             filtered_files.append(pdf_file)
-        
+
         return filtered_files
-    
+
     async def _process_batch(self, batch_files: list[Path]) -> list[dict]:
         """Procesa un lote con concurrencia acotada (una sesión DB por PDF)."""
         from app.core.concurrency import map_bounded
@@ -228,17 +227,17 @@ class BatchProcessor:
             else:
                 processed_results.append(item)
         return processed_results
-    
+
     async def _process_single_pdf(self, pdf_path: Path) -> dict:
         """
         Procesa un PDF individual con manejo seguro de transacciones.
         """
         filename = pdf_path.name
         logger.info(f"Procesando {filename}")
-        
+
         # Usar una sesión de background para evitar conflictos con HTTP handlers
         from app.db.database import BackgroundSessionLocal
-        
+
         async with BackgroundSessionLocal() as file_db:
             try:
                 # Extraer información del archivo
@@ -246,7 +245,7 @@ class BatchProcessor:
                 boletin_date = boletin_date_match.group(1) if boletin_date_match else "unknown"
                 boletin_section_match = re.search(r'_(\d+)_Secc\.pdf$', filename)
                 boletin_section = boletin_section_match.group(1) if boletin_section_match else "unknown"
-                
+
                 # Crear o actualizar boletín
                 boletin = await crud.create_boletin(
                     file_db,
@@ -255,10 +254,10 @@ class BatchProcessor:
                     section=boletin_section
                 )
                 await crud.update_boletin_status(file_db, boletin.id, "processing")
-                
+
                 # Extraer contenido usando ExtractorRegistry
                 result = await ExtractorRegistry.extract(pdf_path, detect_sections=True)
-                
+
                 if not result.success:
                     logger.error(f"Error extracting PDF {filename}: {result.error}")
                     await crud.update_boletin_status(file_db, boletin.id, "failed", result.error)
@@ -268,7 +267,7 @@ class BatchProcessor:
                         "status": "failed",
                         "error": result.error
                     }
-                
+
                 # Convertir secciones al formato esperado
                 sections = []
                 for section in result.sections:
@@ -282,42 +281,42 @@ class BatchProcessor:
                             **section.metadata
                         }
                     })
-                
+
                 ejecuciones_detectadas = 0
                 monto_procesado = 0.0
                 alertas_generadas = 0
                 total_actos = 0
-                
+
                 # Enrich metadata with jurisdiccion info for contextual prompt
                 jurisdiccion_nombre = None
                 if boletin.jurisdiccion:
                     jurisdiccion_nombre = boletin.jurisdiccion.nombre
-                
+
                 # Analizar TODAS las secciones (no limitado a 3)
                 for i, section in enumerate(sections):
                     try:
                         section_content = section["content"]
                         section_metadata = section["metadata"].copy()
-                        
+
                         # Add jurisdiccion context to metadata
                         if jurisdiccion_nombre:
                             section_metadata["jurisdiccion_nombre"] = jurisdiccion_nombre
                         section_metadata["fuente"] = getattr(boletin, 'fuente', 'provincial')
-                        
+
                         # Analyze full section content (no truncation)
                         # analyze_content returns a list of actos (v2)
                         actos = await self.watcher_service.analyze_content(
                             content=section_content,
                             metadata=section_metadata
                         )
-                        
+
                         # Save each acto individually
                         for acto in actos:
                             fragment_text = acto.pop("_fragment_content", section_content[:500])
                             acto.pop("_fragment_index", None)
                             acto.pop("_resumen_fragmento", None)
                             acto.pop("_model_used", None)
-                            
+
                             await crud.create_analisis(
                                 file_db,
                                 boletin_id=boletin.id,
@@ -325,7 +324,7 @@ class BatchProcessor:
                                 analisis_data=acto
                             )
                             total_actos += 1
-                        
+
                         # Extract montos for stats
                         monto = self._extraer_monto(section_content)
                         if monto:
@@ -333,19 +332,19 @@ class BatchProcessor:
                             monto_procesado += monto
                             if monto > 10000000:  # > $10M
                                 alertas_generadas += 1
-                        
+
                     except Exception as e:
                         logger.error(f"Error analizando sección {i} de {filename}: {e}")
                         continue
-                
+
                 logger.info(f"Documento {filename}: {total_actos} actos extraídos de {len(sections)} secciones")
-                
+
                 # Actualizar estado final
                 await crud.update_boletin_status(file_db, boletin.id, "completed")
-                
+
                 # Commit final
                 await file_db.commit()
-                
+
                 return {
                     "filename": filename,
                     "status": "completed",
@@ -353,10 +352,10 @@ class BatchProcessor:
                     "monto_procesado": monto_procesado,
                     "alertas_generadas": alertas_generadas
                 }
-                
+
             except Exception as e:
                 logger.error(f"Error procesando {filename}: {e}")
-                
+
                 # Rollback en caso de error
                 try:
                     await file_db.rollback()
@@ -365,17 +364,17 @@ class BatchProcessor:
                         await file_db.commit()
                 except Exception as rollback_error:
                     logger.error(f"Error en rollback: {rollback_error}")
-                
+
                 return {
                     "filename": filename,
                     "status": "failed",
                     "error": str(e)
                 }
-    
+
     async def _extraer_ejecucion_presupuestaria(
-        self, 
-        content: str, 
-        analysis: dict, 
+        self,
+        content: str,
+        analysis: dict,
         boletin_id: int,
         boletin_date: str
     ) -> dict | None:
@@ -386,19 +385,19 @@ class BatchProcessor:
         monto = self._extraer_monto(content)
         if not monto:
             return None
-        
+
         # Extraer organismo
         organismo = self._extraer_organismo(content) or analysis.get('entidad_beneficiaria', 'No especificado')
-        
+
         # Determinar tipo de operación
         tipo_operacion = self._determinar_tipo_operacion(content, analysis)
-        
+
         # Crear fecha del boletín
         try:
             fecha_boletin = datetime.strptime(boletin_date, '%Y%m%d').date()
         except Exception:
             fecha_boletin = date.today()
-        
+
         # Crear registro usando SQL directo
         ejecucion_data = {
             'boletin_id': boletin_id,
@@ -412,7 +411,7 @@ class BatchProcessor:
             'riesgo_watcher': analysis.get('riesgo', ''),
             'requiere_revision': analysis.get('riesgo') in ['ALTO', 'MEDIO']
         }
-        
+
         sql = """
         INSERT INTO ejecucion_presupuestaria 
         (boletin_id, fecha_boletin, organismo, beneficiario, concepto, 
@@ -423,12 +422,12 @@ class BatchProcessor:
          :monto, :tipo_operacion, :categoria_watcher, :riesgo_watcher,
          :requiere_revision, :created_at)
         """
-        
+
         ejecucion_data['created_at'] = datetime.now().isoformat()
         await self.db.execute(text(sql), ejecucion_data)
-        
+
         return ejecucion_data
-    
+
     async def _crear_alerta_sql(self, ejecucion_data: dict, boletin_id: int):
         """Crea una alerta usando SQL directo."""
         sql = """
@@ -439,7 +438,7 @@ class BatchProcessor:
         (:tipo_alerta, :nivel_severidad, :organismo, :titulo, :descripcion,
          :valor_detectado, :boletin_id, :created_at)
         """
-        
+
         alerta_data = {
             'tipo_alerta': 'presupuestaria',
             'nivel_severidad': 'alta',
@@ -450,9 +449,9 @@ class BatchProcessor:
             'boletin_id': boletin_id,
             'created_at': datetime.now().isoformat()
         }
-        
+
         await self.db.execute(text(sql), alerta_data)
-    
+
     def _extraer_monto(self, content: str) -> float | None:
         """Extrae monto del contenido usando patrones regex."""
         for pattern in self.monto_patterns:
@@ -465,7 +464,7 @@ class BatchProcessor:
                 except ValueError:
                     continue
         return None
-    
+
     def _extraer_organismo(self, content: str) -> str | None:
         """Extrae organismo del contenido."""
         for pattern in self.organismo_patterns:
@@ -473,11 +472,11 @@ class BatchProcessor:
             if match:
                 return match.group(1).strip().title()
         return None
-    
+
     def _determinar_tipo_operacion(self, content: str, analysis: dict) -> str:
         """Determina el tipo de operación basado en el contenido y análisis."""
         content_lower = content.lower()
-        
+
         if 'subsidio' in content_lower:
             return 'subsidio'
         elif 'obra' in content_lower or 'construcción' in content_lower:

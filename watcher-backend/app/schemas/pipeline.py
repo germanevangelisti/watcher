@@ -7,10 +7,11 @@ The pipeline processes documents through these stages:
 -> 10. indexing -> 11. indexed (or failed)
 """
 
-from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any, List
 from datetime import datetime
 from enum import Enum
+from typing import Any
+
+from pydantic import BaseModel, Field
 
 
 class PipelineStage(str, Enum):
@@ -98,12 +99,12 @@ class PipelineOptions(BaseModel):
 class StageStats(BaseModel):
     """Statistics for a single pipeline stage."""
     stage: PipelineStage
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    duration_ms: Optional[float] = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    duration_ms: float | None = None
     success: bool = False
-    error: Optional[str] = None
-    details: Optional[Dict[str, Any]] = None
+    error: str | None = None
+    details: dict[str, Any] | None = None
 
 
 class PipelineStatus(BaseModel):
@@ -112,17 +113,17 @@ class PipelineStatus(BaseModel):
     document_id: str
     current_stage: PipelineStage
     progress_pct: float = Field(0.0, ge=0.0, le=100.0)
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    total_duration_ms: Optional[float] = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    total_duration_ms: float | None = None
     success: bool = False
-    error: Optional[str] = None
-    stage_history: List[StageStats] = Field(default_factory=list)
+    error: str | None = None
+    stage_history: list[StageStats] = Field(default_factory=list)
 
 
 class PipelineRequest(BaseModel):
     """Request to process a document through the pipeline."""
-    options: Optional[PipelineOptions] = None
+    options: PipelineOptions | None = None
 
 
 class PipelineResponse(BaseModel):
@@ -132,16 +133,16 @@ class PipelineResponse(BaseModel):
     success: bool
     current_stage: PipelineStage
     total_duration_ms: float
-    stages: List[StageStats]
-    error: Optional[str] = None
-    chunks_created: Optional[int] = None
-    chunks_indexed: Optional[int] = None
+    stages: list[StageStats]
+    error: str | None = None
+    chunks_created: int | None = None
+    chunks_indexed: int | None = None
 
 
 class BatchPipelineRequest(BaseModel):
     """Request to process multiple documents."""
-    file_ids: List[int] = Field(..., min_length=1, max_length=100)
-    options: Optional[PipelineOptions] = None
+    file_ids: list[int] = Field(..., min_length=1, max_length=100)
+    options: PipelineOptions | None = None
 
 
 class BatchPipelineResponse(BaseModel):
@@ -149,7 +150,7 @@ class BatchPipelineResponse(BaseModel):
     total_files: int
     successful: int
     failed: int
-    results: List[PipelineResponse]
+    results: list[PipelineResponse]
 
 
 class PipelineStatsResponse(BaseModel):
@@ -158,5 +159,5 @@ class PipelineStatsResponse(BaseModel):
     total_successful: int
     total_failed: int
     average_duration_ms: float
-    by_stage: Dict[str, int]
-    recent_executions: List[PipelineStatus]
+    by_stage: dict[str, int]
+    recent_executions: list[PipelineStatus]

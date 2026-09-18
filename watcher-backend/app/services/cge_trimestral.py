@@ -9,10 +9,9 @@ from __future__ import annotations
 
 import re
 import zipfile
-from collections import defaultdict
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
 from xml.etree import ElementTree as ET
 
 from app.services.presupuesto_matching import _normalize

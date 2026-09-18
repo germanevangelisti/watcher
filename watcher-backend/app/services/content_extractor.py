@@ -5,11 +5,10 @@ DEPRECADO: Este módulo se mantiene por compatibilidad.
 Usar ExtractorRegistry con detect_sections=True en su lugar.
 """
 
-import re
-from pathlib import Path
-from typing import Dict, List
 import logging
+import re
 import warnings
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +22,7 @@ warnings.warn(
 
 class ContentExtractor:
     """Extrae y consolida contenido de boletines."""
-    
+
     def __init__(self, min_section_chars: int = 500):
         """
         Inicializa el extractor.
@@ -32,8 +31,8 @@ class ContentExtractor:
             min_section_chars: Tamaño mínimo para considerar una sección completa
         """
         self.min_section_chars = min_section_chars
-    
-    async def extract_from_pdf(self, pdf_path: Path) -> List[Dict]:
+
+    async def extract_from_pdf(self, pdf_path: Path) -> list[dict]:
         """
         Extrae contenido de un PDF y lo organiza en secciones lógicas.
         DEPRECADO: Usar ExtractorRegistry.extract(path, detect_sections=True)
@@ -45,14 +44,14 @@ class ContentExtractor:
             Lista de secciones con su contenido y metadatos
         """
         from app.services.extractors import ExtractorRegistry
-        
+
         # Usar el registry para extraer con detección de secciones
         result = await ExtractorRegistry.extract(pdf_path, detect_sections=True)
-        
+
         if not result.success:
             logger.error(f"Error extracting PDF: {result.error}")
             return []
-        
+
         # Convertir secciones del nuevo formato al legacy
         sections = []
         for section in result.sections:
@@ -66,9 +65,9 @@ class ContentExtractor:
                     **section.metadata
                 }
             })
-        
+
         return sections
-    
+
     def _detect_section_type(self, text: str) -> str:
         """
         Detecta el tipo de sección basado en patrones en el texto.
@@ -81,10 +80,10 @@ class ContentExtractor:
             "subsidio": r"(?i)subsidio|beneficio|ayuda|asistencia",
             "presupuesto": r"(?i)presupuesto|gasto|inversi[oó]n|fondos"
         }
-        
+
         for section_type, pattern in patterns.items():
             if re.search(pattern, text[:1000]):  # Solo buscar en el inicio
                 return section_type
-        
+
         return "general"
 

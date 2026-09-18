@@ -11,9 +11,7 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from app.pipelines.base import BoletinPipeline, PipelineResult
-
 
 # ---------------------------------------------------------------------------
 # Helpers

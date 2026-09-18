@@ -10,8 +10,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.services.extraction_goldset import (
-    extracted_from_db_row,
     evaluate_goldset,
+    extracted_from_db_row,
     load_gold_csv,
 )
 

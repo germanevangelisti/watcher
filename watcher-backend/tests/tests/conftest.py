@@ -2,12 +2,13 @@
 Pytest configuration and shared fixtures for Watcher Agent tests.
 """
 
-import pytest
 import sys
-from pathlib import Path
 from datetime import date, datetime
-from typing import Dict, Any
-from unittest.mock import MagicMock, AsyncMock
+from pathlib import Path
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 # Add backend to path
 backend_path = Path(__file__).resolve().parent.parent / "watcher-monolith" / "backend"
@@ -46,7 +47,7 @@ def mock_async_session():
 def sample_scraper_config():
     """Sample scraper configuration."""
     from app.scrapers.base_scraper import ScraperConfig, ScraperType
-    
+
     return ScraperConfig(
         scraper_type=ScraperType.PROVINCIAL,
         base_url="https://test.example.com",
@@ -63,7 +64,7 @@ def sample_scraper_config():
 def sample_scraper_result():
     """Sample scraper result."""
     from app.scrapers.base_scraper import ScraperResult
-    
+
     return ScraperResult(
         filename="20260101_1_Secc.pdf",
         status="downloaded",
@@ -95,8 +96,8 @@ def sample_bulletin_data():
 @pytest.fixture
 def sample_document_schema():
     """Sample DocumentSchema for testing."""
-    from app.adapters.base_adapter import DocumentSchema, SourceType, DocumentCategory
-    
+    from app.adapters.base_adapter import DocumentCategory, DocumentSchema, SourceType
+
     return DocumentSchema(
         source_type=SourceType.PROVINCIAL,
         document_id="prov_20260101_1",
@@ -187,10 +188,10 @@ def mock_raga_agent():
 def sample_agent_task():
     """Sample agent task."""
     class MockTask:
-        def __init__(self, task_type: str, parameters: Dict[str, Any]):
+        def __init__(self, task_type: str, parameters: dict[str, Any]):
             self.task_type = task_type
             self.parameters = parameters
-    
+
     return MockTask
 
 
@@ -238,22 +239,22 @@ def sample_report_data():
 def mock_http_client():
     """Mock HTTP client for testing scrapers."""
     from unittest.mock import PropertyMock
-    
+
     # Create mock response with proper attribute access
     mock_response = MagicMock()
     type(mock_response).status_code = PropertyMock(return_value=200)
     type(mock_response).headers = PropertyMock(return_value={"Content-Type": "application/pdf"})
     type(mock_response).content = PropertyMock(return_value=b"PDF content" * 1000)
-    
+
     # Create async context manager that returns the client
     mock_client = MagicMock()
     mock_client.get = AsyncMock(return_value=mock_response)
-    
+
     # Make it work as async context manager
     async_context = AsyncMock()
     async_context.__aenter__ = AsyncMock(return_value=mock_client)
     async_context.__aexit__ = AsyncMock(return_value=None)
-    
+
     return async_context
 
 
@@ -286,7 +287,7 @@ def sample_pdf_path(tmp_path):
 def sample_boletin_model():
     """Sample Boletin database model."""
     from app.db.models import Boletin
-    
+
     return Boletin(
         id=1,
         filename="20260101_1_Secc.pdf",
@@ -322,7 +323,7 @@ def pytest_configure(config):
 @pytest.fixture
 def assert_scraper_stats():
     """Helper to assert scraper statistics."""
-    def _assert(stats: Dict[str, Any], expected: Dict[str, Any]):
+    def _assert(stats: dict[str, Any], expected: dict[str, Any]):
         for key, value in expected.items():
             assert key in stats, f"Key '{key}' not in stats"
             assert stats[key] == value, f"Expected {key}={value}, got {stats[key]}"
@@ -335,11 +336,11 @@ def assert_adapter_result():
     def _assert(result, success: bool = True, has_document: bool = True):
         assert hasattr(result, 'success'), "Result missing 'success' attribute"
         assert result.success == success, f"Expected success={success}, got {result.success}"
-        
+
         if has_document and success:
             assert result.document is not None, "Expected document in result"
-        
+
         if not success:
             assert result.error is not None, "Expected error message in failed result"
-    
+
     return _assert

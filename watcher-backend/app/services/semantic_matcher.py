@@ -7,9 +7,8 @@ Autor: Watcher Fiscal Agent
 
 import json
 import re
-from typing import Dict, List, Optional, Tuple
-from pathlib import Path
 from dataclasses import dataclass
+from pathlib import Path
 
 
 @dataclass
@@ -19,9 +18,9 @@ class VinculoActoPresupuesto:
     programa_id: int
     score_confianza: float  # 0.0 - 1.0
     metodo_matching: str  # partida, organismo, keywords, semantico
-    detalles: Dict  # Información adicional del match
-    
-    def to_dict(self) -> Dict:
+    detalles: dict  # Información adicional del match
+
+    def to_dict(self) -> dict:
         """Convierte a diccionario para DB"""
         return {
             'acto_id': self.acto_id,
@@ -34,8 +33,8 @@ class VinculoActoPresupuesto:
 
 class SemanticMatcher:
     """Motor de vinculación semántica entre actos y programas presupuestarios"""
-    
-    def __init__(self, vocabulario_path: Optional[Path] = None):
+
+    def __init__(self, vocabulario_path: Path | None = None):
         """
         Inicializa el matcher
         
@@ -45,9 +44,9 @@ class SemanticMatcher:
         # Cargar vocabulario semántico si está disponible
         self.vocabulario = {}
         if vocabulario_path and vocabulario_path.exists():
-            with open(vocabulario_path, 'r', encoding='utf-8') as f:
+            with open(vocabulario_path, encoding='utf-8') as f:
                 self.vocabulario = json.load(f)
-        
+
         # Normalización de organismos comunes
         self.organismo_aliases = {
             'ECONOMÍA': ['ECONOMIA', 'ECONÓMICO', 'ECONOMICO', 'HACIENDA', 'FINANZAS'],
@@ -59,7 +58,7 @@ class SemanticMatcher:
             'PRODUCCIÓN': ['PRODUCCION', 'INDUSTRIA', 'COMERCIO', 'AGRICULTURA'],
             'AMBIENTE': ['AMBIENTAL', 'ECOLOGÍA', 'ECOLOGIA', 'SOSTENIBLE']
         }
-        
+
         # Pesos para scoring
         self.pesos = {
             'partida_exacta': 1.0,
@@ -70,28 +69,28 @@ class SemanticMatcher:
             'keywords_debiles': 0.45,
             'semantico': 0.50
         }
-        
+
         # Umbral mínimo para considerar un match válido
         self.umbral_minimo = 0.4
-    
+
     def normalizar_organismo(self, organismo: str) -> str:
         """Normaliza nombre de organismo"""
         if not organismo:
             return ""
-        
+
         org = organismo.upper().strip()
-        
+
         # Remover prefijos comunes
         for prefix in ['MINISTERIO DE', 'SECRETARIA DE', 'DIRECCION DE']:
             if org.startswith(prefix):
                 org = org[len(prefix):].strip()
-        
+
         # Remover números de código
         org = re.sub(r'^\d+\s*-\s*', '', org)
-        
+
         return org
-    
-    def match_by_partida(self, acto_partida: str, programa_partida: str) -> Tuple[float, Dict]:
+
+    def match_by_partida(self, acto_partida: str, programa_partida: str) -> tuple[float, dict]:
         """
         Match directo por partida presupuestaria
         
@@ -100,11 +99,11 @@ class SemanticMatcher:
         """
         if not acto_partida or not programa_partida:
             return 0.0, {}
-        
+
         # Normalizar partidas
         acto_p = acto_partida.strip().replace(' ', '')
         prog_p = programa_partida.strip().replace(' ', '')
-        
+
         # Match exacto
         if acto_p == prog_p:
             return self.pesos['partida_exacta'], {
@@ -112,7 +111,7 @@ class SemanticMatcher:
                 'acto_partida': acto_partida,
                 'programa_partida': programa_partida
             }
-        
+
         # Match parcial (primeros dígitos)
         if acto_p.startswith(prog_p) or prog_p.startswith(acto_p):
             return self.pesos['partida_parcial'], {
@@ -120,10 +119,10 @@ class SemanticMatcher:
                 'acto_partida': acto_partida,
                 'programa_partida': programa_partida
             }
-        
+
         return 0.0, {}
-    
-    def match_by_organismo(self, acto_organismo: str, programa_organismo: str) -> Tuple[float, Dict]:
+
+    def match_by_organismo(self, acto_organismo: str, programa_organismo: str) -> tuple[float, dict]:
         """
         Match por organismo emisor
         
@@ -132,11 +131,11 @@ class SemanticMatcher:
         """
         if not acto_organismo or not programa_organismo:
             return 0.0, {}
-        
+
         # Normalizar
         acto_org = self.normalizar_organismo(acto_organismo)
         prog_org = self.normalizar_organismo(programa_organismo)
-        
+
         # Match exacto (ignorando case)
         if acto_org == prog_org:
             return self.pesos['organismo_exacto'], {
@@ -144,7 +143,7 @@ class SemanticMatcher:
                 'acto_organismo': acto_organismo,
                 'programa_organismo': programa_organismo
             }
-        
+
         # Match por contenido
         if acto_org in prog_org or prog_org in acto_org:
             return self.pesos['organismo_similar'], {
@@ -152,7 +151,7 @@ class SemanticMatcher:
                 'acto_organismo': acto_organismo,
                 'programa_organismo': programa_organismo
             }
-        
+
         # Match por alias
         for categoria, aliases in self.organismo_aliases.items():
             acto_match = any(alias in acto_org for alias in aliases)
@@ -164,10 +163,10 @@ class SemanticMatcher:
                     'acto_organismo': acto_organismo,
                     'programa_organismo': programa_organismo
                 }
-        
+
         return 0.0, {}
-    
-    def match_by_keywords(self, acto_keywords: List[str], programa_keywords: List[str]) -> Tuple[float, Dict]:
+
+    def match_by_keywords(self, acto_keywords: list[str], programa_keywords: list[str]) -> tuple[float, dict]:
         """
         Match por keywords comunes
         
@@ -176,62 +175,62 @@ class SemanticMatcher:
         """
         if not acto_keywords or not programa_keywords:
             return 0.0, {}
-        
+
         # Convertir a sets y normalizar
         acto_kw = set(kw.lower().strip() for kw in acto_keywords)
         prog_kw = set(kw.lower().strip() for kw in programa_keywords)
-        
+
         # Calcular intersección
         comunes = acto_kw & prog_kw
-        
+
         if not comunes:
             return 0.0, {}
-        
+
         # Score basado en proporción de keywords comunes
         proporcion = len(comunes) / min(len(acto_kw), len(prog_kw))
-        
+
         # Determinar si son keywords fuertes o débiles
         keywords_fuertes = {
             'hospital', 'escuela', 'ruta', 'obra', 'licitación',
             'construcción', 'servicio', 'suministro'
         }
-        
+
         tiene_fuertes = bool(comunes & keywords_fuertes)
-        
+
         if tiene_fuertes:
             score = self.pesos['keywords_fuertes'] * proporcion
         else:
             score = self.pesos['keywords_debiles'] * proporcion
-        
+
         return score, {
             'tipo': 'keywords_comunes',
             'keywords_comunes': list(comunes),
             'cantidad': len(comunes),
             'proporcion': round(proporcion, 3)
         }
-    
-    def expandir_con_vocabulario(self, keywords: List[str]) -> List[str]:
+
+    def expandir_con_vocabulario(self, keywords: list[str]) -> list[str]:
         """Expande keywords usando vocabulario semántico"""
         if not self.vocabulario:
             return keywords
-        
+
         expandidos = set(keywords)
-        
+
         for keyword in keywords:
             keyword_lower = keyword.lower()
             # Buscar en vocabulario
             for tema, sinonimos in self.vocabulario.items():
                 if keyword_lower in [s.lower() for s in sinonimos]:
                     expandidos.update([s.lower() for s in sinonimos[:5]])  # Top 5 sinónimos
-        
+
         return list(expandidos)
-    
+
     def calcular_match_completo(
         self,
-        acto: Dict,
-        programa: Dict,
+        acto: dict,
+        programa: dict,
         usar_vocabulario: bool = True
-    ) -> Tuple[float, str, Dict]:
+    ) -> tuple[float, str, dict]:
         """
         Calcula match completo entre acto y programa usando todos los métodos
         
@@ -245,7 +244,7 @@ class SemanticMatcher:
         """
         scores = []
         detalles_matches = []
-        
+
         # 1. Match por partida (prioridad máxima)
         if acto.get('partida') and programa.get('partida'):
             score_partida, detalles = self.match_by_partida(
@@ -255,7 +254,7 @@ class SemanticMatcher:
             if score_partida > 0:
                 scores.append(score_partida)
                 detalles_matches.append(detalles)
-        
+
         # 2. Match por organismo
         if acto.get('organismo') and programa.get('organismo'):
             score_org, detalles = self.match_by_organismo(
@@ -265,32 +264,32 @@ class SemanticMatcher:
             if score_org > 0:
                 scores.append(score_org)
                 detalles_matches.append(detalles)
-        
+
         # 3. Match por keywords
         acto_kw = acto.get('keywords', [])
         if isinstance(acto_kw, str):
             acto_kw = [k.strip() for k in acto_kw.split(',')]
-        
+
         programa_kw = programa.get('keywords', [])
-        
+
         if usar_vocabulario and acto_kw:
             acto_kw = self.expandir_con_vocabulario(acto_kw)
-        
+
         if acto_kw and programa_kw:
             score_kw, detalles = self.match_by_keywords(acto_kw, programa_kw)
             if score_kw > 0:
                 scores.append(score_kw)
                 detalles_matches.append(detalles)
-        
+
         # Calcular score final (promedio ponderado)
         if not scores:
             return 0.0, 'sin_match', {}
-        
+
         # El score más alto determina el método principal
         score_final = max(scores)
         idx_mejor = scores.index(score_final)
         metodo_principal = detalles_matches[idx_mejor].get('tipo', 'desconocido')
-        
+
         # Detalles completos
         detalles_completos = {
             'score_final': round(score_final, 3),
@@ -299,15 +298,15 @@ class SemanticMatcher:
             'acto_id': acto.get('id'),
             'programa_id': programa.get('id')
         }
-        
+
         return score_final, metodo_principal, detalles_completos
-    
+
     def match_acto_con_programas(
         self,
-        acto: Dict,
-        programas: List[Dict],
+        acto: dict,
+        programas: list[dict],
         top_n: int = 3
-    ) -> List[VinculoActoPresupuesto]:
+    ) -> list[VinculoActoPresupuesto]:
         """
         Busca los mejores matches de un acto con lista de programas
         
@@ -320,10 +319,10 @@ class SemanticMatcher:
             Lista de VinculoActoPresupuesto ordenados por score
         """
         vinculos = []
-        
+
         for programa in programas:
             score, metodo, detalles = self.calcular_match_completo(acto, programa)
-            
+
             # Solo considerar matches sobre el umbral
             if score >= self.umbral_minimo:
                 vinculo = VinculoActoPresupuesto(
@@ -334,17 +333,17 @@ class SemanticMatcher:
                     detalles=detalles
                 )
                 vinculos.append(vinculo)
-        
+
         # Ordenar por score descendente
         vinculos.sort(key=lambda v: v.score_confianza, reverse=True)
-        
+
         return vinculos[:top_n]
 
 
 # Test de ejemplo
 if __name__ == "__main__":
     matcher = SemanticMatcher()
-    
+
     # Acto de ejemplo
     acto = {
         'id': 1,
@@ -353,7 +352,7 @@ if __name__ == "__main__":
         'keywords': ['obra', 'construcción', 'ruta'],
         'monto': 15000000
     }
-    
+
     # Programas de ejemplo
     programas = [
         {
@@ -378,10 +377,10 @@ if __name__ == "__main__":
             'descripcion': 'Obras Públicas Generales'
         }
     ]
-    
+
     # Buscar matches
     vinculos = matcher.match_acto_con_programas(acto, programas)
-    
+
     print("\n🔗 VÍNCULOS ENCONTRADOS:")
     print("=" * 80)
     for i, vinculo in enumerate(vinculos, 1):

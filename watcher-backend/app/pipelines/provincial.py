@@ -11,10 +11,9 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.config import settings
 from app.pipelines.base import BoletinPipeline
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -69,9 +68,8 @@ class ProvincialPipeline(BoletinPipeline):
 
         Returns a list of dicts with keys: path, filename, date, section.
         """
-        from sqlalchemy import select
-
         from app.db.models import Boletin
+        from sqlalchemy import select
 
         if not self._source_dir.exists():
             logger.warning("BOLETINES_DIR '%s' does not exist — nothing to extract", self._source_dir)
@@ -150,9 +148,8 @@ class ProvincialPipeline(BoletinPipeline):
 
         Creates or updates a Boletin record and triggers analysis via BatchProcessor.
         """
-        from sqlalchemy import select
-
         from app.db.models import Boletin
+        from sqlalchemy import select
 
         loaded = 0
         for item in transformed:

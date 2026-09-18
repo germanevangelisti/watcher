@@ -33,11 +33,11 @@ logger = logging.getLogger(__name__)
 
 class WatcherService:
     """Servicio de análisis de contenido con Google Gemini - v2 structured output."""
-    
+
     def __init__(self):
         """Inicializa el servicio con configuración optimizada."""
         api_key = os.getenv('GOOGLE_API_KEY')
-        
+
         # Inicializar cliente solo si hay API key y el SDK, sino usar fallback
         self.model = None
         if api_key and genai is not None:
@@ -58,13 +58,13 @@ class WatcherService:
                 "GOOGLE_API_KEY no encontrada - el servicio funcionará con respuestas fallback. "
                 "Para habilitar análisis con Google Gemini, configura GOOGLE_API_KEY en .env"
             )
-        
+
         # Configuración optimizada
         self.model_name = "gemini-2.0-flash"
         self.max_tokens_per_request = 8000  # Chunks más grandes para capturar actos completos
         self.max_tokens_per_minute = 1000000
         self.requests_per_minute = 60
-        
+
         # Control de rate limiting
         self.request_timestamps: list[datetime] = []
         self.tokens_used_this_minute = 0
@@ -108,21 +108,21 @@ class WatcherService:
         """Divide el contenido en fragmentos que no excedan el límite de tokens."""
         if max_tokens is None:
             max_tokens = self.max_tokens_per_request
-        
+
         total_tokens = self.count_tokens_estimate(content)
-        
+
         if total_tokens <= max_tokens:
             return [content]
-        
+
         # Dividir por párrafos primero
         paragraphs = content.split('\n\n')
         fragments: list[str] = []
         current_fragment = ""
         current_tokens = 0
-        
+
         for paragraph in paragraphs:
             paragraph_tokens = self.count_tokens_estimate(paragraph)
-            
+
             if paragraph_tokens > max_tokens:
                 # Párrafo excede el límite: dividir por oraciones
                 sentences = re.split(r'[.!?]+', paragraph)
@@ -148,16 +148,16 @@ class WatcherService:
                 else:
                     current_fragment += "\n\n" + paragraph
                     current_tokens += paragraph_tokens
-        
+
         if current_fragment:
             fragments.append(current_fragment.strip())
-        
+
         return fragments
 
     async def wait_for_rate_limit(self, estimated_tokens: int):
         """Espera si es necesario para respetar los límites de rate."""
         now = datetime.now()
-        
+
         # Reset contador cada minuto
         if (now - self.last_minute_reset).total_seconds() >= 60:
             self.request_timestamps = []
@@ -170,14 +170,14 @@ class WatcherService:
             wait_time = 60 - (now - recent_requests[0]).total_seconds() + 1
             logger.info(f"Rate limit alcanzado, esperando {wait_time} segundos...")
             await asyncio.sleep(wait_time)
-        
+
         if self.tokens_used_this_minute + estimated_tokens > self.max_tokens_per_minute:
             wait_time = 60 - (now - self.last_minute_reset).total_seconds() + 1
             logger.info(f"Límite de tokens por minuto alcanzado, esperando {wait_time} segundos...")
             await asyncio.sleep(wait_time)
             self.tokens_used_this_minute = 0
             self.last_minute_reset = datetime.now()
-        
+
         self.request_timestamps.append(now)
         self.tokens_used_this_minute += estimated_tokens
 
@@ -193,15 +193,15 @@ class WatcherService:
     def _build_contextual_prompt(self, content: str, metadata: dict) -> str:
         """Construye el prompt con contexto de jurisdicción, sección y tipo de boletín."""
         context_parts = []
-        
+
         jurisdiccion = metadata.get("jurisdiccion_nombre") or metadata.get("jurisdiccion", "")
         if jurisdiccion:
             context_parts.append(f"Jurisdicción: {jurisdiccion}")
-        
+
         fuente = metadata.get("fuente", "")
         if fuente:
             context_parts.append(f"Fuente: {fuente}")
-        
+
         # Use seccion_nombre if available, otherwise map from section number
         seccion_nombre = metadata.get("seccion_nombre", "")
         section_type = metadata.get("section_type", "")
@@ -210,15 +210,15 @@ class WatcherService:
         elif section_type:
             readable = self.SECTION_NAMES.get(section_type, f"Sección {section_type}")
             context_parts.append(f"Sección: {readable}")
-        
+
         boletin = metadata.get("boletin", "")
         if boletin:
             context_parts.append(f"Boletín: {boletin}")
-        
+
         context_header = ""
         if context_parts:
             context_header = "Contexto del documento:\n" + "\n".join(f"- {p}" for p in context_parts) + "\n\n"
-        
+
         return f"""{self.system_prompt}
 
 {context_header}Contenido a analizar:
@@ -243,7 +243,7 @@ class WatcherService:
                 self._provider.tier,
             )
             return await self._provider.analyze_fragment(content, metadata)
-        
+
         estimated_tokens = self.count_tokens_estimate(content) + self.count_tokens_estimate(self.system_prompt)
         await self.wait_for_rate_limit(estimated_tokens)
 
@@ -407,18 +407,18 @@ class WatcherService:
                     len(fragments),
                 )
                 fragments = select_prioritized(fragments, cap, lambda t: t)
-            
+
             all_actos: list[dict] = []
-            
+
             for i, fragment in enumerate(fragments):
                 fragment_metadata = metadata.copy()
                 fragment_metadata.update({
                     'fragment_number': i + 1,
                     'total_fragments': len(fragments)
                 })
-                
+
                 result = await self.analyze_fragment(fragment, fragment_metadata)
-                
+
                 # Extract individual actos and enrich with fragment info
                 for acto in result.get("actos", []):
                     acto["_fragment_index"] = i
@@ -427,14 +427,14 @@ class WatcherService:
                     acto["_resumen_fragmento"] = result.get("resumen_general", "")
                     acto["_model_used"] = result.get("model_used", self.model_name)
                     all_actos.append(acto)
-                
+
                 # Small pause between fragments
                 if i < len(fragments) - 1 and getattr(self._provider, "tier", None) != "local":
                     await asyncio.sleep(0.5)
-            
+
             logger.info(f"Análisis completado: {len(all_actos)} actos extraídos de {len(fragments)} fragmentos")
             return all_actos
-                
+
         except Exception as e:
             logger.error(f"Error en analyze_content: {e}")
             return []

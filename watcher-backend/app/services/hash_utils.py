@@ -5,10 +5,9 @@ Epic 1.1 - SHA256-based deduplication
 
 import hashlib
 from pathlib import Path
-from typing import Union
 
 
-def compute_sha256(filepath: Union[str, Path]) -> str:
+def compute_sha256(filepath: str | Path) -> str:
     """
     Compute SHA256 hash of a file.
     
@@ -23,17 +22,17 @@ def compute_sha256(filepath: Union[str, Path]) -> str:
         IOError: If file cannot be read
     """
     filepath = Path(filepath)
-    
+
     if not filepath.exists():
         raise FileNotFoundError(f"File not found: {filepath}")
-    
+
     sha256 = hashlib.sha256()
-    
+
     # Read file in chunks to handle large files efficiently
     with open(filepath, "rb") as f:
         for chunk in iter(lambda: f.read(8192), b""):
             sha256.update(chunk)
-    
+
     return sha256.hexdigest()
 
 
@@ -50,7 +49,7 @@ def compute_sha256_bytes(content: bytes) -> str:
     return hashlib.sha256(content).hexdigest()
 
 
-def verify_file_hash(filepath: Union[str, Path], expected_hash: str) -> bool:
+def verify_file_hash(filepath: str | Path, expected_hash: str) -> bool:
     """
     Verify that a file matches an expected SHA256 hash.
     
@@ -64,5 +63,5 @@ def verify_file_hash(filepath: Union[str, Path], expected_hash: str) -> bool:
     try:
         actual_hash = compute_sha256(filepath)
         return actual_hash.lower() == expected_hash.lower()
-    except (FileNotFoundError, IOError):
+    except (OSError, FileNotFoundError):
         return False

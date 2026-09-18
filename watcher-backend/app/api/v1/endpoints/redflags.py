@@ -1,10 +1,10 @@
 """
 API endpoints for Red Flags - Datos reales del DS Lab
 """
-from pathlib import Path
 import json
 import logging
-from typing import Dict
+from pathlib import Path
+
 from fastapi import APIRouter, HTTPException
 
 logger = logging.getLogger(__name__)
@@ -14,14 +14,14 @@ router = APIRouter()
 # Ruta al archivo de sincronización con datos reales del DS Lab
 MONOLITH_SYNC_FILE = Path("/Users/germanevangelisti/watcher-agent/watcher-lab/watcher_ds_lab/reports/monolith_sync.json")
 
-def load_sync_data() -> Dict:
+def load_sync_data() -> dict:
     """Carga los datos reales procesados por el DS Lab"""
     try:
         if not MONOLITH_SYNC_FILE.exists():
             logger.warning(f"Archivo de sincronización no encontrado: {MONOLITH_SYNC_FILE}")
             return {}
-        
-        with open(MONOLITH_SYNC_FILE, 'r', encoding='utf-8') as f:
+
+        with open(MONOLITH_SYNC_FILE, encoding='utf-8') as f:
             return json.load(f)
     except Exception as e:
         logger.error(f"Error cargando datos de sincronización: {e}")
@@ -36,16 +36,16 @@ async def get_document_redflags(document_id: str):
     try:
         # Cargar datos reales del DS Lab
         sync_data = load_sync_data()
-        
+
         if not sync_data:
             raise HTTPException(
-                status_code=503, 
+                status_code=503,
                 detail="Datos de análisis no disponibles. El sistema DS Lab aún no ha procesado los documentos."
             )
-        
+
         # Buscar red flags para este documento
         red_flags_by_document = sync_data.get('red_flags_by_document', {})
-        
+
         if document_id not in red_flags_by_document:
             # Si no hay red flags para este documento, retornar lista vacía
             return {
@@ -59,10 +59,10 @@ async def get_document_redflags(document_id: str):
                     'info': 0
                 }
             }
-        
+
         document_data = red_flags_by_document[document_id]
         flags = document_data.get('flags', [])
-        
+
         # Convertir flags al formato esperado por el frontend
         formatted_flags = []
         for flag in flags:
@@ -84,7 +84,7 @@ async def get_document_redflags(document_id: str):
                 'visual_evidence': None  # Se puede agregar después si está disponible
             }
             formatted_flags.append(formatted_flag)
-        
+
         # Calcular resumen
         summary = {
             'total': len(formatted_flags),
@@ -93,13 +93,13 @@ async def get_document_redflags(document_id: str):
             'medium': len([f for f in formatted_flags if f['severity'] == 'MEDIO']),
             'info': len([f for f in formatted_flags if f['severity'] == 'INFORMATIVO'])
         }
-        
+
         return {
             'document_id': document_id,
             'red_flags': formatted_flags,
             'summary': summary
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -113,14 +113,14 @@ async def get_all_red_flags():
     """
     try:
         sync_data = load_sync_data()
-        
+
         if not sync_data:
             return {
                 'total_documents': 0,
                 'documents_with_flags': 0,
                 'red_flags_by_document': {}
             }
-        
+
         return {
             'total_documents': sync_data.get('total_documents', 0),
             'documents_with_flags': sync_data.get('documents_with_flags', 0),

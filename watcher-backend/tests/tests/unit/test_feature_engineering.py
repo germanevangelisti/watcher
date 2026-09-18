@@ -10,7 +10,6 @@ Cubre:
 from __future__ import annotations
 
 import pytest
-
 from app.services.feature_engineering import (
     ActoFeatureEngineer,
     RedFlagClassifier,
@@ -23,7 +22,6 @@ from app.services.feature_engineering import (
     _parse_amount_string,
     get_feature_engineer,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers

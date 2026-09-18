@@ -23,7 +23,6 @@ from typing import Any, Literal
 from urllib.parse import urlparse
 
 import httpx
-
 from app.services.url_fetcher import build_url_cordoba_provincial
 
 SECTIONS = (1, 2, 3, 4, 5)

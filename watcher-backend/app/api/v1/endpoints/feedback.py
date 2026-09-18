@@ -1,11 +1,11 @@
 """
 API endpoints para sistema de feedback y learning
 """
-from fastapi import APIRouter, HTTPException
-from typing import Optional, Dict, Any
-from pydantic import BaseModel
+from typing import Any
 
 from agents.learning import LearningAgent
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 
 router = APIRouter()
 
@@ -17,23 +17,23 @@ learning_agent = LearningAgent()
 class ValidateRedFlagRequest(BaseModel):
     red_flag_id: str
     is_valid: bool
-    user_notes: Optional[str] = None
+    user_notes: str | None = None
 
 
 class RateClassificationRequest(BaseModel):
     document_id: str
     predicted_class: str
     actual_class: str
-    user_notes: Optional[str] = None
+    user_notes: str | None = None
 
 
 class GenericFeedbackRequest(BaseModel):
     feedback_type: str
     entity_type: str
     entity_id: str
-    feedback_value: Dict[str, Any]
-    user_notes: Optional[str] = None
-    metadata: Optional[Dict[str, Any]] = None
+    feedback_value: dict[str, Any]
+    user_notes: str | None = None
+    metadata: dict[str, Any] | None = None
 
 
 # Endpoints
@@ -113,15 +113,15 @@ async def apply_adjustment(adjustment_id: int):
     Marca un ajuste como aplicado
     """
     result = learning_agent.apply_adjustment(adjustment_id)
-    
+
     if not result.get("success"):
         raise HTTPException(status_code=404, detail=result.get("error", "Unknown error"))
-    
+
     return result
 
 
 @router.get("/history")
-async def get_feedback_history(entity_type: Optional[str] = None, limit: int = 100):
+async def get_feedback_history(entity_type: str | None = None, limit: int = 100):
     """
     Obtiene historial de feedback
     """

@@ -4,11 +4,12 @@ Test simplificado de Epic 0 - Procesa 1 solo archivo real
 Prueba la cadena completa: Extracción -> Análisis con Gemini
 """
 
-import requests
-import time
-import sys
 import sqlite3
+import sys
+import time
 from pathlib import Path
+
+import requests
 
 # Config
 API_BASE = "http://localhost:8000/api/v1"
@@ -127,7 +128,7 @@ print_step("5/5", "Monitoreando procesamiento...")
 max_retries = 30
 for i in range(max_retries):
     time.sleep(2)
-    
+
     # Obtener logs
     try:
         r_logs = requests.get(f"{API_BASE}/processing/logs/{session_id}", timeout=5)
@@ -138,7 +139,7 @@ for i in range(max_retries):
                 print(f"  [{i+1}] {last_log.get('message', 'Processing...')}")
     except Exception:
         pass
-    
+
     # Verificar status del documento
     r_status = requests.get(f"{API_BASE}/boletines", params={
         "year": TEST_YEAR,
@@ -146,7 +147,7 @@ for i in range(max_retries):
         "day": TEST_DAY,
         "limit": 1
     })
-    
+
     if r_status.ok:
         doc = r_status.json()[0]
         if doc['status'] == 'processed':
@@ -155,7 +156,7 @@ for i in range(max_retries):
         elif doc['status'] == 'failed':
             print_error(f"Documento falló: {doc.get('error_message')}")
             sys.exit(1)
-    
+
     if i == max_retries - 1:
         print_error("Timeout - procesamiento tomó demasiado tiempo")
         sys.exit(1)

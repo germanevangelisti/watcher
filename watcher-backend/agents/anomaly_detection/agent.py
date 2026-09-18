@@ -4,12 +4,13 @@ Anomaly Detection Agent
 Identifica patrones sospechosos y red flags usando ML + reglas heurísticas
 """
 import logging
-from typing import Dict, List, Any, Optional
 from datetime import datetime
-from app.db.database import AsyncSessionLocal
+from typing import Any
 
 from app.core.agent_config import AnomalyDetectionConfig
-from agents.orchestrator.state import WorkflowState, TaskDefinition, AgentType
+from app.db.database import AsyncSessionLocal
+
+from agents.orchestrator.state import AgentType, TaskDefinition, WorkflowState
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +25,8 @@ class AnomalyDetectionAgent:
     - Clasificación de riesgo
     - Generación de explicaciones
     """
-    
-    def __init__(self, config: Optional[AnomalyDetectionConfig] = None):
+
+    def __init__(self, config: AnomalyDetectionConfig | None = None):
         """
         Inicializa el agente
         
@@ -34,14 +35,14 @@ class AnomalyDetectionAgent:
         """
         self.config = config or AnomalyDetectionConfig()
         self.agent_type = AgentType.ANOMALY_DETECTION
-        
+
         # Modelos ML (placeholder - cargar modelos entrenados)
         self.models = {}
-        
+
         logger.info("AnomalyDetectionAgent inicializado")
-    
-    async def execute(self, workflow: WorkflowState, 
-                     task: TaskDefinition) -> Dict[str, Any]:
+
+    async def execute(self, workflow: WorkflowState,
+                     task: TaskDefinition) -> dict[str, Any]:
         """
         Ejecuta una tarea del agente
         
@@ -54,9 +55,9 @@ class AnomalyDetectionAgent:
         """
         task_type = task.task_type
         parameters = task.parameters
-        
+
         logger.info(f"Ejecutando tarea: {task_type}")
-        
+
         if task_type == "analyze_document":
             return await self.analyze_document(
                 parameters.get("text"),
@@ -81,9 +82,9 @@ class AnomalyDetectionAgent:
             )
         else:
             raise ValueError(f"Tipo de tarea no soportado: {task_type}")
-    
-    async def analyze_document(self, text: str, entities: Dict[str, Any],
-                              document_id: Optional[str] = None) -> Dict[str, Any]:
+
+    async def analyze_document(self, text: str, entities: dict[str, Any],
+                              document_id: str | None = None) -> dict[str, Any]:
         """
         Análisis completo de un documento
         
@@ -98,19 +99,19 @@ class AnomalyDetectionAgent:
         try:
             # Calcular score de transparencia
             transparency_score = self._calculate_transparency_score(text, entities)
-            
+
             # Calcular score de anomalía
             anomaly_score = self._calculate_anomaly_score(entities, text)
-            
+
             # Determinar nivel de riesgo
             risk_level = self._determine_risk_level(transparency_score, anomaly_score)
-            
+
             # Detectar red flags
             red_flags = self._detect_red_flags(text, entities, transparency_score)
-            
+
             # Predicciones ML
             ml_predictions = self._run_ml_predictions(entities, transparency_score)
-            
+
             result = {
                 "success": True,
                 "document_id": document_id,
@@ -122,22 +123,22 @@ class AnomalyDetectionAgent:
                 "ml_predictions": ml_predictions,
                 "timestamp": datetime.utcnow().isoformat()
             }
-            
+
             logger.info(f"Documento analizado: risk={risk_level}, "
                        f"transparency={transparency_score:.1f}, "
                        f"red_flags={len(red_flags)}")
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"Error analizando documento: {e}", exc_info=True)
             return {
                 "success": False,
                 "error": str(e)
             }
-    
+
     async def calculate_transparency_score(self, text: str,
-                                          entities: Dict[str, Any]) -> float:
+                                          entities: dict[str, Any]) -> float:
         """
         Calcula el score de transparencia
         
@@ -149,9 +150,9 @@ class AnomalyDetectionAgent:
             Score de transparencia (0-100)
         """
         return self._calculate_transparency_score(text, entities)
-    
-    async def detect_red_flags(self, text: str, entities: Dict[str, Any],
-                              transparency_score: float) -> List[Dict[str, Any]]:
+
+    async def detect_red_flags(self, text: str, entities: dict[str, Any],
+                              transparency_score: float) -> list[dict[str, Any]]:
         """
         Detecta red flags en el documento
         
@@ -164,95 +165,93 @@ class AnomalyDetectionAgent:
             Lista de red flags detectadas
         """
         return self._detect_red_flags(text, entities, transparency_score)
-    
-    def _calculate_transparency_score(self, text: str, 
-                                     entities: Dict[str, Any]) -> float:
+
+    def _calculate_transparency_score(self, text: str,
+                                     entities: dict[str, Any]) -> float:
         """Calcula score de transparencia (0-100)"""
         score = 50.0  # Base
-        
+
         # Puntos por tener montos identificados
         if entities.get('amounts'):
             score += 10
             if len(entities['amounts']) >= 5:
                 score += 5
-        
+
         # Puntos por identificar beneficiarios
         if entities.get('beneficiaries'):
             score += 15
             if len(entities['beneficiaries']) >= 3:
                 score += 5
-        
+
         # Puntos por identificar organismos
         if entities.get('organisms'):
             score += 10
-        
+
         # Penalización por texto muy corto
         if len(text) < 1000:
             score -= 15
-        
+
         # Penalización por falta de estructura
         if '\n' not in text or len(text.split('\n')) < 10:
             score -= 10
-        
+
         # Bonus por fechas claras
         if entities.get('dates') and len(entities['dates']) >= 2:
             score += 5
-        
+
         # Asegurar rango 0-100
         return max(0.0, min(100.0, score))
-    
-    def _calculate_anomaly_score(self, entities: Dict[str, Any], 
+
+    def _calculate_anomaly_score(self, entities: dict[str, Any],
                                  text: str) -> float:
         """Calcula score de anomalía (0-100)"""
         anomaly = 0.0
-        
+
         # Montos sospechosos
         amounts = entities.get('amounts', [])
         for amount in amounts:
             value = amount['numeric_value']
-            
+
             # Patrones sospechosos
             if '999' in str(int(value)):
                 anomaly += 15
-            
+
             # Montos muy altos
             threshold = self.config.amount_thresholds.get('very_high', 50000000)
             if value > threshold:
                 anomaly += 10
-        
+
         # Falta de beneficiarios con montos altos
         if amounts and not entities.get('beneficiaries'):
             anomaly += 20
-        
+
         # Texto muy repetitivo
         words = text.lower().split()
         if len(words) > 0:
             unique_ratio = len(set(words)) / len(words)
             if unique_ratio < 0.3:
                 anomaly += 15
-        
+
         return min(100.0, anomaly)
-    
-    def _determine_risk_level(self, transparency_score: float, 
+
+    def _determine_risk_level(self, transparency_score: float,
                              anomaly_score: float) -> str:
         """Determina nivel de riesgo"""
         thresholds = self.config.transparency_thresholds
-        
+
         # Basado en transparency score
         if transparency_score < thresholds.get('high_risk', 30):
             return 'high'
-        elif transparency_score < thresholds.get('medium_risk', 50):
-            return 'medium'
-        elif anomaly_score > 60:
+        elif transparency_score < thresholds.get('medium_risk', 50) or anomaly_score > 60:
             return 'medium'
         else:
             return 'low'
-    
-    def _detect_red_flags(self, text: str, entities: Dict[str, Any],
-                         transparency_score: float) -> List[Dict[str, Any]]:
+
+    def _detect_red_flags(self, text: str, entities: dict[str, Any],
+                         transparency_score: float) -> list[dict[str, Any]]:
         """Detecta red flags basadas en reglas"""
         red_flags = []
-        
+
         # RED FLAG: HIGH_AMOUNT
         rule = self.config.red_flag_rules.get('HIGH_AMOUNT', {})
         if rule.get('enabled', True):
@@ -273,7 +272,7 @@ class AnomalyDetectionAgent:
                         "confidence_score": 0.9,
                         "timestamp": datetime.utcnow().isoformat()
                     })
-        
+
         # RED FLAG: MISSING_BENEFICIARY
         rule = self.config.red_flag_rules.get('MISSING_BENEFICIARY', {})
         if rule.get('enabled', True):
@@ -291,7 +290,7 @@ class AnomalyDetectionAgent:
                     "confidence_score": 0.7,
                     "timestamp": datetime.utcnow().isoformat()
                 })
-        
+
         # RED FLAG: SUSPICIOUS_AMOUNT_PATTERN
         rule = self.config.red_flag_rules.get('SUSPICIOUS_AMOUNT_PATTERN', {})
         if rule.get('enabled', True):
@@ -314,7 +313,7 @@ class AnomalyDetectionAgent:
                             "confidence_score": 0.8,
                             "timestamp": datetime.utcnow().isoformat()
                         })
-        
+
         # RED FLAG: LOW_TRANSPARENCY_SCORE
         rule = self.config.red_flag_rules.get('LOW_TRANSPARENCY_SCORE', {})
         if rule.get('enabled', True):
@@ -334,13 +333,13 @@ class AnomalyDetectionAgent:
                     "confidence_score": 0.95,
                     "timestamp": datetime.utcnow().isoformat()
                 })
-        
+
         return red_flags
-    
-    def _identify_missing_elements(self, entities: Dict[str, Any]) -> List[str]:
+
+    def _identify_missing_elements(self, entities: dict[str, Any]) -> list[str]:
         """Identifica elementos faltantes para transparencia"""
         missing = []
-        
+
         if not entities.get('amounts'):
             missing.append("montos")
         if not entities.get('beneficiaries'):
@@ -349,11 +348,11 @@ class AnomalyDetectionAgent:
             missing.append("organismos")
         if not entities.get('dates'):
             missing.append("fechas")
-        
+
         return missing
-    
-    def _run_ml_predictions(self, entities: Dict[str, Any],
-                           transparency_score: float) -> Dict[str, Any]:
+
+    def _run_ml_predictions(self, entities: dict[str, Any],
+                           transparency_score: float) -> dict[str, Any]:
         """Ejecutar predicciones ML (placeholder)"""
         return {
             "random_forest": {
@@ -369,9 +368,9 @@ class AnomalyDetectionAgent:
                 "distance_to_centroid": 1.5
             }
         }
-    
-    async def analyze_high_risk_documents(self, threshold: int = 50, 
-                                         limit: int = 20) -> Dict[str, Any]:
+
+    async def analyze_high_risk_documents(self, threshold: int = 50,
+                                         limit: int = 20) -> dict[str, Any]:
         """
         Analiza documentos con alto riesgo (bajo score de transparencia)
         
@@ -384,17 +383,17 @@ class AnomalyDetectionAgent:
         """
         try:
             from agents.tools.analysis_tools import AnalysisTools
-            
+
             async with AsyncSessionLocal() as db:
                 # Obtener documentos de alto riesgo
                 high_risk_docs = await AnalysisTools.get_top_risk_documents(db, limit=limit)
-                
+
                 # Filtrar por threshold
                 filtered_docs = [
-                    doc for doc in high_risk_docs 
+                    doc for doc in high_risk_docs
                     if doc.get('transparency_score', 100) < threshold
                 ]
-                
+
                 # Estadísticas
                 stats = {
                     "total_analyzed": len(filtered_docs),
@@ -402,9 +401,9 @@ class AnomalyDetectionAgent:
                     "average_score": sum(d.get('transparency_score', 0) for d in filtered_docs) / len(filtered_docs) if filtered_docs else 0,
                     "total_red_flags": sum(d.get('red_flags_count', 0) for d in filtered_docs)
                 }
-                
+
                 logger.info(f"Análisis de alto riesgo completado: {len(filtered_docs)} documentos")
-                
+
                 return {
                     "success": True,
                     "task_type": "analyze_high_risk",
@@ -417,7 +416,7 @@ class AnomalyDetectionAgent:
                     ],
                     "timestamp": datetime.utcnow().isoformat()
                 }
-                
+
         except Exception as e:
             logger.error(f"Error en análisis de alto riesgo: {e}", exc_info=True)
             return {

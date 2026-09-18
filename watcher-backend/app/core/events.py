@@ -2,10 +2,11 @@
 Sistema de eventos para comunicación entre agentes
 """
 import asyncio
-from typing import Dict, List, Callable, Any, Optional
+import logging
+from collections.abc import Callable
 from datetime import datetime
 from enum import Enum
-import logging
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +18,7 @@ class EventType(str, Enum):
     WORKFLOW_STARTED = "workflow.started"
     WORKFLOW_COMPLETED = "workflow.completed"
     WORKFLOW_FAILED = "workflow.failed"
-    
+
     # Task events
     TASK_CREATED = "task.created"
     TASK_STARTED = "task.started"
@@ -26,22 +27,22 @@ class EventType(str, Enum):
     TASK_WAITING_APPROVAL = "task.waiting_approval"
     TASK_APPROVED = "task.approved"
     TASK_REJECTED = "task.rejected"
-    
+
     # Agent events
     AGENT_STARTED = "agent.started"
     AGENT_STOPPED = "agent.stopped"
     AGENT_ERROR = "agent.error"
-    
+
     # Document events
     DOCUMENT_UPLOADED = "document.uploaded"
     DOCUMENT_ANALYZED = "document.analyzed"
     DOCUMENT_FAILED = "document.failed"
-    
+
     # Red flag events
     RED_FLAG_DETECTED = "redflag.detected"
     RED_FLAG_VALIDATED = "redflag.validated"
     RED_FLAG_DISMISSED = "redflag.dismissed"
-    
+
     # Pipeline events
     PIPELINE_RESET = "pipeline.reset"
     PIPELINE_RESET_DOCUMENT = "pipeline.reset.document"
@@ -51,7 +52,7 @@ class EventType(str, Enum):
     PIPELINE_DOCUMENT_COMPLETED = "pipeline.document.completed"
     PIPELINE_DOCUMENT_FAILED = "pipeline.document.failed"
     PIPELINE_COMPLETED = "pipeline.completed"
-    
+
     # System events
     SYSTEM_HEALTH_CHECK = "system.health_check"
     SYSTEM_ALERT = "system.alert"
@@ -59,16 +60,16 @@ class EventType(str, Enum):
 
 class Event:
     """Evento del sistema"""
-    
-    def __init__(self, event_type: EventType, data: Dict[str, Any], 
-                 source: Optional[str] = None):
+
+    def __init__(self, event_type: EventType, data: dict[str, Any],
+                 source: str | None = None):
         self.event_type = event_type
         self.data = data
         self.source = source or "system"
         self.timestamp = datetime.utcnow()
         self.event_id = f"{event_type}_{self.timestamp.timestamp()}"
-    
-    def to_dict(self) -> Dict[str, Any]:
+
+    def to_dict(self) -> dict[str, Any]:
         """Convierte el evento a diccionario"""
         return {
             "event_id": self.event_id,
@@ -85,12 +86,12 @@ class EventBus:
     
     Patrón Pub/Sub para desacoplar agentes y permitir observabilidad
     """
-    
+
     def __init__(self):
-        self._subscribers: Dict[EventType, List[Callable]] = {}
-        self._event_history: List[Event] = []
+        self._subscribers: dict[EventType, list[Callable]] = {}
+        self._event_history: list[Event] = []
         self._max_history = 1000
-        
+
     def subscribe(self, event_type: EventType, callback: Callable) -> None:
         """
         Suscribe un callback a un tipo de evento
@@ -101,10 +102,10 @@ class EventBus:
         """
         if event_type not in self._subscribers:
             self._subscribers[event_type] = []
-        
+
         self._subscribers[event_type].append(callback)
         logger.debug(f"Callback suscrito a {event_type}")
-    
+
     def unsubscribe(self, event_type: EventType, callback: Callable) -> None:
         """
         Desuscribe un callback de un tipo de evento
@@ -119,9 +120,9 @@ class EventBus:
                 logger.debug(f"Callback desuscrito de {event_type}")
             except ValueError:
                 pass
-    
-    async def emit(self, event_type: EventType, data: Dict[str, Any],
-                   source: Optional[str] = None) -> None:
+
+    async def emit(self, event_type: EventType, data: dict[str, Any],
+                   source: str | None = None) -> None:
         """
         Emite un evento a todos los suscriptores
         
@@ -131,14 +132,14 @@ class EventBus:
             source: Fuente que emite el evento
         """
         event = Event(event_type, data, source)
-        
+
         # Guardar en historial
         self._event_history.append(event)
         if len(self._event_history) > self._max_history:
             self._event_history.pop(0)
-        
+
         logger.info(f"Evento emitido: {event_type} from {source}")
-        
+
         # Notificar suscriptores
         if event_type in self._subscribers:
             for callback in self._subscribers[event_type]:
@@ -148,11 +149,11 @@ class EventBus:
                     else:
                         callback(event)
                 except Exception as e:
-                    logger.error(f"Error en callback de {event_type}: {e}", 
+                    logger.error(f"Error en callback de {event_type}: {e}",
                                exc_info=True)
-    
-    def get_event_history(self, event_type: Optional[EventType] = None,
-                         limit: int = 100) -> List[Dict[str, Any]]:
+
+    def get_event_history(self, event_type: EventType | None = None,
+                         limit: int = 100) -> list[dict[str, Any]]:
         """
         Obtiene el historial de eventos
         
@@ -164,14 +165,14 @@ class EventBus:
             Lista de eventos como diccionarios
         """
         events = self._event_history
-        
+
         if event_type:
             events = [e for e in events if e.event_type == event_type]
-        
+
         # Retornar los más recientes
         recent = events[-limit:] if len(events) > limit else events
         return [e.to_dict() for e in recent]
-    
+
     def clear_history(self) -> None:
         """Limpia el historial de eventos"""
         self._event_history.clear()

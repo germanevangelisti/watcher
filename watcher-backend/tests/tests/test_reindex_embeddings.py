@@ -10,7 +10,6 @@ re-indexación:
 
 import sys
 from pathlib import Path
-from typing import List
 
 import pytest
 
@@ -21,10 +20,9 @@ for p in (str(BACKEND_DIR), str(BACKEND_DIR / "scripts")):
         sys.path.insert(0, p)
 
 import chromadb
-from chromadb.config import Settings
-
-from app.services.embedding_service import EMBEDDING_DIM
 import reindex_google_embeddings as reindexer
+from app.services.embedding_service import EMBEDDING_DIM
+from chromadb.config import Settings
 
 
 class _FakeEmbeddingFunction:
@@ -37,7 +35,7 @@ class _FakeEmbeddingFunction:
     def name(self) -> str:
         return f"fake-{self._label}"
 
-    def __call__(self, input: List[str]) -> List[List[float]]:
+    def __call__(self, input: list[str]) -> list[list[float]]:
         # Vector determinista dependiente del texto para que la búsqueda sea estable.
         out = []
         for text in input:

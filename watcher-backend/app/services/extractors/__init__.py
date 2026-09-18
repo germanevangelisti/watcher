@@ -7,8 +7,8 @@ de documentos PDF usando diferentes bibliotecas (PyPDF2, pdfplumber).
 """
 
 from .base import PDFExtractor
-from .pypdf2_extractor import PyPDF2Extractor
 from .pdfplumber_extractor import PdfPlumberExtractor
+from .pypdf2_extractor import PyPDF2Extractor
 from .registry import ExtractorRegistry, extract_pdf
 
 __all__ = [

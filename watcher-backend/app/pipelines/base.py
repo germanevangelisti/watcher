@@ -20,11 +20,10 @@ import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional
-
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Any
 
 from app.db.models import IngestionRun
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -38,13 +37,13 @@ class PipelineResult:
     status: str  # "loaded" | "failed"
     rows_in: int = 0
     rows_loaded: int = 0
-    error: Optional[str] = None
+    error: str | None = None
     started_at: datetime = field(default_factory=datetime.utcnow)
-    finished_at: Optional[datetime] = None
-    run_id: Optional[int] = None
+    finished_at: datetime | None = None
+    run_id: int | None = None
 
     @property
-    def duration_seconds(self) -> Optional[float]:
+    def duration_seconds(self) -> float | None:
         if self.finished_at and self.started_at:
             return (self.finished_at - self.started_at).total_seconds()
         return None
@@ -67,7 +66,7 @@ class BoletinPipeline(ABC):
     name: str
     source_id: str
 
-    def __init__(self, db: AsyncSession, config: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(self, db: AsyncSession, config: dict[str, Any] | None = None) -> None:
         if not hasattr(self, "name") or not self.name:
             raise TypeError(f"{type(self).__name__} must define class attribute 'name'")
         if not hasattr(self, "source_id") or not self.source_id:
@@ -83,15 +82,15 @@ class BoletinPipeline(ABC):
     # ------------------------------------------------------------------
 
     @abstractmethod
-    async def extract(self) -> List[dict]:
+    async def extract(self) -> list[dict]:
         """Download / read raw data. Returns a list of raw records."""
 
     @abstractmethod
-    async def transform(self, raw_data: List[dict]) -> List[dict]:
+    async def transform(self, raw_data: list[dict]) -> list[dict]:
         """Clean, enrich and normalise raw records. Returns transformed records."""
 
     @abstractmethod
-    async def load(self, transformed: List[dict]) -> None:
+    async def load(self, transformed: list[dict]) -> None:
         """Persist transformed records to SQL / Graph / Vector store."""
 
     # ------------------------------------------------------------------
@@ -167,7 +166,7 @@ class BoletinPipeline(ABC):
         self,
         run: IngestionRun,
         status: str,
-        error: Optional[str] = None,
+        error: str | None = None,
     ) -> None:
         run.status = status
         run.rows_in = self.rows_in

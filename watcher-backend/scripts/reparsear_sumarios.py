@@ -14,29 +14,27 @@ Uso:
     python scripts/reparsear_sumarios.py --format-stats   # Mostrar distribución de formatos
 """
 
-import asyncio
 import argparse
+import asyncio
 import json
 import sys
 from collections import Counter
-from pathlib import Path
 from datetime import datetime
-from typing import Optional
+from pathlib import Path
 
 # Añadir raíz del proyecto al path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from sqlalchemy import select
+from app.core.config import settings
 from app.db.database import AsyncSessionLocal
 from app.db.models import Boletin, FuenteBoletin, SumarioParseado
-from app.core.config import settings
 from app.services.sumario_parser import SumarioParser
-
+from sqlalchemy import select
 
 BATCH_SIZE = 100
 
 
-def _find_pdf(filename: str) -> Optional[Path]:
+def _find_pdf(filename: str) -> Path | None:
     """Busca el PDF en los directorios conocidos."""
     if len(filename) >= 8:
         year = filename[:4]
@@ -50,14 +48,14 @@ def _find_pdf(filename: str) -> Optional[Path]:
     return None
 
 
-def _find_txt(filename: str) -> Optional[Path]:
+def _find_txt(filename: str) -> Path | None:
     """Busca el .txt pre-extraído como fallback."""
     txt_name = filename.replace(".pdf", ".txt")
     txt_path = settings.DATA_DIR / "processed" / txt_name
     return txt_path if txt_path.exists() else None
 
 
-async def _get_text_for_boletin(filename: str) -> Optional[str]:
+async def _get_text_for_boletin(filename: str) -> str | None:
     """
     Obtiene el texto del boletín para parseo de sumario.
     Prefiere el PDF (páginas reales); fallback al .txt pre-extraído.
@@ -87,8 +85,8 @@ async def _get_text_for_boletin(filename: str) -> Optional[str]:
 
 
 async def run_backfill(
-    year: Optional[str] = None,
-    limit: Optional[int] = None,
+    year: str | None = None,
+    limit: int | None = None,
     dry_run: bool = False,
     format_stats: bool = False,
 ):

@@ -10,7 +10,8 @@ This module implements an API Gateway pattern that:
 """
 
 import logging
-from typing import Dict, Any, Optional
+from typing import Any
+
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
@@ -23,8 +24,8 @@ class GatewayRequest(BaseModel):
     """Standard gateway request format"""
     service: str
     operation: str
-    parameters: Dict[str, Any] = {}
-    metadata: Optional[Dict[str, Any]] = None
+    parameters: dict[str, Any] = {}
+    metadata: dict[str, Any] | None = None
 
 
 class GatewayResponse(BaseModel):
@@ -32,9 +33,9 @@ class GatewayResponse(BaseModel):
     success: bool
     service: str
     operation: str
-    data: Optional[Any] = None
-    error: Optional[str] = None
-    metadata: Optional[Dict[str, Any]] = None
+    data: Any | None = None
+    error: str | None = None
+    metadata: dict[str, Any] | None = None
 
 
 class APIGateway:
@@ -47,7 +48,7 @@ class APIGateway:
     - KAA (Knowledge AI Agents)
     - OEx (Output Execution - Alerts, Reports)
     """
-    
+
     def __init__(self):
         """Initialize API Gateway."""
         self.service_registry = {
@@ -72,14 +73,14 @@ class APIGateway:
                 "reports": "app.services.report_generator"
             }
         }
-        
+
         self.stats = {
             "total_requests": 0,
             "successful_requests": 0,
             "failed_requests": 0,
             "by_service": {}
         }
-    
+
     async def route_request(
         self,
         request: GatewayRequest
@@ -94,10 +95,10 @@ class APIGateway:
             Gateway response
         """
         self.stats["total_requests"] += 1
-        
+
         try:
             logger.info(f"🌐 Gateway routing: {request.service}.{request.operation}")
-            
+
             # Route to appropriate service layer
             if request.service == "pds":
                 result = await self._route_to_pds(request)
@@ -109,10 +110,10 @@ class APIGateway:
                 result = await self._route_to_oex(request)
             else:
                 raise ValueError(f"Unknown service: {request.service}")
-            
+
             self.stats["successful_requests"] += 1
             self._update_service_stats(request.service, success=True)
-            
+
             return GatewayResponse(
                 success=True,
                 service=request.service,
@@ -120,12 +121,12 @@ class APIGateway:
                 data=result,
                 metadata=request.metadata
             )
-        
+
         except Exception as e:
             logger.error(f"Gateway error: {e}", exc_info=True)
             self.stats["failed_requests"] += 1
             self._update_service_stats(request.service, success=False)
-            
+
             return GatewayResponse(
                 success=False,
                 service=request.service,
@@ -133,133 +134,133 @@ class APIGateway:
                 error=str(e),
                 metadata=request.metadata
             )
-    
+
     async def _route_to_pds(self, request: GatewayRequest) -> Any:
         """Route to Portal Data Scrapers layer."""
         operation = request.operation
         params = request.parameters
-        
+
         if operation == "download_provincial":
             from app.scrapers.pds_prov import create_provincial_scraper
             scraper = create_provincial_scraper()
-            
+
             from datetime import date
             start_date = date.fromisoformat(params["start_date"])
             end_date = date.fromisoformat(params["end_date"])
-            
+
             results = await scraper.download_range(
                 start_date=start_date,
                 end_date=end_date,
                 sections=params.get("sections", [1, 2, 3, 4, 5])
             )
-            
+
             return {
                 "results": [r.__dict__ for r in results],
                 "stats": scraper.get_stats()
             }
-        
+
         else:
             raise ValueError(f"Unknown PDS operation: {operation}")
-    
+
     async def _route_to_dia(self, request: GatewayRequest) -> Any:
         """Route to Data Integration Adapters layer."""
         operation = request.operation
         params = request.parameters
-        
+
         if operation == "adapt_provincial":
             from app.adapters.sca_prov import create_provincial_adapter
             adapter = create_provincial_adapter()
-            
+
             result = await adapter.adapt_document(params["raw_data"])
-            
+
             return {
                 "result": result.__dict__ if hasattr(result, '__dict__') else result,
                 "stats": adapter.get_stats()
             }
-        
+
         elif operation == "semantic_search":
             from app.adapters.ppa import create_persistence_adapter
             persistence = create_persistence_adapter()
-            
+
             results = await persistence.semantic_search(
                 query=params["query"],
                 limit=params.get("limit", 10)
             )
-            
+
             return {"results": results}
-        
+
         else:
             raise ValueError(f"Unknown DIA operation: {operation}")
-    
+
     async def _route_to_kaa(self, request: GatewayRequest) -> Any:
         """Route to Knowledge AI Agents layer."""
         operation = request.operation
         params = request.parameters
-        
+
         if operation == "rag_search":
             from agents.raga_agent import RAGAgent
             agent = RAGAgent()
-            
+
             # Create mock task object
             class MockTask:
                 def __init__(self, task_type, parameters):
                     self.task_type = task_type
                     self.parameters = parameters
-            
+
             task = MockTask("semantic_search", params)
             result = await agent.execute(None, task)
-            
+
             return result
-        
+
         elif operation == "build_knowledge_base":
             from agents.kba_agent import KnowledgeBaseAgent
             agent = KnowledgeBaseAgent()
-            
+
             class MockTask:
                 def __init__(self, task_type, parameters):
                     self.task_type = task_type
                     self.parameters = parameters
-            
+
             task = MockTask("build_knowledge_base", params)
             result = await agent.execute(None, task)
-            
+
             return result
-        
+
         else:
             raise ValueError(f"Unknown KAA operation: {operation}")
-    
+
     async def _route_to_oex(self, request: GatewayRequest) -> Any:
         """Route to Output Execution layer."""
         operation = request.operation
         params = request.parameters
-        
+
         if operation == "create_alert":
             from app.services.alert_dispatcher import get_alert_dispatcher
             dispatcher = get_alert_dispatcher()
-            
+
             result = await dispatcher.create_and_dispatch(
                 title=params["title"],
                 message=params["message"],
                 priority=params.get("priority", "medium")
             )
-            
+
             return result
-        
+
         elif operation == "generate_report":
-            from app.services.report_generator import get_report_generator, ReportType, ReportFormat
+            from app.services.report_generator import ReportFormat, ReportType, get_report_generator
             generator = get_report_generator()
-            
+
             result = await generator.generate_report(
                 report_type=ReportType(params["type"]),
                 data=params["data"],
                 format=ReportFormat(params.get("format", "json"))
             )
-            
+
             return result
-        
+
         else:
             raise ValueError(f"Unknown OEx operation: {operation}")
-    
+
     def _update_service_stats(self, service: str, success: bool):
         """Update service-specific statistics."""
         if service not in self.stats["by_service"]:
@@ -268,29 +269,29 @@ class APIGateway:
                 "successful": 0,
                 "failed": 0
             }
-        
+
         self.stats["by_service"][service]["total"] += 1
         if success:
             self.stats["by_service"][service]["successful"] += 1
         else:
             self.stats["by_service"][service]["failed"] += 1
-    
-    def get_stats(self) -> Dict[str, Any]:
+
+    def get_stats(self) -> dict[str, Any]:
         """Get gateway statistics."""
         return self.stats.copy()
 
 
 # Global gateway instance
-_gateway: Optional[APIGateway] = None
+_gateway: APIGateway | None = None
 
 
 def get_gateway() -> APIGateway:
     """Get or create global gateway instance."""
     global _gateway
-    
+
     if _gateway is None:
         _gateway = APIGateway()
-    
+
     return _gateway
 
 
@@ -315,7 +316,7 @@ async def gateway_endpoint(
 @router.get("/gateway/stats")
 async def gateway_stats(
     gateway: APIGateway = Depends(get_gateway)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get API Gateway statistics."""
     return gateway.get_stats()
 
@@ -323,7 +324,7 @@ async def gateway_stats(
 @router.get("/gateway/services")
 async def list_services(
     gateway: APIGateway = Depends(get_gateway)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """List available services and operations."""
     return {
         "services": list(gateway.service_registry.keys()),

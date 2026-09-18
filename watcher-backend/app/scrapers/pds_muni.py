@@ -8,15 +8,8 @@ To be implemented when municipal portals are identified and configured.
 import logging
 from datetime import date
 from pathlib import Path
-from typing import List, Optional
 
-from .base_scraper import (
-    BaseScraper,
-    ScraperConfig,
-    ScraperResult,
-    ScraperType,
-    DocumentType
-)
+from .base_scraper import BaseScraper, DocumentType, ScraperConfig, ScraperResult, ScraperType
 
 logger = logging.getLogger(__name__)
 
@@ -31,8 +24,8 @@ class MunicipalScraper(BaseScraper):
     - Municipal contracts
     - Public works
     """
-    
-    def __init__(self, config: Optional[ScraperConfig] = None):
+
+    def __init__(self, config: ScraperConfig | None = None):
         """
         Initialize municipal scraper.
         
@@ -45,10 +38,10 @@ class MunicipalScraper(BaseScraper):
                 base_url="https://example.com/municipal",  # TODO: Update with real URL
                 output_dir=Path("/Users/germanevangelisti/watcher-agent/boletines/municipal"),
             )
-        
+
         super().__init__(config)
         logger.info("Municipal scraper initialized (placeholder)")
-    
+
     def get_file_path(
         self,
         target_date: date,
@@ -59,11 +52,11 @@ class MunicipalScraper(BaseScraper):
         municipality = kwargs.get('municipality', 'unknown')
         filename = f"{target_date.isoformat()}_{municipality}_{document_type.value}.pdf"
         return self.config.output_dir / municipality / str(target_date.year) / filename
-    
+
     def validate_file(self, filepath: Path) -> bool:
         """Validate municipal document."""
         return filepath.exists() and filepath.stat().st_size > 1024
-    
+
     async def download_single(
         self,
         target_date: date,
@@ -76,20 +69,20 @@ class MunicipalScraper(BaseScraper):
         NOTE: This is a placeholder implementation.
         """
         logger.warning("Municipal scraper not yet implemented")
-        
+
         return ScraperResult(
             filename=f"municipal_{target_date.isoformat()}.pdf",
             status="error",
             error="Municipal scraper not yet implemented"
         )
-    
+
     async def download_range(
         self,
         start_date: date,
         end_date: date,
         document_type: DocumentType,
         **kwargs
-    ) -> List[ScraperResult]:
+    ) -> list[ScraperResult]:
         """
         Download municipal documents for date range.
         

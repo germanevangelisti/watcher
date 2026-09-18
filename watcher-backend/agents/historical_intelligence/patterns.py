@@ -3,8 +3,8 @@ Patrones de detección para Historical Intelligence Agent
 Define los patrones sospechosos y reglas de análisis
 """
 
-from typing import Dict, List, Any
 from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
@@ -15,7 +15,7 @@ class PatternRule:
     descripcion: str
     severidad: str  # ALTA, MEDIA, BAJA
     query_template: str
-    threshold: Dict[str, Any]
+    threshold: dict[str, Any]
     categoria: str
     cypher_template: str = ""  # Versión Cypher para Neo4j (fallback a query_template si vacío)
 
@@ -214,7 +214,7 @@ PATRONES_SOSPECHOSOS = {
             ORDER BY porcentaje DESC
         """
     ),
-    
+
     "fragmentacion_sospechosa": PatternRule(
         id="fragmentacion_sospechosa",
         nombre="Fragmentación de Contratos",
@@ -267,7 +267,7 @@ PATRONES_SOSPECHOSOS = {
             ORDER BY num_contratos DESC, suma_total DESC
         """
     ),
-    
+
     "recurrencia_temporal": PatternRule(
         id="recurrencia_temporal",
         nombre="Patrón Temporal Recurrente",
@@ -308,7 +308,7 @@ PATRONES_SOSPECHOSOS = {
             ORDER BY apariciones DESC, empresa
         """
     ),
-    
+
     "vinculo_cruzado": PatternRule(
         id="vinculo_cruzado",
         nombre="Vínculos Cruzados Complejos",
@@ -354,16 +354,16 @@ def get_pattern(pattern_id: str) -> PatternRule:
     return PATRONES_SOSPECHOSOS.get(pattern_id)
 
 
-def get_patterns_by_severity(severidad: str) -> List[PatternRule]:
+def get_patterns_by_severity(severidad: str) -> list[PatternRule]:
     """Obtiene patrones por severidad"""
     return [p for p in PATRONES_SOSPECHOSOS.values() if p.severidad == severidad]
 
 
-def get_patterns_by_category(categoria: str) -> List[PatternRule]:
+def get_patterns_by_category(categoria: str) -> list[PatternRule]:
     """Obtiene patrones por categoría"""
     return [p for p in PATRONES_SOSPECHOSOS.values() if p.categoria == categoria]
 
 
-def get_all_patterns() -> Dict[str, PatternRule]:
+def get_all_patterns() -> dict[str, PatternRule]:
     """Obtiene todos los patrones"""
     return PATRONES_SOSPECHOSOS

@@ -5,23 +5,19 @@ API endpoints for Presupuesto
 import json
 from datetime import date
 from pathlib import Path
-from typing import Optional
-from fastapi import APIRouter, HTTPException, Depends, Query, Response
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, or_
 
+from app.db.models import EjecucionPresupuestaria, PresupuestoBase
 from app.db.session import get_db
-from app.db.models import PresupuestoBase, EjecucionPresupuestaria
 from app.schemas.presupuesto import (
-    ProgramaResponse,
-    ProgramasListResponse,
-    ProgramaDetailResponse,
-    EjecucionResponse,
     EjecucionListResponse,
+    EjecucionResponse,
     EjecucionResumenResponse,
-    OrgResumenItem,
     MesResumenItem,
     OrganismoResponse,
+    OrgResumenItem,
+    ProgramaDetailResponse,
+    ProgramaResponse,
+    ProgramasListResponse,
 )
 from app.services.ejecucion_contrast import (
     BUCKET_COMPROMISO,
@@ -32,6 +28,9 @@ from app.services.ejecucion_contrast import (
     vigente_por_organismo_canonico,
 )
 from app.services.gasto_classifier import JURISDICCIONES
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from sqlalchemy import and_, func, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 # Paths for analysis data
 BASE_DIR = Path(__file__).parent.parent.parent.parent.parent.parent
@@ -47,8 +46,8 @@ router = APIRouter(dependencies=[Depends(_no_store)])
 async def get_programas(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
-    ejercicio: Optional[int] = None,
-    organismo: Optional[str] = None,
+    ejercicio: int | None = None,
+    organismo: str | None = None,
     exclude_zero_budget: bool = Query(True, description="Excluir programas con presupuesto $0"),
     db: AsyncSession = Depends(get_db)
 ):
@@ -58,14 +57,14 @@ async def get_programas(
     """
     try:
         query = select(PresupuestoBase)
-        
+
         # Apply filters
         filters = []
         if ejercicio:
             filters.append(PresupuestoBase.ejercicio == ejercicio)
         if organismo:
             filters.append(PresupuestoBase.organismo == organismo)
-        
+
         # Filtrar programas con presupuesto $0 (excluir donde ambos montos son 0)
         if exclude_zero_budget:
             # Excluir programas donde tanto monto_vigente como monto_inicial son 0
@@ -76,30 +75,30 @@ async def get_programas(
                     PresupuestoBase.monto_inicial != 0
                 )
             )
-        
+
         if filters:
             query = query.where(and_(*filters))
-        
+
         # Get total count
         count_query = select(func.count()).select_from(PresupuestoBase)
         if filters:
             count_query = count_query.where(and_(*filters))
-        
+
         result = await db.execute(count_query)
         total = result.scalar()
-        
+
         # Get paginated results
         query = query.offset(skip).limit(limit).order_by(PresupuestoBase.organismo, PresupuestoBase.programa)
         result = await db.execute(query)
         programas = result.scalars().all()
-        
+
         return ProgramasListResponse(
             programas=[ProgramaResponse.model_validate(p) for p in programas],
             total=total or 0,
             page=skip // limit + 1,
             page_size=limit
         )
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -117,10 +116,10 @@ async def get_programa(
             select(PresupuestoBase).where(PresupuestoBase.id == programa_id)
         )
         programa = result.scalar_one_or_none()
-        
+
         if not programa:
             raise HTTPException(status_code=404, detail="Programa not found")
-        
+
         # Get ejecuciones
         ejecuciones_result = await db.execute(
             select(EjecucionPresupuestaria)
@@ -128,11 +127,11 @@ async def get_programa(
             .order_by(EjecucionPresupuestaria.fecha_boletin.desc())
         )
         ejecuciones = ejecuciones_result.scalars().all()
-        
+
         # Calculate total ejecutado
         total_ejecutado = sum(e.monto for e in ejecuciones)
         porcentaje_ejecucion = (total_ejecutado / programa.monto_vigente * 100) if programa.monto_vigente > 0 else 0
-        
+
         # Build ejecuciones list
         ejecuciones_list = []
         for e in ejecuciones:
@@ -149,7 +148,7 @@ async def get_programa(
                 categoria_watcher=e.categoria_watcher,
                 riesgo_watcher=e.riesgo_watcher
             ))
-        
+
         # Build programa detail response
         programa_detail = ProgramaDetailResponse(
             id=programa.id,
@@ -170,9 +169,9 @@ async def get_programa(
             total_ejecutado=total_ejecutado,
             porcentaje_ejecucion=round(porcentaje_ejecucion, 2)
         )
-        
+
         return programa_detail
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -192,10 +191,10 @@ async def get_programa_ejecucion(
             select(PresupuestoBase).where(PresupuestoBase.id == programa_id)
         )
         programa = programa_result.scalar_one_or_none()
-        
+
         if not programa:
             raise HTTPException(status_code=404, detail="Programa not found")
-        
+
         # Get ejecuciones
         result = await db.execute(
             select(EjecucionPresupuestaria)
@@ -203,9 +202,9 @@ async def get_programa_ejecucion(
             .order_by(EjecucionPresupuestaria.fecha_boletin.desc())
         )
         ejecuciones = result.scalars().all()
-        
+
         return [EjecucionResponse.model_validate(e) for e in ejecuciones]
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -213,7 +212,7 @@ async def get_programa_ejecucion(
 
 @router.get("/organismos/", response_model=list[OrganismoResponse])
 async def get_organismos(
-    ejercicio: Optional[int] = None,
+    ejercicio: int | None = None,
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -226,13 +225,13 @@ async def get_organismos(
             func.sum(PresupuestoBase.monto_inicial).label('monto_inicial_total'),
             func.sum(PresupuestoBase.monto_vigente).label('monto_vigente_total')
         ).group_by(PresupuestoBase.organismo)
-        
+
         if ejercicio:
             query = query.where(PresupuestoBase.ejercicio == ejercicio)
-        
+
         result = await db.execute(query)
         organismos = []
-        
+
         for row in result.all():
             organismos.append(OrganismoResponse(
                 organismo=row.organismo,
@@ -240,9 +239,9 @@ async def get_organismos(
                 monto_inicial_total=row.monto_inicial_total or 0,
                 monto_vigente_total=row.monto_vigente_total or 0
             ))
-        
+
         return sorted(organismos, key=lambda x: x.monto_vigente_total, reverse=True)
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -251,9 +250,9 @@ async def get_organismos(
 
 @router.get("/ejecucion/resumen/", response_model=EjecucionResumenResponse)
 async def get_ejecucion_resumen(
-    fecha_desde: Optional[date] = Query(None),
-    fecha_hasta: Optional[date] = Query(None),
-    jurisdiccion: Optional[str] = Query(
+    fecha_desde: date | None = Query(None),
+    fecha_hasta: date | None = Query(None),
+    jurisdiccion: str | None = Query(
         None, description="provincial | municipal | fuera_presupuesto"
     ),
     ejercicio: int = Query(2026, ge=2000, le=2100),
@@ -419,17 +418,17 @@ async def get_ejecucion_resumen(
 async def get_ejecucion(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
-    fecha_desde: Optional[date] = Query(None),
-    fecha_hasta: Optional[date] = Query(None),
-    organismo: Optional[str] = Query(None, description="Partial match (case-insensitive)"),
-    riesgo: Optional[str] = Query(None, description="alto | medio | bajo | informativo"),
+    fecha_desde: date | None = Query(None),
+    fecha_hasta: date | None = Query(None),
+    organismo: str | None = Query(None, description="Partial match (case-insensitive)"),
+    riesgo: str | None = Query(None, description="alto | medio | bajo | informativo"),
     solo_canonicos: bool = Query(True, description="Exclude duplicate publications"),
-    presupuesto_base_id: Optional[int] = Query(None),
-    requiere_revision: Optional[bool] = Query(None),
-    jurisdiccion: Optional[str] = Query(
+    presupuesto_base_id: int | None = Query(None),
+    requiere_revision: bool | None = Query(None),
+    jurisdiccion: str | None = Query(
         None, description="provincial | municipal | fuera_presupuesto"
     ),
-    etapa_gasto: Optional[str] = Query(
+    etapa_gasto: str | None = Query(
         None, description="llamado | adjudicacion | contrato | pago"
     ),
     db: AsyncSession = Depends(get_db),
@@ -515,10 +514,10 @@ async def get_tendencias(
         tendencias_path = DATOS_DIR / "analisis_tendencias_2025.json"
         if not tendencias_path.exists():
             raise HTTPException(status_code=404, detail="Tendencias analysis not found")
-        
-        with open(tendencias_path, 'r', encoding='utf-8') as f:
+
+        with open(tendencias_path, encoding='utf-8') as f:
             tendencias = json.load(f)
-        
+
         return {
             "metadata": tendencias.get("metadata", {}),
             "summary": tendencias.get("summary", {}),
@@ -534,7 +533,7 @@ async def get_tendencias(
 
 @router.get("/anomalias/")
 async def get_anomalias(
-    severity: Optional[str] = Query(None, description="Filter by severity"),
+    severity: str | None = Query(None, description="Filter by severity"),
     limit: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db)
 ):
@@ -543,16 +542,16 @@ async def get_anomalias(
         anomalias_path = DATOS_DIR / "clasificacion_anomalias_budget.json"
         if not anomalias_path.exists():
             raise HTTPException(status_code=404, detail="Anomalies not found")
-        
-        with open(anomalias_path, 'r', encoding='utf-8') as f:
+
+        with open(anomalias_path, encoding='utf-8') as f:
             data = json.load(f)
-        
+
         programas = data.get("programas", [])
         if severity:
             programas = [p for p in programas if p.get("severity") == severity.upper()]
         anomalies = [p for p in programas if p.get("severity") != "NORMAL"]
         anomalies.sort(key=lambda x: x.get("anomaly_score", 0))
-        
+
         return {
             "total_anomalies": len(anomalies),
             "anomalies": anomalies[:limit],
@@ -571,8 +570,8 @@ async def get_anomalias(
 
 @router.get("/predicciones/")
 async def get_predicciones(
-    organismo: Optional[str] = Query(None),
-    risk_level: Optional[str] = Query(None),
+    organismo: str | None = Query(None),
+    risk_level: str | None = Query(None),
     db: AsyncSession = Depends(get_db)
 ):
     """Get Q3/Q4 execution forecasts with confidence intervals"""
@@ -580,16 +579,16 @@ async def get_predicciones(
         tendencias_path = DATOS_DIR / "analisis_tendencias_2025.json"
         if not tendencias_path.exists():
             raise HTTPException(status_code=404, detail="Forecasts not found")
-        
-        with open(tendencias_path, 'r', encoding='utf-8') as f:
+
+        with open(tendencias_path, encoding='utf-8') as f:
             data = json.load(f)
-        
+
         forecasts = data.get("forecasts", {}).get("forecasts", [])
         if organismo:
             forecasts = [f for f in forecasts if organismo.upper() in f.get("organismo", "").upper()]
         if risk_level:
             forecasts = [f for f in forecasts if f.get("risk_level") == risk_level.upper()]
-        
+
         return {
             "total_forecasts": len(forecasts),
             "forecasts": forecasts,
@@ -611,14 +610,14 @@ async def get_comparacion(periodo: str, db: AsyncSession = Depends(get_db)):
     try:
         if periodo.lower() != "marzo-junio":
             raise HTTPException(status_code=400, detail="Only 'marzo-junio' available")
-        
+
         comparison_path = DATOS_DIR / "comparacion_marzo_junio_2025.json"
         if not comparison_path.exists():
             raise HTTPException(status_code=404, detail="Comparison not found")
-        
-        with open(comparison_path, 'r', encoding='utf-8') as f:
+
+        with open(comparison_path, encoding='utf-8') as f:
             data = json.load(f)
-        
+
         return {
             "periodo": "marzo-junio",
             "programas_comunes": data.get("programas_comunes", 0),

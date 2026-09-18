@@ -6,7 +6,6 @@ Autor: Watcher Fiscal Agent
 """
 
 import re
-from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -15,20 +14,20 @@ from datetime import datetime
 class ActoAdministrativo:
     """Representa un acto administrativo extraído"""
     tipo_acto: str  # DECRETO, RESOLUCIÓN, LICITACIÓN, DESIGNACIÓN, SUBSIDIO
-    numero: Optional[str]
-    fecha: Optional[datetime]
+    numero: str | None
+    fecha: datetime | None
     organismo: str
-    beneficiario: Optional[str]
-    monto: Optional[float]
-    partida: Optional[str]
+    beneficiario: str | None
+    monto: float | None
+    partida: str | None
     descripcion: str
-    keywords: List[str]
+    keywords: list[str]
     nivel_riesgo: str  # ALTO, MEDIO, BAJO
     fragmento_original: str
-    boletin_id: Optional[int]
-    pagina: Optional[int]
-    
-    def to_dict(self) -> Dict:
+    boletin_id: int | None
+    pagina: int | None
+
+    def to_dict(self) -> dict:
         """Convierte a diccionario para DB"""
         return {
             'tipo_acto': self.tipo_acto,
@@ -49,7 +48,7 @@ class ActoAdministrativo:
 
 class ActoAdministrativoParser:
     """Parser especializado en actos administrativos"""
-    
+
     def __init__(self):
         # Patterns para tipos de actos
         self.tipo_patterns = {
@@ -92,7 +91,7 @@ class ActoAdministrativoParser:
                 r'REASIGNACI[ÓO]N\s+DE\s+PARTIDAS'
             ]
         }
-        
+
         # Patterns para extracción de datos
         self.monto_patterns = [
             r'\$\s*(\d{1,3}(?:\.\d{3})*(?:,\d{2})?)',  # $1.000.000,00
@@ -101,14 +100,14 @@ class ActoAdministrativoParser:
             r'MONTO\s+DE\s+\$?\s*(\d{1,3}(?:\.\d{3})*)',  # MONTO DE $1.000.000
             r'POR\s+UN\s+IMPORTE\s+DE\s+\$?\s*(\d{1,3}(?:\.\d{3})*)'
         ]
-        
+
         self.partida_patterns = [
             r'PARTIDA\s+(\d+\.?\d*\.?\d*\.?\d*)',
             r'PART\.?\s+(\d+\.?\d*\.?\d*\.?\d*)',
             r'INCISO\s+(\d+)',
             r'PROGRAMA\s+(\d+)'
         ]
-        
+
         self.organismo_patterns = [
             r'MINISTERIO\s+DE\s+([^\n\.,;]+)',
             r'SECRETAR[ÍI]A\s+DE\s+([^\n\.,;]+)',
@@ -117,7 +116,7 @@ class ActoAdministrativoParser:
             r'AGENCIA\s+([^\n\.,;]+)',
             r'TRIBUNAL\s+([^\n\.,;]+)'
         ]
-        
+
         self.beneficiario_patterns = [
             r'A\s+FAVOR\s+DE\s+([^\n\.,;]+)',
             r'BENEFICIARIO:\s*([^\n\.,;]+)',
@@ -128,7 +127,7 @@ class ActoAdministrativoParser:
             r'EMPRESA\s+([A-ZÁ-Ú\s\.,]+)',
             r'COOPERATIVA\s+([A-ZÁ-Ú\s\.,]+)'
         ]
-        
+
         # Keywords de riesgo
         self.risk_keywords = {
             'ALTO': [
@@ -147,21 +146,21 @@ class ActoAdministrativoParser:
                 'resolución', 'decreto', 'normativa'
             ]
         }
-    
-    def detectar_tipo_acto(self, texto: str) -> Tuple[str, Optional[str]]:
+
+    def detectar_tipo_acto(self, texto: str) -> tuple[str, str | None]:
         """Detecta el tipo de acto y extrae su número"""
         texto_upper = texto.upper()
-        
+
         for tipo, patterns in self.tipo_patterns.items():
             for pattern in patterns:
                 match = re.search(pattern, texto_upper)
                 if match:
                     numero = match.group(1) if match.groups() else None
                     return tipo, numero
-        
+
         return 'OTRO', None
-    
-    def extraer_monto(self, texto: str) -> Optional[float]:
+
+    def extraer_monto(self, texto: str) -> float | None:
         """Extrae monto del texto"""
         for pattern in self.monto_patterns:
             match = re.search(pattern, texto.upper())
@@ -174,8 +173,8 @@ class ActoAdministrativoParser:
                 except ValueError:
                     continue
         return None
-    
-    def extraer_partida(self, texto: str) -> Optional[str]:
+
+    def extraer_partida(self, texto: str) -> str | None:
         """Extrae partida presupuestaria"""
         texto_upper = texto.upper()
         for pattern in self.partida_patterns:
@@ -183,7 +182,7 @@ class ActoAdministrativoParser:
             if match:
                 return match.group(1)
         return None
-    
+
     def extraer_organismo(self, texto: str) -> str:
         """Extrae organismo emisor"""
         texto_upper = texto.upper()
@@ -194,11 +193,11 @@ class ActoAdministrativoParser:
                 # Limpiar caracteres extraños
                 organismo = re.sub(r'\s+', ' ', organismo)
                 return organismo[:100]  # Limitar longitud
-        
+
         # Si no encuentra, retornar desconocido
         return "ORGANISMO NO ESPECIFICADO"
-    
-    def extraer_beneficiario(self, texto: str) -> Optional[str]:
+
+    def extraer_beneficiario(self, texto: str) -> str | None:
         """Extrae beneficiario del acto"""
         texto_upper = texto.upper()
         for pattern in self.beneficiario_patterns:
@@ -208,12 +207,12 @@ class ActoAdministrativoParser:
                 beneficiario = re.sub(r'\s+', ' ', beneficiario)
                 return beneficiario[:150]
         return None
-    
-    def extraer_keywords(self, texto: str) -> List[str]:
+
+    def extraer_keywords(self, texto: str) -> list[str]:
         """Extrae keywords relevantes"""
         texto_upper = texto.upper()
         keywords = []
-        
+
         # Lista de keywords a buscar
         keyword_list = [
             'OBRA', 'LICITACIÓN', 'SUBSIDIO', 'DESIGNACIÓN', 'CONTRATO',
@@ -221,35 +220,35 @@ class ActoAdministrativoParser:
             'SERVICIO', 'SUMINISTRO', 'MANTENIMIENTO', 'ADQUISICIÓN',
             'EMERGENCIA', 'URGENCIA', 'DIRECTA', 'PÚBLICA'
         ]
-        
+
         for keyword in keyword_list:
             if keyword in texto_upper:
                 keywords.append(keyword.lower())
-        
+
         return list(set(keywords))  # Únicos
-    
-    def calcular_nivel_riesgo(self, tipo_acto: str, texto: str, monto: Optional[float]) -> str:
+
+    def calcular_nivel_riesgo(self, tipo_acto: str, texto: str, monto: float | None) -> str:
         """Calcula nivel de riesgo del acto"""
         texto_lower = texto.lower()
-        
+
         # Contar keywords de cada nivel
         risk_scores = {'ALTO': 0, 'MEDIO': 0, 'BAJO': 0}
-        
+
         for nivel, keywords in self.risk_keywords.items():
             for keyword in keywords:
                 if keyword in texto_lower:
                     risk_scores[nivel] += 1
-        
+
         # Factores adicionales de riesgo
         if monto and monto > 10000000:  # Más de 10 millones
             risk_scores['ALTO'] += 2
-        
+
         if tipo_acto in ['CONTRATACIÓN_DIRECTA', 'SUBSIDIO']:
             risk_scores['MEDIO'] += 1
-        
+
         if tipo_acto == 'LICITACIÓN':
             risk_scores['BAJO'] += 1
-        
+
         # Determinar nivel final
         if risk_scores['ALTO'] > 0:
             return 'ALTO'
@@ -257,16 +256,16 @@ class ActoAdministrativoParser:
             return 'MEDIO'
         else:
             return 'BAJO'
-    
-    def parse_acto(self, texto: str, boletin_id: Optional[int] = None, pagina: Optional[int] = None) -> Optional[ActoAdministrativo]:
+
+    def parse_acto(self, texto: str, boletin_id: int | None = None, pagina: int | None = None) -> ActoAdministrativo | None:
         """Parsea un fragmento de texto y extrae acto administrativo"""
         # Detectar tipo de acto
         tipo_acto, numero = self.detectar_tipo_acto(texto)
-        
+
         # Si no es un acto reconocido, retornar None
         if tipo_acto == 'OTRO':
             return None
-        
+
         # Extraer datos
         monto = self.extraer_monto(texto)
         partida = self.extraer_partida(texto)
@@ -274,10 +273,10 @@ class ActoAdministrativoParser:
         beneficiario = self.extraer_beneficiario(texto)
         keywords = self.extraer_keywords(texto)
         nivel_riesgo = self.calcular_nivel_riesgo(tipo_acto, texto, monto)
-        
+
         # Crear descripción resumida
         descripcion = texto[:200].strip() + "..." if len(texto) > 200 else texto.strip()
-        
+
         # Crear acto
         acto = ActoAdministrativo(
             tipo_acto=tipo_acto,
@@ -294,32 +293,32 @@ class ActoAdministrativoParser:
             boletin_id=boletin_id,
             pagina=pagina
         )
-        
+
         return acto
-    
-    def parse_boletin(self, texto: str, boletin_id: Optional[int] = None) -> List[ActoAdministrativo]:
+
+    def parse_boletin(self, texto: str, boletin_id: int | None = None) -> list[ActoAdministrativo]:
         """Parsea un boletín completo y extrae todos los actos"""
         actos = []
-        
+
         # Dividir en bloques por saltos de línea
         bloques = re.split(r'\n{2,}', texto)
-        
+
         for i, bloque in enumerate(bloques):
             # Solo procesar bloques con contenido significativo
             if len(bloque) < 50:  # Muy corto, probablemente no es un acto
                 continue
-            
+
             acto = self.parse_acto(bloque, boletin_id=boletin_id, pagina=None)
             if acto:
                 actos.append(acto)
-        
+
         return actos
 
 
 # Ejemplo de uso
 if __name__ == "__main__":
     parser = ActoAdministrativoParser()
-    
+
     # Texto de ejemplo
     texto_ejemplo = """
     DECRETO N° 1234/2025
@@ -334,9 +333,9 @@ if __name__ == "__main__":
     ARTÍCULO 2°.- La presente contratación se realiza en virtud de la situación de
     urgencia declarada por Resolución 567/2025.
     """
-    
+
     acto = parser.parse_acto(texto_ejemplo)
-    
+
     if acto:
         print("Acto extraído:")
         print(f"  Tipo: {acto.tipo_acto}")

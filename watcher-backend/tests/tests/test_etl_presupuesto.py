@@ -21,33 +21,30 @@ sys.path.insert(0, str(_BACKEND))
 sys.path.insert(0, str(_BACKEND / "scripts"))
 
 from etl_analisis_to_ejecucion import (
-    _normalize,
-    _token_jaccard,
-    _normalize_acto,
-    _dedup_key,
     _ORGANISMO_ALIASES,
+    _dedup_key,
+    _normalize,
+    _normalize_acto,
+    _token_jaccard,
+    first_beneficiario,
     looks_like_publication_id,
     match_organismo,
     parse_date,
-    first_beneficiario,
     resolve_numero_acto,
     run_etl,
 )
-
+from parse_excel_presupuesto import OrganismoNormalizer
 from parse_pdf_presupuesto_2026 import (
-    _parse_monto,
-    _normalize_fin_fun_det,
+    LEY_11088_ENTES,
     _clean_cell,
-    _is_jurisdiction_header,
     _col_for_x,
+    _is_jurisdiction_header,
+    _normalize_fin_fun_det,
+    _parse_monto,
     _words_to_rows,
     clean_jurisdiccion,
     organismo_from_jurisdiccion,
-    LEY_11088_ENTES,
 )
-
-from parse_excel_presupuesto import OrganismoNormalizer
-
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # etl_analisis_to_ejecucion — unit tests

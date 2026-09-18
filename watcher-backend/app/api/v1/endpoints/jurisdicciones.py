@@ -3,14 +3,13 @@ API Endpoints para Jurisdicciones de Córdoba
 """
 
 import logging
-from typing import List, Optional, Dict
-from fastapi import APIRouter, HTTPException, Depends, Query
-from pydantic import BaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_
 
 from app.db.database import get_db
-from app.db.models import Jurisdiccion, Boletin, MencionJurisdiccional
+from app.db.models import Boletin, Jurisdiccion, MencionJurisdiccional
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
+from sqlalchemy import and_, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -26,14 +25,14 @@ class JurisdiccionResponse(BaseModel):
     id: int
     nombre: str
     tipo: str
-    latitud: Optional[float]
-    longitud: Optional[float]
-    codigo_postal: Optional[str]
-    departamento: Optional[str]
-    poblacion: Optional[int]
-    superficie_km2: Optional[float]
-    extra_data: Optional[Dict]
-    
+    latitud: float | None
+    longitud: float | None
+    codigo_postal: str | None
+    departamento: str | None
+    poblacion: int | None
+    superficie_km2: float | None
+    extra_data: dict | None
+
     class Config:
         from_attributes = True
 
@@ -45,29 +44,29 @@ class JurisdiccionStats(BaseModel):
     tipo: str
     total_boletines: int
     total_menciones: int
-    poblacion: Optional[int]
+    poblacion: int | None
 
 
 class JurisdiccionDetailResponse(JurisdiccionResponse):
     """Respuesta detallada con estadísticas"""
     total_boletines: int = 0
     total_menciones: int = 0
-    ultima_actividad: Optional[str]
+    ultima_actividad: str | None
 
 
 # ============================================
 # ENDPOINTS
 # ============================================
 
-@router.get("/", response_model=List[JurisdiccionResponse])
+@router.get("/", response_model=list[JurisdiccionResponse])
 async def listar_jurisdicciones(
-    tipo: Optional[str] = Query(None, description="Filtrar por tipo: provincia, capital, municipalidad, comuna"),
-    departamento: Optional[str] = Query(None, description="Filtrar por departamento"),
+    tipo: str | None = Query(None, description="Filtrar por tipo: provincia, capital, municipalidad, comuna"),
+    departamento: str | None = Query(None, description="Filtrar por departamento"),
     limite: int = Query(100, le=500, description="Número máximo de resultados"),
     offset: int = Query(0, ge=0, description="Offset para paginación"),
-    buscar: Optional[str] = Query(None, description="Buscar por nombre"),
+    buscar: str | None = Query(None, description="Buscar por nombre"),
     db: AsyncSession = Depends(get_db)
-) -> List[JurisdiccionResponse]:
+) -> list[JurisdiccionResponse]:
     """
     Lista todas las jurisdicciones con filtros opcionales.
     
@@ -84,39 +83,39 @@ async def listar_jurisdicciones(
     """
     try:
         query = select(Jurisdiccion)
-        
+
         # Aplicar filtros
         if tipo:
             query = query.where(Jurisdiccion.tipo == tipo)
-        
+
         if departamento:
             query = query.where(Jurisdiccion.departamento == departamento)
-        
+
         if buscar:
             query = query.where(Jurisdiccion.nombre.ilike(f"%{buscar}%"))
-        
+
         # Ordenar por población descendente
         query = query.order_by(Jurisdiccion.poblacion.desc().nullslast())
-        
+
         # Paginación
         query = query.limit(limite).offset(offset)
-        
+
         result = await db.execute(query)
         jurisdicciones = result.scalars().all()
-        
+
         return [JurisdiccionResponse.model_validate(j) for j in jurisdicciones]
-    
+
     except Exception as e:
         logger.error(f"Error listando jurisdicciones: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/stats", response_model=List[JurisdiccionStats])
+@router.get("/stats", response_model=list[JurisdiccionStats])
 async def estadisticas_jurisdicciones(
-    tipo: Optional[str] = Query(None, description="Filtrar por tipo"),
+    tipo: str | None = Query(None, description="Filtrar por tipo"),
     limite: int = Query(20, le=100),
     db: AsyncSession = Depends(get_db)
-) -> List[JurisdiccionStats]:
+) -> list[JurisdiccionStats]:
     """
     Obtiene estadísticas de actividad por jurisdicción.
     
@@ -138,18 +137,18 @@ async def estadisticas_jurisdicciones(
         ).group_by(
             Jurisdiccion.id, Jurisdiccion.nombre, Jurisdiccion.tipo, Jurisdiccion.poblacion
         )
-        
+
         if tipo:
             query = query.where(Jurisdiccion.tipo == tipo)
-        
+
         # Ordenar por actividad (boletines + menciones)
         query = query.order_by(
             (func.count(Boletin.id) + func.count(MencionJurisdiccional.id)).desc()
         ).limit(limite)
-        
+
         result = await db.execute(query)
         rows = result.all()
-        
+
         return [
             JurisdiccionStats(
                 jurisdiccion_id=row.id,
@@ -161,7 +160,7 @@ async def estadisticas_jurisdicciones(
             )
             for row in rows
         ]
-    
+
     except Exception as e:
         logger.error(f"Error obteniendo estadísticas: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -180,31 +179,31 @@ async def obtener_jurisdiccion(
         query = select(Jurisdiccion).where(Jurisdiccion.id == jurisdiccion_id)
         result = await db.execute(query)
         jurisdiccion = result.scalar_one_or_none()
-        
+
         if not jurisdiccion:
             raise HTTPException(status_code=404, detail="Jurisdicción no encontrada")
-        
+
         # Contar boletines
         query_boletines = select(func.count(Boletin.id)).where(
             Boletin.jurisdiccion_id == jurisdiccion_id
         )
         result_boletines = await db.execute(query_boletines)
         total_boletines = result_boletines.scalar() or 0
-        
+
         # Contar menciones
         query_menciones = select(func.count(MencionJurisdiccional.id)).where(
             MencionJurisdiccional.jurisdiccion_id == jurisdiccion_id
         )
         result_menciones = await db.execute(query_menciones)
         total_menciones = result_menciones.scalar() or 0
-        
+
         # Última actividad (último boletín o mención)
         query_ultima = select(func.max(Boletin.created_at)).where(
             Boletin.jurisdiccion_id == jurisdiccion_id
         )
         result_ultima = await db.execute(query_ultima)
         ultima_actividad = result_ultima.scalar()
-        
+
         return JurisdiccionDetailResponse(
             id=jurisdiccion.id,
             nombre=jurisdiccion.nombre,
@@ -220,7 +219,7 @@ async def obtener_jurisdiccion(
             total_menciones=total_menciones,
             ultima_actividad=ultima_actividad.isoformat() if ultima_actividad else None
         )
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -234,7 +233,7 @@ async def boletines_por_jurisdiccion(
     limite: int = Query(50, le=200),
     offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_db)
-) -> Dict:
+) -> dict:
     """
     Obtiene boletines asociados a una jurisdicción específica.
     """
@@ -244,24 +243,24 @@ async def boletines_por_jurisdiccion(
         result_check = await db.execute(query_check)
         if not result_check.scalar_one_or_none():
             raise HTTPException(status_code=404, detail="Jurisdicción no encontrada")
-        
+
         # Obtener boletines
         query = select(Boletin).where(
             Boletin.jurisdiccion_id == jurisdiccion_id
         ).order_by(
             Boletin.date.desc()
         ).limit(limite).offset(offset)
-        
+
         result = await db.execute(query)
         boletines = result.scalars().all()
-        
+
         # Contar total
         query_count = select(func.count(Boletin.id)).where(
             Boletin.jurisdiccion_id == jurisdiccion_id
         )
         result_count = await db.execute(query_count)
         total = result_count.scalar() or 0
-        
+
         return {
             "total": total,
             "limite": limite,
@@ -279,7 +278,7 @@ async def boletines_por_jurisdiccion(
                 for b in boletines
             ]
         }
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -294,7 +293,7 @@ async def jurisdicciones_cercanas(
     radio_km: float = Query(50.0, description="Radio de búsqueda en kilómetros"),
     limite: int = Query(10, le=50),
     db: AsyncSession = Depends(get_db)
-) -> List[Dict]:
+) -> list[dict]:
     """
     Encuentra jurisdicciones cercanas a unas coordenadas.
     
@@ -308,26 +307,26 @@ async def jurisdicciones_cercanas(
                 Jurisdiccion.longitud.isnot(None)
             )
         )
-        
+
         result = await db.execute(query)
         jurisdicciones = result.scalars().all()
-        
+
         # Calcular distancias
-        from math import radians, cos, sin, asin, sqrt
-        
+        from math import asin, cos, radians, sin, sqrt
+
         def haversine(lat1, lon1, lat2, lon2):
             """Calcula distancia en km entre dos puntos"""
             R = 6371  # Radio de la Tierra en km
-            
+
             lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
             dlat = lat2 - lat1
             dlon = lon2 - lon1
-            
+
             a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
             c = 2 * asin(sqrt(a))
-            
+
             return R * c
-        
+
         # Filtrar por distancia
         cercanas = []
         for j in jurisdicciones:
@@ -337,19 +336,19 @@ async def jurisdicciones_cercanas(
                     "jurisdiccion": JurisdiccionResponse.model_validate(j),
                     "distancia_km": round(distancia, 2)
                 })
-        
+
         # Ordenar por distancia
         cercanas.sort(key=lambda x: x["distancia_km"])
-        
+
         return cercanas[:limite]
-    
+
     except Exception as e:
         logger.error(f"Error buscando jurisdicciones cercanas: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/tipos/disponibles")
-async def tipos_disponibles(db: AsyncSession = Depends(get_db)) -> Dict:
+async def tipos_disponibles(db: AsyncSession = Depends(get_db)) -> dict:
     """
     Retorna los tipos de jurisdicciones disponibles con conteo.
     """
@@ -358,10 +357,10 @@ async def tipos_disponibles(db: AsyncSession = Depends(get_db)) -> Dict:
             Jurisdiccion.tipo,
             func.count(Jurisdiccion.id).label("cantidad")
         ).group_by(Jurisdiccion.tipo)
-        
+
         result = await db.execute(query)
         tipos = result.all()
-        
+
         return {
             "tipos": [
                 {
@@ -377,7 +376,7 @@ async def tipos_disponibles(db: AsyncSession = Depends(get_db)) -> Dict:
                 for row in tipos
             ]
         }
-    
+
     except Exception as e:
         logger.error(f"Error obteniendo tipos: {e}")
         raise HTTPException(status_code=500, detail=str(e))

@@ -9,10 +9,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from sqlalchemy import text
-from app.db.database import AsyncSessionLocal
-from app.db.neo4j_client import init_neo4j, close_neo4j, get_neo4j_session
 from app.core.config import settings
+from app.db.database import AsyncSessionLocal
+from app.db.neo4j_client import close_neo4j, get_neo4j_session, init_neo4j
+from sqlalchemy import text
 
 TABLES = [
     # Dependientes primero (FK children)

@@ -3,18 +3,11 @@ Tests para los extractores de PDF unificados.
 Épica 2: Extracción - Tarea 2.1
 """
 
-import pytest
 from pathlib import Path
 
-from watcher_monolith.backend.app.services.extractors import (
-    PyPDF2Extractor,
-    PdfPlumberExtractor
-)
-from watcher_monolith.backend.app.schemas.extraction import (
-    ExtractionMethod,
-    SectionType
-)
-
+import pytest
+from watcher_monolith.backend.app.schemas.extraction import ExtractionMethod, SectionType
+from watcher_monolith.backend.app.services.extractors import PdfPlumberExtractor, PyPDF2Extractor
 
 # Path to test PDF (will be created if needed)
 TEST_PDF_DIR = Path(__file__).parent / "fixtures" / "pdfs"
@@ -36,7 +29,7 @@ class TestPyPDF2Extractor:
     async def test_extract_nonexistent_file(self, extractor):
         """Test extracción de archivo no existente."""
         result = await extractor.extract(Path("/nonexistent/file.pdf"))
-        
+
         assert result.success is False
         assert result.error is not None
         assert "not found" in result.error.lower()
@@ -49,12 +42,13 @@ class TestPyPDF2Extractor:
         """Test extracción básica de PDF."""
         # Crear un PDF simple de prueba
         pdf_path = tmp_path / "test.pdf"
-        
+
         # Crear un PDF simple con PyPDF2
-        from reportlab.pdfgen import canvas
-        from reportlab.lib.pagesizes import letter
         import io
-        
+
+        from reportlab.lib.pagesizes import letter
+        from reportlab.pdfgen import canvas
+
         # Crear contenido con reportlab
         buffer = io.BytesIO()
         c = canvas.Canvas(buffer, pagesize=letter)
@@ -62,15 +56,15 @@ class TestPyPDF2Extractor:
         c.drawString(100, 730, "This is a test PDF for extraction.")
         c.showPage()
         c.save()
-        
+
         # Guardar el PDF
         buffer.seek(0)
         with open(pdf_path, 'wb') as f:
             f.write(buffer.read())
-        
+
         # Extraer
         result = await extractor.extract(pdf_path)
-        
+
         assert result.success is True
         assert result.error is None
         assert result.stats.total_pages == 1
@@ -84,37 +78,38 @@ class TestPyPDF2Extractor:
         """Test extracción con detección de secciones."""
         # Crear un PDF con contenido que active detección de secciones
         pdf_path = tmp_path / "test_sections.pdf"
-        
-        from reportlab.pdfgen import canvas
-        from reportlab.lib.pagesizes import letter
+
         import io
-        
+
+        from reportlab.lib.pagesizes import letter
+        from reportlab.pdfgen import canvas
+
         buffer = io.BytesIO()
         c = canvas.Canvas(buffer, pagesize=letter)
-        
+
         # Página 1: Licitación
         c.drawString(100, 750, "LICITACION PUBLICA N 123")
         c.drawString(100, 730, "Se convoca a licitación pública...")
         c.showPage()
-        
+
         # Página 2: Resolución
         c.drawString(100, 750, "RESOLUCION 456/2025")
         c.drawString(100, 730, "Se resuelve designar...")
         c.showPage()
-        
+
         c.save()
         buffer.seek(0)
-        
+
         with open(pdf_path, 'wb') as f:
             f.write(buffer.read())
-        
+
         # Extraer con detección de secciones
         result = await extractor.extract(pdf_path, detect_sections=True)
-        
+
         assert result.success is True
         assert result.stats.total_pages == 2
         assert len(result.sections) > 0
-        
+
         # Verificar que se detectaron tipos de sección
         section_types = [s.section_type for s in result.sections]
         assert any(t in [SectionType.LICITACION, SectionType.GENERAL] for t in section_types)
@@ -139,7 +134,7 @@ class TestPdfPlumberExtractor:
     async def test_extract_nonexistent_file(self, extractor):
         """Test extracción de archivo no existente."""
         result = await extractor.extract(Path("/nonexistent/file.pdf"))
-        
+
         assert result.success is False
         assert result.error is not None
         assert "not found" in result.error.lower()
@@ -151,19 +146,19 @@ class TestPdfPlumberExtractor:
         """Test extracción básica de PDF."""
         # Crear un PDF simple
         pdf_path = tmp_path / "test.pdf"
-        
-        from reportlab.pdfgen import canvas
+
         from reportlab.lib.pagesizes import letter
-        
+        from reportlab.pdfgen import canvas
+
         c = canvas.Canvas(str(pdf_path), pagesize=letter)
         c.drawString(100, 750, "Test Document")
         c.drawString(100, 730, "This is a test PDF for pdfplumber extraction.")
         c.showPage()
         c.save()
-        
+
         # Extraer
         result = await extractor.extract(pdf_path)
-        
+
         assert result.success is True
         assert result.error is None
         assert result.stats.total_pages == 1
@@ -175,27 +170,27 @@ class TestPdfPlumberExtractor:
     async def test_extract_with_sections(self, extractor, tmp_path):
         """Test extracción con detección de secciones."""
         pdf_path = tmp_path / "test_sections.pdf"
-        
-        from reportlab.pdfgen import canvas
+
         from reportlab.lib.pagesizes import letter
-        
+        from reportlab.pdfgen import canvas
+
         c = canvas.Canvas(str(pdf_path), pagesize=letter)
-        
+
         # Página 1
         c.drawString(100, 750, "DECRETO 789/2025")
         c.drawString(100, 730, "Se decreta lo siguiente...")
         c.showPage()
-        
+
         # Página 2
         c.drawString(100, 750, "NOMBRAMIENTO")
         c.drawString(100, 730, "Se nombra a Juan Pérez...")
         c.showPage()
-        
+
         c.save()
-        
+
         # Extraer con secciones
         result = await extractor.extract(pdf_path, detect_sections=True)
-        
+
         assert result.success is True
         assert result.stats.total_pages == 2
         assert len(result.sections) > 0
@@ -217,39 +212,39 @@ class TestExtractorComparison:
 
     @pytest.mark.asyncio
     async def test_both_extractors_same_pdf(
-        self, 
-        pypdf2_extractor, 
-        pdfplumber_extractor, 
+        self,
+        pypdf2_extractor,
+        pdfplumber_extractor,
         tmp_path
     ):
         """Test que ambos extractores producen resultados similares."""
         # Crear PDF de prueba
         pdf_path = tmp_path / "comparison.pdf"
-        
-        from reportlab.pdfgen import canvas
+
         from reportlab.lib.pagesizes import letter
-        
+        from reportlab.pdfgen import canvas
+
         c = canvas.Canvas(str(pdf_path), pagesize=letter)
         c.drawString(100, 750, "Comparison Test")
         c.drawString(100, 730, "Both extractors should extract this text.")
         c.showPage()
         c.save()
-        
+
         # Extraer con ambos
         result_pypdf2 = await pypdf2_extractor.extract(pdf_path)
         result_pdfplumber = await pdfplumber_extractor.extract(pdf_path)
-        
+
         # Ambos deben tener éxito
         assert result_pypdf2.success is True
         assert result_pdfplumber.success is True
-        
+
         # Misma cantidad de páginas
         assert result_pypdf2.stats.total_pages == result_pdfplumber.stats.total_pages
-        
+
         # Ambos deben tener contenido
         assert len(result_pypdf2.full_text) > 0
         assert len(result_pdfplumber.full_text) > 0
-        
+
         # Métodos correctos
         assert result_pypdf2.stats.extraction_method == ExtractionMethod.PYPDF2
         assert result_pdfplumber.stats.extraction_method == ExtractionMethod.PDFPLUMBER

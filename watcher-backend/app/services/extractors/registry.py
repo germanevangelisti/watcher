@@ -8,12 +8,12 @@ Proporciona un punto de acceso unificado para todos los extractores.
 import logging
 import os
 from pathlib import Path
-from typing import Dict, Optional
 
 from app.schemas.extraction import ExtractedContent
+
 from .base import PDFExtractor
+from .pdfplumber_extractor import PDFPLUMBER_AVAILABLE, PdfPlumberExtractor
 from .pypdf2_extractor import PyPDF2Extractor
-from .pdfplumber_extractor import PdfPlumberExtractor, PDFPLUMBER_AVAILABLE
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ class ExtractorRegistry:
     proporciona una interfaz unificada para la extracción de contenido.
     """
 
-    _extractors: Dict[str, PDFExtractor] = {}
+    _extractors: dict[str, PDFExtractor] = {}
     _default: str = "pdfplumber"  # pdfplumber produce mejor output
     _initialized: bool = False
 
@@ -89,7 +89,7 @@ class ExtractorRegistry:
         logger.info(f"Extractor '{name}' registrado manualmente")
 
     @classmethod
-    def get(cls, name: Optional[str] = None) -> PDFExtractor:
+    def get(cls, name: str | None = None) -> PDFExtractor:
         """
         Obtiene un extractor por nombre.
         
@@ -154,7 +154,7 @@ class ExtractorRegistry:
     async def extract(
         cls,
         file_path: Path,
-        method: Optional[str] = None,
+        method: str | None = None,
         detect_sections: bool = False,
         **kwargs
     ) -> ExtractedContent:
@@ -211,7 +211,7 @@ class ExtractorRegistry:
 # Función helper para uso simple
 async def extract_pdf(
     file_path: Path,
-    method: Optional[str] = None,
+    method: str | None = None,
     detect_sections: bool = False,
     **kwargs
 ) -> ExtractedContent:

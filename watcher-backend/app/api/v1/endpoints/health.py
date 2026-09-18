@@ -5,12 +5,11 @@ Health check endpoint for monitoring and load-balancer probes.
 import logging
 from datetime import datetime
 
+from app.core.config import settings
+from app.db.database import get_db
 from fastapi import APIRouter, Depends
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.core.config import settings
-from app.db.database import get_db
 
 logger = logging.getLogger(__name__)
 

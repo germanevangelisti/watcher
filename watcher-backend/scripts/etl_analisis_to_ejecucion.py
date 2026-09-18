@@ -35,10 +35,10 @@ from app.services.gasto_classifier import classify_gasto
 from app.services.presupuesto_matching import (
     _ACTO_NO_DEDUP,
     _ANALISIS_NO_MATCH,
+    _ORGANISMO_ALIASES,
     _dedup_key,
     _normalize,
     _normalize_acto,
-    _ORGANISMO_ALIASES,
     _token_jaccard,
     build_presupuesto_index,
     extract_numero_acto,

@@ -4,7 +4,6 @@ from datetime import date
 
 import httpx
 import pytest
-
 from app.services.coverage_inventory import (
     DbBoletin,
     ProbeResult,
@@ -15,12 +14,12 @@ from app.services.coverage_inventory import (
     parse_filename,
     parse_section,
     parse_ymd,
+    probe_slot,
     published_set,
     slot_url,
     weekday_dates,
     weekday_slots,
 )
-from app.services.coverage_inventory import probe_slot
 
 
 class TestParsers:

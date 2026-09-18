@@ -3,12 +3,12 @@ Endpoints para procesamiento por lotes
 """
 
 from pathlib import Path
-from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
 from app.schemas.batch import BatchProcessRequest
 from app.services.batch_processor import BatchProcessor
+from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
@@ -26,10 +26,10 @@ async def process_directory(
     """
     processor = BatchProcessor(db)
     source_dir = Path(request.source_dir)
-    
+
     if not source_dir.exists():
         return {"error": "Directorio no encontrado"}
-    
+
     stats = await processor.process_directory(
         source_dir=source_dir,
         batch_size=request.batch_size

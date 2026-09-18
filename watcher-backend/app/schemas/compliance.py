@@ -3,9 +3,9 @@ Schemas para sistema de Compliance
 """
 
 from datetime import date, datetime
-from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, Field
+from typing import Any
 
+from pydantic import BaseModel, Field
 
 # ============================================================================
 # COMPLIANCE CHECK SCHEMAS
@@ -19,32 +19,32 @@ class ComplianceCheckBase(BaseModel):
     legal_basis: str
     obligation_summary: str
     priority: str
-    category: Optional[str] = None
+    category: str | None = None
     weight: float = 1.0
-    frequency: Optional[str] = None
+    frequency: str | None = None
 
 
 class ComplianceCheckCreate(ComplianceCheckBase):
     """Schema para crear un Compliance Check"""
-    legal_text: Optional[str] = None
-    legal_url: Optional[str] = None
-    rezago_permitido: Optional[int] = None
-    validation_rules: Optional[Dict[str, Any]] = None
-    expected_sources: Optional[List[str]] = None
-    citizen_explanation: Optional[str] = None
-    auditor_notes: Optional[str] = None
+    legal_text: str | None = None
+    legal_url: str | None = None
+    rezago_permitido: int | None = None
+    validation_rules: dict[str, Any] | None = None
+    expected_sources: list[str] | None = None
+    citizen_explanation: str | None = None
+    auditor_notes: str | None = None
 
 
 class ComplianceCheckResponse(ComplianceCheckBase):
     """Schema de respuesta para Compliance Check"""
     id: int
-    legal_text: Optional[str] = None
-    legal_url: Optional[str] = None
-    rezago_permitido: Optional[int] = None
-    validation_rules: Optional[Dict[str, Any]] = None
-    expected_sources: Optional[List[str]] = None
-    citizen_explanation: Optional[str] = None
-    auditor_notes: Optional[str] = None
+    legal_text: str | None = None
+    legal_url: str | None = None
+    rezago_permitido: int | None = None
+    validation_rules: dict[str, Any] | None = None
+    expected_sources: list[str] | None = None
+    citizen_explanation: str | None = None
+    auditor_notes: str | None = None
     is_active: bool
     created_at: datetime
     updated_at: datetime
@@ -66,28 +66,28 @@ class CheckResultBase(BaseModel):
 class CheckResultCreate(CheckResultBase):
     """Schema para crear un Check Result"""
     check_id: int
-    jurisdiccion_id: Optional[int] = None
-    score: Optional[float] = None
+    jurisdiccion_id: int | None = None
+    score: float | None = None
     evaluation_date: date
-    period_start: Optional[date] = None
-    period_end: Optional[date] = None
-    reason: Optional[str] = None
-    remediation: Optional[str] = None
-    evaluation_metadata: Optional[Dict[str, Any]] = None
+    period_start: date | None = None
+    period_end: date | None = None
+    reason: str | None = None
+    remediation: str | None = None
+    evaluation_metadata: dict[str, Any] | None = None
 
 
 class CheckResultResponse(CheckResultBase):
     """Schema de respuesta para Check Result"""
     id: int
     check_id: int
-    jurisdiccion_id: Optional[int] = None
-    score: Optional[float] = None
+    jurisdiccion_id: int | None = None
+    score: float | None = None
     evaluation_date: date
-    period_start: Optional[date] = None
-    period_end: Optional[date] = None
-    reason: Optional[str] = None
-    remediation: Optional[str] = None
-    evaluation_metadata: Optional[Dict[str, Any]] = None
+    period_start: date | None = None
+    period_end: date | None = None
+    reason: str | None = None
+    remediation: str | None = None
+    evaluation_metadata: dict[str, Any] | None = None
     created_at: datetime
 
     class Config:
@@ -97,7 +97,7 @@ class CheckResultResponse(CheckResultBase):
 class CheckResultWithDetails(CheckResultResponse):
     """Schema de Check Result con detalles del check"""
     check: ComplianceCheckResponse
-    evidences: List["EvidenceResponse"] = []
+    evidences: list["EvidenceResponse"] = []
 
     class Config:
         from_attributes = True
@@ -116,27 +116,27 @@ class EvidenceBase(BaseModel):
 class EvidenceCreate(EvidenceBase):
     """Schema para crear Evidence"""
     check_result_id: int
-    snapshot_hash: Optional[str] = None
-    snapshot_path: Optional[str] = None
-    relevant_fragment: Optional[str] = None
-    extracted_data: Optional[Dict[str, Any]] = None
-    artifact_metadata: Optional[Dict[str, Any]] = None
+    snapshot_hash: str | None = None
+    snapshot_path: str | None = None
+    relevant_fragment: str | None = None
+    extracted_data: dict[str, Any] | None = None
+    artifact_metadata: dict[str, Any] | None = None
     is_valid: bool = True
-    validation_notes: Optional[str] = None
+    validation_notes: str | None = None
 
 
 class EvidenceResponse(EvidenceBase):
     """Schema de respuesta para Evidence"""
     id: int
     check_result_id: int
-    snapshot_hash: Optional[str] = None
-    snapshot_path: Optional[str] = None
+    snapshot_hash: str | None = None
+    snapshot_path: str | None = None
     captured_at: datetime
-    relevant_fragment: Optional[str] = None
-    extracted_data: Optional[Dict[str, Any]] = None
-    artifact_metadata: Optional[Dict[str, Any]] = None
+    relevant_fragment: str | None = None
+    extracted_data: dict[str, Any] | None = None
+    artifact_metadata: dict[str, Any] | None = None
     is_valid: bool
-    validation_notes: Optional[str] = None
+    validation_notes: str | None = None
     created_at: datetime
 
     class Config:
@@ -163,29 +163,29 @@ class CheckDetail(BaseModel):
     check_code: str
     check_name: str
     priority: str
-    category: Optional[str] = None
+    category: str | None = None
     legal_basis: str
     status: str
-    score: Optional[float] = None
-    last_evaluation: Optional[str] = None
+    score: float | None = None
+    last_evaluation: str | None = None
     summary: str
-    citizen_explanation: Optional[str] = None
+    citizen_explanation: str | None = None
 
 
 class ScorecardOverview(BaseModel):
     """Overview del scorecard"""
-    overall_score: Optional[float] = None
+    overall_score: float | None = None
     total_checks: int
-    status_breakdown: Dict[str, int]
+    status_breakdown: dict[str, int]
     evaluation_date: str
-    jurisdiccion_id: Optional[int] = None
+    jurisdiccion_id: int | None = None
 
 
 class ComplianceScorecardResponse(BaseModel):
     """Respuesta completa del scorecard de compliance"""
     scorecard: ScorecardOverview
-    checks: List[CheckDetail]
-    red_flags: List[CheckDetail]
+    checks: list[CheckDetail]
+    red_flags: list[CheckDetail]
     compliance_level: str
 
 
@@ -198,7 +198,7 @@ class ChecksSyncResponse(BaseModel):
     success: bool
     synced_count: int
     message: str
-    checks_summary: Optional[Dict[str, int]] = None
+    checks_summary: dict[str, int] | None = None
 
 
 # ============================================================================
@@ -209,28 +209,28 @@ class RequiredDocumentBase(BaseModel):
     """Schema base para Required Document"""
     document_type: str
     document_name: str
-    period: Optional[str] = None
+    period: str | None = None
     expected_format: str
 
 
 class RequiredDocumentResponse(RequiredDocumentBase):
     """Schema de respuesta para Required Document"""
     id: int
-    check_id: Optional[int] = None
-    jurisdiccion_id: Optional[int] = None
-    expected_url: Optional[str] = None
+    check_id: int | None = None
+    jurisdiccion_id: int | None = None
+    expected_url: str | None = None
     status: str
-    local_path: Optional[str] = None
-    file_hash: Optional[str] = None
-    file_size_bytes: Optional[int] = None
-    downloaded_at: Optional[datetime] = None
-    processed_at: Optional[datetime] = None
-    last_checked: Optional[datetime] = None
+    local_path: str | None = None
+    file_hash: str | None = None
+    file_size_bytes: int | None = None
+    downloaded_at: datetime | None = None
+    processed_at: datetime | None = None
+    last_checked: datetime | None = None
     indexed_in_rag: bool
-    embedding_model: Optional[str] = None
-    num_chunks: Optional[int] = None
-    metadata_json: Optional[Dict[str, Any]] = None
-    notes: Optional[str] = None
+    embedding_model: str | None = None
+    num_chunks: int | None = None
+    metadata_json: dict[str, Any] | None = None
+    notes: str | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -241,20 +241,20 @@ class RequiredDocumentResponse(RequiredDocumentBase):
 class JurisdictionDocumentsSummary(BaseModel):
     """Resumen de documentos de una jurisdicción"""
     jurisdiction_code: str
-    jurisdiction_id: Optional[int] = None
+    jurisdiction_id: int | None = None
     jurisdiction_name: str
-    applicable_laws: List[str]
+    applicable_laws: list[str]
     total_documents: int
     missing: int
     downloaded: int
     processed: int
     coverage_percentage: float
-    by_type: Dict[str, Dict[str, int]]
+    by_type: dict[str, dict[str, int]]
 
 
 class DocumentsOverviewResponse(BaseModel):
     """Overview completo de documentos por jurisdicción"""
-    jurisdictions: List[JurisdictionDocumentsSummary]
+    jurisdictions: list[JurisdictionDocumentsSummary]
     total_documents: int
     total_missing: int
     total_processed: int
@@ -263,12 +263,12 @@ class DocumentsOverviewResponse(BaseModel):
 
 class DocumentUpdateRequest(BaseModel):
     """Request para actualizar estado de documento"""
-    local_path: Optional[str] = None
-    file_size_bytes: Optional[int] = None
-    indexed_in_rag: Optional[bool] = None
-    embedding_model: Optional[str] = None
-    num_chunks: Optional[int] = None
-    metadata: Optional[Dict[str, Any]] = None
+    local_path: str | None = None
+    file_size_bytes: int | None = None
+    indexed_in_rag: bool | None = None
+    embedding_model: str | None = None
+    num_chunks: int | None = None
+    metadata: dict[str, Any] | None = None
 
 
 # Update forward refs

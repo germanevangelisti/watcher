@@ -6,7 +6,6 @@ Autor: Watcher Fiscal Agent
 """
 
 import json
-from typing import Dict, List, Optional
 from dataclasses import dataclass
 
 
@@ -18,13 +17,13 @@ class AlertaCiudadana:
     titulo: str
     descripcion: str
     accion_ciudadana: str
-    evidencia: Dict
-    contexto_presupuestario: Optional[Dict] = None
+    evidencia: dict
+    contexto_presupuestario: dict | None = None
     score_confianza: float = 1.0
-    acto_id: Optional[int] = None
-    programa_id: Optional[int] = None
-    
-    def to_dict(self) -> Dict:
+    acto_id: int | None = None
+    programa_id: int | None = None
+
+    def to_dict(self) -> dict:
         """Convierte a diccionario para DB"""
         return {
             'tipo_alerta': self.tipo_alerta,
@@ -42,8 +41,8 @@ class AlertaCiudadana:
 
 class AlertGenerator:
     """Generador de alertas fiscales ciudadanas"""
-    
-    def __init__(self, config: Optional[Dict] = None):
+
+    def __init__(self, config: dict | None = None):
         """
         Inicializa el generador de alertas
         
@@ -95,32 +94,32 @@ class AlertGenerator:
                 'severidad': 'MEDIA'
             }
         }
-        
+
         # Cache de alertas ya generadas (para deduplicación)
         self.alertas_generadas = set()
-    
+
     def _deduplicate_key(self, acto_id: int, tipo_alerta: str) -> str:
         """Genera clave para deduplicación"""
         return f"{acto_id}-{tipo_alerta}"
-    
+
     def evaluar_licitacion_sin_presupuesto(
         self,
-        acto: Dict,
-        vinculo: Optional[Dict]
-    ) -> Optional[AlertaCiudadana]:
+        acto: dict,
+        vinculo: dict | None
+    ) -> AlertaCiudadana | None:
         """Alerta 1: Licitación sin presupuesto"""
-        
+
         # Solo aplica a licitaciones
         if acto.get('tipo_acto') not in ['LICITACIÓN', 'CONTRATACIÓN_DIRECTA']:
             return None
-        
+
         # Verificar si tiene vínculo válido
         if vinculo and vinculo.get('score_confianza', 0) >= self.config['licitacion_sin_presupuesto']['score_minimo']:
             return None
-        
+
         # Generar alerta
         monto_str = f"${acto.get('monto', 0):,.0f}" if acto.get('monto') else "No especificado"
-        
+
         return AlertaCiudadana(
             tipo_alerta='LICITACION_SIN_PRESUPUESTO',
             severidad='ALTA',
@@ -142,23 +141,23 @@ class AlertGenerator:
             score_confianza=0.9,  # Alta confianza porque es verificable
             acto_id=acto.get('id')
         )
-    
+
     def evaluar_gasto_excesivo(
         self,
-        acto: Dict,
-        vinculo: Dict,
-        programa: Dict
-    ) -> Optional[AlertaCiudadana]:
+        acto: dict,
+        vinculo: dict,
+        programa: dict
+    ) -> AlertaCiudadana | None:
         """Alerta 2: Gasto excesivo vs programa"""
-        
+
         if not acto.get('monto') or not programa.get('monto_vigente'):
             return None
-        
+
         porcentaje = (acto['monto'] / programa['monto_vigente']) * 100
-        
+
         if porcentaje <= self.config['gasto_excesivo']['porcentaje_limite']:
             return None
-        
+
         return AlertaCiudadana(
             tipo_alerta='GASTO_EXCESIVO',
             severidad='ALTA',
@@ -187,24 +186,24 @@ class AlertGenerator:
             acto_id=acto.get('id'),
             programa_id=programa.get('id')
         )
-    
-    def evaluar_contratacion_urgente(self, acto: Dict) -> Optional[AlertaCiudadana]:
+
+    def evaluar_contratacion_urgente(self, acto: dict) -> AlertaCiudadana | None:
         """Alerta 4: Contratación urgente grande"""
-        
+
         if not acto.get('monto') or acto['monto'] < self.config['contratacion_urgente']['monto_minimo']:
             return None
-        
+
         # Verificar keywords de urgencia
         texto = f"{acto.get('descripcion', '')} {acto.get('fragmento_original', '')}".lower()
         keywords_encontradas = []
-        
+
         for keyword in self.config['contratacion_urgente']['keywords']:
             if keyword in texto:
                 keywords_encontradas.append(keyword)
-        
+
         if not keywords_encontradas:
             return None
-        
+
         return AlertaCiudadana(
             tipo_alerta='CONTRATACION_URGENTE',
             severidad='MEDIA',
@@ -226,24 +225,24 @@ class AlertGenerator:
             score_confianza=0.85,
             acto_id=acto.get('id')
         )
-    
-    def evaluar_obra_sin_trazabilidad(self, acto: Dict) -> Optional[AlertaCiudadana]:
+
+    def evaluar_obra_sin_trazabilidad(self, acto: dict) -> AlertaCiudadana | None:
         """Alerta 8: Obra sin trazabilidad"""
-        
+
         if not acto.get('monto') or acto['monto'] < self.config['obra_sin_trazabilidad']['monto_minimo']:
             return None
-        
+
         # Verificar si es obra
         texto = f"{acto.get('descripcion', '')} {acto.get('keywords', '')}".lower()
         es_obra = any(kw in texto for kw in ['obra', 'construcción', 'infraestructura', 'edificio'])
-        
+
         if not es_obra:
             return None
-        
+
         # Verificar si falta partida
         if acto.get('partida'):
             return None
-        
+
         return AlertaCiudadana(
             tipo_alerta='OBRA_SIN_TRAZABILIDAD',
             severidad='ALTA',
@@ -264,14 +263,14 @@ class AlertGenerator:
             score_confianza=0.90,
             acto_id=acto.get('id')
         )
-    
+
     def generar_alertas_para_acto(
         self,
-        acto: Dict,
-        vinculos: List[Dict],
-        programas: Dict[int, Dict],
-        baseline_marzo: Optional[Dict] = None
-    ) -> List[AlertaCiudadana]:
+        acto: dict,
+        vinculos: list[dict],
+        programas: dict[int, dict],
+        baseline_marzo: dict | None = None
+    ) -> list[AlertaCiudadana]:
         """
         Genera todas las alertas aplicables a un acto
         
@@ -285,21 +284,21 @@ class AlertGenerator:
             Lista de alertas generadas
         """
         alertas = []
-        
+
         # Mejor vínculo (si existe)
         mejor_vinculo = vinculos[0] if vinculos else None
         programa = programas.get(mejor_vinculo['programa_id']) if mejor_vinculo else None
-        
+
         # Generar clave de deduplicación
         acto_id = acto.get('id')
-        
+
         # Alerta 1: Licitación sin presupuesto
         if f"{acto_id}-LICITACION_SIN_PRESUPUESTO" not in self.alertas_generadas:
             alerta = self.evaluar_licitacion_sin_presupuesto(acto, mejor_vinculo)
             if alerta:
                 alertas.append(alerta)
                 self.alertas_generadas.add(f"{acto_id}-LICITACION_SIN_PRESUPUESTO")
-        
+
         # Alerta 2: Gasto excesivo (requiere vínculo)
         if mejor_vinculo and programa:
             if f"{acto_id}-GASTO_EXCESIVO" not in self.alertas_generadas:
@@ -307,23 +306,23 @@ class AlertGenerator:
                 if alerta:
                     alertas.append(alerta)
                     self.alertas_generadas.add(f"{acto_id}-GASTO_EXCESIVO")
-        
+
         # Alerta 4: Contratación urgente
         if f"{acto_id}-CONTRATACION_URGENTE" not in self.alertas_generadas:
             alerta = self.evaluar_contratacion_urgente(acto)
             if alerta:
                 alertas.append(alerta)
                 self.alertas_generadas.add(f"{acto_id}-CONTRATACION_URGENTE")
-        
+
         # Alerta 8: Obra sin trazabilidad
         if f"{acto_id}-OBRA_SIN_TRAZABILIDAD" not in self.alertas_generadas:
             alerta = self.evaluar_obra_sin_trazabilidad(acto)
             if alerta:
                 alertas.append(alerta)
                 self.alertas_generadas.add(f"{acto_id}-OBRA_SIN_TRAZABILIDAD")
-        
+
         return alertas
-    
+
     def reset_cache(self):
         """Limpia el cache de deduplicación"""
         self.alertas_generadas.clear()
@@ -332,7 +331,7 @@ class AlertGenerator:
 # Test de ejemplo
 if __name__ == "__main__":
     generator = AlertGenerator()
-    
+
     # Acto de ejemplo sin vínculo
     acto_sin_vinculo = {
         'id': 1,
@@ -344,9 +343,9 @@ if __name__ == "__main__":
         'descripcion': 'Licitación para obra vial',
         'fragmento_original': 'Se llama a licitación pública...'
     }
-    
+
     alertas = generator.generar_alertas_para_acto(acto_sin_vinculo, [], {})
-    
+
     print("\n🚨 ALERTAS GENERADAS:")
     print("=" * 80)
     for alerta in alertas:

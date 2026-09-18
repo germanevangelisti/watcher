@@ -12,7 +12,6 @@ import logging
 from typing import Any
 
 import httpx
-
 from app.core.hardware import (
     llm_max_concurrent,
     ollama_base_url,

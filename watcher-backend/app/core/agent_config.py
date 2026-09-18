@@ -2,7 +2,8 @@
 Configuración centralizada para agentes
 """
 import os
-from typing import Dict, Any
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 
@@ -28,16 +29,16 @@ class DocumentIntelligenceConfig(BaseModel):
 
 class AnomalyDetectionConfig(BaseModel):
     """Configuración para Anomaly Detection Agent"""
-    transparency_thresholds: Dict[str, float] = Field(default_factory=lambda: {
+    transparency_thresholds: dict[str, float] = Field(default_factory=lambda: {
         "high_risk": 30.0,
         "medium_risk": 50.0,
         "low_risk": 70.0
     })
-    amount_thresholds: Dict[str, float] = Field(default_factory=lambda: {
+    amount_thresholds: dict[str, float] = Field(default_factory=lambda: {
         "suspicious_amount": 10000000.0,
         "very_high": 50000000.0
     })
-    red_flag_rules: Dict[str, Any] = Field(default_factory=lambda: {
+    red_flag_rules: dict[str, Any] = Field(default_factory=lambda: {
         "HIGH_AMOUNT": {
             "enabled": True,
             "threshold": 50000000
@@ -54,7 +55,7 @@ class AnomalyDetectionConfig(BaseModel):
             "threshold": 30
         }
     })
-    ml_models: Dict[str, Any] = Field(default_factory=lambda: {
+    ml_models: dict[str, Any] = Field(default_factory=lambda: {
         "isolation_forest": {
             "contamination": 0.1,
             "n_estimators": 100
@@ -98,7 +99,7 @@ class AgentSystemConfig(BaseModel):
     insight_reporting: InsightReportingConfig = Field(
         default_factory=InsightReportingConfig
     )
-    
+
     # API Keys y recursos (se lee desde variable de entorno para evitar hardcoding)
     google_api_key: str = Field(default_factory=lambda: os.getenv("GOOGLE_API_KEY", ""))
     anthropic_api_key: str = Field(default_factory=lambda: os.getenv("ANTHROPIC_API_KEY", ""))

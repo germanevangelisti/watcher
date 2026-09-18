@@ -1,20 +1,20 @@
 """
 API endpoints para gestión de agentes
 """
-from fastapi import APIRouter, HTTPException, Depends
-from typing import List, Optional, Dict, Any
-from pydantic import BaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Any
 
+from agents.anomaly_detection import AnomalyDetectionAgent
+from agents.document_intelligence import DocumentIntelligenceAgent
+from agents.historical_intelligence import HistoricalIntelligenceAgent
+from agents.insight_reporting import InsightReportingAgent
 from agents.orchestrator import AgentOrchestrator
 from agents.orchestrator.state import AgentType
-from agents.document_intelligence import DocumentIntelligenceAgent
-from agents.anomaly_detection import AnomalyDetectionAgent
-from agents.insight_reporting import InsightReportingAgent
-from agents.historical_intelligence import HistoricalIntelligenceAgent
 from app.core.agent_config import DEFAULT_AGENT_CONFIG
-from app.core.events import event_bus, EventType
+from app.core.events import EventType, event_bus
 from app.db.session import get_db
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
@@ -83,7 +83,7 @@ class AgentStatusResponse(BaseModel):
 
 class AgentHealthResponse(BaseModel):
     system_status: str
-    agents: List[AgentStatusResponse]
+    agents: list[AgentStatusResponse]
     active_workflows: int
     total_tasks_completed: int
 
@@ -116,7 +116,7 @@ async def get_agents_health():
             is_available=True
         )
     ]
-    
+
     return AgentHealthResponse(
         system_status="healthy",
         agents=agents_status,
@@ -131,10 +131,10 @@ async def get_agent_status(agent_type: str):
     Obtiene el estado de un agente específico
     """
     valid_agents = ["document_intelligence", "anomaly_detection", "insight_reporting"]
-    
+
     if agent_type not in valid_agents:
         raise HTTPException(status_code=404, detail="Agente no encontrado")
-    
+
     return {
         "agent_type": agent_type,
         "status": "active",
@@ -149,7 +149,7 @@ async def get_agent_status(agent_type: str):
 
 class ChatRequest(BaseModel):
     query: str
-    context: Optional[Dict[str, Any]] = None
+    context: dict[str, Any] | None = None
 
 
 @router.post("/chat")
@@ -236,8 +236,8 @@ async def get_monthly_summary(year: int, month: int, db: AsyncSession = Depends(
 
 @router.get("/insights/red-flag-distribution")
 async def get_red_flag_distribution(
-    year: Optional[int] = None,
-    month: Optional[int] = None,
+    year: int | None = None,
+    month: int | None = None,
     db: AsyncSession = Depends(get_db)
 ):
     """

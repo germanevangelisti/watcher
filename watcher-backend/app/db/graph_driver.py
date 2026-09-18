@@ -15,18 +15,19 @@ Public API:
 from __future__ import annotations
 
 import logging
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any, AsyncGenerator, Dict, List, Optional
-
-from neo4j import AsyncGraphDatabase, AsyncDriver, AsyncSession as Neo4jAsyncSession
+from typing import Any
 
 from app.core.config import settings
 from app.db.query_loader import load_query
+from neo4j import AsyncDriver, AsyncGraphDatabase
+from neo4j import AsyncSession as Neo4jAsyncSession
 
 logger = logging.getLogger(__name__)
 
-_driver: Optional[AsyncDriver] = None
+_driver: AsyncDriver | None = None
 
 # Path to the declarative schema file
 _INIT_CYPHER = Path(__file__).resolve().parent.parent.parent / "graph" / "init.cypher"
@@ -82,7 +83,7 @@ async def close_neo4j() -> None:
 # ---------------------------------------------------------------------------
 
 
-def get_driver() -> Optional[AsyncDriver]:
+def get_driver() -> AsyncDriver | None:
     """Return the singleton driver, or None if not initialized."""
     return _driver
 
@@ -118,7 +119,7 @@ async def get_neo4j_session_dep() -> AsyncGenerator[Neo4jAsyncSession, None]:
 async def run_query(
     session: Neo4jAsyncSession,
     query_name: str,
-    params: Optional[Dict[str, Any]] = None,
+    params: dict[str, Any] | None = None,
 ):
     """
     Run a named Cypher query loaded from graph/queries/<query_name>.cypher.
@@ -143,7 +144,7 @@ async def run_query(
 # ---------------------------------------------------------------------------
 
 
-def _parse_cypher_statements(text: str) -> List[str]:
+def _parse_cypher_statements(text: str) -> list[str]:
     """
     Parse individual CREATE statements from a multi-statement Cypher file.
 

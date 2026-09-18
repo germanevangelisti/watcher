@@ -5,7 +5,6 @@ Tests for the query_loader module.
 from unittest.mock import patch
 
 import pytest
-
 from app.db.query_loader import (
     QueryNotFoundError,
     clear_cache,

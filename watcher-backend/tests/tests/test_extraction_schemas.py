@@ -3,17 +3,17 @@ Tests para los schemas de extracción de contenido.
 Épica 2: Extracción - Tarea 2.3
 """
 
-import pytest
 from datetime import datetime
-from pydantic import ValidationError
 
+import pytest
+from pydantic import ValidationError
 from watcher_monolith.backend.app.schemas.extraction import (
-    ExtractionMethod,
-    SectionType,
-    PageContent,
     ContentSection,
+    ExtractedContent,
+    ExtractionMethod,
     ExtractionStats,
-    ExtractedContent
+    PageContent,
+    SectionType,
 )
 
 

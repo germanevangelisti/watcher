@@ -2,17 +2,17 @@
 API endpoints para logs de procesamiento en tiempo real
 """
 
-from typing import List, Dict, Optional
-from fastapi import APIRouter, Query
+
 from app.services.processing_logger import processing_logger
+from fastapi import APIRouter, Query
 
 router = APIRouter()
 
 @router.get("/logs")
 async def get_processing_logs(
-    session_id: Optional[str] = Query(None, description="ID de sesión para filtrar logs"),
+    session_id: str | None = Query(None, description="ID de sesión para filtrar logs"),
     limit: int = Query(100, description="Número máximo de logs a retornar")
-) -> List[Dict]:
+) -> list[dict]:
     """
     Obtiene los logs de procesamiento más recientes.
     
@@ -27,7 +27,7 @@ async def get_processing_logs(
     return logs
 
 @router.delete("/logs/{session_id}")
-async def clear_session_logs(session_id: str) -> Dict:
+async def clear_session_logs(session_id: str) -> dict:
     """
     Limpia los logs de una sesión específica.
     
@@ -41,7 +41,7 @@ async def clear_session_logs(session_id: str) -> Dict:
     return {"message": f"Logs de sesión {session_id} eliminados"}
 
 @router.get("/logs/sessions")
-async def get_active_sessions() -> Dict:
+async def get_active_sessions() -> dict:
     """
     Obtiene información sobre las sesiones activas.
     
@@ -51,7 +51,7 @@ async def get_active_sessions() -> Dict:
     # Obtener todas las sesiones únicas de los logs
     all_logs = processing_logger.get_logs(limit=1000)
     sessions = {}
-    
+
     for log in all_logs:
         session_id = log.get("session_id")
         if session_id:
@@ -64,15 +64,15 @@ async def get_active_sessions() -> Dict:
                     "errors": 0,
                     "warnings": 0
                 }
-            
+
             sessions[session_id]["last_log"] = log["timestamp"]
             sessions[session_id]["log_count"] += 1
-            
+
             if log["level"] == "error":
                 sessions[session_id]["errors"] += 1
             elif log["level"] == "warning":
                 sessions[session_id]["warnings"] += 1
-    
+
     return {
         "total_sessions": len(sessions),
         "sessions": list(sessions.values())

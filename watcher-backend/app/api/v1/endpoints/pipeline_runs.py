@@ -7,15 +7,13 @@ GET  /api/v1/pipelines/runs/{run_id}  — Single run detail
 
 import logging
 from datetime import datetime
-from typing import Optional
-
-from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel, ConfigDict
-from sqlalchemy import select, func
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import IngestionRun
 from app.db.session import get_db
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, ConfigDict
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -36,9 +34,9 @@ class IngestionRunSchema(BaseModel):
     status: str
     rows_in: int = 0
     rows_loaded: int = 0
-    error: Optional[str] = None
+    error: str | None = None
     started_at: datetime
-    finished_at: Optional[datetime] = None
+    finished_at: datetime | None = None
 
 
 class PaginatedRunsResponse(BaseModel):
@@ -55,8 +53,8 @@ class PaginatedRunsResponse(BaseModel):
 
 @router.get("/runs", response_model=PaginatedRunsResponse, summary="List pipeline runs")
 async def list_pipeline_runs(
-    pipeline_name: Optional[str] = Query(None, description="Filter by pipeline name"),
-    status: Optional[str] = Query(None, description="Filter by status (running|loaded|failed)"),
+    pipeline_name: str | None = Query(None, description="Filter by pipeline name"),
+    status: str | None = Query(None, description="Filter by status (running|loaded|failed)"),
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Results per page"),
     db: AsyncSession = Depends(get_db),

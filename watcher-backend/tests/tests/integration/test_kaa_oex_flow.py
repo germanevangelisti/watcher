@@ -4,17 +4,17 @@ Integration tests for KAA -> OEx flow.
 Tests the flow from AI agents to output execution.
 """
 
-import pytest
-from pathlib import Path
 import sys
+from pathlib import Path
+
+import pytest
 
 # Add paths
 backend_path = Path(__file__).resolve().parent.parent.parent / "watcher-monolith" / "backend"
 sys.path.insert(0, str(backend_path))
 
 from app.services.alert_dispatcher import AlertDispatcher
-from app.services.report_generator import ReportGenerator, ReportType, ReportFormat
-
+from app.services.report_generator import ReportFormat, ReportGenerator, ReportType
 
 # ============================================================================
 # KAA -> OEx Integration Tests
@@ -36,11 +36,11 @@ async def test_agent_detection_to_alert():
             }
         }
     ]
-    
+
     # Dispatcher processes results and creates alerts
     dispatcher = AlertDispatcher()
     result = await dispatcher.process_analysis_results(analysis_results)
-    
+
     assert result["success"] is True
     assert result["alerts_created"] >= 0  # May create alerts based on rules
 
@@ -60,7 +60,7 @@ async def test_agent_results_to_report():
             "Total amount: $150M"
         ]
     }
-    
+
     # Generate report
     generator = ReportGenerator()
     report = await generator.generate_report(
@@ -68,7 +68,7 @@ async def test_agent_results_to_report():
         data=analysis_data,
         format=ReportFormat.MARKDOWN
     )
-    
+
     assert report["success"] is True
     assert "content" in report
 
@@ -82,12 +82,12 @@ async def test_multiple_agents_to_combined_output():
         "organizations": ["Company A", "Company B"],
         "total_entities": 50
     }
-    
+
     raga_results = {
         "searches_performed": 10,
         "documents_retrieved": 25
     }
-    
+
     # Combine into report
     generator = ReportGenerator()
     combined_data = {
@@ -96,11 +96,11 @@ async def test_multiple_agents_to_combined_output():
         "knowledge_base": kba_results,
         "search_results": raga_results
     }
-    
+
     report = await generator.generate_report(
         report_type=ReportType.DETAILED_ANALYSIS,
         data=combined_data,
         format=ReportFormat.JSON
     )
-    
+
     assert report["success"] is True

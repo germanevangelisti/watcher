@@ -4,14 +4,14 @@ Operaciones CRUD para la base de datos
 
 import re
 from datetime import datetime
-from typing import List, Optional, Dict
-from sqlalchemy import select, func
+
+from app.services.presupuesto_matching import resolve_numero_acto
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.services.presupuesto_matching import resolve_numero_acto
+from .models import Analisis, Boletin
 
-from .models import Boletin, Analisis
 
 async def create_boletin(
     db: AsyncSession,
@@ -19,8 +19,8 @@ async def create_boletin(
     date: str,
     section: str,
     status: str = "pending",
-    file_hash: Optional[str] = None,
-    file_size_bytes: Optional[int] = None,
+    file_hash: str | None = None,
+    file_size_bytes: int | None = None,
     origin: str = "downloaded"
 ) -> Boletin:
     """
@@ -48,7 +48,7 @@ async def create_boletin(
         hash_query = select(Boletin).where(Boletin.file_hash == file_hash)
         result = await db.execute(hash_query)
         existing_by_hash = result.scalar_one_or_none()
-        
+
         if existing_by_hash:
             # Duplicate detected by hash - update if needed
             existing_by_hash.status = status
@@ -60,12 +60,12 @@ async def create_boletin(
                 existing_by_hash.file_size_bytes = file_size_bytes
             await db.flush()
             return existing_by_hash
-    
+
     # 2. Check for duplicate by filename
     filename_query = select(Boletin).where(Boletin.filename == filename)
     result = await db.execute(filename_query)
     existing_by_filename = result.scalar_one_or_none()
-    
+
     if existing_by_filename:
         # Update existing record
         existing_by_filename.status = status
@@ -77,7 +77,7 @@ async def create_boletin(
             existing_by_filename.file_size_bytes = file_size_bytes
         await db.flush()
         return existing_by_filename
-    
+
     # 3. Create new record
     db_boletin = Boletin(
         filename=filename,
@@ -92,13 +92,13 @@ async def create_boletin(
     await db.flush()  # Flush para obtener el ID
     return db_boletin
 
-async def get_boletin(db: AsyncSession, boletin_id: int) -> Optional[Boletin]:
+async def get_boletin(db: AsyncSession, boletin_id: int) -> Boletin | None:
     """Obtiene un boletín por ID."""
     query = select(Boletin).where(Boletin.id == boletin_id)
     result = await db.execute(query)
     return result.scalar_one_or_none()
 
-async def get_boletin_by_filename(db: AsyncSession, filename: str) -> Optional[Boletin]:
+async def get_boletin_by_filename(db: AsyncSession, filename: str) -> Boletin | None:
     """Obtiene un boletín por nombre de archivo."""
     query = select(Boletin).where(Boletin.filename == filename)
     result = await db.execute(query)
@@ -108,8 +108,8 @@ async def get_boletines(
     db: AsyncSession,
     skip: int = 0,
     limit: int = 100,
-    status: Optional[str] = None
-) -> List[Boletin]:
+    status: str | None = None
+) -> list[Boletin]:
     """Obtiene lista de boletines con filtros opcionales."""
     query = select(Boletin).options(selectinload(Boletin.jurisdiccion)).offset(skip).limit(limit)
     if status:
@@ -121,8 +121,8 @@ async def update_boletin_status(
     db: AsyncSession,
     boletin_id: int,
     status: str,
-    error_message: Optional[str] = None
-) -> Optional[Boletin]:
+    error_message: str | None = None
+) -> Boletin | None:
     """Actualiza el estado de un boletín."""
     boletin = await get_boletin(db, boletin_id)
     if boletin:
@@ -131,7 +131,7 @@ async def update_boletin_status(
         boletin.updated_at = datetime.utcnow()
     return boletin
 
-def _parse_monto_string(monto_str: str) -> Optional[float]:
+def _parse_monto_string(monto_str: str) -> float | None:
     """
     Parse an Argentine monto string to a float.
     
@@ -143,7 +143,7 @@ def _parse_monto_string(monto_str: str) -> Optional[float]:
     """
     if not monto_str:
         return None
-    
+
     # Try to find a numeric amount in parentheses first (often contains the parsed value)
     paren_match = re.search(r'\((?:pesos\s+)?([0-9]{1,3}(?:\.[0-9]{3})*(?:,[0-9]{2})?)\)', monto_str)
     if paren_match:
@@ -152,7 +152,7 @@ def _parse_monto_string(monto_str: str) -> Optional[float]:
             return float(num_str)
         except ValueError:
             pass
-    
+
     # Try to find a standalone numeric pattern
     num_match = re.search(r'(?:pesos\s+|\$\s*)?([0-9]{1,3}(?:\.[0-9]{3})*(?:,[0-9]{2})?)', monto_str)
     if num_match:
@@ -161,7 +161,7 @@ def _parse_monto_string(monto_str: str) -> Optional[float]:
             return float(num_str)
         except ValueError:
             pass
-    
+
     return None
 
 
@@ -169,7 +169,7 @@ async def create_analisis(
     db: AsyncSession,
     boletin_id: int,
     fragmento: str,
-    analisis_data: Dict
+    analisis_data: dict
 ) -> Analisis:
     """
     Crea un nuevo registro de análisis.
@@ -179,18 +179,18 @@ async def create_analisis(
     """
     # Detect v2 format (has 'tipo_acto' key)
     is_v2 = "tipo_acto" in analisis_data
-    
+
     # Build beneficiarios string for legacy field
     beneficiarios = analisis_data.get("beneficiarios", [])
     beneficiarios_str = ", ".join(beneficiarios[:3]) if beneficiarios else analisis_data.get("entidad_beneficiaria", "No especificado")
-    
+
     # Build montos string for legacy field
     montos = analisis_data.get("montos", [])
     montos_str = ", ".join(montos[:3]) if montos else analisis_data.get("monto_estimado", "No especificado")
-    
+
     # Map riesgo to uppercase for legacy compat
     riesgo_raw = analisis_data.get("riesgo", "informativo")
-    
+
     # Map tipo_acto to legacy categoria
     tipo_to_categoria = {
         "decreto": "otros",
@@ -201,7 +201,7 @@ async def create_analisis(
         "transferencia": "gasto excesivo",
         "otro": "otros",
     }
-    
+
     # Parse monto_numerico: prefer Gemini's monto_total_numerico, fallback to parsing strings
     monto_numerico = None
     gemini_monto = analisis_data.get("monto_total_numerico")
@@ -213,7 +213,7 @@ async def create_analisis(
             parsed = _parse_monto_string(monto_str)
             if parsed and parsed > 0:
                 monto_numerico = (monto_numerico or 0) + parsed
-    
+
     # numero_acto holds the dedup identity for re-published tenders, so it must
     # be the stable public identifier rather than the per-publication ID the LLM
     # sometimes returns. The raw ID stays available in `expediente`/`fragmento`.
@@ -261,7 +261,7 @@ async def get_analisis_by_boletin(
     boletin_id: int,
     skip: int = 0,
     limit: int = 100
-) -> List[Analisis]:
+) -> list[Analisis]:
     """Obtiene análisis de un boletín específico."""
     query = (
         select(Analisis)
@@ -272,18 +272,18 @@ async def get_analisis_by_boletin(
     result = await db.execute(query)
     return result.scalars().all()
 
-async def get_analisis_stats(db: AsyncSession) -> Dict:
+async def get_analisis_stats(db: AsyncSession) -> dict:
     """Obtiene estadísticas generales de los análisis."""
     # Total de boletines por estado
     boletines_query = select(Boletin.status, func.count(Boletin.id)).group_by(Boletin.status)
     boletines_result = await db.execute(boletines_query)
     boletines_stats = dict(boletines_result.all())
-    
+
     # Total de análisis por nivel de riesgo
     riesgo_query = select(Analisis.riesgo, func.count(Analisis.id)).group_by(Analisis.riesgo)
     riesgo_result = await db.execute(riesgo_query)
     riesgo_stats = dict(riesgo_result.all())
-    
+
     return {
         "boletines": boletines_stats,
         "riesgos": riesgo_stats

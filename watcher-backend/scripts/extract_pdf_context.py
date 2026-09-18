@@ -5,12 +5,12 @@ Procesa Ley de Presupuesto y Mensaje de Elevación para extraer keywords y prior
 Autor: Watcher Fiscal Agent
 """
 
-import pdfplumber
 import json
 import re
-from pathlib import Path
 from collections import Counter
-from typing import Dict, List
+from pathlib import Path
+
+import pdfplumber
 
 # Rutas
 BASE_DIR = Path(__file__).parent.parent.parent.parent
@@ -42,14 +42,14 @@ STOPWORDS = set([
 def extract_text_from_pdf(pdf_path: Path, max_pages: int = None) -> str:
     """Extrae texto completo de un PDF"""
     print(f"\n📖 Extrayendo texto de: {pdf_path.name}")
-    
+
     text = ""
     with pdfplumber.open(pdf_path) as pdf:
         total_pages = len(pdf.pages)
         pages_to_process = min(max_pages, total_pages) if max_pages else total_pages
-        
+
         print(f"   Total páginas: {total_pages}, procesando: {pages_to_process}")
-        
+
         for i, page in enumerate(pdf.pages[:pages_to_process], 1):
             try:
                 page_text = page.extract_text() or ""
@@ -59,41 +59,41 @@ def extract_text_from_pdf(pdf_path: Path, max_pages: int = None) -> str:
             except Exception as e:
                 print(f"\n   ⚠ Error en página {i}: {e}")
                 continue
-        
+
         print(f"\n   ✓ Extraídos {len(text)} caracteres")
-    
+
     return text
 
 
-def extract_keywords(text: str, min_freq: int = 3, min_length: int = 5) -> List[tuple]:
+def extract_keywords(text: str, min_freq: int = 3, min_length: int = 5) -> list[tuple]:
     """Extrae keywords por frecuencia"""
     # Limpiar y normalizar texto
     text = text.upper()
     text = re.sub(r'[^\w\s]', ' ', text)
-    
+
     # Extraer palabras
     words = text.split()
-    
+
     # Filtrar stopwords y palabras cortas
     words = [
-        word for word in words 
+        word for word in words
         if len(word) >= min_length and word.lower() not in STOPWORDS
     ]
-    
+
     # Contar frecuencias
     counter = Counter(words)
-    
+
     # Retornar top keywords
     return counter.most_common(100)
 
 
-def extract_priority_topics(text: str) -> Dict[str, List[str]]:
+def extract_priority_topics(text: str) -> dict[str, list[str]]:
     """Extrae tópicos prioritarios basados en keywords clave"""
     text_upper = text.upper()
-    
+
     # Diccionario de temas con sus keywords asociadas
     topics = {
-        'salud': ['HOSPITAL', 'MÉDICO', 'MEDICINA', 'VACUNA', 'TRATAMIENTO', 
+        'salud': ['HOSPITAL', 'MÉDICO', 'MEDICINA', 'VACUNA', 'TRATAMIENTO',
                   'PACIENTE', 'SANITARIO', 'CLÍNICA', 'SALUD'],
         'educacion': ['ESCUELA', 'DOCENTE', 'ALUMNO', 'EDUCATIVO', 'ENSEÑANZA',
                       'MAESTRO', 'UNIVERSIDAD', 'ESTUDIANTE', 'EDUCACIÓN'],
@@ -110,7 +110,7 @@ def extract_priority_topics(text: str) -> Dict[str, List[str]]:
         'produccion': ['PRODUCCIÓN', 'INDUSTRIA', 'AGRÍCOLA', 'GANADERO',
                       'COMERCIO', 'EXPORTACIÓN', 'TECNOLOGÍA']
     }
-    
+
     # Buscar menciones de cada tema
     topic_keywords = {}
     for topic, keywords in topics.items():
@@ -119,24 +119,24 @@ def extract_priority_topics(text: str) -> Dict[str, List[str]]:
             count = text_upper.count(keyword)
             if count > 0:
                 found_keywords.append(f"{keyword.lower()} ({count})")
-        
+
         if found_keywords:
             topic_keywords[topic] = found_keywords
-    
+
     return topic_keywords
 
 
-def generate_semantic_vocabulary(keywords_ley: List[tuple], keywords_mensaje: List[tuple], topics: Dict) -> Dict:
+def generate_semantic_vocabulary(keywords_ley: list[tuple], keywords_mensaje: list[tuple], topics: dict) -> dict:
     """Genera vocabulario semántico fiscal"""
     print("\n📝 Generando vocabulario semántico...")
-    
+
     # Combinar keywords de ambos documentos
     all_keywords = set()
     for word, _ in keywords_ley[:50]:
         all_keywords.add(word.lower())
     for word, _ in keywords_mensaje[:50]:
         all_keywords.add(word.lower())
-    
+
     # Vocabulario base con sinónimos
     vocab = {
         'licitacion': ['contratación', 'adjudicación', 'concurso', 'llamado', 'puja'],
@@ -150,16 +150,16 @@ def generate_semantic_vocabulary(keywords_ley: List[tuple], keywords_mensaje: Li
         'gasto': ['erogación', 'egreso', 'desembolso', 'inversión'],
         'ingreso': ['recurso', 'recaudación', 'renta', 'tributo']
     }
-    
+
     # Agregar keywords por tema
     for topic, keywords in topics.items():
         # Extraer solo las palabras (sin counts)
         words = [kw.split(' (')[0] for kw in keywords]
         vocab[topic] = words[:10]  # Top 10 por tema
-    
+
     # Agregar keywords generales
     vocab['keywords_generales'] = list(all_keywords)[:100]
-    
+
     print(f"   ✓ Vocabulario generado con {len(vocab)} categorías")
     return vocab
 
@@ -168,10 +168,10 @@ def extract_priorities_summary(text: str, max_length: int = 2000) -> str:
     """Extrae resumen de prioridades del Mensaje de Elevación"""
     # Buscar sección de prioridades (típicamente en primeras páginas)
     text_lines = text.split('\n')
-    
+
     # Buscar palabras clave de secciones importantes
     priority_keywords = ['PRIORITARIO', 'OBJETIVO', 'META', 'PRIORIDAD', 'ESTRATÉG']
-    
+
     priority_lines = []
     for i, line in enumerate(text_lines[:200]):  # Primeras 200 líneas
         line_upper = line.upper()
@@ -180,7 +180,7 @@ def extract_priorities_summary(text: str, max_length: int = 2000) -> str:
             start = max(0, i - 3)
             end = min(len(text_lines), i + 6)
             priority_lines.extend(text_lines[start:end])
-    
+
     summary = '\n'.join(priority_lines)[:max_length]
     return summary if summary else text[:max_length]
 
@@ -190,68 +190,68 @@ def main():
     print(f"\n{'#'*80}")
     print("# EXTRACTOR DE CONTEXTO PRESUPUESTARIO")
     print(f"{'#'*80}")
-    
+
     # 1. Extraer texto de Ley de Presupuesto
     print(f"\n{'='*80}")
     print("FASE 1: LEY DE PRESUPUESTO")
     print(f"{'='*80}")
-    
+
     if not LEY_PRESUPUESTO.exists():
         print(f"✗ No encontrado: {LEY_PRESUPUESTO}")
         return
-    
+
     texto_ley = extract_text_from_pdf(LEY_PRESUPUESTO)
     keywords_ley = extract_keywords(texto_ley)
-    
+
     print("\n📊 Top 10 Keywords Ley de Presupuesto:")
     for word, count in keywords_ley[:10]:
         print(f"   • {word:<30} {count:>4} menciones")
-    
+
     # 2. Extraer texto de Mensaje de Elevación
     print(f"\n{'='*80}")
     print("FASE 2: MENSAJE DE ELEVACIÓN")
     print(f"{'='*80}")
-    
+
     if not MENSAJE_ELEVACION.exists():
         print(f"✗ No encontrado: {MENSAJE_ELEVACION}")
         return
-    
+
     texto_mensaje = extract_text_from_pdf(MENSAJE_ELEVACION, max_pages=30)
     keywords_mensaje = extract_keywords(texto_mensaje)
-    
+
     print("\n📊 Top 10 Keywords Mensaje de Elevación:")
     for word, count in keywords_mensaje[:10]:
         print(f"   • {word:<30} {count:>4} menciones")
-    
+
     # 3. Extraer tópicos prioritarios
     print(f"\n{'='*80}")
     print("FASE 3: ANÁLISIS DE PRIORIDADES")
     print(f"{'='*80}")
-    
+
     topics = extract_priority_topics(texto_mensaje)
-    
+
     print("\n📍 Tópicos Identificados:")
     for topic, keywords in sorted(topics.items()):
         print(f"   • {topic}: {len(keywords)} keywords")
         print(f"     {', '.join(keywords[:5])}")
-    
+
     # 4. Generar vocabulario semántico
     vocab = generate_semantic_vocabulary(keywords_ley, keywords_mensaje, topics)
-    
+
     # 5. Extraer resumen de prioridades
     priorities_summary = extract_priorities_summary(texto_mensaje)
-    
+
     # 6. Guardar outputs
     print(f"\n{'='*80}")
     print("GUARDANDO ARCHIVOS")
     print(f"{'='*80}")
-    
+
     # Vocabulario semántico
     vocab_path = OUTPUT_DIR / "vocabulario_semantico_fiscal.json"
     with open(vocab_path, 'w', encoding='utf-8') as f:
         json.dump(vocab, f, ensure_ascii=False, indent=2)
     print(f"✓ Guardado: {vocab_path}")
-    
+
     # Metas presupuestarias
     metas_path = OUTPUT_DIR / "metas_presupuestarias_2025.json"
     metas = {
@@ -262,13 +262,13 @@ def main():
     with open(metas_path, 'w', encoding='utf-8') as f:
         json.dump(metas, f, ensure_ascii=False, indent=2)
     print(f"✓ Guardado: {metas_path}")
-    
+
     # Prioridades gubernamentales
     priorities_path = OUTPUT_DIR / "prioridades_gubernamentales.txt"
     with open(priorities_path, 'w', encoding='utf-8') as f:
         f.write(priorities_summary)
     print(f"✓ Guardado: {priorities_path}")
-    
+
     print(f"\n{'#'*80}")
     print("# ✅ EXTRACCIÓN COMPLETADA")
     print(f"{'#'*80}\n")

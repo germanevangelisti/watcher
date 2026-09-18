@@ -2,15 +2,15 @@
 API endpoints para entidades y Knowledge Graph
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from typing import List, Optional, Dict, Any
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, or_, and_
+from typing import Any
 
-from app.db.database import get_db
-from app.db.models import EntidadExtraida, MencionEntidad, RelacionEntidad
 from agents.historical_intelligence import HistoricalIntelligenceAgent
 from agents.historical_intelligence.patterns import get_all_patterns
+from app.db.database import get_db
+from app.db.models import EntidadExtraida, MencionEntidad, RelacionEntidad
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import and_, func, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
@@ -32,12 +32,12 @@ def _neo4j_available() -> bool:
 
 @router.get("/")
 async def listar_entidades(
-    tipo: Optional[str] = Query(None),
-    search: Optional[str] = Query(None),
+    tipo: str | None = Query(None),
+    search: str | None = Query(None),
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=500),
     db: AsyncSession = Depends(get_db),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Lista entidades con filtros opcionales."""
     query = select(EntidadExtraida)
     if tipo:
@@ -84,7 +84,7 @@ async def listar_entidades(
 
 
 @router.get("/stats")
-async def estadisticas_entidades(db: AsyncSession = Depends(get_db)) -> Dict[str, Any]:
+async def estadisticas_entidades(db: AsyncSession = Depends(get_db)) -> dict[str, Any]:
     """Estadísticas globales del grafo de entidades."""
     por_tipo = dict(
         (await db.execute(
@@ -108,9 +108,9 @@ async def estadisticas_entidades(db: AsyncSession = Depends(get_db)) -> Dict[str
 async def get_knowledge_graph(
     max_nodes: int = Query(50, ge=10, le=2000),
     min_mentions: int = Query(3, ge=1),
-    entity_types: Optional[List[str]] = Query(None),
+    entity_types: list[str] | None = Query(None),
     db: AsyncSession = Depends(get_db),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Grafo de conocimiento para visualización.
     Lee desde Neo4j si está disponible, sino fallback a PostgreSQL.
@@ -173,7 +173,7 @@ async def get_knowledge_graph(
 @router.get("/centralidad")
 async def centralidad_entidades(
     top_n: int = Query(20, ge=5, le=100),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Top entidades por PageRank (requiere Neo4j)."""
     if not _neo4j_available():
         raise HTTPException(status_code=503, detail="Graph database no disponible")
@@ -185,7 +185,7 @@ async def centralidad_entidades(
 
 
 @router.get("/comunidades")
-async def comunidades_entidades() -> Dict[str, Any]:
+async def comunidades_entidades() -> dict[str, Any]:
     """Clusters de comunidades via algoritmo Louvain (requiere Neo4j)."""
     if not _neo4j_available():
         raise HTTPException(status_code=503, detail="Graph database no disponible")
@@ -201,7 +201,7 @@ async def camino_entre_entidades(
     id_a: int,
     id_b: int,
     max_depth: int = Query(6, ge=2, le=10),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Camino más corto entre dos entidades (requiere Neo4j)."""
     if not _neo4j_available():
         raise HTTPException(status_code=503, detail="Graph database no disponible")
@@ -218,7 +218,7 @@ async def camino_entre_entidades(
 async def timeline_entidad(
     entidad_id: int,
     db: AsyncSession = Depends(get_db),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Timeline de apariciones de una entidad."""
     result = await historical_agent.build_entity_timeline(entidad_id, db)
     if not result.get("success"):
@@ -230,7 +230,7 @@ async def timeline_entidad(
 async def relaciones_entidad(
     entidad_id: int,
     db: AsyncSession = Depends(get_db),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Grafo de relaciones de una entidad.
     Lee desde Neo4j si disponible, sino fallback a PostgreSQL.
@@ -251,7 +251,7 @@ async def relaciones_entidad(
 async def vecinos_entidad(
     entidad_id: int,
     depth: int = Query(2, ge=1, le=4),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Subgrafo de vecinos a N saltos (requiere Neo4j)."""
     if not _neo4j_available():
         raise HTTPException(status_code=503, detail="Graph database no disponible")
@@ -265,7 +265,7 @@ async def vecinos_entidad(
 async def detalle_entidad(
     entidad_id: int,
     db: AsyncSession = Depends(get_db),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Detalle completo de una entidad."""
     entidad = (await db.execute(
         select(EntidadExtraida).where(EntidadExtraida.id == entidad_id)
@@ -299,7 +299,7 @@ async def detalle_entidad(
 
 
 @router.get("/patrones/disponibles")
-async def patrones_disponibles() -> Dict[str, Any]:
+async def patrones_disponibles() -> dict[str, Any]:
     """Lista todos los patrones de detección disponibles."""
     patterns = get_all_patterns()
     return {
@@ -320,9 +320,9 @@ async def patrones_disponibles() -> Dict[str, Any]:
 
 @router.post("/patrones/detectar")
 async def detectar_patrones(
-    pattern_ids: Optional[List[str]] = None,
+    pattern_ids: list[str] | None = None,
     db: AsyncSession = Depends(get_db),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Detecta patrones sospechosos en los datos."""
     result = await historical_agent.detect_patterns(pattern_ids, db)
     if not result.get("success"):
@@ -335,7 +335,7 @@ async def analisis_historico(
     entity_name: str = Query(...),
     entity_type: str = Query(...),
     db: AsyncSession = Depends(get_db),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Análisis histórico completo de una entidad."""
     result = await historical_agent.analyze_entity_history(entity_name, entity_type, db)
     if not result.get("success"):
@@ -344,7 +344,7 @@ async def analisis_historico(
 
 
 @router.get("/tipos")
-async def tipos_entidades(db: AsyncSession = Depends(get_db)) -> Dict[str, Any]:
+async def tipos_entidades(db: AsyncSession = Depends(get_db)) -> dict[str, Any]:
     """Lista los tipos de entidades disponibles con conteos."""
     result = await db.execute(
         select(EntidadExtraida.tipo, func.count().label("count"))

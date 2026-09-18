@@ -5,8 +5,8 @@ Revises:
 Create Date: 2026-02-10 12:00:00.000000
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = 'add_chunk_records'
@@ -42,7 +42,7 @@ def upgrade():
         sa.ForeignKeyConstraint(['boletin_id'], ['boletines.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
-    
+
     # Create indices
     op.create_index('idx_chunk_document_index', 'chunk_records', ['document_id', 'chunk_index'], unique=True)
     op.create_index('idx_chunk_section', 'chunk_records', ['section_type'])

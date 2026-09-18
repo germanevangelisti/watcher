@@ -19,7 +19,7 @@ import logging
 import re
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -60,10 +60,10 @@ class RedFlag:
     severity: Severity
     title: str
     description: str
-    evidence: Dict[str, Any] = field(default_factory=dict)
+    evidence: dict[str, Any] = field(default_factory=dict)
     confidence: float = 0.8
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "type": self.type.value,
             "severity": self.severity.value,
@@ -79,14 +79,14 @@ class ActoFeatures:
     """Resultado del feature engineering de un acto."""
 
     transparency_score: float
-    red_flags: List[RedFlag] = field(default_factory=list)
-    score_breakdown: Dict[str, float] = field(default_factory=dict)
+    red_flags: list[RedFlag] = field(default_factory=list)
+    score_breakdown: dict[str, float] = field(default_factory=dict)
 
     @property
     def num_red_flags(self) -> int:
         return len(self.red_flags)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "transparency_score": round(self.transparency_score, 2),
             "num_red_flags": self.num_red_flags,
@@ -122,7 +122,7 @@ def _is_present(value: Any) -> bool:
     }
 
 
-def _acto_monto(acto: Dict[str, Any]) -> float:
+def _acto_monto(acto: dict[str, Any]) -> float:
     """Extrae el monto numérico total del acto, robusto a múltiples formatos."""
     for key in ("monto_total_numerico", "monto_numerico"):
         val = acto.get(key)
@@ -176,7 +176,7 @@ class TransparencyScorer:
     BASE_SCORE = 30.0
 
     # Peso de cada campo de trazabilidad (suman 70 → base 30 + 70 = 100).
-    FIELD_WEIGHTS: Dict[str, float] = {
+    FIELD_WEIGHTS: dict[str, float] = {
         "organismo": 12.0,
         "beneficiarios": 12.0,
         "montos": 10.0,
@@ -190,9 +190,9 @@ class TransparencyScorer:
     SHORT_DESCRIPTION_PENALTY = 8.0
     MIN_DESCRIPTION_LEN = 40
 
-    def score(self, acto: Dict[str, Any]) -> tuple[float, Dict[str, float]]:
+    def score(self, acto: dict[str, Any]) -> tuple[float, dict[str, float]]:
         """Devuelve ``(score, breakdown)`` con el detalle por campo."""
-        breakdown: Dict[str, float] = {"base": self.BASE_SCORE}
+        breakdown: dict[str, float] = {"base": self.BASE_SCORE}
         score = self.BASE_SCORE
 
         for field_name, weight in self.FIELD_WEIGHTS.items():
@@ -236,15 +236,15 @@ class RedFlagConfig:
 class RedFlagClassifier:
     """Clasifica irregularidades de un acto según la tipología canónica."""
 
-    def __init__(self, config: Optional[RedFlagConfig] = None):
+    def __init__(self, config: RedFlagConfig | None = None):
         self.config = config or RedFlagConfig()
 
     def classify(
         self,
-        acto: Dict[str, Any],
-        transparency_score: Optional[float] = None,
-    ) -> List[RedFlag]:
-        flags: List[RedFlag] = []
+        acto: dict[str, Any],
+        transparency_score: float | None = None,
+    ) -> list[RedFlag]:
+        flags: list[RedFlag] = []
         monto = _acto_monto(acto)
         tipo_acto = str(acto.get("tipo_acto") or "").lower()
         has_beneficiary = _is_present(acto.get("beneficiarios"))
@@ -414,13 +414,13 @@ class ActoFeatureEngineer:
 
     def __init__(
         self,
-        scorer: Optional[TransparencyScorer] = None,
-        classifier: Optional[RedFlagClassifier] = None,
+        scorer: TransparencyScorer | None = None,
+        classifier: RedFlagClassifier | None = None,
     ):
         self.scorer = scorer or TransparencyScorer()
         self.classifier = classifier or RedFlagClassifier()
 
-    def engineer(self, acto: Dict[str, Any]) -> ActoFeatures:
+    def engineer(self, acto: dict[str, Any]) -> ActoFeatures:
         """Calcula todas las features de un acto en un solo paso."""
         score, breakdown = self.scorer.score(acto)
         red_flags = self.classifier.classify(acto, transparency_score=score)
@@ -432,7 +432,7 @@ class ActoFeatureEngineer:
 
 
 # Singleton liviano (el servicio es puro / stateless salvo config).
-_default_engineer: Optional[ActoFeatureEngineer] = None
+_default_engineer: ActoFeatureEngineer | None = None
 
 
 def get_feature_engineer() -> ActoFeatureEngineer:

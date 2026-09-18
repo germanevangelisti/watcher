@@ -1,13 +1,14 @@
 """
 API endpoints para workflows supervisados
 """
-from fastapi import APIRouter, HTTPException, BackgroundTasks
-from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field
+from typing import Any
 
 from agents.orchestrator.state import TaskStatus
+from app.core.events import EventType, event_bus
+from fastapi import APIRouter, BackgroundTasks, HTTPException
+from pydantic import BaseModel, Field
+
 from .agents import orchestrator
-from app.core.events import event_bus, EventType
 
 router = APIRouter()
 
@@ -16,15 +17,15 @@ router = APIRouter()
 class TaskDefinitionRequest(BaseModel):
     task_type: str
     agent: str
-    parameters: Dict[str, Any] = Field(default_factory=dict)
+    parameters: dict[str, Any] = Field(default_factory=dict)
     priority: int = 0
     requires_approval: bool = False
 
 
 class CreateWorkflowRequest(BaseModel):
     workflow_name: str
-    tasks: List[TaskDefinitionRequest]
-    config: Optional[Dict[str, Any]] = None
+    tasks: list[TaskDefinitionRequest]
+    config: dict[str, Any] | None = None
 
 
 class WorkflowStatusResponse(BaseModel):
@@ -38,20 +39,20 @@ class WorkflowStatusResponse(BaseModel):
     pending_tasks: int
     awaiting_approval: int
     created_at: str
-    started_at: Optional[str]
-    completed_at: Optional[str]
+    started_at: str | None
+    completed_at: str | None
 
 
 class ApproveTaskRequest(BaseModel):
-    modifications: Optional[Dict[str, Any]] = None
+    modifications: dict[str, Any] | None = None
 
 
 class RejectTaskRequest(BaseModel):
-    reason: Optional[str] = None
+    reason: str | None = None
 
 
 # Endpoints
-@router.post("", response_model=Dict[str, Any])
+@router.post("", response_model=dict[str, Any])
 async def create_workflow(request: CreateWorkflowRequest):
     """
     Crea un nuevo workflow
@@ -67,28 +68,28 @@ async def create_workflow(request: CreateWorkflowRequest):
                 "priority": task_req.priority,
                 "requires_approval": task_req.requires_approval
             })
-        
+
         # Crear workflow
         workflow = await orchestrator.create_workflow(
             workflow_name=request.workflow_name,
             tasks=tasks,
             config=request.config
         )
-        
+
         # Emitir evento
         await event_bus.emit(
             EventType.WORKFLOW_CREATED,
             {"workflow_id": workflow.workflow_id, "workflow_name": workflow.workflow_name},
             source="api"
         )
-        
+
         return {
             "workflow_id": workflow.workflow_id,
             "workflow_name": workflow.workflow_name,
             "status": workflow.status,
             "total_tasks": len(workflow.tasks)
         }
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -101,17 +102,17 @@ async def execute_workflow(workflow_id: str, background_tasks: BackgroundTasks):
     workflow = orchestrator.get_workflow(workflow_id)
     if not workflow:
         raise HTTPException(status_code=404, detail="Workflow no encontrado")
-    
+
     # Ejecutar en background
     background_tasks.add_task(orchestrator.execute_workflow, workflow_id)
-    
+
     # Emitir evento
     await event_bus.emit(
         EventType.WORKFLOW_STARTED,
         {"workflow_id": workflow_id},
         source="api"
     )
-    
+
     return {
         "message": "Workflow iniciado",
         "workflow_id": workflow_id
@@ -126,7 +127,7 @@ async def get_workflow_status(workflow_id: str):
     status = orchestrator.get_workflow_status(workflow_id)
     if not status:
         raise HTTPException(status_code=404, detail="Workflow no encontrado")
-    
+
     return WorkflowStatusResponse(
         workflow_id=status["workflow_id"],
         workflow_name=status["workflow_name"],
@@ -151,12 +152,12 @@ async def get_workflow_details(workflow_id: str):
     workflow = orchestrator.get_workflow(workflow_id)
     if not workflow:
         raise HTTPException(status_code=404, detail="Workflow no encontrado")
-    
+
     return workflow.model_dump()
 
 
-@router.get("", response_model=List[WorkflowStatusResponse])
-async def list_workflows(status_filter: Optional[str] = None):
+@router.get("", response_model=list[WorkflowStatusResponse])
+async def list_workflows(status_filter: str | None = None):
     """
     Lista todos los workflows
     """
@@ -166,9 +167,9 @@ async def list_workflows(status_filter: Optional[str] = None):
             status_enum = TaskStatus(status_filter)
         except ValueError:
             raise HTTPException(status_code=400, detail="Estado inválido")
-    
+
     workflows = orchestrator.list_workflows(status_filter=status_enum)
-    
+
     return [
         WorkflowStatusResponse(
             workflow_id=wf["workflow_id"],
@@ -198,20 +199,20 @@ async def approve_task(workflow_id: str, task_id: str, request: ApproveTaskReque
         task_id,
         modifications=request.modifications
     )
-    
+
     if not success:
         raise HTTPException(
             status_code=404,
             detail="Workflow o tarea no encontrada, o tarea no está esperando aprobación"
         )
-    
+
     # Emitir evento
     await event_bus.emit(
         EventType.TASK_APPROVED,
         {"workflow_id": workflow_id, "task_id": task_id},
         source="api"
     )
-    
+
     return {"message": "Tarea aprobada", "task_id": task_id}
 
 
@@ -225,20 +226,20 @@ async def reject_task(workflow_id: str, task_id: str, request: RejectTaskRequest
         task_id,
         reason=request.reason
     )
-    
+
     if not success:
         raise HTTPException(
             status_code=404,
             detail="Workflow o tarea no encontrada"
         )
-    
+
     # Emitir evento
     await event_bus.emit(
         EventType.TASK_REJECTED,
         {"workflow_id": workflow_id, "task_id": task_id, "reason": request.reason},
         source="api"
     )
-    
+
     return {"message": "Tarea rechazada", "task_id": task_id}
 
 
@@ -250,7 +251,7 @@ async def get_workflow_tasks(workflow_id: str):
     workflow = orchestrator.get_workflow(workflow_id)
     if not workflow:
         raise HTTPException(status_code=404, detail="Workflow no encontrado")
-    
+
     return {
         "workflow_id": workflow_id,
         "tasks": [task.model_dump() for task in workflow.tasks]
@@ -265,7 +266,7 @@ async def get_workflow_logs(workflow_id: str):
     workflow = orchestrator.get_workflow(workflow_id)
     if not workflow:
         raise HTTPException(status_code=404, detail="Workflow no encontrado")
-    
+
     return {
         "workflow_id": workflow_id,
         "logs": workflow.logs
@@ -280,9 +281,9 @@ async def get_tasks_awaiting_approval(workflow_id: str):
     workflow = orchestrator.get_workflow(workflow_id)
     if not workflow:
         raise HTTPException(status_code=404, detail="Workflow no encontrado")
-    
+
     awaiting_tasks = workflow.get_tasks_awaiting_approval()
-    
+
     return {
         "workflow_id": workflow_id,
         "awaiting_approval_count": len(awaiting_tasks),

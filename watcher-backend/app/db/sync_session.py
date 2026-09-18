@@ -2,9 +2,9 @@
 Synchronous session for endpoints that require traditional SQLAlchemy.
 Supports both SQLite and PostgreSQL based on SYNC_DATABASE_URL.
 """
+from app.core.config import settings
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from app.core.config import settings
 
 engine_kwargs: dict = {
     "echo": False,

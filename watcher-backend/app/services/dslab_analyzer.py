@@ -3,8 +3,8 @@
 """
 import re
 import time
-from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime
+from typing import Any
 
 try:
     import pdfplumber  # noqa: F401
@@ -16,8 +16,8 @@ except ImportError:
 
 class DSLabAnalyzer:
     """Analizador de boletines con integración a BD"""
-    
-    def __init__(self, config_parameters: Dict[str, Any]):
+
+    def __init__(self, config_parameters: dict[str, Any]):
         """
         Inicializar analizador con parámetros de configuración
         
@@ -29,8 +29,8 @@ class DSLabAnalyzer:
         self.amount_thresholds = config_parameters.get('amount_thresholds', {})
         self.red_flag_rules = config_parameters.get('red_flag_rules', {})
         self.nlp_config = config_parameters.get('nlp_config', {})
-        
-    async def analyze_document(self, file_path: str) -> Dict[str, Any]:
+
+    async def analyze_document(self, file_path: str) -> dict[str, Any]:
         """
         Analizar un documento completo
         
@@ -47,37 +47,37 @@ class DSLabAnalyzer:
             - processing_time_seconds: float
         """
         start_time = time.time()
-        
+
         try:
             # Extraer texto del PDF
             text, num_pages = await self._extract_text_from_pdf(file_path)
-            
+
             if not text:
                 return self._create_failed_result("No se pudo extraer texto del PDF")
-            
+
             # Extraer entidades
             entities = self._extract_entities(text)
-            
+
             # Calcular score de transparencia
             transparency_score = self._calculate_transparency_score(text, entities)
-            
+
             # Detectar anomalías
             anomaly_score = self._calculate_anomaly_score(entities, text)
-            
+
             # Determinar nivel de riesgo
             risk_level = self._determine_risk_level(transparency_score, anomaly_score)
-            
+
             # Detectar red flags
             red_flags = self._detect_red_flags(text, entities, transparency_score)
-            
+
             # Predicciones ML (placeholder por ahora)
             ml_predictions = self._run_ml_predictions(entities, transparency_score)
-            
+
             # Texto de muestra
             text_sample = text[:5000] if len(text) > 5000 else text
-            
+
             processing_time = time.time() - start_time
-            
+
             return {
                 "transparency_score": round(transparency_score, 2),
                 "risk_level": risk_level,
@@ -94,30 +94,31 @@ class DSLabAnalyzer:
                     "analysis_timestamp": datetime.utcnow().isoformat()
                 }
             }
-            
+
         except Exception as e:
             print(f"Error analizando {file_path}: {e}")
             return self._create_failed_result(str(e))
-    
-    async def _extract_text_from_pdf(self, file_path: str) -> Tuple[str, int]:
+
+    async def _extract_text_from_pdf(self, file_path: str) -> tuple[str, int]:
         """Extraer texto completo de un PDF usando ExtractorRegistry"""
         try:
-            from app.services.extractors import ExtractorRegistry
             from pathlib import Path
-            
+
+            from app.services.extractors import ExtractorRegistry
+
             result = await ExtractorRegistry.extract(Path(file_path))
-            
+
             if not result.success:
                 print(f"Error extrayendo PDF {file_path}: {result.error}")
                 return ("", 0)
-            
+
             return (result.full_text, result.stats.total_pages)
-            
+
         except Exception as e:
             print(f"Error extrayendo PDF {file_path}: {e}")
             return ("", 0)
-    
-    def _extract_entities(self, text: str) -> Dict[str, Any]:
+
+    def _extract_entities(self, text: str) -> dict[str, Any]:
         """
         Extraer entidades del texto (montos, beneficiarios, organismos)
         """
@@ -128,30 +129,30 @@ class DSLabAnalyzer:
             "dates": [],
             "contracts": []
         }
-        
+
         # Extraer montos
         if self.nlp_config.get('extract_amounts', True):
             amounts = self._extract_amounts(text)
             entities["amounts"] = amounts
-        
+
         # Extraer beneficiarios
         if self.nlp_config.get('extract_beneficiaries', True):
             beneficiaries = self._extract_beneficiaries(text)
             entities["beneficiaries"] = beneficiaries
-        
+
         # Extraer organismos
         if self.nlp_config.get('extract_organisms', True):
             organisms = self._extract_organisms(text)
             entities["organisms"] = organisms
-        
+
         # Extraer fechas
         if self.nlp_config.get('extract_dates', True):
             dates = self._extract_dates(text)
             entities["dates"] = dates
-        
+
         return entities
-    
-    def _extract_amounts(self, text: str) -> List[Dict[str, Any]]:
+
+    def _extract_amounts(self, text: str) -> list[dict[str, Any]]:
         """Extraer montos del texto"""
         amounts = []
         patterns = self.nlp_config.get('amount_regex_patterns', [
@@ -159,62 +160,62 @@ class DSLabAnalyzer:
             r'(?:pesos|ARS|PESOS)\s*[\d\.,]+',
             r'[\d\.,]+\s*(?:millones?|mil)'
         ])
-        
+
         for pattern in patterns:
             matches = re.finditer(pattern, text, re.IGNORECASE)
             for match in matches:
                 amount_str = match.group(0)
                 numeric_value = self._parse_amount_to_number(amount_str)
-                
+
                 if numeric_value and numeric_value > 0:
                     amounts.append({
                         "raw_text": amount_str,
                         "numeric_value": numeric_value,
                         "position": match.start()
                     })
-        
+
         # Ordenar por valor y eliminar duplicados cercanos
         amounts = sorted(amounts, key=lambda x: x['numeric_value'], reverse=True)
         return amounts[:20]  # Top 20 montos
-    
-    def _parse_amount_to_number(self, amount_str: str) -> Optional[float]:
+
+    def _parse_amount_to_number(self, amount_str: str) -> float | None:
         """Convertir string de monto a número"""
         try:
             # Limpiar string
             clean = amount_str.replace('$', '').replace('pesos', '').replace('PESOS', '').replace('ARS', '')
             clean = clean.strip()
-            
+
             # Manejar millones
             if 'millon' in clean.lower():
                 num_part = re.search(r'[\d\.,]+', clean)
                 if num_part:
                     value = float(num_part.group(0).replace('.', '').replace(',', '.'))
                     return value * 1000000
-            
+
             # Manejar miles
             if 'mil' in clean.lower():
                 num_part = re.search(r'[\d\.,]+', clean)
                 if num_part:
                     value = float(num_part.group(0).replace('.', '').replace(',', '.'))
                     return value * 1000
-            
+
             # Número directo
             clean = clean.replace('.', '').replace(',', '.')
             num_part = re.search(r'[\d\.]+', clean)
             if num_part:
                 return float(num_part.group(0))
-            
+
             return None
         except Exception:
             return None
-    
-    def _extract_beneficiaries(self, text: str) -> List[str]:
+
+    def _extract_beneficiaries(self, text: str) -> list[str]:
         """Extraer beneficiarios/empresas"""
         beneficiaries = []
         keywords = self.nlp_config.get('beneficiary_keywords', [
             'adjudicatario', 'beneficiario', 'contratista', 'proveedor', 'empresa'
         ])
-        
+
         lines = text.split('\n')
         for i, line in enumerate(lines):
             for keyword in keywords:
@@ -222,12 +223,12 @@ class DSLabAnalyzer:
                     # Buscar nombre en la misma línea o siguiente
                     potential_names = self._extract_names_near(lines, i)
                     beneficiaries.extend(potential_names)
-        
+
         # Eliminar duplicados y limpiar
         beneficiaries = list(set(beneficiaries))
         return beneficiaries[:30]  # Top 30
-    
-    def _extract_names_near(self, lines: List[str], index: int) -> List[str]:
+
+    def _extract_names_near(self, lines: list[str], index: int) -> list[str]:
         """Extraer nombres cerca de una línea"""
         names = []
         # Buscar en línea actual y 2 siguientes
@@ -236,27 +237,27 @@ class DSLabAnalyzer:
             # Pattern simple: palabras capitalizadas seguidas
             matches = re.findall(r'[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)+', line)
             names.extend(matches)
-        
+
         return names
-    
-    def _extract_organisms(self, text: str) -> List[str]:
+
+    def _extract_organisms(self, text: str) -> list[str]:
         """Extraer organismos gubernamentales"""
         organisms = []
         common_organisms = [
             'Ministerio', 'Secretaría', 'Subsecretaría', 'Dirección',
             'Municipalidad', 'Gobierno', 'Legislatura', 'Tribunal'
         ]
-        
+
         lines = text.split('\n')
         for line in lines:
             for org in common_organisms:
                 if org in line:
                     organisms.append(line.strip())
                     break
-        
+
         return list(set(organisms))[:20]
-    
-    def _extract_dates(self, text: str) -> List[str]:
+
+    def _extract_dates(self, text: str) -> list[str]:
         """Extraer fechas"""
         dates = []
         patterns = [
@@ -264,102 +265,100 @@ class DSLabAnalyzer:
             r'\d{1,2}-\d{1,2}-\d{4}',
             r'\d{1,2}\s+de\s+\w+\s+de\s+\d{4}'
         ]
-        
+
         for pattern in patterns:
             matches = re.findall(pattern, text)
             dates.extend(matches)
-        
+
         return list(set(dates))[:10]
-    
-    def _calculate_transparency_score(self, text: str, entities: Dict) -> float:
+
+    def _calculate_transparency_score(self, text: str, entities: dict) -> float:
         """
         Calcular score de transparencia (0-100)
         Mayor score = mayor transparencia
         """
         score = 50.0  # Base
-        
+
         # Puntos por tener montos identificados
         if entities.get('amounts'):
             score += 10
             if len(entities['amounts']) >= 5:
                 score += 5
-        
+
         # Puntos por identificar beneficiarios
         if entities.get('beneficiaries'):
             score += 15
             if len(entities['beneficiaries']) >= 3:
                 score += 5
-        
+
         # Puntos por identificar organismos
         if entities.get('organisms'):
             score += 10
-        
+
         # Penalización por texto muy corto
         if len(text) < 1000:
             score -= 15
-        
+
         # Penalización por falta de estructura
         if '\n' not in text or len(text.split('\n')) < 10:
             score -= 10
-        
+
         # Bonus por fechas claras
         if entities.get('dates') and len(entities['dates']) >= 2:
             score += 5
-        
+
         # Asegurar rango 0-100
         return max(0.0, min(100.0, score))
-    
-    def _calculate_anomaly_score(self, entities: Dict, text: str) -> float:
+
+    def _calculate_anomaly_score(self, entities: dict, text: str) -> float:
         """
         Calcular score de anomalía (0-100)
         Mayor score = más anómalo
         """
         anomaly = 0.0
-        
+
         # Montos sospechosos
         amounts = entities.get('amounts', [])
         for amount in amounts:
             value = amount['numeric_value']
-            
+
             # Patrones sospechosos (999999, 9999, etc)
             if '999' in str(int(value)):
                 anomaly += 15
-            
+
             # Montos muy altos
             if value > self.amount_thresholds.get('very_high', 50000000):
                 anomaly += 10
-        
+
         # Falta de beneficiarios con montos altos
         if amounts and not entities.get('beneficiaries'):
             anomaly += 20
-        
+
         # Texto muy repetitivo
         words = text.lower().split()
         if len(words) > 0:
             unique_ratio = len(set(words)) / len(words)
             if unique_ratio < 0.3:
                 anomaly += 15
-        
+
         return min(100.0, anomaly)
-    
+
     def _determine_risk_level(self, transparency_score: float, anomaly_score: float) -> str:
         """Determinar nivel de riesgo"""
         thresholds = self.transparency_thresholds
-        
+
         # Basado principalmente en transparency score
         if transparency_score < thresholds.get('high_risk', 30):
             return 'high'
-        elif transparency_score < thresholds.get('medium_risk', 50):
-            return 'medium'
-        elif anomaly_score > 60:  # Alta anomalía fuerza medium risk
+        elif transparency_score < thresholds.get('medium_risk', 50) or anomaly_score > 60:
             return 'medium'
         else:
             return 'low'
-    
-    def _detect_red_flags(self, text: str, entities: Dict, transparency_score: float) -> List[Dict[str, Any]]:
+
+    def _detect_red_flags(self, text: str, entities: dict, transparency_score: float) -> list[dict[str, Any]]:
         """Detectar red flags basadas en reglas"""
         red_flags = []
-        
+
         # RED FLAG: HIGH_AMOUNT
         if self.red_flag_rules.get('HIGH_AMOUNT', {}).get('enabled', True):
             threshold = self.red_flag_rules['HIGH_AMOUNT'].get('threshold', 50000000)
@@ -378,7 +377,7 @@ class DSLabAnalyzer:
                         },
                         "confidence_score": 0.9
                     })
-        
+
         # RED FLAG: MISSING_BENEFICIARY
         if self.red_flag_rules.get('MISSING_BENEFICIARY', {}).get('enabled', True):
             if entities.get('amounts') and not entities.get('beneficiaries'):
@@ -394,7 +393,7 @@ class DSLabAnalyzer:
                     },
                     "confidence_score": 0.7
                 })
-        
+
         # RED FLAG: SUSPICIOUS_AMOUNT_PATTERN
         if self.red_flag_rules.get('SUSPICIOUS_AMOUNT_PATTERN', {}).get('enabled', True):
             patterns = self.red_flag_rules['SUSPICIOUS_AMOUNT_PATTERN'].get('patterns', ['999999', '9999'])
@@ -415,7 +414,7 @@ class DSLabAnalyzer:
                             },
                             "confidence_score": 0.8
                         })
-        
+
         # RED FLAG: LOW_TRANSPARENCY_SCORE
         if self.red_flag_rules.get('LOW_TRANSPARENCY_SCORE', {}).get('enabled', True):
             threshold = self.red_flag_rules['LOW_TRANSPARENCY_SCORE'].get('threshold', 30)
@@ -433,13 +432,13 @@ class DSLabAnalyzer:
                     },
                     "confidence_score": 0.95
                 })
-        
+
         return red_flags
-    
-    def _identify_missing_transparency_elements(self, entities: Dict) -> List[str]:
+
+    def _identify_missing_transparency_elements(self, entities: dict) -> list[str]:
         """Identificar qué elementos faltan para transparencia"""
         missing = []
-        
+
         if not entities.get('amounts'):
             missing.append("montos")
         if not entities.get('beneficiaries'):
@@ -448,10 +447,10 @@ class DSLabAnalyzer:
             missing.append("organismos")
         if not entities.get('dates'):
             missing.append("fechas")
-        
+
         return missing
-    
-    def _run_ml_predictions(self, entities: Dict, transparency_score: float) -> Dict[str, Any]:
+
+    def _run_ml_predictions(self, entities: dict, transparency_score: float) -> dict[str, Any]:
         """
         Ejecutar predicciones de modelos ML
         Por ahora placeholder - aquí irían los modelos entrenados
@@ -470,8 +469,8 @@ class DSLabAnalyzer:
                 "distance_to_centroid": 1.5
             }
         }
-    
-    def _create_failed_result(self, error_message: str) -> Dict[str, Any]:
+
+    def _create_failed_result(self, error_message: str) -> dict[str, Any]:
         """Crear resultado para documentos que fallaron"""
         return {
             "transparency_score": 0.0,

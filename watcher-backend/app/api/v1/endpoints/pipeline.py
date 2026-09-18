@@ -17,11 +17,6 @@ from datetime import date as _date
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException
-from pydantic import BaseModel
-from sqlalchemy import delete, func, select, update
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.config import settings
 from app.core.events import EventType, event_bus
 from app.db.models import Analisis, Boletin, ChunkRecord, FuenteDato
@@ -33,6 +28,10 @@ from app.schemas.pipeline import (
     PipelineConfig,
 )
 from app.services.url_fetcher import build_url_from_template
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException
+from pydantic import BaseModel
+from sqlalchemy import delete, func, select, update
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -123,7 +122,7 @@ async def reset_all_pipeline_data(
                 ]
             }
         )
-    
+
     try:
         results = {
             "chunks_deleted": 0,
@@ -132,17 +131,17 @@ async def reset_all_pipeline_data(
             "txt_files_deleted": 0,
             "boletines_reset": 0,
         }
-        
+
         # 1. Delete all chunk_records
         count_result = await db.execute(select(func.count()).select_from(ChunkRecord))
         results["chunks_deleted"] = count_result.scalar() or 0
         await db.execute(delete(ChunkRecord))
-        
+
         # 1b. Delete all analisis records
         count_result = await db.execute(select(func.count()).select_from(Analisis))
         results["analisis_deleted"] = count_result.scalar() or 0
         await db.execute(delete(Analisis))
-        
+
         # 2. Clear ChromaDB collection
         try:
             from app.services.embedding_service import get_embedding_service
@@ -160,7 +159,7 @@ async def reset_all_pipeline_data(
         except Exception as e:
             logger.warning(f"ChromaDB reset skipped: {e}")
             results["chromadb_cleared"] = False
-        
+
         # 3. Delete .txt files from data/processed/
         processed_dir = settings.DATA_DIR / "processed"
         if processed_dir.exists():
@@ -171,7 +170,7 @@ async def reset_all_pipeline_data(
                     txt_file.unlink()
                 except Exception as e:
                     logger.warning(f"Failed to delete {txt_file}: {e}")
-        
+
         # 4. Reset all boletines to pending
         count_result = await db.execute(
             select(func.count()).select_from(Boletin).where(Boletin.status != "pending")
@@ -180,19 +179,19 @@ async def reset_all_pipeline_data(
         await db.execute(
             update(Boletin).values(status="pending", error_message=None)
         )
-        
+
         await db.commit()
-        
+
         # Emit event
         await event_bus.emit(
             EventType.PIPELINE_RESET,
             data=results,
             source="pipeline"
         )
-        
+
         logger.info(f"Pipeline reset complete: {results}")
         return {"success": True, "message": "Todos los datos procesados han sido eliminados.", **results}
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -217,10 +216,10 @@ async def reset_document_pipeline(
         # Find the boletin
         result = await db.execute(select(Boletin).where(Boletin.id == boletin_id))
         boletin = result.scalar_one_or_none()
-        
+
         if not boletin:
             raise HTTPException(status_code=404, detail=f"Boletin {boletin_id} no encontrado")
-        
+
         results = {
             "boletin_id": boletin_id,
             "filename": boletin.filename,
@@ -230,10 +229,10 @@ async def reset_document_pipeline(
             "txt_deleted": False,
             "previous_status": boletin.status,
         }
-        
+
         # Build the document_id used in chunk_records
         document_id = boletin.filename.replace(".pdf", "")
-        
+
         # 0. Delete analisis records for this boletin
         count_result = await db.execute(
             select(func.count()).select_from(Analisis).where(
@@ -244,23 +243,23 @@ async def reset_document_pipeline(
         await db.execute(
             delete(Analisis).where(Analisis.boletin_id == boletin_id)
         )
-        
+
         # 1. Delete chunk_records for this boletin
         count_result = await db.execute(
             select(func.count()).select_from(ChunkRecord).where(
-                (ChunkRecord.boletin_id == boletin_id) | 
+                (ChunkRecord.boletin_id == boletin_id) |
                 (ChunkRecord.document_id == document_id)
             )
         )
         results["chunks_deleted"] = count_result.scalar() or 0
-        
+
         await db.execute(
             delete(ChunkRecord).where(
-                (ChunkRecord.boletin_id == boletin_id) | 
+                (ChunkRecord.boletin_id == boletin_id) |
                 (ChunkRecord.document_id == document_id)
             )
         )
-        
+
         # 2. Delete from ChromaDB
         try:
             from app.services.embedding_service import get_embedding_service
@@ -278,30 +277,30 @@ async def reset_document_pipeline(
                     pass
         except Exception as e:
             logger.warning(f"ChromaDB delete skipped for {document_id}: {e}")
-        
+
         # 3. Delete .txt file
         txt_filename = boletin.filename.replace(".pdf", ".txt")
         txt_path = settings.DATA_DIR / "processed" / txt_filename
         if txt_path.exists():
             txt_path.unlink()
             results["txt_deleted"] = True
-        
+
         # 4. Reset status to pending
         boletin.status = "pending"
         boletin.error_message = None
-        
+
         await db.commit()
-        
+
         # Emit event
         await event_bus.emit(
             EventType.PIPELINE_RESET_DOCUMENT,
             data=results,
             source="pipeline"
         )
-        
+
         logger.info(f"Document {boletin_id} reset: {results}")
         return {"success": True, **results}
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -330,17 +329,17 @@ async def process_single_document(
         # Find the boletin
         result = await db.execute(select(Boletin).where(Boletin.id == boletin_id))
         boletin = result.scalar_one_or_none()
-        
+
         if not boletin:
             raise HTTPException(status_code=404, detail=f"Boletin {boletin_id} no encontrado")
-        
+
         session_id = str(uuid.uuid4())[:8]
         pipeline_config = config or PipelineConfig()
-        
+
         # Update status to extracting
         boletin.status = "extracting"
         await db.commit()
-        
+
         # Emit pipeline.started so the frontend tracks progress
         await event_bus.emit(
             EventType.PIPELINE_STARTED,
@@ -351,7 +350,7 @@ async def process_single_document(
             },
             source="pipeline"
         )
-        
+
         # Run in background
         background_tasks.add_task(
             _process_document_pipeline,
@@ -360,7 +359,7 @@ async def process_single_document(
             session_id,
             pipeline_config,
         )
-        
+
         return {
             "success": True,
             "session_id": session_id,
@@ -369,7 +368,7 @@ async def process_single_document(
             "message": "Procesamiento iniciado",
             "config": pipeline_config.model_dump(),
         }
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -391,7 +390,7 @@ async def process_all_pending(
     """
     try:
         pipeline_config = config or PipelineConfig()
-        
+
         # Get all pending boletines
         result = await db.execute(
             select(Boletin.id, Boletin.filename)
@@ -399,7 +398,7 @@ async def process_all_pending(
             .order_by(Boletin.id)
         )
         pending = result.all()
-        
+
         if not pending:
             return {
                 "success": True,
@@ -407,10 +406,10 @@ async def process_all_pending(
                 "total": 0,
                 "message": "No hay documentos pendientes de procesar",
             }
-        
+
         session_id = str(uuid.uuid4())[:8]
         boletin_list = [{"id": row.id, "filename": row.filename} for row in pending]
-        
+
         # Track session
         _active_sessions[session_id] = {
             "total": len(boletin_list),
@@ -419,7 +418,7 @@ async def process_all_pending(
             "config": pipeline_config.model_dump(),
             "errors": [],
         }
-        
+
         # Emit pipeline started
         await event_bus.emit(
             EventType.PIPELINE_STARTED,
@@ -430,7 +429,7 @@ async def process_all_pending(
             },
             source="pipeline"
         )
-        
+
         # Run in background
         background_tasks.add_task(
             _process_all_pipeline,
@@ -438,7 +437,7 @@ async def process_all_pending(
             session_id,
             pipeline_config,
         )
-        
+
         return {
             "success": True,
             "session_id": session_id,
@@ -446,7 +445,7 @@ async def process_all_pending(
             "message": f"Procesamiento de {len(boletin_list)} documentos iniciado",
             "config": pipeline_config.model_dump(),
         }
-    
+
     except Exception as e:
         logger.error(f"Error starting batch pipeline: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
@@ -662,7 +661,7 @@ async def get_pipeline_status():
     pipeline tasks that commit on the shared aiosqlite connection.
     """
     from app.db.database import AsyncSessionLocal
-    
+
     try:
         async with AsyncSessionLocal() as db:
             # Single query: count boletines grouped by status
@@ -672,28 +671,28 @@ async def get_pipeline_status():
             rows = result.all()
             status_counts = {row[0]: row[1] for row in rows}
             total_boletines = sum(status_counts.values())
-            
+
             # Ensure all expected keys exist
             for key in ["pending", "extracting", "chunking", "indexing", "completed", "failed"]:
                 status_counts.setdefault(key, 0)
-            
+
             # Total chunks
             chunks_result = await db.execute(select(func.count()).select_from(ChunkRecord))
             total_chunks = chunks_result.scalar() or 0
-            
+
             # Total indexed (with indexed_at)
             indexed_result = await db.execute(
                 select(func.count()).select_from(ChunkRecord).where(ChunkRecord.indexed_at.isnot(None))
             )
             total_indexed = indexed_result.scalar() or 0
-        
+
         # Active session info (in-memory, no DB needed)
         active_session = None
         for sid, session in _active_sessions.items():
             if session.get("status") == "running":
                 active_session = {"session_id": sid, **session}
                 break
-        
+
         return {
             "total_boletines": total_boletines,
             "by_status": status_counts,
@@ -701,7 +700,7 @@ async def get_pipeline_status():
             "total_indexed": total_indexed,
             "active_session": active_session,
         }
-    
+
     except Exception as e:
         logger.error(f"Error getting pipeline status: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
@@ -730,7 +729,7 @@ async def _process_document_pipeline(
 ):
     """Background task: process a single document through the full pipeline."""
     from app.db.database import BackgroundSessionLocal
-    
+
     TOTAL_STAGES = 7  # extract, clean, entity_mapping, chunk, index, analyze, completed
 
     if not batch_mode:
@@ -746,7 +745,7 @@ async def _process_document_pipeline(
         _active_sessions[session_id]["stage"] = "extracting"
         _active_sessions[session_id]["filename"] = filename
         _active_sessions[session_id]["boletin_id"] = boletin_id
-    
+
     async with BackgroundSessionLocal() as db:
         try:
             # Stage 1/7: EXTRACTION
@@ -839,7 +838,7 @@ async def _process_document_pipeline(
             await _update_status(db, boletin_id, "completed")
             await _emit_stage(session_id, boletin_id, filename, "completed", 7, TOTAL_STAGES,
                             details={"chunks_created": len(chunks), "chunks_indexed": indexed, "actos_extracted": actos_count})
-            
+
             await event_bus.emit(
                 EventType.PIPELINE_DOCUMENT_COMPLETED,
                 data={
@@ -852,7 +851,7 @@ async def _process_document_pipeline(
                 },
                 source="pipeline"
             )
-            
+
             logger.info(f"Document {boletin_id} processed: {len(chunks)} chunks, {indexed} indexed")
 
             if not batch_mode:
@@ -963,11 +962,11 @@ async def _process_all_pipeline(
             logger.error(f"Batch: document {boletin_id} failed: {e}")
 
     await map_bounded(boletin_list, _one, workers, return_exceptions=True)
-    
+
     # Mark session as complete
     if session_id in _active_sessions:
         _active_sessions[session_id]["status"] = "completed"
-    
+
     # Emit pipeline completed
     await event_bus.emit(
         EventType.PIPELINE_COMPLETED,
@@ -979,7 +978,7 @@ async def _process_all_pipeline(
         },
         source="pipeline"
     )
-    
+
     logger.info(f"Batch pipeline {session_id} complete: {completed}/{total} successful, {failed} failed")
     _active_sessions.pop(session_id, None)
 
@@ -1007,12 +1006,12 @@ def _find_pdf(filename: str) -> Path | None:
                 return candidate
         except (ValueError, IndexError):
             pass
-        
+
         # Fallback: glob search in boletines tree
         matches = list(settings.BOLETINES_DIR.rglob(filename))
         if matches:
             return matches[0]
-    
+
     # 2. Search in uploads/{year}/{month}/ (uploaded via API)
     if settings.UPLOADS_DIR.exists() and len(filename) >= 8:
         try:
@@ -1037,14 +1036,14 @@ def _find_pdf(filename: str) -> Path | None:
         candidate = search_dir / filename
         if candidate.exists():
             return candidate
-    
+
     return None
 
 
 async def _emit_stage(
-    session_id: str, 
-    boletin_id: int, 
-    filename: str, 
+    session_id: str,
+    boletin_id: int,
+    filename: str,
     stage: str,
     current: int,
     total: int,
@@ -1156,9 +1155,8 @@ async def _get_source_url(
     1. Boletin.source_url (guardada en DB en el momento del registro)
     2. Construir desde JurisdiccionSyncConfig.source_url_template
     """
-    from sqlalchemy import select
-
     from app.db.models import Boletin, JurisdiccionSyncConfig
+    from sqlalchemy import select
 
     # 1. URL ya guardada en el registro del boletín
     result = await db.execute(
@@ -1196,10 +1194,9 @@ async def _parse_and_store_sumario(
     """
     import json
     try:
-        from sqlalchemy import select
-
         from app.db.models import Boletin, FuenteBoletin, SumarioParseado
         from app.services.sumario_parser import SumarioParser
+        from sqlalchemy import select
 
         # Verificar que es un boletín provincial de Córdoba
         result = await db.execute(
@@ -1240,7 +1237,7 @@ async def _parse_and_store_sumario(
 def _clean_text(text: str, config) -> str:
     """Clean extracted text using TextCleaner."""
     from app.services.text_cleaner import CleaningConfig, TextCleaner
-    
+
     cleaner_config = CleaningConfig(
         fix_encoding=config.fix_encoding,
         normalize_unicode=config.normalize_unicode,
@@ -1354,7 +1351,7 @@ async def _index_chunks(
             enricher = ChunkEnricher()
         except Exception as e:
             logger.warning(f"ChunkEnricher unavailable: {e}")
-    
+
     # Optional embedding service
     embedding_service = None
     if indexing_config.use_chromadb:
@@ -1363,13 +1360,13 @@ async def _index_chunks(
             embedding_service = get_embedding_service()
         except Exception as e:
             logger.warning(f"EmbeddingService unavailable: {e}")
-    
+
     COMMIT_BATCH_SIZE = 10  # Commit every N chunks to avoid long-held write locks
-    
+
     for chunk in chunks:
         try:
             chunk_hash = hashlib.sha256(chunk.text.encode()).hexdigest()
-            
+
             # Enrich
             enrichment = {}
             if enricher:
@@ -1385,7 +1382,7 @@ async def _index_chunks(
                     },
                     anchored_entities=anchored_entities,
                 )
-            
+
             # Insert ChunkRecord using on_conflict_do_nothing to safely handle
             # duplicates when cleanup was skipped due to a locked database.
             if indexing_config.use_sqlite:
@@ -1412,7 +1409,7 @@ async def _index_chunks(
                     index_elements=["document_id", "chunk_index"]
                 )
                 await db.execute(stmt)
-            
+
             # Index in ChromaDB
             if indexing_config.use_chromadb and embedding_service and embedding_service.collection:
                 try:
@@ -1428,19 +1425,19 @@ async def _index_chunks(
                             "filename": filename,
                         }],
                     )
-                    
+
                 except Exception as e:
                     logger.warning(f"ChromaDB indexing failed for chunk {chunk.chunk_index}: {e}")
-            
+
             indexed_count += 1
-            
+
             # Periodic commit to release write lock and let HTTP readers through
             if indexed_count % COMMIT_BATCH_SIZE == 0:
                 await db.commit()
-        
+
         except Exception as e:
             logger.error(f"Failed to index chunk {chunk.chunk_index} of {filename}: {e}")
-    
+
     # Final commit for remaining chunks
     await db.commit()
     return indexed_count

@@ -4,8 +4,8 @@ Test script for LLMProviderFactory
 Verifies that the factory can create providers from environment config
 """
 
-import sys
 import asyncio
+import sys
 from pathlib import Path
 
 # Add backend to path
@@ -14,6 +14,7 @@ sys.path.insert(0, str(backend_path))
 
 # Load environment variables
 from dotenv import load_dotenv
+
 env_path = backend_path / ".env"
 load_dotenv(env_path)
 
@@ -22,11 +23,11 @@ from app.services.llm_provider import get_llm_provider
 
 async def test_llm_provider():
     """Test LLM provider creation and basic functionality"""
-    
+
     print("=" * 60)
     print("Testing LLMProviderFactory")
     print("=" * 60)
-    
+
     # Test 1: Create provider from environment
     print("\n1. Creating provider from environment...")
     try:
@@ -36,7 +37,7 @@ async def test_llm_provider():
     except Exception as e:
         print(f"❌ Failed to create provider: {e}")
         return False
-    
+
     # Test 2: Generate simple text (single call to avoid rate limits)
     print("\n2. Testing text generation with system prompt...")
     try:
@@ -56,7 +57,7 @@ async def test_llm_provider():
         else:
             print(f"❌ Text generation failed: {e}")
             return False
-    
+
     # Test 3: Verify environment configuration
     print("\n3. Verifying environment configuration...")
     import os
@@ -67,7 +68,7 @@ async def test_llm_provider():
     print(f"   LLM_MODEL: {llm_model}")
     print(f"   GOOGLE_API_KEY: {'***' + google_key[-4:] if google_key != 'not set' else 'not set'}")
     print("✅ Environment variables configured")
-    
+
     print("\n" + "=" * 60)
     print("✅ All tests passed!")
     print("=" * 60)

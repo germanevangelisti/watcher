@@ -16,10 +16,8 @@ import asyncio
 import json
 import logging
 from enum import Enum
-from typing import Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict
-
 
 logger = logging.getLogger(__name__)
 
@@ -56,11 +54,11 @@ class AIU(BaseModel):
 
     claim_text: str
     claim_type: ClaimType
-    source_output_id: Optional[str] = None
-    source_chunk_id: Optional[str] = None
+    source_output_id: str | None = None
+    source_chunk_id: str | None = None
     verification_status: VerificationStatus = VerificationStatus.PENDING
-    evidence_text: Optional[str] = None
-    evidence_score: Optional[float] = None
+    evidence_text: str | None = None
+    evidence_score: float | None = None
 
 
 class AIUDecompositionResult(BaseModel):
@@ -68,10 +66,10 @@ class AIUDecompositionResult(BaseModel):
 
     model_config = ConfigDict(strict=True)
 
-    aius: List[AIU]
+    aius: list[AIU]
     source_type: str          # "structured_acto" or "free_text"
     total_aius: int
-    by_type: Dict             # counts per ClaimType value
+    by_type: dict             # counts per ClaimType value
 
 
 # ---------------------------------------------------------------------------
@@ -101,8 +99,8 @@ class AIUService:
     def decompose_acto(
         self,
         acto: dict,
-        source_output_id: Optional[str] = None,
-    ) -> List[AIU]:
+        source_output_id: str | None = None,
+    ) -> list[AIU]:
         """
         Decompose a single structured acto dict (as produced by WatcherService)
         into a list of AIUs.
@@ -125,7 +123,7 @@ class AIUService:
         - descripcion            -> ACTION
         - texto_original         -> EVIDENCE_ANCHOR (must exist literally in chunks)
         """
-        aius: List[AIU] = []
+        aius: list[AIU] = []
 
         # organismo -> SUBJECT
         if acto.get("organismo"):
@@ -253,7 +251,7 @@ class AIUService:
 
         return aius
 
-    def decompose_actos(self, actos: List[dict]) -> AIUDecompositionResult:
+    def decompose_actos(self, actos: list[dict]) -> AIUDecompositionResult:
         """
         Decompose a list of actos (the ``actos`` key of an
         ``analyze_fragment`` result) into a single AIUDecompositionResult.
@@ -262,14 +260,14 @@ class AIUService:
         ``acto_{index}_{numero}`` so downstream services can trace every AIU
         back to its originating acto.
         """
-        all_aius: List[AIU] = []
+        all_aius: list[AIU] = []
 
         for i, acto in enumerate(actos):
             acto_id = f"acto_{i}_{acto.get('numero', 'unknown')}"
             all_aius.extend(self.decompose_acto(acto, source_output_id=acto_id))
 
         # Count by ClaimType value
-        by_type: Dict[str, int] = {}
+        by_type: dict[str, int] = {}
         for aiu in all_aius:
             key = aiu.claim_type.value
             by_type[key] = by_type.get(key, 0) + 1
@@ -288,8 +286,8 @@ class AIUService:
     async def decompose_free_text(
         self,
         text: str,
-        source_output_id: Optional[str] = None,
-    ) -> List[AIU]:
+        source_output_id: str | None = None,
+    ) -> list[AIU]:
         """
         Use Gemini Flash to decompose free text into atomic claims.
 
@@ -335,7 +333,7 @@ class AIUService:
                 raw = raw.split("```")[1].split("```")[0].strip()
 
             data = json.loads(raw)
-            aius: List[AIU] = []
+            aius: list[AIU] = []
 
             for claim in data.get("claims", []):
                 try:

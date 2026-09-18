@@ -8,9 +8,9 @@ enabling a pluggable architecture for multiple data sources.
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import date
-from pathlib import Path
-from typing import Dict, List, Optional, Any
 from enum import Enum
+from pathlib import Path
+from typing import Any
 
 
 class ScraperType(str, Enum):
@@ -40,9 +40,9 @@ class ScraperConfig:
     rate_limit_delay: float = 2.0
     max_retries: int = 3
     timeout: float = 30.0
-    user_agents: Optional[List[str]] = None
+    user_agents: list[str] | None = None
     skip_weekends: bool = True
-    sections: Optional[List[int]] = None
+    sections: list[int] | None = None
 
 
 @dataclass
@@ -50,11 +50,11 @@ class ScraperResult:
     """Result of a scraping operation"""
     filename: str
     status: str  # 'downloaded', 'exists', 'not_available', 'error'
-    size: Optional[int] = None
-    path: Optional[str] = None
-    url: Optional[str] = None
-    error: Optional[str] = None
-    metadata: Optional[Dict[str, Any]] = None
+    size: int | None = None
+    path: str | None = None
+    url: str | None = None
+    error: str | None = None
+    metadata: dict[str, Any] | None = None
 
 
 class BaseScraper(ABC):
@@ -64,7 +64,7 @@ class BaseScraper(ABC):
     Each scraper must implement the core methods for downloading,
     validating, and organizing data from a specific source.
     """
-    
+
     def __init__(self, config: ScraperConfig):
         """
         Initialize the scraper with configuration.
@@ -80,7 +80,7 @@ class BaseScraper(ABC):
             "failed": 0,
             "errors": []
         }
-    
+
     @abstractmethod
     async def download_single(
         self,
@@ -100,7 +100,7 @@ class BaseScraper(ABC):
             ScraperResult with download status
         """
         pass
-    
+
     @abstractmethod
     async def download_range(
         self,
@@ -108,7 +108,7 @@ class BaseScraper(ABC):
         end_date: date,
         document_type: DocumentType,
         **kwargs
-    ) -> List[ScraperResult]:
+    ) -> list[ScraperResult]:
         """
         Download documents for a date range.
         
@@ -122,7 +122,7 @@ class BaseScraper(ABC):
             List of ScraperResult objects
         """
         pass
-    
+
     @abstractmethod
     def validate_file(self, filepath: Path) -> bool:
         """
@@ -135,7 +135,7 @@ class BaseScraper(ABC):
             True if file is valid, False otherwise
         """
         pass
-    
+
     @abstractmethod
     def get_file_path(
         self,
@@ -155,8 +155,8 @@ class BaseScraper(ABC):
             Path where the file should be stored
         """
         pass
-    
-    def get_stats(self) -> Dict[str, Any]:
+
+    def get_stats(self) -> dict[str, Any]:
         """
         Get scraping statistics.
         
@@ -164,7 +164,7 @@ class BaseScraper(ABC):
             Dictionary with statistics
         """
         return self.stats.copy()
-    
+
     def reset_stats(self):
         """Reset statistics counters."""
         self.stats = {
@@ -174,11 +174,11 @@ class BaseScraper(ABC):
             "failed": 0,
             "errors": []
         }
-    
+
     def _update_stats(self, result: ScraperResult):
         """Update statistics based on a scraping result."""
         self.stats["total_requested"] += 1
-        
+
         if result.status == "downloaded":
             self.stats["downloaded"] += 1
         elif result.status == "exists":

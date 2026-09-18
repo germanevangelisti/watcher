@@ -6,8 +6,8 @@ Automated report generation service for analysis results, trends, and insights.
 
 import logging
 from datetime import datetime
-from typing import Dict, List, Optional, Any
 from enum import Enum
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ class ReportGenerator:
     - Format reports in multiple formats (JSON, HTML, PDF, MD)
     - Schedule automated report generation
     """
-    
+
     def __init__(self):
         """Initialize report generator."""
         self.stats = {
@@ -51,14 +51,14 @@ class ReportGenerator:
             "by_format": {f.value: 0 for f in ReportFormat},
             "errors": 0
         }
-    
+
     async def generate_report(
         self,
         report_type: ReportType,
-        data: Dict[str, Any],
+        data: dict[str, Any],
         format: ReportFormat = ReportFormat.JSON,
-        metadata: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        metadata: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """
         Generate a report.
         
@@ -73,7 +73,7 @@ class ReportGenerator:
         """
         try:
             logger.info(f"📊 Generating {report_type.value} report in {format.value} format")
-            
+
             # Generate report based on type
             if report_type == ReportType.EXECUTIVE_SUMMARY:
                 report_content = self._generate_executive_summary(data)
@@ -89,17 +89,17 @@ class ReportGenerator:
                 report_content = {
                     "error": f"Report type {report_type.value} not implemented"
                 }
-            
+
             # Format report
             formatted_report = self._format_report(report_content, format)
-            
+
             # Update stats
             self.stats["reports_generated"] += 1
             self.stats["by_type"][report_type.value] += 1
             self.stats["by_format"][format.value] += 1
-            
+
             logger.info("✅ Report generated successfully")
-            
+
             return {
                 "success": True,
                 "report_type": report_type.value,
@@ -108,7 +108,7 @@ class ReportGenerator:
                 "metadata": metadata or {},
                 "content": formatted_report
             }
-        
+
         except Exception as e:
             logger.error(f"Error generating report: {e}", exc_info=True)
             self.stats["errors"] += 1
@@ -116,8 +116,8 @@ class ReportGenerator:
                 "success": False,
                 "error": str(e)
             }
-    
-    def _generate_executive_summary(self, data: Dict[str, Any]) -> Dict[str, Any]:
+
+    def _generate_executive_summary(self, data: dict[str, Any]) -> dict[str, Any]:
         """Generate an executive summary report."""
         return {
             "title": "Executive Summary",
@@ -139,8 +139,8 @@ class ReportGenerator:
                 "Update risk assessment criteria"
             ])
         }
-    
-    def _generate_detailed_analysis(self, data: Dict[str, Any]) -> Dict[str, Any]:
+
+    def _generate_detailed_analysis(self, data: dict[str, Any]) -> dict[str, Any]:
         """Generate a detailed analysis report."""
         return {
             "title": "Detailed Analysis Report",
@@ -155,8 +155,8 @@ class ReportGenerator:
             "findings": data.get("findings", []),
             "detailed_items": data.get("detailed_items", [])
         }
-    
-    def _generate_trend_report(self, data: Dict[str, Any]) -> Dict[str, Any]:
+
+    def _generate_trend_report(self, data: dict[str, Any]) -> dict[str, Any]:
         """Generate a trend analysis report."""
         return {
             "title": "Trend Analysis Report",
@@ -174,8 +174,8 @@ class ReportGenerator:
             ],
             "projections": data.get("projections", {})
         }
-    
-    def _generate_entity_report(self, data: Dict[str, Any]) -> Dict[str, Any]:
+
+    def _generate_entity_report(self, data: dict[str, Any]) -> dict[str, Any]:
         """Generate an entity-focused report."""
         return {
             "title": "Entity Report",
@@ -191,8 +191,8 @@ class ReportGenerator:
             "related_entities": data.get("related_entities", []),
             "risk_indicators": data.get("risk_indicators", [])
         }
-    
-    def _generate_risk_assessment(self, data: Dict[str, Any]) -> Dict[str, Any]:
+
+    def _generate_risk_assessment(self, data: dict[str, Any]) -> dict[str, Any]:
         """Generate a risk assessment report."""
         return {
             "title": "Risk Assessment Report",
@@ -211,66 +211,66 @@ class ReportGenerator:
                 "Review and update risk thresholds"
             ]
         }
-    
-    def _format_report(self, content: Dict[str, Any], format: ReportFormat) -> Any:
+
+    def _format_report(self, content: dict[str, Any], format: ReportFormat) -> Any:
         """Format report in specified format."""
         if format == ReportFormat.JSON:
             return content
-        
+
         elif format == ReportFormat.MARKDOWN:
             return self._to_markdown(content)
-        
+
         elif format == ReportFormat.HTML:
             return self._to_html(content)
-        
+
         elif format == ReportFormat.CSV:
             return self._to_csv(content)
-        
+
         elif format == ReportFormat.PDF:
             # PDF generation would require additional libraries
             return {
                 "error": "PDF generation not yet implemented",
                 "json_content": content
             }
-        
+
         return content
-    
-    def _to_markdown(self, content: Dict[str, Any]) -> str:
+
+    def _to_markdown(self, content: dict[str, Any]) -> str:
         """Convert report to Markdown format."""
         md_lines = []
-        
+
         # Title
         if "title" in content:
             md_lines.append(f"# {content['title']}\n")
-        
+
         # Generated date
         if "generated_at" in content:
             md_lines.append(f"**Generated:** {content['generated_at']}\n")
-        
+
         # Summary section
         if "summary" in content:
             md_lines.append("## Summary\n")
             for key, value in content["summary"].items():
                 md_lines.append(f"- **{key.replace('_', ' ').title()}:** {value}")
             md_lines.append("")
-        
+
         # Highlights
         if "highlights" in content:
             md_lines.append("## Key Highlights\n")
             for highlight in content["highlights"]:
                 md_lines.append(f"- {highlight}")
             md_lines.append("")
-        
+
         # Recommendations
         if "recommendations" in content:
             md_lines.append("## Recommendations\n")
             for i, rec in enumerate(content["recommendations"], 1):
                 md_lines.append(f"{i}. {rec}")
             md_lines.append("")
-        
+
         return "\n".join(md_lines)
-    
-    def _to_html(self, content: Dict[str, Any]) -> str:
+
+    def _to_html(self, content: dict[str, Any]) -> str:
         """Convert report to HTML format."""
         html_parts = [
             "<!DOCTYPE html>",
@@ -288,10 +288,10 @@ class ReportGenerator:
             "<body>",
             f"<h1>{content.get('title', 'Report')}</h1>",
         ]
-        
+
         if "generated_at" in content:
             html_parts.append(f"<p><strong>Generated:</strong> {content['generated_at']}</p>")
-        
+
         if "summary" in content:
             html_parts.append("<div class='summary'>")
             html_parts.append("<h2>Summary</h2>")
@@ -300,41 +300,41 @@ class ReportGenerator:
                 html_parts.append(f"<li><strong>{key.replace('_', ' ').title()}:</strong> {value}</li>")
             html_parts.append("</ul>")
             html_parts.append("</div>")
-        
+
         if "highlights" in content:
             html_parts.append("<h2>Key Highlights</h2>")
             html_parts.append("<ul>")
             for highlight in content["highlights"]:
                 html_parts.append(f"<li>{highlight}</li>")
             html_parts.append("</ul>")
-        
+
         html_parts.extend(["</body>", "</html>"])
-        
+
         return "\n".join(html_parts)
-    
-    def _to_csv(self, content: Dict[str, Any]) -> str:
+
+    def _to_csv(self, content: dict[str, Any]) -> str:
         """Convert report to CSV format (simplified)."""
         csv_lines = []
-        
+
         # Header
         csv_lines.append("Report Type,Field,Value")
-        
+
         # Flatten content
         report_type = content.get("title", "Unknown")
-        
+
         for key, value in content.items():
             if isinstance(value, (str, int, float)):
                 csv_lines.append(f"{report_type},{key},{value}")
             elif isinstance(value, dict):
                 for sub_key, sub_value in value.items():
                     csv_lines.append(f"{report_type},{key}.{sub_key},{sub_value}")
-        
+
         return "\n".join(csv_lines)
-    
+
     async def generate_batch_reports(
         self,
-        reports: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+        reports: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
         """
         Generate multiple reports in batch.
         
@@ -345,7 +345,7 @@ class ReportGenerator:
             List of generated reports
         """
         results = []
-        
+
         for report_spec in reports:
             result = await self.generate_report(
                 report_type=ReportType(report_spec.get("type", "executive_summary")),
@@ -354,15 +354,15 @@ class ReportGenerator:
                 metadata=report_spec.get("metadata")
             )
             results.append(result)
-        
+
         logger.info(f"📊 Generated {len(results)} reports in batch")
-        
+
         return results
-    
-    def get_stats(self) -> Dict[str, Any]:
+
+    def get_stats(self) -> dict[str, Any]:
         """Get generator statistics."""
         return self.stats.copy()
-    
+
     def reset_stats(self):
         """Reset statistics."""
         self.stats = {
@@ -374,14 +374,14 @@ class ReportGenerator:
 
 
 # Global instance
-_report_generator: Optional[ReportGenerator] = None
+_report_generator: ReportGenerator | None = None
 
 
 def get_report_generator() -> ReportGenerator:
     """Get or create global report generator instance."""
     global _report_generator
-    
+
     if _report_generator is None:
         _report_generator = ReportGenerator()
-    
+
     return _report_generator

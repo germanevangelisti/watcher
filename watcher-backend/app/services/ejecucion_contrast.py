@@ -16,8 +16,8 @@ past the ceiling.  Callers decide how to render that.
 from __future__ import annotations
 
 from collections import defaultdict
-from dataclasses import dataclass
 from collections.abc import Iterable
+from dataclasses import dataclass
 
 from app.services.gasto_classifier import ETAPAS_COMPROMISO, ETAPAS_EJECUCION
 from app.services.presupuesto_matching import (

@@ -22,9 +22,6 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import date, datetime
 
-from sqlalchemy import delete, select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.db.models import Analisis, Boletin, EjecucionPresupuestaria, PresupuestoBase
 from app.services.gasto_classifier import (
     JURISDICCION_PROVINCIAL,
@@ -40,6 +37,8 @@ from app.services.presupuesto_matching import (
     parse_date,
     resolve_numero_acto,
 )
+from sqlalchemy import delete, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 

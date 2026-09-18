@@ -5,39 +5,34 @@ Implementa el Rules Engine que ejecuta checks de compliance y produce
 estados PASS/WARN/FAIL/UNKNOWN con scoring ponderado.
 """
 
-import json
 import hashlib
-from datetime import datetime, date
+import json
+from datetime import date, datetime
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import Any
+
+from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, desc
 from sqlalchemy.orm import selectinload
 
-from ..db.models import (
-    ComplianceCheck, 
-    CheckResult, 
-    Evidence, 
-    Jurisdiccion,
-    ComplianceCheckStatus
-)
+from ..db.models import CheckResult, ComplianceCheck, ComplianceCheckStatus, Evidence, Jurisdiccion
 
 
 class ComplianceEngine:
     """Motor principal de compliance checks"""
-    
+
     def __init__(self, db: AsyncSession):
         self.db = db
         self.config_path = Path(__file__).parent.parent.parent / "config" / "checks.json"
         self._checks_config = None
-    
-    def load_checks_config(self) -> Dict[str, Any]:
+
+    def load_checks_config(self) -> dict[str, Any]:
         """Carga la configuración de checks desde JSON"""
         if self._checks_config is None:
-            with open(self.config_path, 'r', encoding='utf-8') as f:
+            with open(self.config_path, encoding='utf-8') as f:
                 self._checks_config = json.load(f)
         return self._checks_config
-    
+
     async def sync_checks_to_database(self) -> int:
         """
         Sincroniza los checks del JSON a la base de datos.
@@ -45,13 +40,13 @@ class ComplianceEngine:
         """
         config = self.load_checks_config()
         synced_count = 0
-        
+
         for check_def in config.get("checks", []):
             # Buscar si ya existe
             stmt = select(ComplianceCheck).filter_by(check_code=check_def["check_code"])
             result = await self.db.execute(stmt)
             existing = result.scalar_one_or_none()
-            
+
             if existing:
                 # Actualizar check existente
                 existing.check_name = check_def["check_name"]
@@ -92,13 +87,13 @@ class ComplianceEngine:
                     is_active=True
                 )
                 self.db.add(new_check)
-            
+
             synced_count += 1
-        
+
         await self.db.commit()
         return synced_count
-    
-    async def get_all_checks(self, active_only: bool = True) -> List[ComplianceCheck]:
+
+    async def get_all_checks(self, active_only: bool = True) -> list[ComplianceCheck]:
         """Obtiene todos los checks de compliance"""
         stmt = select(ComplianceCheck)
         if active_only:
@@ -106,17 +101,17 @@ class ComplianceEngine:
         stmt = stmt.order_by(ComplianceCheck.priority.desc(), ComplianceCheck.category)
         result = await self.db.execute(stmt)
         return result.scalars().all()
-    
-    async def get_check_by_code(self, check_code: str) -> Optional[ComplianceCheck]:
+
+    async def get_check_by_code(self, check_code: str) -> ComplianceCheck | None:
         """Obtiene un check específico por código"""
         stmt = select(ComplianceCheck).filter_by(check_code=check_code)
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
-    
+
     async def execute_check(
-        self, 
-        check: ComplianceCheck, 
-        jurisdiccion: Optional[Jurisdiccion] = None
+        self,
+        check: ComplianceCheck,
+        jurisdiccion: Jurisdiccion | None = None
     ) -> CheckResult:
         """
         Ejecuta un check de compliance.
@@ -127,7 +122,7 @@ class ComplianceEngine:
         """
         # Determinar el período de evaluación
         evaluation_date = date.today()
-        
+
         # TODO: Implementar lógica de validación específica por check
         # Por ahora, marcamos todos como UNKNOWN con mensaje placeholder
         status = ComplianceCheckStatus.UNKNOWN
@@ -135,7 +130,7 @@ class ComplianceEngine:
         summary = f"Check '{check.check_name}' pendiente de implementación de validadores"
         reason = "El sistema aún no tiene implementada la lógica de validación para este check"
         remediation = "Implementar validadores específicos en el ComplianceEngine"
-        
+
         # Crear resultado
         result = CheckResult(
             check_id=check.id,
@@ -154,32 +149,32 @@ class ComplianceEngine:
                 "validation_pending": True
             }
         )
-        
+
         self.db.add(result)
         await self.db.commit()
         await self.db.refresh(result)
-        
+
         return result
-    
+
     async def execute_all_checks(
-        self, 
-        jurisdiccion: Optional[Jurisdiccion] = None
-    ) -> List[CheckResult]:
+        self,
+        jurisdiccion: Jurisdiccion | None = None
+    ) -> list[CheckResult]:
         """Ejecuta todos los checks activos"""
         checks = await self.get_all_checks(active_only=True)
         results = []
-        
+
         for check in checks:
             result = await self.execute_check(check, jurisdiccion)
             results.append(result)
-        
+
         return results
-    
+
     async def calculate_compliance_score(
-        self, 
-        jurisdiccion_id: Optional[int] = None,
-        evaluation_date: Optional[date] = None
-    ) -> Dict[str, Any]:
+        self,
+        jurisdiccion_id: int | None = None,
+        evaluation_date: date | None = None
+    ) -> dict[str, Any]:
         """
         Calcula el score de compliance ponderado.
         
@@ -188,28 +183,28 @@ class ComplianceEngine:
         """
         if evaluation_date is None:
             evaluation_date = date.today()
-        
+
         # Obtener todos los resultados más recientes para cada check
         stmt = (
             select(CheckResult)
             .options(selectinload(CheckResult.check))
             .order_by(CheckResult.check_id, CheckResult.evaluation_date.desc())
         )
-        
+
         if jurisdiccion_id:
             stmt = stmt.filter(CheckResult.jurisdiccion_id == jurisdiccion_id)
-        
+
         result = await self.db.execute(stmt)
         all_results = result.scalars().all()
-        
+
         # Obtener solo el más reciente por check_id
         latest_results = {}
         for r in all_results:
             if r.check_id not in latest_results:
                 latest_results[r.check_id] = r
-        
+
         results = list(latest_results.values())
-        
+
         # Calcular score ponderado
         total_weight = 0.0
         weighted_sum = 0.0
@@ -219,26 +214,26 @@ class ComplianceEngine:
             "fail": 0,
             "unknown": 0
         }
-        
+
         for result in results:
             check = result.check
             status_counts[result.status] += 1
-            
+
             # Solo sumar si el status no es UNKNOWN
             if result.status != ComplianceCheckStatus.UNKNOWN.value:
                 weight = check.weight
                 total_weight += weight
-                
+
                 if result.status == ComplianceCheckStatus.PASS.value:
                     weighted_sum += weight * 1.0
                 elif result.status == ComplianceCheckStatus.WARN.value:
                     weighted_sum += weight * 0.5
                 elif result.status == ComplianceCheckStatus.FAIL.value:
                     weighted_sum += weight * 0.0
-        
+
         # Calcular score final
         final_score = (weighted_sum / total_weight * 100) if total_weight > 0 else None
-        
+
         return {
             "score": round(final_score, 2) if final_score is not None else None,
             "total_checks": len(results),
@@ -248,22 +243,22 @@ class ComplianceEngine:
             "evaluation_date": evaluation_date.isoformat(),
             "jurisdiccion_id": jurisdiccion_id
         }
-    
+
     async def get_scorecard(
         self,
-        jurisdiccion_id: Optional[int] = None
-    ) -> Dict[str, Any]:
+        jurisdiccion_id: int | None = None
+    ) -> dict[str, Any]:
         """
         Genera un scorecard completo de compliance.
         Incluye score, desglose por checks, y red flags.
         """
         # Obtener score general
         score_data = await self.calculate_compliance_score(jurisdiccion_id)
-        
+
         # Obtener todos los checks con sus resultados más recientes
         checks = await self.get_all_checks(active_only=True)
         check_details = []
-        
+
         for check in checks:
             # Obtener resultado más reciente
             stmt = (
@@ -274,7 +269,7 @@ class ComplianceEngine:
             )
             result_query = await self.db.execute(stmt)
             result = result_query.scalar_one_or_none()
-            
+
             check_details.append({
                 "check_code": check.check_code,
                 "check_name": check.check_name,
@@ -287,16 +282,16 @@ class ComplianceEngine:
                 "summary": result.summary if result else "No evaluado",
                 "citizen_explanation": check.citizen_explanation
             })
-        
+
         # Identificar red flags (checks FAIL o WARN)
         red_flags = [
-            detail for detail in check_details 
+            detail for detail in check_details
             if detail["status"] in [
-                ComplianceCheckStatus.FAIL.value, 
+                ComplianceCheckStatus.FAIL.value,
                 ComplianceCheckStatus.WARN.value
             ]
         ]
-        
+
         return {
             "scorecard": {
                 "overall_score": score_data["score"],
@@ -309,8 +304,8 @@ class ComplianceEngine:
             "red_flags": red_flags,
             "compliance_level": self._get_compliance_level(score_data["score"])
         }
-    
-    def _get_compliance_level(self, score: Optional[float]) -> str:
+
+    def _get_compliance_level(self, score: float | None) -> str:
         """Determina el nivel de compliance basado en el score"""
         if score is None:
             return "unknown"
@@ -322,15 +317,15 @@ class ComplianceEngine:
             return "acceptable"
         else:
             return "deficient"
-    
+
     async def add_evidence(
         self,
         check_result_id: int,
         source_url: str,
         source_type: str,
-        relevant_fragment: Optional[str] = None,
-        extracted_data: Optional[Dict[str, Any]] = None,
-        snapshot_path: Optional[str] = None
+        relevant_fragment: str | None = None,
+        extracted_data: dict[str, Any] | None = None,
+        snapshot_path: str | None = None
     ) -> Evidence:
         """
         Agrega evidencia a un resultado de check.
@@ -343,7 +338,7 @@ class ComplianceEngine:
         elif extracted_data:
             data_str = json.dumps(extracted_data, sort_keys=True)
             snapshot_hash = hashlib.sha256(data_str.encode()).hexdigest()
-        
+
         evidence = Evidence(
             check_result_id=check_result_id,
             source_url=source_url,
@@ -355,14 +350,14 @@ class ComplianceEngine:
             extracted_data=extracted_data,
             is_valid=True
         )
-        
+
         self.db.add(evidence)
         await self.db.commit()
         await self.db.refresh(evidence)
-        
+
         return evidence
-    
-    async def get_check_evidence(self, check_result_id: int) -> List[Evidence]:
+
+    async def get_check_evidence(self, check_result_id: int) -> list[Evidence]:
         """Obtiene toda la evidencia de un resultado de check"""
         stmt = (
             select(Evidence)

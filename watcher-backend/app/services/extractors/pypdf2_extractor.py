@@ -5,10 +5,10 @@ Extractor de PDF usando PyPDF2.
 Migrado desde pdf_service.py y document_processor.py
 """
 
-import time
 import logging
-from pathlib import Path
+import time
 from datetime import datetime
+from pathlib import Path
 
 import PyPDF2
 
@@ -19,12 +19,8 @@ except ImportError:
     TIKTOKEN_AVAILABLE = False
     tiktoken = None
 
-from app.schemas.extraction import (
-    ExtractedContent,
-    ExtractionMethod,
-    PageContent,
-    ExtractionStats
-)
+from app.schemas.extraction import ExtractedContent, ExtractionMethod, ExtractionStats, PageContent
+
 from .base import PDFExtractor
 
 logger = logging.getLogger(__name__)
@@ -103,17 +99,17 @@ class PyPDF2Extractor(PDFExtractor):
             with open(file_path, 'rb') as pdf_file:
                 pdf_reader = PyPDF2.PdfReader(pdf_file)
                 num_pages = len(pdf_reader.pages)
-                
+
                 logger.debug(f"Extracting {num_pages} pages from {file_path.name}")
-                
+
                 # Extraer texto de todas las páginas
                 pages_content = []
                 pages_text_list = []
-                
+
                 for page_num in range(num_pages):
                     page = pdf_reader.pages[page_num]
                     page_text = page.extract_text()
-                    
+
                     if page_text:
                         pages_text_list.append(page_text)
                         pages_content.append(
@@ -133,10 +129,10 @@ class PyPDF2Extractor(PDFExtractor):
                                 char_count=0
                             )
                         )
-                
+
                 # Concatenar todo el texto
                 full_text = "\n\n".join(pages_text_list)
-                
+
                 # Calcular tokens si está habilitado
                 total_tokens = None
                 if self.calculate_tokens and self.encoding:
@@ -145,7 +141,7 @@ class PyPDF2Extractor(PDFExtractor):
                         total_tokens = len(tokens)
                     except Exception as e:
                         logger.warning(f"Error calculating tokens: {e}")
-                
+
                 # Detectar secciones si está habilitado
                 sections = []
                 if detect_sections:
@@ -153,10 +149,10 @@ class PyPDF2Extractor(PDFExtractor):
                         full_text,
                         pages_text_list
                     )
-                
+
                 # Calcular duración
                 duration_ms = (time.time() - start_time) * 1000
-                
+
                 # Construir resultado
                 return ExtractedContent(
                     success=True,
@@ -177,11 +173,11 @@ class PyPDF2Extractor(PDFExtractor):
                         "file_size_bytes": file_path.stat().st_size
                     }
                 )
-                
+
         except Exception as e:
             duration_ms = (time.time() - start_time) * 1000
             logger.error(f"Error extracting PDF with PyPDF2: {e}", exc_info=True)
-            
+
             return ExtractedContent(
                 success=False,
                 source_path=str(file_path),

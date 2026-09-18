@@ -5,10 +5,10 @@ Extractor de PDF usando pdfplumber.
 Migrado desde dslab_analyzer.py y document_intelligence/agent.py
 """
 
-import time
 import logging
-from pathlib import Path
+import time
 from datetime import datetime
+from pathlib import Path
 
 try:
     import pdfplumber
@@ -24,12 +24,8 @@ except ImportError:
     TIKTOKEN_AVAILABLE = False
     tiktoken = None
 
-from app.schemas.extraction import (
-    ExtractedContent,
-    ExtractionMethod,
-    PageContent,
-    ExtractionStats
-)
+from app.schemas.extraction import ExtractedContent, ExtractionMethod, ExtractionStats, PageContent
+
 from .base import PDFExtractor
 
 logger = logging.getLogger(__name__)
@@ -59,7 +55,7 @@ class PdfPlumberExtractor(PDFExtractor):
                 "pdfplumber no está disponible. "
                 "Instalar con: pip install pdfplumber"
             )
-        
+
         self.calculate_tokens = calculate_tokens and TIKTOKEN_AVAILABLE
         if self.calculate_tokens:
             try:
@@ -117,18 +113,18 @@ class PdfPlumberExtractor(PDFExtractor):
             # Abrir y leer el PDF
             with pdfplumber.open(file_path) as pdf:
                 num_pages = len(pdf.pages)
-                
+
                 logger.debug(f"Extracting {num_pages} pages from {file_path.name}")
-                
+
                 # Extraer texto de todas las páginas
                 pages_content = []
                 pages_text_list = []
-                
+
                 for i, page in enumerate(pdf.pages, start=1):
                     try:
                         # pdfplumber puede extraer texto más complejo
                         page_text = page.extract_text()
-                        
+
                         if page_text:
                             pages_text_list.append(page_text)
                             pages_content.append(
@@ -160,10 +156,10 @@ class PdfPlumberExtractor(PDFExtractor):
                                 char_count=0
                             )
                         )
-                
+
                 # Concatenar todo el texto
                 full_text = "\n\n".join(pages_text_list)
-                
+
                 # Calcular tokens si está habilitado
                 total_tokens = None
                 if self.calculate_tokens and self.encoding and full_text:
@@ -172,7 +168,7 @@ class PdfPlumberExtractor(PDFExtractor):
                         total_tokens = len(tokens)
                     except Exception as e:
                         logger.warning(f"Error calculating tokens: {e}")
-                
+
                 # Detectar secciones si está habilitado
                 sections = []
                 if detect_sections:
@@ -180,10 +176,10 @@ class PdfPlumberExtractor(PDFExtractor):
                         full_text,
                         pages_text_list
                     )
-                
+
                 # Calcular duración
                 duration_ms = (time.time() - start_time) * 1000
-                
+
                 # Construir resultado
                 return ExtractedContent(
                     success=True,
@@ -205,11 +201,11 @@ class PdfPlumberExtractor(PDFExtractor):
                         "pages_with_text": sum(1 for p in pages_text_list if p.strip())
                     }
                 )
-                
+
         except Exception as e:
             duration_ms = (time.time() - start_time) * 1000
             logger.error(f"Error extracting PDF with pdfplumber: {e}", exc_info=True)
-            
+
             return ExtractedContent(
                 success=False,
                 source_path=str(file_path),

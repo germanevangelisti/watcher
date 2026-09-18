@@ -2,17 +2,17 @@
 Dashboard endpoint with real data from Watcher Agent
 """
 
-from fastapi import APIRouter, Depends
-from sqlalchemy import func, desc
-from sqlalchemy.orm import Session
-from typing import Dict, Any
+from typing import Any
 
-from app.db.sync_session import get_sync_db
 from app.db.models import (
-    Boletin,  # Tabla real de boletines
+    AgentWorkflow,  # Workflows de agentes
     Analisis,  # Tabla real de análisis
-    AgentWorkflow  # Workflows de agentes
+    Boletin,  # Tabla real de boletines
 )
+from app.db.sync_session import get_sync_db
+from fastapi import APIRouter, Depends
+from sqlalchemy import desc, func
+from sqlalchemy.orm import Session
 
 router = APIRouter()
 
@@ -20,51 +20,51 @@ router = APIRouter()
 @router.get("/stats")
 async def get_dashboard_stats(
     db: Session = Depends(get_sync_db)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get comprehensive dashboard statistics from real Watcher Agent data
     """
     try:
         # Documentos totales (boletines)
         total_documents = db.query(func.count(Boletin.id)).scalar() or 0
-        
+
         # Documentos con texto extraído (status='completed')
         analyzed_documents = db.query(func.count(Boletin.id)).filter(
             Boletin.status == 'completed'
         ).scalar() or 0
-        
+
         # Documentos pendientes de extracción
         pending_documents = db.query(func.count(Boletin.id)).filter(
             Boletin.status == 'pending'
         ).scalar() or 0
-        
+
         # Total de workflows ejecutados
         total_executions = db.query(func.count(AgentWorkflow.id)).scalar() or 0
-        
+
         # Workflows completados
         completed_executions = db.query(func.count(AgentWorkflow.id)).filter(
             AgentWorkflow.status == 'completed'
         ).scalar() or 0
-        
+
         # Total análisis realizados (RED FLAGS = análisis con riesgo ALTO)
         total_analyses = db.query(func.count(Analisis.id)).scalar() or 0
         total_red_flags = db.query(func.count(Analisis.id)).filter(
             Analisis.riesgo == 'ALTO'
         ).scalar() or 0
-        
+
         # Red flags por "severidad" (mapeando riesgo a severidad)
         risk_stats = db.query(
             Analisis.riesgo,
             func.count(Analisis.id)
         ).group_by(Analisis.riesgo).all()
-        
+
         red_flags_by_severity = {
             'critical': 0,  # ALTO
             'high': 0,      # MEDIO
             'medium': 0,    # BAJO
             'low': 0        # Otros
         }
-        
+
         for riesgo, count in risk_stats:
             if riesgo == 'ALTO':
                 red_flags_by_severity['critical'] = count
@@ -72,7 +72,7 @@ async def get_dashboard_stats(
                 red_flags_by_severity['high'] = count
             elif riesgo == 'BAJO':
                 red_flags_by_severity['medium'] = count
-        
+
         # Score promedio de transparencia (no tenemos, usar valor ficticio basado en análisis)
         # Si hay análisis, mostrar un valor proporcional
         avg_transparency = 0.0
@@ -81,7 +81,7 @@ async def get_dashboard_stats(
             risk_ratio = total_red_flags / total_analyses if total_analyses > 0 else 0
             # Invertir: menos riesgo = más transparencia
             avg_transparency = (1 - risk_ratio) * 100
-        
+
         # Distribución de riesgo
         risk_distribution = {
             'high': 0,
@@ -95,10 +95,10 @@ async def get_dashboard_stats(
                 risk_distribution['medium'] = count
             elif riesgo == 'BAJO':
                 risk_distribution['low'] = count
-        
+
         # Documentos por mes (basado en fecha del boletín: YYYYMMDD)
         boletines_with_dates = db.query(Boletin.date).filter(Boletin.date.isnot(None)).all()
-        
+
         monthly_counts = {}
         for (date_str,) in boletines_with_dates:
             if date_str and len(date_str) >= 6:
@@ -106,7 +106,7 @@ async def get_dashboard_stats(
                 month = int(date_str[4:6])
                 key = f"{year}-{month:02d}"
                 monthly_counts[key] = monthly_counts.get(key, 0) + 1
-        
+
         monthly_data = []
         for period in sorted(monthly_counts.keys()):
             year, month = period.split('-')
@@ -116,12 +116,12 @@ async def get_dashboard_stats(
                 'year': int(year),
                 'month': int(month)
             })
-        
+
         # Últimas ejecuciones (workflows completados)
         recent_workflows = db.query(AgentWorkflow).filter(
             AgentWorkflow.status == 'completed'
         ).order_by(desc(AgentWorkflow.created_at)).limit(5).all()
-        
+
         executions_list = []
         for wf in recent_workflows:
             executions_list.append({
@@ -133,26 +133,26 @@ async def get_dashboard_stats(
                 'started_at': wf.created_at.isoformat() if wf.created_at else None,
                 'completed_at': wf.updated_at.isoformat() if wf.updated_at else None
             })
-        
+
         # Top categorías de análisis
         top_categories = db.query(
             Analisis.categoria,
             func.count(Analisis.id).label('count')
         ).group_by(Analisis.categoria).order_by(desc('count')).limit(10).all()
-        
+
         top_red_flags = [
             {'type': categoria or 'sin_categoria', 'count': count}
             for categoria, count in top_categories
         ]
-        
+
         # Montos totales detectados (sumar de monto_numerico)
         total_amount_detected = db.query(func.sum(Analisis.monto_numerico)).scalar() or 0
-        
+
         # Configuraciones activas (usar total de workflows como proxy)
         active_configs = db.query(func.count(AgentWorkflow.id)).filter(
             AgentWorkflow.status.in_(['pending', 'running'])
         ).scalar() or 0
-        
+
         return {
             'summary': {
                 'total_documents': total_documents,
@@ -173,7 +173,7 @@ async def get_dashboard_stats(
             'documents_by_month': monthly_data,
             'recent_executions': executions_list
         }
-        
+
     except Exception as e:
         import traceback
         print(f"Error in get_dashboard_stats: {str(e)}")
@@ -206,14 +206,14 @@ async def get_recent_red_flags(
     limit: int = 20,
     severity: str = None,
     db: Session = Depends(get_sync_db)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get recent high-risk analyses (red flags) from Analisis table
     """
     try:
         # Consultar análisis de alto riesgo (RED FLAGS)
         query = db.query(Analisis).order_by(desc(Analisis.created_at))
-        
+
         # Mapear severity a riesgo
         if severity:
             if severity == 'critical':
@@ -225,30 +225,30 @@ async def get_recent_red_flags(
         else:
             # Por defecto, solo mostrar alto riesgo
             query = query.filter(Analisis.riesgo == 'ALTO')
-        
+
         analyses = query.limit(limit).all()
-        
+
         result = []
         for analisis in analyses:
             # Get boletin info
             boletin = db.query(Boletin).filter(
                 Boletin.id == analisis.boletin_id
             ).first()
-            
+
             # Mapear riesgo a severity
             severity_map = {
                 'ALTO': 'critical',
                 'MEDIO': 'high',
                 'BAJO': 'medium'
             }
-            
+
             # Extraer año/mes/día del date del boletín
             year, month, day = None, None, None
             if boletin and boletin.date and len(boletin.date) >= 8:
                 year = int(boletin.date[:4])
                 month = int(boletin.date[4:6])
                 day = int(boletin.date[6:8])
-            
+
             result.append({
                 'id': analisis.id,
                 'type': analisis.tipo_curro or analisis.categoria or 'general',
@@ -271,12 +271,12 @@ async def get_recent_red_flags(
                     'day': day
                 } if boletin else None
             })
-        
+
         return {
             'total': len(result),
             'flags': result
         }
-        
+
     except Exception as e:
         import traceback
         print(f"Error in get_recent_red_flags: {str(e)}")
@@ -291,7 +291,7 @@ async def get_recent_red_flags(
 @router.get("/timeline")
 async def get_analysis_timeline(
     db: Session = Depends(get_sync_db)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get timeline of workflow execution activity
     """
@@ -300,18 +300,18 @@ async def get_analysis_timeline(
         workflows = db.query(AgentWorkflow).filter(
             AgentWorkflow.status == 'completed'
         ).order_by(AgentWorkflow.created_at).all()
-        
+
         timeline = []
         for wf in workflows:
             # Contar análisis generados por este workflow (aproximado por fecha)
             analyses_count = db.query(func.count(Analisis.id)).filter(
                 Analisis.created_at >= wf.created_at
             ).scalar() or 0
-            
+
             duration = 0
             if wf.updated_at and wf.created_at:
                 duration = (wf.updated_at - wf.created_at).total_seconds()
-            
+
             timeline.append({
                 'id': wf.id,
                 'name': wf.workflow_name or f"Workflow #{wf.id}",
@@ -321,12 +321,12 @@ async def get_analysis_timeline(
                 'processed_documents': analyses_count,
                 'duration_seconds': duration
             })
-        
+
         return {
             'total_executions': len(timeline),
             'timeline': timeline
         }
-        
+
     except Exception as e:
         import traceback
         print(f"Error in get_analysis_timeline: {str(e)}")

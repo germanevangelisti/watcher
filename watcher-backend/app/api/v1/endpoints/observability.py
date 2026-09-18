@@ -1,12 +1,11 @@
 """
 API endpoints para observability y telemetría
 """
-from fastapi import APIRouter
-from typing import Optional, Dict
-from pydantic import BaseModel, ConfigDict
 
-from app.core.observability import observability, traced_operation
 from app.core.events import event_bus
+from app.core.observability import observability, traced_operation
+from fastapi import APIRouter
+from pydantic import BaseModel, ConfigDict
 
 router = APIRouter()
 
@@ -15,13 +14,13 @@ class VCPMetrics(BaseModel):
     model_config = ConfigDict(protected_namespaces=())
 
     vcp_score_current: float
-    vcp_score_by_boletin: Dict[str, float]
+    vcp_score_by_boletin: dict[str, float]
     aius_total: int
     aius_verified: int
     aius_unverifiable: int
     aius_contradicted: int
-    verification_latency_p50_ms: Optional[float]
-    verification_latency_p95_ms: Optional[float]
+    verification_latency_p50_ms: float | None
+    verification_latency_p95_ms: float | None
     requires_attention: bool  # True if contradicted > 0 or vcp_score < 0.85
 
 
@@ -71,7 +70,7 @@ async def get_operation_stats(operation_name: str):
 
 
 @router.get("/events")
-async def get_event_history(event_type: Optional[str] = None, limit: int = 100):
+async def get_event_history(event_type: str | None = None, limit: int = 100):
     """
     Obtiene historial de eventos
     """
@@ -140,15 +139,15 @@ async def get_vcp_dashboard():
         aius_contradicted = int(counters.get("vcp.aius_contradicted", 0))
 
         # Collect per-boletin scores from gauges
-        vcp_score_by_boletin: Dict[str, float] = {
+        vcp_score_by_boletin: dict[str, float] = {
             key.replace("vcp.score.boletin_", ""): float(val)
             for key, val in gauges.items()
             if key.startswith("vcp.score.boletin_")
         }
 
         # Compute latency percentiles from histogram
-        p50: Optional[float] = None
-        p95: Optional[float] = None
+        p50: float | None = None
+        p95: float | None = None
         if latency_values:
             p50 = observability.metrics._percentile(latency_values, 50)
             p95 = observability.metrics._percentile(latency_values, 95)
