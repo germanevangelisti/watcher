@@ -39,12 +39,26 @@ try:
 except ImportError:
     pass
 
+_IMPORT_ERROR: str | None = None
 try:
     import chromadb
     from chromadb.config import Settings
     import google.generativeai as genai
 except ImportError as e:  # pragma: no cover - entorno sin dependencias
-    print(f"❌ Error importando dependencias: {e}")
+    # No abortar en import: test_reindex_embeddings.py importa este módulo
+    # para testear su lógica, y un sys.exit() acá corta la colección entera
+    # de la suite con INTERNALERROR (DT-4).
+    chromadb = None  # type: ignore[assignment]
+    Settings = None  # type: ignore[assignment]
+    genai = None  # type: ignore[assignment]
+    _IMPORT_ERROR = str(e)
+
+
+def _require_deps() -> None:
+    """Aborta con mensaje útil sólo al ejecutar, no al importar."""
+    if _IMPORT_ERROR is None:
+        return
+    print(f"❌ Error importando dependencias: {_IMPORT_ERROR}")
     print("\n📦 Instala las dependencias:")
     print("   pip install chromadb google-generativeai")
     sys.exit(1)
@@ -242,6 +256,7 @@ def _parse_args(argv=None) -> argparse.Namespace:
 
 
 async def main(argv=None) -> int:
+    _require_deps()
     args = _parse_args(argv)
     result = await reindex(
         persist_dir=args.persist_dir,
