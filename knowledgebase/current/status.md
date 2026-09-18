@@ -1,9 +1,9 @@
 # Estado Actual — Watcher Agent
 
-**Última actualización:** 2026-09-15
+**Última actualización:** 2026-09-18
 **Snapshot del momento.** Se pisa al avanzar. La historia completa está en `docs/changelog.md` y el historial de git.
 
-> Rama activa: `feature/V.2-matching-denominador`. Handoff: [next-session.md](next-session.md). [V.2](../backlog/V.2-matching-denominador.md) hecho.
+> **V.2 mergeada a `main`** (`7a366b0`) el 2026-09-18, sin `sqlite.db`: el binario se dio de baja del índice (`git rm --cached`) porque estaba trackeado pese a `*.db` en `.gitignore`. Handoff: [next-session.md](next-session.md).
 
 ---
 
@@ -82,14 +82,30 @@ Ninguno de producto. Notion MCP no disponible — el tablero quedó sin actualiz
 4. DS Lab scoring a nivel documento vs per-acto.
 5. CI (`requirements.txt`, Py 3.10, tests `continue-on-error`).
 6. UI v2 sin compliance / menciones / jurisdicciones / mapa.
-7. 6 módulos de test no colectan: `watcher_monolith` / `kba_agent` no existen. `test_reindex_embeddings.py` rompe la colección entera porque `reindex_google_embeddings.py` hace `sys.exit(1)` al importarse sin `GOOGLE_API_KEY`.
-8. `ruff check .` da 2.668 errores de base (config `[tool.ruff]` de `pyproject.toml` no se aplica con ruff 0.16). `make lint` no pasa desde antes de P.7.
+7. ✅ Resuelto (DT-4/DT-5, 2026-09-18): la suite colecta entera. `reindex_google_embeddings.py` ya no hace `sys.exit(1)` al importarse; los 3 módulos con prefijo `watcher_monolith` se revivieron y los 3 de `kba_agent`/`raga_agent` usan `importorskip`. Suite: **15 failed, 637 passed, 7 skipped** (antes 6 errores de colección y ~50 tests que nunca corrían).
+8. Lint: causa raíz resuelta (DT-6 — `ruff.toml` tapaba `pyproject.toml`). Deuda real medida: **8.327 → 643 errores**. `make lint` **sigue sin pasar**: el residual (DT-7) es `E501` 439 + `B904` 97 + `N806` 34, sin autofix, diferido a historia propia.
 
 ---
 
 ## Próximos pasos
 
-1. Mergear V.2 **sin** `sqlite.db`.
-2. Ingest mayo+ si hace falta cobertura (el matching ya no infla las 4 alertas de abril).
-3. CGE T2 cuando Hacienda publique (contraste aparte, no tercera barra).
-4. UI huérfana y CI (paralelo).
+1. ✅ V.2 mergeada a `main` sin `sqlite.db` (2026-09-18).
+2. **Honestidad del contraste** — el número que muestra la UI no es el que dice ser (ver *Hallazgos del corte*, abajo).
+3. Sanear `presupuesto_base`: el denominador tiene basura del parser.
+4. Ingesta mayo–septiembre: el producto muestra abril y hoy es septiembre.
+5. DT-7 (residual de lint) e ingest CGE T2 cuando Hacienda publique.
+
+---
+
+## Hallazgos del corte (2026-09-18)
+
+Medido sobre el ledger canónico del corte abril (`is_duplicate=0`):
+
+| Hallazgo | Evidencia |
+|---|---|
+| **"Compromiso" es 99,7% `llamado`** | $701.8B de $703.7B son licitaciones publicadas. Compromiso legal real (adjudicación + contrato) = **$1.9B = 0,27%** de la barra |
+| **34,7% del gasto no tiene denominador** | unmatched $244.0B / 141 filas vs matched $460.8B / 228 |
+| **La barra de ejecución está vacía** | `pago` = $1.115B contra $703.7B de compromiso (57 filas) |
+| **Denominador con artefactos** | 29 filas / **$1.09T (14,5% del presupuesto)** con texto en `partida_presupuestaria` (`'Recursos'`, `'Cuentas'`, `''`); caso 755 de Seguridad con fila basura ($94.45B) + fila real ($90.01B) para el mismo programa |
+| **Cobertura temporal** | `boletines` hasta 2026-04; hoy 2026-09-18 |
+| **Recall de extracción** | 44,4% (gold set) — se mide la mitad de los actos |

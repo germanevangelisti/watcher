@@ -162,8 +162,10 @@ Medición 2026-09-14 tras P.7.3: `presupuesto_base` 480 filas; match **90/131** 
 | DT-1 | Modelo de embeddings inconsistente (`gemini-embedding-001` vs `text-embedding-004`) | 0 | ✅ resuelto (A1) |
 | DT-2 | Tests de `indexing_service` hacen `await` sobre sesión SQLAlchemy síncrona del fixture | 7 | ⬜ abierto |
 | DT-3 | `scripts/parse_excel_presupuesto.py` importaba `pandas` (no declarado) en el top level e impedía colectar `test_etl_presupuesto.py` | P | ✅ resuelto (P.7.2, import perezoso) |
-| DT-4 | `reindex_google_embeddings.py` hace `sys.exit(1)` al importarse sin `GOOGLE_API_KEY` → INTERNALERROR que corta la colección de toda la suite | 7 | ⬜ abierto |
-| DT-5 | 6 módulos de test no colectan: `watcher_monolith` y `kba_agent` no existen en el repo | 7 | ⬜ abierto |
-| DT-6 | `[tool.ruff]` de `pyproject.toml` no se aplica con ruff 0.16 (usa defaults: line-length 88 y reglas extra); `ruff check .` da 2.668 errores | 7 | ⬜ abierto |
+| DT-4 | `reindex_google_embeddings.py` hace `sys.exit(1)` al importarse sin `GOOGLE_API_KEY` → INTERNALERROR que corta la colección de toda la suite | 7 | ✅ resuelto (2026-09-18, `_require_deps()`) |
+| DT-5 | 6 módulos de test no colectan: `watcher_monolith` y `kba_agent` no existen en el repo | 7 | ✅ resuelto (2026-09-18: 3 revividos por prefijo, 3 con `importorskip`) |
+| DT-6 | `ruff.toml` (80 bytes) tiene precedencia sobre `pyproject.toml` en ruff y solo define `per-file-ignores`: `select` y `line-length = 100` nunca se aplicaron. Ruff corría con defaults | 7 | ✅ causa raíz resuelta (2026-09-18) |
+| DT-7 | Residual de lint tras el autofix: 643 errores sin autofix posible — `E501` 439 (líneas >100), `B904` 97 (`raise` sin `from`), `N806` 34. Concentrados en `app/db/models.py` (49 E501), endpoints y agents | 7 | ⬜ abierto (diferido a historia propia) |
 
 > Sincronizado con commits hasta `da098b7` — 2026-06-26. Bugs DT-3..DT-6 detectados en P.7 (2026-09-13).
+> DT-4..DT-7 trabajados el 2026-09-18 (rama `chore/lint-normalization`). Detalle de DT-6: la deuda real era 8.327 errores, no 2.668 — el número chico era el de los defaults, no el del ruleset del proyecto.
