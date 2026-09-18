@@ -212,8 +212,15 @@ una hipótesis mía.
       El numerador no se tocó ($34,45B, el mismo acto de V.3): lo que estaba mal
       era el denominador. Alertas: 1 → 0, con el motivo escrito acá y en el
       commit. **No se silenció: se midió.**
-- [ ] `make test` / lint sin errores nuevos (A/B con `git stash`, como V.3).
-- [ ] `knowledgebase/current/` actualizado. No se commitea `sqlite.db`.
+- [x] `make test` / lint sin errores nuevos (A/B, como V.3). Suite: **15 failed,
+      663 passed, 7 skipped** — los 15 son los mismos 5 archivos pre-existentes
+      (DT-2/DT-3). Lint: **642 errores en la rama y 642 en `main`**, cero nuevos.
+      `make` no existe en este shell: corrí los targets a mano (`uv run pytest`,
+      `uv run ruff check .`, `npx tsc --noEmit`, `npx eslint src`) y lo digo acá.
+- [x] `knowledgebase/current/` actualizado (corte V.4 + foco + deuda). `sqlite.db`
+      no se commiteó: el reparo es una operación local sobre la DB, no un archivo
+      del repo. Backup previo en `/tmp` y diff de `presupuesto_base` revisado fila
+      por fila antes de dar por bueno el reparo.
 
 ## Slices (orden)
 
@@ -248,7 +255,30 @@ significa el número que ya está en pantalla. V.4.3 es el único que escribe.
 ## Riesgo principal
 
 V.4.3 es el único slice que escribe, y `presupuesto_base` es el **techo de todos los
-%**. Un reparo que agregue o cambie filas mueve todos los denominadores. Backup de
-`sqlite.db` antes, y el diff de `presupuesto_base` revisado fila por fila antes de
-commitear. Si el reparo no es confiable, se queda en V.4.2 (declarar) — que es
-valioso por sí solo.
+%**. Un reparo que agregue o cambie filas mueve todos los denominadores.
+
+Ejecutado con los tres frenos puestos: backup de `sqlite.db` antes, el reparo escribe
+**sólo** la columna `organismo` (ni ids, ni montos, ni filas), y el diff se contrastó
+por dos vías independientes —480 filas e ids idénticos, total idéntico; y los 89
+organismos del contraste apareados por (count, compromiso, ejecución, matched), con
+0 huérfanos y **1** solo cambio de denominador.
+
+Lo que queda como lección para el próximo slice que escriba: el diff de una tabla de
+las que todos los % cuelgan se audita **apareando los agregados**, no leyendo 375
+nombres. Leer 375 nombres no dice si el techo se movió; aparear 89 organismos sí, y
+además dice cuánto.
+
+## Resultado V.4 (cierre)
+
+| Slice | Entrega | Cómo se verificó |
+|---|---|---|
+| V.4.1 | Período + calendario en endpoint y pantalla | endpoint contra `sqlite.db`: 3 de 12 meses, 58 + 2 días, 0 faltantes |
+| V.4.2 | Techo partido en verificable / sin dueño | endpoint: $706,6B · 74 · 9,38% · verificable $6,825T |
+| V.4.3 | Nombres recuperados desde el PDF | `--repair-db` + diff apareado: 74 → 0 truncos, 1 solo denominador movido, alertas 1 → 0 |
+
+Los tres slices son read-only salvo el tercero, y los tres se midieron sobre la DB
+real antes de escribirlos: **cuatro hipótesis de esta épica murieron al medirlas**
+(H2, H3 en dos partes, y el "los nombres no se pueden recuperar") y una se confirmó
+con más precisión de la esperada (H4). El patrón de los cuatro errores fue el mismo:
+concluir un hecho sobre el mundo desde un estado agregado sin leer el dato que lo
+explicaba.
