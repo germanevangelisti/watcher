@@ -117,7 +117,7 @@ Ordenado por valor de negocio. Estatus: `idea` | `refinado` | `en progreso` | `h
 ---
 
 ## Épica V — Verificación / ground truth
-> V.1 hecho · V.2 hecho · [V.1](V.1-verificar-pipeline-vs-realidad.md) · [V.2](V.2-matching-denominador.md)
+> V.1–V.6 hechos · V.5 cerró el período · [V.1](V.1-verificar-pipeline-vs-realidad.md) · [V.2](V.2-matching-denominador.md) · [V.3](V.3-honestidad-contraste.md) · [V.4](V.4-limites-del-cociente.md) · [V.5](V.5-ingesta-mayo-septiembre.md) · [V.6](V.6-dedup-licitaciones-republicadas.md)
 
 | # | Historia | Criterio de aceptación | Estado |
 |---|---|---|---|
@@ -130,6 +130,22 @@ Ordenado por valor de negocio. Estatus: `idea` | `refinado` | `en progreso` | `h
 | V.2.2 | S-511 / Unidad Ejecutora | No matchear a Dirección de Ministerio | ✅ hecho |
 | V.2.3 | Denominador por organismo | `%` vs suma vigente del organismo canónico | ✅ hecho |
 | V.2.4 | Truncados `presupuesto_base` | `MINISTERIO DE` / secretarías no cuelgan $50B de $1.9B | ✅ hecho |
+| V.3 | Honestidad del contraste | El `pb_id` persistido se revalida; dedup robusto; UI no silencia >100% | ✅ hecho (V.3.1/32/33) |
+| V.4 | Límites del cociente | El `%` declara su período y su techo; 74 truncos recuperados del PDF | ✅ hecho (V.4.1/42/43) |
+| V.5 | Ingesta mayo–septiembre | 5 meses ingeridos, calendario sin huecos, ETL re-corrido, gate exit 0 | ✅ hecho (2026-09-19) |
+| V.6 | Dedup de licitaciones republicadas | `_normalize_acto` unifica grafías; A/B medido; contra-ejemplos con test | ✅ hecho |
+| V.7 | El monto del acto de al lado | El extractor no mezcla columnas (4ª sección) | ⬜ pendiente |
+| V.8 | El monto del aviso vecino | Guard en `crud.py:208` contra el **texto de entrada** (no la cita) | ⬜ pendiente* |
+
+\* El caso catastrófico de V.8 ($3,0B en una fila, alerta fabricada de 10.850%) está
+**reparado a mano contra el PDF**, con evidencia en `datos_extra`; la reparación se
+pierde si el boletín se re-extrae.
+
+> **Actualización V.5 (2026-09-19).** El período medido pasa de 3 a **8 meses**
+> (feb–sep). Cifras corregidas: feb–abr **$538,44B → $519,57B** canónicos por la
+> dedup de V.6; alertas >100% **5 → 3** (ninguna nueva); el techo no se mueve
+> ($7,531907T). Queda **2026-01** como único mes vencido sin ingesta. Toda historia
+> que cite el ledger pre-V.5 debe leerse con estas dos correcciones.
 
 No mezclar capa A (pipeline vs boletín) con capa C (boletín vs caja). Mayo+ ya no multiplica matching basura de las 4 alertas; el recall 44.4% sigue siendo deuda de extracción.
 

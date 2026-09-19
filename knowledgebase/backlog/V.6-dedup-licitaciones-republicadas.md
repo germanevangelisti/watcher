@@ -2,7 +2,7 @@
 
 **Épica:** V — Verificación / ground truth (capa A: pipeline vs boletín)
 **Puntos:** 3
-**Estado:** en progreso
+**Estado:** hecho (2026-09-19) — A/B re-medido sobre el corpus final; gate en exit 0
 **Rama:** `main`
 **Depende de:** V.5 (el defecto lo destapó la ingesta de mayo–septiembre)
 **Origen:** hallazgo medido durante V.5, 2026-09-19
@@ -59,6 +59,42 @@ viejo y con el nuevo. El canónico total pasa de **$1.600,12B a $1.312,60B**
 | 2026-07 | $719,22B | $478,56B | −$240,66B |
 | 2026-08 | $27,64B | $27,64B | $0,00B |
 
+### Corpus final (re-medición prometida arriba, 2026-09-19)
+
+Con la extracción **cerrada** (`ok=469 fail=0`), el mismo A/B sobre el mismo
+código da:
+
+| | canónico | duplicados | match |
+|---|---|---|---|
+| ANTES (clave vieja) | $2.089,73B | 202 | 64,8% |
+| DESPUÉS (clave nueva) | $1.776,41B | 248 | 64,8% |
+| **delta** | **−$313,32B** | +46 | 0 |
+
+| mes | canónico antes | canónico después | delta |
+|---|---|---|---|
+| 2026-02 | $101,73B | $97,83B | −$3,90B |
+| 2026-03 | $208,79B | $206,45B | −$2,34B |
+| 2026-04 | $227,92B | $215,29B | −$12,63B |
+| 2026-05 | $159,39B | $140,13B | −$19,26B |
+| 2026-06 | $196,90B | $188,15B | −$8,75B |
+| 2026-07 | $720,70B | $480,05B | −$240,65B |
+| 2026-08 | $253,14B | $227,64B | −$25,50B |
+| 2026-09 | $221,16B | $220,87B | −$0,29B |
+
+**Los tres meses publicados dan idéntico al centavo** que en la medición parcial
+(−$3,90B / −$2,34B / −$12,63B = **−$18,87B**): la corrección de feb–abr queda
+confirmada en el corpus final. **Agosto es la fila que cambia de sentido**: en la
+medición parcial daba $0,00B porque agosto estaba **sin extraer** ($27,64B);
+ahora se mueve **−$25,50B**. El −$287,52B anterior queda como lo que fue: una
+medición sobre corpus parcial, no un número equivocado.
+
+El aporte sigue concentrado: la 5576 de EPEC ($237,29B) es el **76%** de julio.
+Y una corrección de atribución: **esta historia nunca declaró "ACIF −$323B"** —su
+única entrada ACIF es un par duplicado de **$1,06B**—; medido sobre el ledger
+final, ACIF se mueve **−$9,78B**. Los $313B son EPEC y el resto repartido. Si
+alguien cita un "−$323B de ACIF", no sale de acá.
+
+
 **Los 33 pares que el arreglo reconoce son todos republicaciones verificadas**,
 no sólo un número: cada fila que pasa a duplicada aparece en el corpus junto a su
 par —número pelado un día, forma decorada al otro, mismo organismo, mismo monto al
@@ -82,15 +118,18 @@ antes de V.5. No es un efecto de la ingesta y se declara como corrección de V.6
 
 - **EPEC, etapa `llamado`:** $564,54B canónicos → **$327,25B** sin la duplicación.
   Contra su techo de $2.627,77B pasa de 21,5% a 12,5%. No dispara alerta >100%,
-  pero deforma el número publicado al doble en esa etapa.
-- **Sobre el canónico de mayo–septiembre** (hoy $1,034T, extracción en curso):
-  $237,29B = **23%**.
+  pero deforma el número publicado al doble en esa etapa. *(Medido sobre el corpus
+  parcial; la etapa no se re-midió sobre el final.)*
+- **Sobre el canónico de mayo–septiembre:** $237,29B es el **76%** del delta de
+  julio sobre el corpus final (el "23% de $1,034T" de la medición parcial queda
+  viejo: ese total era con la extracción en curso).
 
 > **Tres números, uno solo vale.** Un primer barrido por heurística de substrings
 > sugirió 58 grupos / $304,66B; un prototipo de clave por texto dio $259,58B; el
-> A/B del ETL real da **$287,52B**, que es el autoritativo porque corre el camino
-> de producción. Los otros dos eran aproximaciones con falsos positivos y falsos
-> negativos. Queda escrito para que nadie cite el equivocado.
+> A/B del ETL real da **−$313,32B** sobre el corpus final (**−$287,52B** sobre el
+> parcial), que es el autoritativo porque corre el camino de producción. Los otros
+> dos eran aproximaciones con falsos positivos y falsos negativos. Queda escrito
+> para que nadie cite el equivocado.
 
 ## Criterio de aceptación
 
@@ -106,11 +145,13 @@ antes de V.5. No es un efecto de la ingesta y se declara como corrección de V.6
 - [x] **El campo que ve el usuario no cambia.** `numero_acto` se muestra en
       `boletin-detail.tsx`: el arreglo va en la **clave**, no en el dato guardado.
       La pantalla sigue mostrando `LICITACION PUBLICA No 5576`.
-- [x] **A/B del canónico medido y declarado** (corpus parcial, arriba): el delta
-      por mes se reporta, no se silencia. Re-medición sobre el corpus final al
-      cerrar V.5.
-- [ ] **El gate sigue verde**: `check_match_drift.py` exit 0 después del cambio
+- [x] **A/B del canónico medido y declarado**: el delta por mes se reporta, no se
+      silencia. **Re-medido sobre el corpus final al cerrar V.5** (−$313,32B; ver
+      *Corpus final*, arriba).
+- [x] **El gate sigue verde**: `check_match_drift.py` exit 0 después del cambio
       (la dedup no toca `presupuesto_base_id`, pero se verifica).
+      **Medido al cerrar V.5, sobre la DB real con el corpus completo: exit 0,
+      0 filas con deriva, 0 sin match.**
 - [x] **`make test` y `make lint`**: `test_etl_presupuesto.py` 151/151 (7 tests
       nuevos); el resto del suite igual que antes (15 fallos pre-existentes de
       DT-2/DT-3, ninguno de dedup/ETL). Lint: **0 errores nuevos** — el archivo de

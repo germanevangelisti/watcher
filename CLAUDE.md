@@ -38,8 +38,11 @@ Tipos: `feat` `fix` `refactor` `test` `docs` `chore`
 - [ ] KB actualizada si hubo cambios de arquitectura (ADR)
 
 ## Estado actual del proyecto
-V.1, V.2, V.3 (honestidad del contraste) y **V.4 (límites del cociente)** están en
-`main`; H.1 también. El % declara su período y su techo, y no hay alertas >100%.
-Ver `knowledgebase/current/status.md`.
-**Próxima sesión:** ingesta mayo–septiembre (el producto mide feb–abr y hoy es
-septiembre). Leer `knowledgebase/current/next-session.md`.
+V.1–V.6 y **V.5 (ingesta mayo–septiembre)** están en `main`; H.1 también. El
+producto mide **8 de 12 meses (feb–sep)** con el % declarando su período y su techo,
+sin prorratear la Ley. Quedan **3 alertas >100%**, todas por granularidad del
+denominador y todas visibles (no se silencian); **2026-01** es el único mes vencido
+sin ingesta. Ver `knowledgebase/current/status.md`.
+**Próxima sesión:** V.7 (fuga de monto entre columnas del extractor) y V.8 (el monto
+del aviso vecino). Ojo: arreglarlas obliga a **re-extraer** el corpus. Leer
+`knowledgebase/current/next-session.md`.

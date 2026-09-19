@@ -2,10 +2,17 @@
 
 **Épica:** V — Verificación / ground truth (capa A: pipeline vs boletín)
 **Puntos:** 5 (operativo: no agrega features, cierra el período)
-**Estado:** en progreso
+**Estado:** hecho (2026-09-19) — extracción cerrada, ledger reconstruido, gate en 0
 **Rama:** `main` (la ingesta es una operación sobre `sqlite.db`, no un cambio de código)
 **Depende de:** V.4 hecho (el producto declara su período; V.5 lo extiende)
 **Handoff:** [next-session.md](../current/next-session.md)
+
+**Resultado del corte, medido:** may–sep ingeridos (472 `completed` / 33
+`justified:` / 0 en vuelo, **0 fallos sin justificar**), la pantalla pasa de **3 a
+8 meses** con `dias_faltantes = 0`, el ledger queda en **1220 filas / 972 canónicas
+/ $1.776,41B** con **3 alertas >100%** (eran 5, ninguna nueva) y el techo intacto
+en **$7,531907T**. El gasto sin denominador es **364 actos / $404,52B**, declarado
+con causas. Sin una línea de código cambiada.
 
 ---
 
@@ -22,22 +29,53 @@ los meses que le faltan.**
 
 ## Criterio de aceptación
 
-- [ ] **Los 5 meses entran a `boletines`.** 202605 … 202609 con el calendario
+- [x] **Los 5 meses entran a `boletines`.** 202605 … 202609 con el calendario
       cerrado: cada día hábil (lun–vie) es `completed` (el boletín salió) o está
       justificado (`justified:`, el boletín no salió), y **0 días sin explicación**.
       El invariante del corte: días hábiles = días con PDF + weekdays sin PDF.
-- [ ] **Los actos se extraen.** `process_pending.py` sobre los 5 meses: 0 slots
+      **Medido al cierre:** 472 `completed` / 33 `failed` (todos `justified:`) /
+      0 en vuelo · `dias_faltantes = 0` · `dias_justificados = 8` · 153 días con
+      publicación. `vencidos_sin_ingesta = ('2026-01',)` — el hueco anterior al
+      período declarado, que esta historia no toca.
+- [x] **Los actos se extraen.** `process_pending.py` sobre los 5 meses: 0 slots
       `pending` al cerrar, y los `failed` declarados con su motivo (no borrados).
-- [ ] **El ledger se re-corre y el matcher no driftea.** `etl_analisis_to_ejecucion.py`
+      **Medido:** `ok=469 fail=0`, y **0 fallos sin justificar en todo el corpus**.
+- [x] **El ledger se re-corre y el matcher no driftea.** `etl_analisis_to_ejecucion.py`
       + `scripts/check_match_drift.py` → **exit 0**. Si el matcher vivo discrepa del
       `presupuesto_base_id` persistido, la ingesta no está cerrada.
-- [ ] **La pantalla declara el período nuevo.** `cobertura_temporal` pasa de 3 a 8
+      **Medido:** ETL real 1220 → 248 duplicados → 972 canónicos; gate **exit 0,
+      0 filas**. La línea base roja (exit 1, 9 filas, $14,30B) era el estado *de
+      entrada* del paso 4, no un pendiente: el re-corrido reasigna el
+      `presupuesto_base_id` entero.
+- [x] **La pantalla declara el período nuevo.** `cobertura_temporal` pasa de 3 a 8
       meses (feb–sep), `meses_vencidos_sin_ingesta` deja de listar may–sep, y las
       alertas >100% nuevas (si aparecen) tienen motivo medido — no se silencian.
-- [ ] **No se prorratea la Ley.** El % sigue dividiendo por la Ley anual completa.
-      Es la regla que V.4 dejó escrita y V.5 no la toca.
-- [ ] `knowledgebase/current/` actualizado (corte V.5 + estado + próximos pasos).
+      **Medido:** 8 de 12 meses, 0 días faltantes, may–sep fuera de vencidos; las
+      alertas pasan de **5 a 3** (las dos que se van son las de extracción, con
+      predicción escrita antes) y **ninguna es nueva**; las 3 tienen causa medida
+      (granularidad del denominador) y siguen visibles.
+- [x] **No se prorratea la Ley.** El % sigue dividiendo por la Ley anual completa.
+      Es la regla que V.4 dejó escrita y V.5 no la toca. **Medido:** el techo sigue
+      en 480 filas / **$7,531907T** / 0 sin dueño, idéntico al de V.4.
+- [x] `knowledgebase/current/` actualizado (corte V.5 + estado + próximos pasos).
       `sqlite.db` y los PDFs **no** se commitean (gitignored).
+
+**DoD, medido (no `make`: no está disponible en este entorno):**
+
+- Tests: **15 failed, 670 passed, 7 skipped**. Los 15 son los **mismos 5 archivos**
+  de siempre (DT-2/DT-3: `indexing_service`, `reindex_embeddings`,
+  `adversarial_verification`, `pds_scrapers`, `security_middleware`), todos por
+  dependencia de entorno (chromadb ausente, separador de path de Windows, event
+  loop). **Cero nuevos** — y no podían serlo: esta historia **no tocó una línea de
+  código**. Los `passed` suben de 663 (V.4) a 670 porque **V.6 agregó 70 líneas de
+  test** después del cierre de V.4 (commit `5cd4cc9`), verificado en el `--stat`.
+- Lint: **642 errores** excluyendo el scratch, exactamente el residual **DT-7** ya
+  declarado y medido en V.4 ("642 en la rama y 642 en `main`"). **Cero nuevos.**
+  `make lint` **no pasa** y no pasaba antes de V.5: el target corre
+  `ruff check .` pero está envuelto en `command -v ruff || echo "⚠️ ruff not
+  installed"`, así que **pasa en vacío** si el binario no está en el PATH. La
+  deuda es DT-7, diferida a historia propia.
+
 
 ## Estado de partida (medido 2026-09-19, antes de tocar nada)
 
@@ -288,7 +326,7 @@ determinada** desde acá (el `origin` sí explica *cuáles* faltan).
 la **geometría**, no el texto: una auditoría por texto sigue siendo posible sobre
 todo el corpus; lo que no se puede es volver al papel a medir columnas.
 
-### 8. El gate de drift está rojo **igual que antes de V.5**
+### 8. El gate de drift estaba rojo **antes** del paso 4 (y el paso 4 lo cierra)
 
 `check_match_drift.py` → **exit 1**, 9 filas con deriva, $14,30B: exactamente la
 línea base pre-V.5 (`drift_baseline.txt`). La ingesta no agrega deriva; la
@@ -356,11 +394,18 @@ Las dos que fallan **tienen motivo medido, y ninguna se ajusta**:
 - **Los $2.990,14B estaban mal derivados.** Salieron de "los $3.000,01B del 5592
   + $20,18B de los edictos − $30,00B correctos del 5592", o sea de **2 de las 5
   filas EPEC**: no contaban la **suba** de 8180 (de $1,49M a $3,679B, porque lo
-  guardado era la tasa BOE y lo correcto es el presupuesto) ni la de 8184. La
-  caída atribuible a las 9 reparaciones, medida fila por fila sobre la copia, es
-  **$2.966,33B**. El resto hasta $3.299,37B es la **dedup entre días que sólo
-  puede hacer el ETL por lotes** —la tubería viva escribe boletín por boletín y no
-  ve la republicación—, que es la corrección que **V.6** ya había declarado.
+  guardado era la tasa BOE y lo correcto es el presupuesto) ni la de 8184. El
+  resto hasta la caída total es la **dedup entre días que sólo puede hacer el ETL
+  por lotes** —la tubería viva escribe boletín por boletín y no ve la
+  republicación—, que es la corrección que **V.6** ya había declarado.
+
+  > **Corrección (cierre, 2026-09-19).** Acá decía que la caída por las 9
+  > reparaciones, "medida fila por fila sobre la copia", era **$2.966,33B**. Ese
+  > número **no salió del ledger**: salió de `prediccion_paso4.py`, la réplica que
+  > ya se había tirado, y estaba mal por **4 edictos ($26,85B)**: la réplica los
+  > marcaba duplicados y el ledger real los tiene canónicos. Medido diffeando los
+  > **dos ledgers reales**, es **$2.986,48B**. La cifra vieja se deja escrita
+  > porque es la tercera vez que la misma réplica se equivoca en el reparto.
 - **feb–abr se mueve −$18,87B**, y ese número es **el que V.6 declaró para
   feb–abr**. El `snapshot_antes.json` contra el que se comparó es anterior al pase
   por lotes, así que "V.6 ya está adentro" era falso para ese snapshot: la
@@ -371,6 +416,69 @@ la causa ya declarada en el hallazgo 2 (granularidad del denominador, más el
 criterio `llamado` cuenta como compromiso): Infraestructura Hídrica **1561,58%**,
 Seguridad **136,01%**, Desarrollo Sostenible **184,80%**. Las dos que se van son
 las dos de extracción, que es lo que la reparación buscaba.
+
+### El paso 4 corrido sobre la DB real (cierre, 2026-09-19)
+
+La extracción cerró con **`ok=469 fail=0`**, 0 boletines en vuelo y **0 fallos sin
+justificar en todo el corpus**; `dias_faltantes = 0`, `vencidos_sin_ingesta =
+('2026-01',)`. Antes de correr el ETL se tomó un `VACUUM INTO` (`pre_paso4.db`,
+integridad `ok`) como punto de retorno, porque el ETL arranca con
+`DELETE FROM ejecucion_presupuestaria`.
+
+Entrada: **4619 filas de `analisis` con monto > 0** (la copia tenía 3231), ledger
+vivo **1225 filas / $5.076,20B canónicos**, con feb–abr en **$538,44B** — el total
+previo que este documento nombra como referencia. Salida del ETL: **1220
+procesados → 248 duplicados → 972 canónicos**, 790 con match (64,8%).
+
+| predicción | esperado | medido en la DB real | veredicto |
+|---|---|---|---|
+| numerador de Defensa | ~$0,000B | **$0,0001B** (n=1) | **acierta** |
+| alerta de Defensa | desaparece | **desaparece** (no está entre las 3) | **acierta** |
+| numerador de Saneamiento | < $0,05B | **$0,0447B**, comp **1,89%** | **acierta** |
+| alerta de Saneamiento | desaparece | **desaparece** | **acierta** |
+| numerador de EPEC | ≥ $43,49B | **$594,96B** (6 grafías: $391,51B) | **acierta** |
+| caída del canónico | $2.990,14B | **$3.299,79B** | **falla** |
+| techo | no se mueve | 480 filas / $7,531907T / 0 sin dueño | **acierta** |
+| feb–abr | no se mueve | **−$18,87B** (crudo idéntico) | **falla** |
+
+Los tres numeradores dan **al centavo lo mismo que en la copia**, con 1388 filas
+de `analisis` más: la extracción que faltaba no movió a ninguno de los tres.
+
+**La caída del canónico, desarmada con dos mediciones que no se pisan** (una
+diffea los dos ledgers reales, la otra es el A/B de V.6 sobre el cambio de clave):
+
+| componente | monto |
+|---|---|
+| total (pre $5.076,20B → post $1.776,41B) | **−$3.299,79B** |
+| de eso: las 9 reparaciones de V.8 | **−$2.986,48B** |
+| de eso: la dedup entre días de V.6 (A/B) | **−$313,32B** |
+| de eso: feb–abr (dentro de V.6) | −$18,87B |
+
+El A/B de V.6 sobre el corpus final da **−$313,32B** (canónico $2.089,73B →
+$1.776,41B, duplicados 202 → 248), y los dos instrumentos cierran: la diff de
+ledgers deja un resto de **$313,31B** y el A/B mide **$313,32B** por un camino
+independiente. **El resto era la dedup, y ahora está medido, no inferido.**
+
+**Lo que este cierre corrige de V.6**: su A/B declarado (−$287,52B, duplicados
+151→183, agosto en $0,00B) se corrió con agosto **sin extraer**. Sobre el corpus
+final es **−$313,32B** y agosto se mueve **−$25,50B**. El aporte mayor sigue
+siendo la 5576 de EPEC ($237,29B, **76%** del total del mes de julio). De paso se
+corrige una atribución que se me había pegado: **V.6 nunca declaró "ACIF
+−$323B"** —su única entrada ACIF es un par duplicado de **$1,06B**— y medido, ACIF
+se mueve **−$9,78B**. Los $313B son EPEC ($237,29B en un solo acto) y el resto
+repartido.
+
+**Y feb–abr queda explicado del todo.** Contra el snapshot tomado justo antes del
+paso 4 (el que aísla la ingesta) los tres meses tienen el **crudo idéntico al
+centavo** ($210,71B / $405,52B / $332,17B) y sólo suben los duplicados (19→24,
+16→23, 34→40): eso es dedup, no ingesta —una ingesta de may–sep no puede agregar
+filas a febrero—. La caída canónica es **−$18,87B**, exactamente la que el A/B de
+V.6 le asigna a feb–abr. Las dos mediciones coinciden.
+
+Contra el snapshot **viejo** (`snapshot_antes.json`, 03:42) feb–abr también da
+−$18,87B, pero ese snapshot no distingue las dos causas. Por eso el número es el
+mismo y la conclusión es distinta: la primera comparación no probaba nada.
+
 
 ### Un instrumento que se tiró (y por qué se anota)
 

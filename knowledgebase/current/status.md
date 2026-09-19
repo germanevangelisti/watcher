@@ -1,8 +1,13 @@
 # Estado Actual — Watcher Agent
 
-**Última actualización:** 2026-09-18
+**Última actualización:** 2026-09-19
 **Snapshot del momento.** Se pisa al avanzar. La historia completa está en `docs/changelog.md` y el historial de git.
 
+> **V.5 cerrada** (2026-09-19): el producto pasa de medir **3 a 8 meses** (feb–sep).
+> Extracción cerrada (`ok=469 fail=0`), ledger reconstruido, gate de drift en 0.
+> **No cambió una línea de código**: es una operación sobre `sqlite.db`.
+> Handoff: [next-session.md](next-session.md).
+>
 > **V.4 mergeada a `main`** (2026-09-18): el cociente deja de mentir por período y por
 > techo. Handoff: [next-session.md](next-session.md).
 >
@@ -16,10 +21,10 @@
 
 | Campo | Valor |
 |---|---|
-| Release | v2.0.0 + H.1 + P.7 + V.1 + V.2 + V.3 + V.4 |
-| Estado | V.4 hecho (V.4.1/42/43); **0** alertas >100%; el % declara su período y su techo |
+| Release | v2.0.0 + H.1 + P.7 + V.1 + V.2 + V.3 + V.4 + V.6 + V.5 |
+| Estado | **V.5 hecha (2026-09-19)**: 8 de 12 meses medidos; **3** alertas >100%, todas con causa medida |
 | Stack LLM | Gemini (cloud) + LocalPro/Ollama (`qwen2.5:7b`) |
-| Pendiente inmediato | Ingesta mayo–septiembre: el producto mide feb–abr y hoy es septiembre. |
+| Pendiente inmediato | **2026-01** es el único mes vencido sin ingesta. Después: V.7 (columnas del extractor) y V.8 (monto del aviso vecino), que necesitan re-extracción y son decisión de costo. |
 
 ---
 
@@ -28,7 +33,7 @@
 | Épica | Estado | Notas |
 |---|---|---|
 | Épica 0: Migración Gemini | Hecho | Reindex operativo Google aún pendiente si se sigue en 3072-d |
-| Épica 1: Ingesta | Hecho (parcial) | Transform provincial ahora paralelo (nproc-2) |
+| Épica 1: Ingesta | Hecho (parcial) | Transform provincial ahora paralelo (nproc-2); **feb–sep ingeridos, 2026-01 no** |
 | Épica 2: Extracción | Hecho | Free / Pro / **LocalPro**; gold set recall 44.4% |
 | Épica 3: Feature Engineering | Hecho | Sin cambios en H.1 |
 | Épica 4–5: Índice / retrieval | Hecho | Rerank local-first; colección local separada |
@@ -36,7 +41,67 @@
 | Épica 7: Prod | En curso | H.1; CI/auth/UI huérfana siguen abiertos |
 | H.1 Hardware local | Hecho | Workers nproc-2, overlay Compose, LocalPro |
 | Épica P: Presupuesto | P.1–P.7.4 en `main` | Ledger + Ley 11.088 + UI dos barras |
-| Épica V: Ground truth | V.1 + V.2 + V.3 + V.4 hechos | El dato persistido y la pantalla ahora dicen lo mismo que el matcher; y el cociente declara su período y su techo |
+| Épica V: Ground truth | V.1 … V.6 hechos | El dato persistido y la pantalla dicen lo mismo que el matcher; el cociente declara período y techo; **y ahora el período es feb–sep** |
+
+---
+
+## Corte V.5 (2026-09-19)
+
+Historia: [V.5-ingesta-mayo-septiembre.md](../backlog/V.5-ingesta-mayo-septiembre.md).
+Ingesta de los 5 meses vencidos. **Sin cambios de código**, así que los gates de
+DoD miden el árbol tal como estaba.
+
+| | antes | después |
+|---|---|---|
+| Meses medidos | 3 de 12 (feb–abr) | **8 de 12 (feb–sep)** |
+| Días faltantes | 0 | **0** |
+| Boletines may–sep | 372 `pending` | **472 `completed` / 33 `justified:` / 0 en vuelo** |
+| Ledger | 430 filas · $538,44B canónicos | **1220 filas · 972 canónicas · $1.776,41B** |
+| Alertas >100% | 5 (2 de extracción) | **3**, ninguna nueva |
+| Gasto sin denominador | $140,72B / 140 actos | **$404,52B / 364 actos** |
+| Techo (Ley 11.088) | $7,531907T · 0 sin dueño | **$7,531907T · 0 sin dueño** (idéntico) |
+| Gate de drift | exit 1 · 9 filas · $14,30B | **exit 0 · 0 filas** |
+
+**Titular del corte:** el ciudadano veía **3 meses de gasto divididos por la Ley de
+12**. Ahora ve **8**, con el mismo techo anual y sin prorratear la Ley (regla de
+V.4). Las dos alertas >100% que **desaparecen** eran defectos de extracción con
+reparación probada contra el PDF; las **3 que quedan** son estructurales
+(granularidad del denominador) y siguen a la vista, no silenciadas.
+
+**Corrección a números ya publicados (declarada, no silenciosa):** feb–abr baja de
+**$538,44B a $519,57B** canónicos (**−$18,87B**). No lo causa la ingesta: es la
+dedup de V.6 sobre licitaciones republicadas, que hasta ahora sólo corría al
+reconstruir el ledger por lotes. Sobre el corpus final el A/B de V.6 da
+**−$313,32B** en total (julio −$240,65B, de los cuales **$237,29B son un solo acto
+de EPEC contado dos veces**, la licitación 5576). Los tres meses publicados dan
+idéntico al centavo que en la medición parcial de V.6.
+
+**Predicciones escritas antes de medir, y su veredicto:** 6 de 8 se cumplen. Las
+dos que fallan tienen causa medida y **ninguna expectativa se ajustó**: la caída
+del canónico se había derivado mal ($2.990,14B contra $3.299,79B reales, porque
+omitía la dedup) y "feb–abr no se mueve" era falso contra un snapshot que no
+distinguía ingesta de dedup. Ambas quedaron escritas como fallas en la historia.
+
+**Lo que queda declarado y no arreglado:**
+1. **2026-01** es el único mes vencido sin ingesta (anterior al período que el
+   producto declara).
+2. **123 boletines `completed` perdieron su PDF** en disco. El **texto** de los 123
+   está en `chunk_records` (123/123), así que la auditoría por texto es corpus-wide;
+   lo que no se puede re-verificar es la **geometría** (columnas).
+3. **V.7** (fuga de monto entre columnas) y **V.8** (el monto del aviso vecino en el
+   modelo) son historias abiertas, con el caso catastrófico de V.8 reparado contra
+   el PDF ($3,0B en una fila, 62% del corte de ese momento). Arreglarlas obliga a
+   **re-extraer**: decisión de costo explícita.
+4. **$404,52B sin denominador** (364 actos): entidades que no están en la Ley,
+   fuera de alcance por diseño, o el matcher. Tiene causas por organismo medidas.
+5. DT-7 (lint, 642) y los 15 tests pre-existentes (DT-2/DT-3).
+
+**DoD medido (sin `make`):** tests **15 failed / 670 passed / 7 skipped** — los 15
+en los mismos 5 archivos de DT-2/DT-3, cero nuevos (y no podían serlo: no se tocó
+código); los `passed` suben de 663 a 670 por los tests que **V.6** agregó.
+Lint **642 errores = DT-7**, cero nuevos.
+
+
 
 ---
 
@@ -161,19 +226,20 @@ Ninguno de producto. Notion MCP no disponible — el tablero quedó sin actualiz
 4. DS Lab scoring a nivel documento vs per-acto.
 5. CI (`requirements.txt`, Py 3.10, tests `continue-on-error`).
 6. UI v2 sin compliance / menciones / jurisdicciones / mapa.
-7. ✅ Resuelto (DT-4/DT-5, 2026-09-18): la suite colecta entera. `reindex_google_embeddings.py` ya no hace `sys.exit(1)` al importarse; los 3 módulos con prefijo `watcher_monolith` se revivieron y los 3 de `kba_agent`/`raga_agent` usan `importorskip`. Suite tras V.4: **15 failed, 663 passed, 7 skipped**; los 15 son los mismos 5 archivos pre-existentes de siempre (DT-2/DT-3), cero nuevos.
-8. Lint: causa raíz resuelta (DT-6 — `ruff.toml` tapaba `pyproject.toml`). Deuda real medida: **8.327 → 642 errores**. `make lint` **sigue sin pasar**: el residual (DT-7) es `E501` 439 + `B904` 97 + `N806` 34, sin autofix, diferido a historia propia. Ni V.3 ni V.4 agregaron ninguno (A/B con `git stash`, archivo por archivo).
+7. ✅ Resuelto (DT-4/DT-5, 2026-09-18): la suite colecta entera. `reindex_google_embeddings.py` ya no hace `sys.exit(1)` al importarse; los 3 módulos con prefijo `watcher_monolith` se revivieron y los 3 de `kba_agent`/`raga_agent` usan `importorskip`. Suite tras **V.5** (2026-09-19): **15 failed, 670 passed, 7 skipped**; los 15 son los mismos 5 archivos pre-existentes de siempre (DT-2/DT-3), cero nuevos — y no podían serlo, V.5 no tocó código. Los `passed` suben de 663 (V.4) a 670 por las **70 líneas de test que agregó V.6** (commit `5cd4cc9`, verificado en el `--stat`), posterior al cierre de V.4.
+8. Lint: causa raíz resuelta (DT-6 — `ruff.toml` tapaba `pyproject.toml`). Deuda real medida: **8.327 → 642 errores**. `make lint` **sigue sin pasar**: el residual (DT-7) es `E501` 439 + `B904` 97 + `N806` 34, sin autofix, diferido a historia propia. Ni V.3, ni V.4, ni V.5/V.6 agregaron ninguno (V.5 da **642** excluyendo el scratch: idéntico a la línea base). **Y ojo con el verde falso:** el target `make lint` corre `ruff check .` envuelto en `command -v ruff || echo "⚠️ ruff not installed"`, así que **pasa en vacío** cuando el binario no está en el PATH. Un `make lint` verde no prueba nada por sí solo.
 
 ---
 
 ## Próximos pasos
 
 1. ✅ V.2 mergeada a `main` sin `sqlite.db` (2026-09-18).
-2. **Honestidad del contraste** — el número que muestra la UI no es el que dice ser (ver *Hallazgos del corte*, abajo).
+2. ✅ **Honestidad del contraste** (V.3/V.4) — el número que muestra la UI dice su período y su techo.
 3. ✅ Saneado (V.4.3): 74 organismos truncos reparados desde la jurisdicción del PDF.
-4. **Ingesta mayo–septiembre** — el producto muestra abril y hoy es septiembre. Es la etapa siguiente y la que más mueve la aguja: el gasto medido es un piso de 3 meses.
-5. DT-7 (residual de lint) e ingest CGE T2 cuando Hacienda publique.
-6. Tercera barra "pagado CGE" (no mezclar con el BO) sigue fuera de alcance.
+4. ✅ **Ingesta mayo–septiembre** (V.5, 2026-09-19) — de 3 a **8 meses** medidos. Queda **2026-01** como único mes vencido sin ingesta.
+5. **V.7** (la fuga de monto entre columnas) y **V.8** (el monto del aviso vecino en el modelo): son la causa de fondo de los peores errores de monto del corpus, están medidos y declarados, y arreglarlos obliga a **re-extraer** — decisión de costo explícita.
+6. DT-7 (residual de lint) e ingest CGE T2 cuando Hacienda publique.
+7. Tercera barra "pagado CGE" (no mezclar con el BO) sigue fuera de alcance.
 
 ---
 
