@@ -295,6 +295,13 @@ línea base pre-V.5 (`drift_baseline.txt`). La ingesta no agrega deriva; la
 corrección de nombres de V.4.3 dejó el `presupuesto_base_id` persistido viejo y el
 re-corrido del ETL es el que lo limpia (paso 4 del procedimiento).
 
+**Y el gate se cierra, medido sobre la copia con el ETL ya aplicado**: 0 filas con
+deriva, 0 sin match, **exit 0**. Sobre ese corpus el `presupuesto_base_id` que el
+ledger persiste es el que el matcher vivo asigna, así que la línea base roja no es
+un pendiente de V.5 sino el estado *de entrada* del paso 4. El re-corrido no
+introduce deriva nueva: **la reasigna entera**. La confirmación sobre la DB real
+queda para el cierre.
+
 ## Qué tiene que pasar en el paso 4 (predicción escrita antes de medir)
 
 Las dos reparaciones del hallazgo 5 se aplicaron sobre `analisis`, y el ledger las
@@ -338,6 +345,11 @@ sin denominador 267 actos $367,92B; techo **480 / $7,531907T / 0 sin dueño**.
 | caída del canónico | $2.990,14B | **$3.299,37B** | **falla** |
 | techo | no se mueve | 480 filas / $7,531907T / 0 sin dueño | **acierta** |
 | feb–abr | no se mueve | **se mueve −$18,87B** | **falla** |
+
+**El gate de drift no estaba en la tabla** —se escribió antes de que se me ocurriera
+mirarlo—, así que no lleva veredicto: se midió después, sobre la misma copia, y dio
+**exit 0 con 0 filas** (hallazgo 8). Se dice acá para que nadie lea la tabla como si
+lo hubiera predicho.
 
 Las dos que fallan **tienen motivo medido, y ninguna se ajusta**:
 
