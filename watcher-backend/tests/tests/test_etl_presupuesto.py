@@ -913,6 +913,76 @@ class TestNormalizeActo:
         assert _normalize_acto("DECRETO 056/2026") == "DECRETO056/2026"
 
 
+class TestLicitacionRepublicadaConDosGrafias:
+    """El boletín republica una licitación al día siguiente, escrita distinto.
+
+    Caso testigo (2026-07-22 y 2026-07-23, 4a sección): la Licitación Pública
+    N° 5576 de EPEC S.A.U — "AUMENTO DE DISPONIBILIDAD DE POTENCIA Y MEJORA
+    TECNOLOGICA DEL COMPLEJO HIDROELECTRICO RIO GRANDE", presupuesto oficial
+    $237.291.285.000,01. Un día el LLM guarda `numero_acto='5576'` y al otro
+    `'LICITACION PUBLICA No 5576'`; las dos grafías daban claves distintas y el
+    mismo acto entró dos veces al canónico ($474,58B en el ledger).
+
+    El arreglo vive en la clave, no en el dato: `boletin-detail.tsx` muestra
+    `numero_acto`, así que el campo guardado conserva su texto.
+    """
+
+    def test_las_dos_grafias_del_mismo_numero_dan_la_misma_clave(self):
+        assert _normalize_acto("LICITACION PUBLICA No 5576") == "5576"
+        assert _normalize_acto("5576") == "5576"
+        assert _normalize_acto("Licitación Pública N° 5576") == "5576"
+
+    def test_la_republicacion_no_vuelve_a_contar(self):
+        """La clave nueva de la segunda publicación ya fue reclamada por la primera."""
+        org, monto = "EMPRESA PROVINCIAL DE ENERGIA DE CORDOBA S.A.U", 237291285000.01
+        primera = dedup_keys(
+            _normalize(org), monto, _normalize_acto("5576"), "Aumento de disponibilidad"
+        )
+        segunda = dedup_keys(
+            _normalize(org),
+            monto,
+            _normalize_acto("LICITACION PUBLICA No 5576"),
+            "LICITACION PUBLICA No 5576 DOBLE APERTURA: 21-09-26",
+        )
+        assert set(primera) & set(segunda)
+
+    def test_licitaciones_distintas_del_mismo_organismo_no_se_fusionan(self):
+        """EPEC 5561 y 5562 son dos licitaciones; mismo organismo, número distinto."""
+        assert _normalize_acto("5561") != _normalize_acto("5562")
+        assert _normalize_acto("Licitación Pública N° 5561") != _normalize_acto(
+            "Licitación Pública N° 5562"
+        )
+
+    def test_el_tipo_de_instrumento_no_se_tira_a_la_basura(self):
+        """Decreto y resolución numerados igual son instrumentos distintos.
+
+        Reducirlos a '456/2026' los fusionaría cuando comparten organismo y monto
+        redondeado a 1M: un falso positivo silencioso, peor que la duplicación.
+        """
+        assert _normalize_acto("DECRETO N° 456/2026") == "DECRETON°456/2026"
+        assert _normalize_acto("RESOLUCION N° 456/2026") == "RESOLUCIONN°456/2026"
+        assert _normalize_acto("DECRETO N° 456/2026") != _normalize_acto(
+            "RESOLUCION N° 456/2026"
+        )
+
+    def test_lo_generico_sigue_sin_clave(self):
+        assert _normalize_acto("N/A") is None
+        assert _normalize_acto("NO ESPECIFICADO") is None
+        assert _normalize_acto(None) is None
+
+    def test_el_codigo_de_obra_no_se_pisa(self):
+        """Un S-511/2026 nombrado dentro de una licitación conserva su identidad."""
+        assert _normalize_acto("Licitación Pública N° S-511/2026") == "S-511/2026"
+
+    def test_el_campo_que_ve_el_usuario_no_cambia(self):
+        """La reducción es de la clave: el front sigue mostrando el texto del boletín."""
+        assert (
+            resolve_numero_acto("LICITACION PUBLICA No 5576", "texto")
+            == "LICITACION PUBLICA No 5576"
+        )
+        assert resolve_numero_acto("5576", "texto") == "5576"
+
+
 class TestPublicationId:
     """El boletín numera cada publicación, no cada acto.
 

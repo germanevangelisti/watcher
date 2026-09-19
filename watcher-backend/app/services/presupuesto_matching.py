@@ -285,6 +285,30 @@ def match_organismo(
 _ACTO_NO_DEDUP = {"N/A", "NA", "NOESPECIFICADO", "SINNUMERO", "NINGUNO"}
 
 
+def _tender_identity(acto_norm: str) -> str | None:
+    """Tender code inside an acto string that names the tender, if any.
+
+    The boletín republishes a tender the next day and the LLM writes the number
+    differently each time: `'5576'` one day, `'LICITACION PUBLICA No 5576'` the
+    next.  Keying on the raw spelling counted EPEC's Licitación Pública N° 5576
+    ($237.29B, 4a sección of 2026-07-22 and 2026-07-23) twice.  For this family
+    the number *is* the tender's identity and the boletín repeats it verbatim,
+    so the code alone is the stable key.
+
+    Deliberately narrow: instrument-numbered acts are left alone.  Reducing
+    `'DECRETO N° 456/2026'` to `'456/2026'` would merge two distinct instruments
+    that share a number, an organismo and a million-rounded monto -- a silent
+    false positive, worse than the duplication it would fix.
+    """
+    match = _RE_TENDER_NUMERO.search(acto_norm)
+    if not match:
+        return None
+    code = re.sub(r"\s+", "", match.group(1)).strip(".-/")
+    if len(code) >= 2 and any(c.isdigit() for c in code):
+        return code[:100]
+    return None
+
+
 def _normalize_acto(s: str | None) -> str | None:
     """Normalize acto number for deduplication key. Returns None for empty/generic values."""
     if not s:
@@ -292,7 +316,7 @@ def _normalize_acto(s: str | None) -> str | None:
     norm = re.sub(r"\s+", "", s.upper().strip())
     if norm in _ACTO_NO_DEDUP or not norm:
         return None
-    return norm
+    return _tender_identity(norm) or norm
 
 
 def _dedup_organismo(org_norm: str) -> str:
@@ -396,6 +420,10 @@ _NUMERO_PATTERNS: tuple[re.Pattern[str], ...] = (
         re.IGNORECASE,
     ),
 )
+
+# The tender family of `_NUMERO_PATTERNS`, reused as the dedup-key reduction in
+# `_tender_identity`: only this one, never the instrument patterns above.
+_RE_TENDER_NUMERO = _NUMERO_PATTERNS[0]
 
 
 def extract_numero_acto(*texts: str | None) -> str | None:
