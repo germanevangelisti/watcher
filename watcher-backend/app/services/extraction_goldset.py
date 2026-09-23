@@ -221,9 +221,8 @@ def match_one(gold: GoldAct, candidates: list[ExtractedAct]) -> GoldMatch:
         if not _numero_hit(gold, cand):
             continue
         err = relative_monto_error(cand.monto, gold.monto)
-        if gold.monto is not None and cand.monto is not None:
-            if err is None or err > NUMERO_MONTO_MAX_REL_ERR:
-                continue
+        if gold.monto is not None and cand.monto is not None and (err is None or err > NUMERO_MONTO_MAX_REL_ERR):
+            continue
         numbered.append((0.0 if err is None else err, cand))
     if numbered:
         numbered.sort(key=lambda item: item[0])
@@ -285,9 +284,8 @@ def evaluate_goldset(
 
     false_gasto = 0
     for match in matches:
-        if match.gold.is_gasto_publico is False and match.extracted is not None:
-            if match.extracted.is_gasto_publico:
-                false_gasto += 1
+        if match.gold.is_gasto_publico is False and match.extracted is not None and match.extracted.is_gasto_publico:
+            false_gasto += 1
 
     recall = len(hit) / len(gold_list) if gold_list else 0.0
     return GoldMetrics(

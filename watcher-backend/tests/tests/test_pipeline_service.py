@@ -3,6 +3,7 @@ Tests for Pipeline Service - End-to-end document processing
 """
 
 # Import the service
+import contextlib
 import sys
 import tempfile
 from pathlib import Path
@@ -58,10 +59,8 @@ def test_file():
     yield temp_path
 
     # Cleanup
-    try:
+    with contextlib.suppress(Exception):
         Path(temp_path).unlink()
-    except Exception:
-        pass
 
 
 def test_pipeline_service_initialization(test_db):

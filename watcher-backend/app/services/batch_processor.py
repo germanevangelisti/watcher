@@ -217,7 +217,7 @@ class BatchProcessor:
             return_exceptions=True,
         )
         processed_results: list[dict] = []
-        for pdf_file, item in zip(batch_files, raw):
+        for pdf_file, item in zip(batch_files, raw, strict=False):
             if isinstance(item, BaseException):
                 processed_results.append({
                     "filename": pdf_file.name,

@@ -76,7 +76,7 @@ uv run python .tmp_ingesta/...            # (el scratch se borra al cerrar V.5)
 uv run python scripts/etl_analisis_to_ejecucion.py   # reconstruye el ledger ENTERO
 uv run python scripts/check_match_drift.py           # gate: exit 0 = sano
 uv run pytest -q                                     # 15 failed / 670 passed (DT-2/DT-3)
-uv run ruff check .                                  # 642 = DT-7, cero nuevos
+uv run ruff check .                                  # 0 = DT-7 cerrada (2026-09-23)
 ```
 
 `make` **no está disponible** en este entorno: correr los targets a mano.

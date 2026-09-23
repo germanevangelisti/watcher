@@ -351,7 +351,7 @@ class EntityService:
         if len(digits) != 11:
             return False
         weights = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2]
-        total = sum(int(d) * w for d, w in zip(digits[:10], weights))
+        total = sum(int(d) * w for d, w in zip(digits[:10], weights, strict=False))
         check = 11 - (total % 11)
         if check == 11:
             check = 0
@@ -479,7 +479,7 @@ class EntityService:
             key=lambda x: x[0]
         )
 
-        for i, (org_pos, org_nombre, org_norm) in enumerate(org_list):
+        for i, (org_pos, org_nombre, _org_norm) in enumerate(org_list):
             # Bloque: desde este organismo hasta el siguiente (máx 2500 chars)
             next_pos = org_list[i + 1][0] if i + 1 < len(org_list) else org_pos + 2500
             block_end = min(next_pos, org_pos + 2500)

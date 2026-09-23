@@ -127,10 +127,9 @@ class TestCypherQueryLoader:
         (sql_dir / "my_query.sql").write_text("SELECT 1")
         (cypher_dir / "my_query.cypher").write_text("MATCH (n) RETURN n")
 
-        with patch("app.db.query_loader._SQL_QUERIES_DIR", sql_dir):
-            with patch("app.db.query_loader._CYPHER_QUERIES_DIR", cypher_dir):
-                sql = load_query("my_query", "sql")
-                cypher = load_query("my_query", "cypher")
+        with patch("app.db.query_loader._SQL_QUERIES_DIR", sql_dir), patch("app.db.query_loader._CYPHER_QUERIES_DIR", cypher_dir):
+            sql = load_query("my_query", "sql")
+            cypher = load_query("my_query", "cypher")
 
         assert "SELECT" in sql
         assert "MATCH" in cypher

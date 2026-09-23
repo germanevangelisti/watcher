@@ -379,20 +379,19 @@ class DSLabAnalyzer:
                     })
 
         # RED FLAG: MISSING_BENEFICIARY
-        if self.red_flag_rules.get('MISSING_BENEFICIARY', {}).get('enabled', True):
-            if entities.get('amounts') and not entities.get('beneficiaries'):
-                red_flags.append({
-                    "type": "MISSING_BENEFICIARY",
-                    "severity": "medium",
-                    "category": "transparency",
-                    "title": "Falta identificación de beneficiario",
-                    "description": "Se detectaron montos pero no se pudo identificar beneficiarios",
-                    "evidence": {
-                        "amounts_count": len(entities.get('amounts', [])),
-                        "beneficiaries_found": 0
-                    },
-                    "confidence_score": 0.7
-                })
+        if self.red_flag_rules.get('MISSING_BENEFICIARY', {}).get('enabled', True) and entities.get('amounts') and not entities.get('beneficiaries'):
+            red_flags.append({
+                "type": "MISSING_BENEFICIARY",
+                "severity": "medium",
+                "category": "transparency",
+                "title": "Falta identificación de beneficiario",
+                "description": "Se detectaron montos pero no se pudo identificar beneficiarios",
+                "evidence": {
+                    "amounts_count": len(entities.get('amounts', [])),
+                    "beneficiaries_found": 0
+                },
+                "confidence_score": 0.7
+            })
 
         # RED FLAG: SUSPICIOUS_AMOUNT_PATTERN
         if self.red_flag_rules.get('SUSPICIOUS_AMOUNT_PATTERN', {}).get('enabled', True):

@@ -444,10 +444,7 @@ class EmbeddingService:
 
             # Generate chunks
             chunks_to_add = []
-            if chunk:
-                chunks_to_add = self.chunk_text(cleaned_content)
-            else:
-                chunks_to_add = [cleaned_content]
+            chunks_to_add = self.chunk_text(cleaned_content) if chunk else [cleaned_content]
 
             if not chunks_to_add:
                 return {

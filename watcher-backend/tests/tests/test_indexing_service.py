@@ -92,7 +92,7 @@ def mock_embedding_service():
         def get(self, where=None):
             if where and "document_id" in where:
                 doc_id = where["document_id"]
-                matching = [k for k in self.data.keys() if self.data[k]["metadata"].get("document_id") == doc_id]
+                matching = [k for k in self.data if self.data[k]["metadata"].get("document_id") == doc_id]
                 return {"ids": matching}
             return {"ids": list(self.data.keys())}
 

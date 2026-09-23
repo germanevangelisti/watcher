@@ -194,10 +194,7 @@ class ChunkEnricher:
         Returns:
             True si contiene montos
         """
-        for pattern in self._amount_patterns_compiled:
-            if pattern.search(text):
-                return True
-        return False
+        return any(pattern.search(text) for pattern in self._amount_patterns_compiled)
 
     def _detect_tables(self, text: str) -> bool:
         """
@@ -209,10 +206,7 @@ class ChunkEnricher:
         Returns:
             True si contiene tablas
         """
-        for pattern in self._table_patterns_compiled:
-            if pattern.search(text):
-                return True
-        return False
+        return any(pattern.search(text) for pattern in self._table_patterns_compiled)
 
     def _extract_basic_entities(self, text: str) -> dict[str, list[str]] | None:
         """

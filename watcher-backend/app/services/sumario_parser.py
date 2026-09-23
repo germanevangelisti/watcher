@@ -240,9 +240,8 @@ class SumarioParser:
 
         # Tipo A alternativo: hay líneas en caps que son organismos conocidos
         for kw in _ORGANISMO_KEYWORDS:
-            if kw in text_lower:
-                if re.search(r'^[A-ZÁÉÍÓÚÑ\s\-]+$', block_text, re.MULTILINE):
-                    return "organismo_jerarquia"
+            if kw in text_lower and re.search(r'^[A-ZÁÉÍÓÚÑ\s\-]+$', block_text, re.MULTILINE):
+                return "organismo_jerarquia"
 
         return "categorias_simples"
 
@@ -289,16 +288,15 @@ class SumarioParser:
             has_noise = bool(re.search(r'[\d.…:@,]', stripped))
             is_valid_len = 4 <= len(stripped) <= 75
 
-            if is_all_caps and not has_noise and is_valid_len:
-                if stripped not in seen_organismos:
-                    current_organismo = stripped
-                    seen_organismos.add(stripped)
-                    entries.append(SumarioEntry(
-                        nombre=stripped,
-                        pagina_inicio=0,
-                        tipo="organismo",
-                        organismo=stripped,
-                    ))
+            if is_all_caps and not has_noise and is_valid_len and stripped not in seen_organismos:
+                current_organismo = stripped
+                seen_organismos.add(stripped)
+                entries.append(SumarioEntry(
+                    nombre=stripped,
+                    pagina_inicio=0,
+                    tipo="organismo",
+                    organismo=stripped,
+                ))
 
         return entries
 

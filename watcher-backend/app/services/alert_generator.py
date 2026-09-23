@@ -300,12 +300,11 @@ class AlertGenerator:
                 self.alertas_generadas.add(f"{acto_id}-LICITACION_SIN_PRESUPUESTO")
 
         # Alerta 2: Gasto excesivo (requiere vínculo)
-        if mejor_vinculo and programa:
-            if f"{acto_id}-GASTO_EXCESIVO" not in self.alertas_generadas:
-                alerta = self.evaluar_gasto_excesivo(acto, mejor_vinculo, programa)
-                if alerta:
-                    alertas.append(alerta)
-                    self.alertas_generadas.add(f"{acto_id}-GASTO_EXCESIVO")
+        if mejor_vinculo and programa and f"{acto_id}-GASTO_EXCESIVO" not in self.alertas_generadas:
+            alerta = self.evaluar_gasto_excesivo(acto, mejor_vinculo, programa)
+            if alerta:
+                alertas.append(alerta)
+                self.alertas_generadas.add(f"{acto_id}-GASTO_EXCESIVO")
 
         # Alerta 4: Contratación urgente
         if f"{acto_id}-CONTRATACION_URGENTE" not in self.alertas_generadas:

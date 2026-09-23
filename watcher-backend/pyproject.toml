@@ -88,12 +88,34 @@ packages = ["app", "agents"]
 target-version = "py311"
 line-length = 100
 src = ["app", "agents", "tests"]
+# El gate cubre el producto (app, agents, tests). Quedan afuera `scripts/`
+# (herramientas de operación de un solo uso, se escriben para correr una vez) y
+# `alembic/` (migraciones autogeneradas). El CI lintea exactamente estos tres.
+extend-exclude = ["scripts", "alembic", "migrations"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP", "B", "SIM"]
+ignore = [
+    # E501 es trabajo del formatter, no del linter: `ruff format` parte lo que
+    # puede partir, y lo que queda son strings con textos de dominio en
+    # castellano que no conviene cortar. No se enforcea longitud a mano.
+    "E501",
+    # N803/N806: el código numérico y los tests usan `X`/`Session` como
+    # matrices y fixtures, que es el idioma de numpy/pytest. Renombrarlos
+    # empeora la lectura.
+    "N803",
+    "N806",
+    # B904 (97 casos en app/): `raise` sin `from e` en la capa de endpoints.
+    # Se pierde el encadenado de la causa. Es un pase propio, mecánico pero
+    # amplio, y toca el manejo de errores de todos los endpoints: va aparte.
+    "B904",
+    # UP042 (24 casos, enums de `app/db/models.py`): pasar de
+    # `class X(str, Enum)` a `StrEnum` cambia `str(X.a)` y hay enums que se
+    # serializan a la API y a la base. Requiere verificar cada caso antes.
+    "UP042",
+]
 
 [tool.ruff.lint.per-file-ignores]
-"scripts/*.py" = ["E402"]
 "tests/**/*.py" = ["E402"]
 # B008: FastAPI exige `Depends()` en los defaults de los endpoints; es el
 # idioma del framework, no un bug. Los 168 casos del repo están todos acá.

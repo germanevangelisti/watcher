@@ -38,7 +38,7 @@
 | Épica 3: Feature Engineering | Hecho | Sin cambios en H.1 |
 | Épica 4–5: Índice / retrieval | Hecho | Rerank local-first; colección local separada |
 | Épica 6: Agentes | Hecho | Sin cambios de canales |
-| Épica 7: Prod | En curso | H.1; CI/auth/UI huérfana siguen abiertos |
+| Épica 7: Prod | En curso | H.1; **CI deja de fallar (2026-09-23): lint backend y build frontend en verde**; auth/UI huérfana siguen abiertos |
 | H.1 Hardware local | Hecho | Workers nproc-2, overlay Compose, LocalPro |
 | Épica P: Presupuesto | P.1–P.7.4 en `main` | Ledger + Ley 11.088 + UI dos barras |
 | Épica V: Ground truth | V.1 … V.6 hechos | El dato persistido y la pantalla dicen lo mismo que el matcher; el cociente declara período y techo; **y ahora el período es feb–sep** |

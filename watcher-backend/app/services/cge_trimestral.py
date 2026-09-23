@@ -114,7 +114,7 @@ def _row_values(row: ET.Element, shared: list[str]) -> list[str | None]:
     if all(refs):
         width = max(_col_index(ref) for ref in refs) + 1
         out: list[str | None] = [None] * width
-        for cell, ref in zip(cells, refs):
+        for cell, ref in zip(cells, refs, strict=False):
             out[_col_index(ref or "")] = _cell_value(cell, shared)
         return out
     return [_cell_value(cell, shared) for cell in cells]

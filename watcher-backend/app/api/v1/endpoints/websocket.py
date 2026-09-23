@@ -65,9 +65,8 @@ class ConnectionManager:
 
         for connection in self.active_connections:
             # Si hay filtro de evento, verificar suscripción
-            if event_type:
-                if event_type not in self.subscriptions.get(connection, set()):
-                    continue
+            if event_type and event_type not in self.subscriptions.get(connection, set()):
+                continue
 
             try:
                 await connection.send_text(message)

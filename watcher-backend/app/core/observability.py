@@ -4,7 +4,7 @@ Sistema de observability y telemetría para agentes
 import logging
 import time
 from collections import defaultdict
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from datetime import datetime, timedelta
 from functools import wraps
 from typing import Any
@@ -320,7 +320,7 @@ def record_vcp(
     latency_ms: float | None = None,
 ) -> None:
     """Module-level convenience function to record VCP metrics via global ObservabilityManager."""
-    try:
+    with suppress(Exception):
         observability.metrics.record_vcp_result(
             vcp_score=vcp_score,
             total_aius=total_aius,
@@ -330,8 +330,6 @@ def record_vcp(
             boletin_id=boletin_id,
             latency_ms=latency_ms,
         )
-    except Exception:
-        pass
 
 
 def traced_operation(operation_name: str):

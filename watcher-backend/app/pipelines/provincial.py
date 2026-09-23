@@ -133,7 +133,7 @@ class ProvincialPipeline(BoletinPipeline):
             return_exceptions=True,
         )
         transformed: list[dict] = []
-        for item, result in zip(raw_data, results):
+        for item, result in zip(raw_data, results, strict=False):
             if isinstance(result, BaseException):
                 transformed.append(
                     {**item, "text": "", "pages": 0, "char_count": 0, "error": str(result)}

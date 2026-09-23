@@ -11,6 +11,7 @@ Provides endpoints for:
 
 import asyncio
 import calendar as _cal_module
+import contextlib
 import logging
 import uuid
 from datetime import date as _date
@@ -1084,10 +1085,8 @@ async def _update_status(db: AsyncSession, boletin_id: int, status: str, error: 
             await db.commit()
         except Exception as retry_err:
             logger.error(f"_update_status retry also failed for {boletin_id}: {retry_err}")
-            try:
+            with contextlib.suppress(Exception):
                 await db.rollback()
-            except Exception:
-                pass
 
 
 async def _extract_text(

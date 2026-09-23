@@ -141,9 +141,8 @@ class TestBoletinPipelineRun:
     async def test_successful_run_returns_loaded_result(self, db, run_record):
         pipeline = _GoodPipeline(db=db)
 
-        with patch.object(pipeline, "_create_ingestion_run", AsyncMock(return_value=run_record)):
-            with patch.object(pipeline, "_complete_run", AsyncMock()) as mock_complete:
-                result = await pipeline.run()
+        with patch.object(pipeline, "_create_ingestion_run", AsyncMock(return_value=run_record)), patch.object(pipeline, "_complete_run", AsyncMock()) as mock_complete:
+            result = await pipeline.run()
 
         assert result.status == "loaded"
         assert result.rows_in == 3
@@ -156,10 +155,8 @@ class TestBoletinPipelineRun:
     async def test_failed_run_returns_failed_result(self, db, run_record):
         pipeline = _FailPipeline(db=db)
 
-        with patch.object(pipeline, "_create_ingestion_run", AsyncMock(return_value=run_record)):
-            with patch.object(pipeline, "_complete_run", AsyncMock()) as mock_complete:
-                with pytest.raises(RuntimeError, match="simulated extract failure"):
-                    await pipeline.run()
+        with patch.object(pipeline, "_create_ingestion_run", AsyncMock(return_value=run_record)), patch.object(pipeline, "_complete_run", AsyncMock()) as mock_complete, pytest.raises(RuntimeError, match="simulated extract failure"):
+            await pipeline.run()
 
         mock_complete.assert_awaited_once()
         call_status = mock_complete.call_args[0][1]
@@ -168,9 +165,8 @@ class TestBoletinPipelineRun:
     async def test_run_sets_finished_at(self, db, run_record):
         pipeline = _GoodPipeline(db=db)
 
-        with patch.object(pipeline, "_create_ingestion_run", AsyncMock(return_value=run_record)):
-            with patch.object(pipeline, "_complete_run", AsyncMock()):
-                result = await pipeline.run()
+        with patch.object(pipeline, "_create_ingestion_run", AsyncMock(return_value=run_record)), patch.object(pipeline, "_complete_run", AsyncMock()):
+            result = await pipeline.run()
 
         assert result.finished_at is not None
         assert isinstance(result.finished_at, datetime)
@@ -179,9 +175,8 @@ class TestBoletinPipelineRun:
         run_record.id = 42
         pipeline = _GoodPipeline(db=db)
 
-        with patch.object(pipeline, "_create_ingestion_run", AsyncMock(return_value=run_record)):
-            with patch.object(pipeline, "_complete_run", AsyncMock()):
-                result = await pipeline.run()
+        with patch.object(pipeline, "_create_ingestion_run", AsyncMock(return_value=run_record)), patch.object(pipeline, "_complete_run", AsyncMock()):
+            result = await pipeline.run()
 
         assert result.run_id == 42
 

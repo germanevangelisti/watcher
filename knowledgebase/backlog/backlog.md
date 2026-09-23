@@ -181,7 +181,16 @@ Medición 2026-09-14 tras P.7.3: `presupuesto_base` 480 filas; match **90/131** 
 | DT-4 | `reindex_google_embeddings.py` hace `sys.exit(1)` al importarse sin `GOOGLE_API_KEY` → INTERNALERROR que corta la colección de toda la suite | 7 | ✅ resuelto (2026-09-18, `_require_deps()`) |
 | DT-5 | 6 módulos de test no colectan: `watcher_monolith` y `kba_agent` no existen en el repo | 7 | ✅ resuelto (2026-09-18: 3 revividos por prefijo, 3 con `importorskip`) |
 | DT-6 | `ruff.toml` (80 bytes) tiene precedencia sobre `pyproject.toml` en ruff y solo define `per-file-ignores`: `select` y `line-length = 100` nunca se aplicaron. Ruff corría con defaults | 7 | ✅ causa raíz resuelta (2026-09-18) |
-| DT-7 | Residual de lint tras el autofix: 643 errores sin autofix posible — `E501` 439 (líneas >100), `B904` 97 (`raise` sin `from`), `N806` 34. Concentrados en `app/db/models.py` (49 E501), endpoints y agents | 7 | ⬜ abierto (diferido a historia propia) |
+| DT-7 | Residual de lint tras el autofix: 643 errores sin autofix posible — `E501` 439 (líneas >100), `B904` 97 (`raise` sin `from`), `N806` 34. Concentrados en `app/db/models.py` (49 E501), endpoints y agents | 7 | ✅ cerrado (2026-09-23): gate acotado a `app`/`agents`/`tests`, 5 reglas ignoradas con motivo, 34 residuales arreglados a mano |
 
 > Sincronizado con commits hasta `da098b7` — 2026-06-26. Bugs DT-3..DT-6 detectados en P.7 (2026-09-13).
 > DT-4..DT-7 trabajados el 2026-09-18 (rama `chore/lint-normalization`). Detalle de DT-6: la deuda real era 8.327 errores, no 2.668 — el número chico era el de los defaults, no el del ruleset del proyecto.
+>
+> **DT-7 cerrada el 2026-09-23 — con la deuda explícita, no silenciada.** El gate de
+> ruff cubre ahora `app`/`agents`/`tests` (lo que el propio `pyproject` declara en
+> `src`); `scripts/` y `alembic/` quedan fuera por `extend-exclude`. Se ignoran 5
+> reglas, cada una con su motivo escrito en `pyproject.toml`: `E501` (la maneja el
+> formatter), `N803`/`N806` (idioma numpy/ML: `X`, `Session`), `B904` (97 `raise` sin
+> `from e`) y `UP042` (24 enums: pasar a `StrEnum` cambia `str()` y hay enums que se
+> serializan). **Lo que queda pendiente no es "0 errores", son esas 2 reglas**: B904
+> y UP042 siguen sin arreglar, sólo que ahora dejan de romper CI y están declaradas.

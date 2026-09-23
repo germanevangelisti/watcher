@@ -128,13 +128,13 @@ async def fetch_pdf_to_tempfile(url: str, timeout_s: int = 30) -> Path:
             )
 
         # Escribir a tempfile con sufijo .pdf para que los extractores lo reconozcan
-        tmp = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
-        tmp.write(response.content)
-        tmp.close()
+        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+            tmp.write(response.content)
+            tmp_path = Path(tmp.name)
 
         size_kb = len(response.content) // 1024
-        logger.info("PDF descargado (%d KB) → %s", size_kb, tmp.name)
-        return Path(tmp.name)
+        logger.info("PDF descargado (%d KB) → %s", size_kb, tmp_path)
+        return tmp_path
 
 
 async def fetch_and_extract_text(

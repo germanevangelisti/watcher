@@ -58,7 +58,7 @@ class DownloadFromURLRequest(BaseModel):
     fuente: str | None = "provincial"  # Source type
 
     @validator('date')
-    def validate_date(cls, v):
+    def validate_date(self, v):
         """Validate date format if provided."""
         if v and not re.match(r'^\d{8}$', v):
             raise ValueError("Date must be in YYYYMMDD format")

@@ -219,7 +219,7 @@ class SemanticMatcher:
         for keyword in keywords:
             keyword_lower = keyword.lower()
             # Buscar en vocabulario
-            for tema, sinonimos in self.vocabulario.items():
+            for _tema, sinonimos in self.vocabulario.items():
                 if keyword_lower in [s.lower() for s in sinonimos]:
                     expandidos.update([s.lower() for s in sinonimos[:5]])  # Top 5 sinónimos
 

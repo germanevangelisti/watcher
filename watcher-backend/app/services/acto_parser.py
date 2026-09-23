@@ -303,7 +303,7 @@ class ActoAdministrativoParser:
         # Dividir en bloques por saltos de línea
         bloques = re.split(r'\n{2,}', texto)
 
-        for i, bloque in enumerate(bloques):
+        for _i, bloque in enumerate(bloques):
             # Solo procesar bloques con contenido significativo
             if len(bloque) < 50:  # Muy corto, probablemente no es un acto
                 continue

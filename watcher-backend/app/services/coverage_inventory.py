@@ -243,7 +243,7 @@ class CoverageReport:
         if self.published_days == 0:
             return None
         complete = 0
-        for day, counts in self.sections_present_by_day.items():
+        for _day, counts in self.sections_present_by_day.items():
             if counts.get("published", 0) <= 0:
                 continue
             if counts.get("covered", 0) == counts["published"]:

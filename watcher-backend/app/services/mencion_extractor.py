@@ -277,9 +277,8 @@ class MencionExtractor:
             True si es duplicado, False en caso contrario
         """
         for mencion in menciones:
-            if mencion["jurisdiccion_id"] == jurisdiccion_id:
-                if abs(mencion["posicion"] - posicion) < threshold:
-                    return True
+            if mencion["jurisdiccion_id"] == jurisdiccion_id and abs(mencion["posicion"] - posicion) < threshold:
+                return True
         return False
 
     def generar_resumen_menciones(self, menciones: list[dict]) -> dict:

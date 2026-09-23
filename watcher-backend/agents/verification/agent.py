@@ -106,7 +106,7 @@ class VerificationAgent:
 
         # Replace exceptions with original AIU (unverifiable)
         result_aius = []
-        for orig, res in zip(aius, verified_aius):
+        for orig, res in zip(aius, verified_aius, strict=False):
             if isinstance(res, Exception):
                 self._logger.warning(f"AIU verification error: {res}")
                 result_aius.append(orig)

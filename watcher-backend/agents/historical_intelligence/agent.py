@@ -343,7 +343,7 @@ class HistoricalIntelligenceAgent:
                         "categoria": pattern.categoria,
                         "detecciones": len(rows),
                         "casos": [
-                            {col: val for col, val in zip(result.keys(), row)}
+                            {col: val for col, val in zip(result.keys(), row, strict=False)}
                             for row in rows[:10]  # Limitar a 10 casos
                         ]
                     })

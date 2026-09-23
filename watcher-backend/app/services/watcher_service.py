@@ -6,6 +6,7 @@ FreeProvider (rule-based) como fallback cuando no hay API key.
 """
 
 import asyncio
+import contextlib
 import json
 import logging
 import os
@@ -315,10 +316,8 @@ class WatcherService:
 
                 # Reference Firewall hook (non-blocking, informative only).
                 if self._firewall is not None:
-                    try:
+                    with contextlib.suppress(Exception):
                         result['_firewall_pending'] = True
-                    except Exception:
-                        pass
 
                 # AIU Decomposition hook (Fase II) — non-blocking, never propagates.
                 if self._aiu_service is not None:

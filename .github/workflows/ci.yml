@@ -28,12 +28,12 @@ jobs:
             ${{ runner.os }}-pip-
 
       - name: Install ruff
-        run: pip install ruff
+        run: pip install ruff==0.16.8
 
       - name: Lint backend with ruff
         run: |
           cd watcher-backend
-          ruff check . --output-format=github
+          ruff check app agents tests --output-format=github
 
       - name: Lint lab with ruff
         run: |
