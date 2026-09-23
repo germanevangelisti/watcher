@@ -244,7 +244,7 @@ export function EjecucionPresupuestariaPage() {
         )}
       </FadeTransition>
 
-      {organismos.length > 0 && (
+      {resumenQuery.data && organismos.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
