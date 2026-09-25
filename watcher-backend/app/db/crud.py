@@ -10,7 +10,28 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from .models import Analisis, Boletin
+from .models import Analisis, Boletin, FuenteDato
+
+
+async def get_default_jurisdiccion_id(db: AsyncSession) -> int | None:
+    """El `jurisdiccion_id` de la única fuente `boletin_diario` activa.
+
+    Sirve para que una fila no nazca huérfana: `GET /boletines/calendar` filtra
+    por `jurisdiccion_id`, y `NULL == <id>` es falso en SQL, así que una fila
+    sin jurisdicción es **invisible** al calendario — se dibuja como `not_found`
+    y su botón "Descargar" no hace nada.
+
+    Devuelve `None` cuando no hay exactamente una fuente activa.  Es a
+    propósito: sin una fuente inequívoca preferimos una fila sin procedencia
+    declarada (y visible como tal) antes que inventarle una jurisdicción.
+    """
+    result = await db.execute(
+        select(FuenteDato.jurisdiccion_id)
+        .where(FuenteDato.tipo == "boletin_diario", FuenteDato.activa)
+        .distinct()
+    )
+    ids = [row[0] for row in result.all() if row[0] is not None]
+    return ids[0] if len(ids) == 1 else None
 
 
 async def create_boletin(
@@ -21,7 +42,8 @@ async def create_boletin(
     status: str = "pending",
     file_hash: str | None = None,
     file_size_bytes: int | None = None,
-    origin: str = "downloaded"
+    origin: str = "downloaded",
+    jurisdiccion_id: int | None = None
 ) -> Boletin:
     """
     Crea un nuevo registro de boletín o actualiza existente.
@@ -39,10 +61,17 @@ async def create_boletin(
         status: Status of the boletin
         file_hash: Optional SHA256 hash for deduplication
         file_size_bytes: Optional file size in bytes
+        jurisdiccion_id: Jurisdicción del boletín.  Si no se pasa se deriva de
+            la única fuente `boletin_diario` activa (ver
+            `get_default_jurisdiccion_id`); puede quedar en `None` si no hay una
+            fuente inequívoca.
 
     Returns:
         Boletin record (existing or newly created)
     """
+    if jurisdiccion_id is None:
+        jurisdiccion_id = await get_default_jurisdiccion_id(db)
+
     # 1. Check for duplicate by file_hash (if provided)
     if file_hash:
         hash_query = select(Boletin).where(Boletin.file_hash == file_hash)
@@ -58,6 +87,11 @@ async def create_boletin(
                 existing_by_hash.file_hash = file_hash
             if not existing_by_hash.file_size_bytes and file_size_bytes:
                 existing_by_hash.file_size_bytes = file_size_bytes
+            # Reparar la procedencia si la fila nació huérfana y ahora la
+            # conocemos: sin esto, una fila invisible lo sigue siendo para
+            # siempre aunque se la vuelva a registrar.
+            if jurisdiccion_id and not existing_by_hash.jurisdiccion_id:
+                existing_by_hash.jurisdiccion_id = jurisdiccion_id
             await db.flush()
             return existing_by_hash
 
@@ -75,6 +109,8 @@ async def create_boletin(
             existing_by_filename.file_hash = file_hash
         if file_size_bytes and not existing_by_filename.file_size_bytes:
             existing_by_filename.file_size_bytes = file_size_bytes
+        if jurisdiccion_id and not existing_by_filename.jurisdiccion_id:
+            existing_by_filename.jurisdiccion_id = jurisdiccion_id
         await db.flush()
         return existing_by_filename
 
@@ -86,7 +122,8 @@ async def create_boletin(
         status=status,
         file_hash=file_hash,
         file_size_bytes=file_size_bytes,
-        origin=origin
+        origin=origin,
+        jurisdiccion_id=jurisdiccion_id
     )
     db.add(db_boletin)
     await db.flush()  # Flush para obtener el ID
