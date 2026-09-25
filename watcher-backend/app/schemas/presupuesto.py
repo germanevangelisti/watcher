@@ -140,6 +140,69 @@ class DenominadorSinDuenoResumen(BaseModel):
     por_organismo: list[DenominadorSinDuenoItemResumen] = []
 
 
+class FinalidadDetalleItem(BaseModel):
+    """One component inside the `sin_clasificar` bucket.
+
+    `label` is `None` for components that are not finalidades of the classifier
+    (the annex's `6`, for "crédito adicional"), so the caller shows `clave`
+    instead of inventing a name for them.
+    """
+
+    clave: str
+    label: str | None = None
+    count: int
+    monto_inicial: JsonMoney = 0.0
+    monto_vigente: JsonMoney = 0.0
+    participacion_techo_pct: float = 0.0
+
+
+class FinalidadItem(BaseModel):
+    """One row of the 3+1: a headline finalidad, or the bucket itself."""
+
+    clave: str
+    label: str
+    count: int
+    monto_inicial: JsonMoney = 0.0
+    monto_vigente: JsonMoney = 0.0
+    participacion_techo_pct: float = 0.0
+    detalle: list[FinalidadDetalleItem] = []
+
+
+class HonestidadResumen(BaseModel):
+    """Qué son y qué **no** son los montos de `FinalidadesResumen`.
+
+    Existe para que el disclaimer de la UI lea la afirmación en vez de repetirla
+    de memoria: si el copy viviera sólo en el frontend, podría despegarse del
+    dato y seguir diciendo "inicial = vigente" un corte donde ya hay variación.
+
+    `inicial_es_vigente` y `filas_inicial_distinto_vigente` se miden fila por
+    fila; `notas` es el copy ya listo para mostrar y se genera de esa medición.
+    """
+
+    es_techo: bool = True
+    inicial_es_vigente: bool = False
+    filas_inicial_distinto_vigente: int = 0
+    es_credito_modificado: bool = False
+    incluye_devengado_cge: bool = False
+    notas: list[str] = []
+
+
+class FinalidadesResumen(BaseModel):
+    """Techo Ley/Mapas by finalidad — 1 / 2 / 3 + `sin_clasificar`.
+
+    Money is the ceiling, never execution: there is no `pct_ejecucion` here on
+    purpose.  `participacion_techo_pct` is the share of the año's Ley, and the
+    Ley is never prorated.
+    """
+
+    ejercicio: int
+    total_inicial: JsonMoney = 0.0
+    total_vigente: JsonMoney = 0.0
+    total_registros: int = 0
+    items: list[FinalidadItem] = []
+    honestidad: HonestidadResumen = HonestidadResumen()
+
+
 class EjecucionResumenResponse(BaseModel):
     total_canonical: int
     total_duplicates: int

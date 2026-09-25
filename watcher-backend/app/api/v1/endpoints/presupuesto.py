@@ -16,6 +16,10 @@ from app.schemas.presupuesto import (
     EjecucionListResponse,
     EjecucionResponse,
     EjecucionResumenResponse,
+    FinalidadDetalleItem,
+    FinalidadesResumen,
+    FinalidadItem,
+    HonestidadResumen,
     MesResumenItem,
     OrganismoResponse,
     OrgResumenItem,
@@ -35,6 +39,7 @@ from app.services.ejecucion_contrast import (
     vigente_por_organismo_canonico,
 )
 from app.services.gasto_classifier import JURISDICCIONES
+from app.services.presupuesto_finalidades import fetch_finalidades
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -249,6 +254,84 @@ async def get_organismos(
 
         return sorted(organismos, key=lambda x: x.monto_vigente_total, reverse=True)
 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/finalidades/", response_model=FinalidadesResumen)
+async def get_finalidades(
+    ejercicio: int = Query(2026, ge=2000, le=2100),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Techo Ley/Mapas agrupado por finalidad: filas 1 / 2 / 3 + `sin_clasificar`.
+
+    Los montos son **techo** (`presupuesto_base`), no ejecución — no hay
+    `pct_ejecucion` acá.  El bucket `sin_clasificar` expone su composición en
+    `detalle`, porque en 2026 la finalidad 4 (Servicios Económicos) es el 40,71%
+    del techo y no se la puede llamar "sin clasificar" sin decirlo.
+
+    La respuesta trae además `honestidad`: los flags y el copy que el disclaimer
+    de la UI tiene que mostrar (techo y no ejecución; `inicial_es_vigente`
+    medido; no crédito modificado; no Devengado CGE / no caja).
+
+    Un ejercicio sin Ley cargada es 404, no un techo en $0: es un hueco y el
+    llamador tiene que poder declararlo.
+    """
+    try:
+        finalidades = await fetch_finalidades(db, ejercicio)
+        if finalidades is None:
+            raise HTTPException(
+                status_code=404,
+                detail=(
+                    f"no hay presupuesto_base cargado para el ejercicio {ejercicio}; "
+                    "no es techo $0, es un hueco"
+                ),
+            )
+
+        return FinalidadesResumen(
+            ejercicio=finalidades.ejercicio,
+            total_inicial=finalidades.total_inicial,
+            total_vigente=finalidades.total_vigente,
+            total_registros=finalidades.total_registros,
+            items=[
+                FinalidadItem(
+                    clave=item.clave,
+                    label=item.label,
+                    count=item.count,
+                    monto_inicial=item.monto_inicial,
+                    monto_vigente=item.monto_vigente,
+                    participacion_techo_pct=item.participacion_techo_pct,
+                    detalle=[
+                        FinalidadDetalleItem(
+                            clave=d.clave,
+                            label=d.label,
+                            count=d.count,
+                            monto_inicial=d.monto_inicial,
+                            monto_vigente=d.monto_vigente,
+                            participacion_techo_pct=d.participacion_techo_pct,
+                        )
+                        for d in item.detalle
+                    ],
+                )
+                for item in finalidades.items
+            ],
+            honestidad=HonestidadResumen(
+                es_techo=finalidades.honestidad.es_techo,
+                inicial_es_vigente=finalidades.honestidad.inicial_es_vigente,
+                filas_inicial_distinto_vigente=(
+                    finalidades.honestidad.filas_inicial_distinto_vigente
+                ),
+                es_credito_modificado=finalidades.honestidad.es_credito_modificado,
+                incluye_devengado_cge=(
+                    finalidades.honestidad.incluye_devengado_cge
+                ),
+                notas=list(finalidades.honestidad.notas),
+            ),
+        )
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
