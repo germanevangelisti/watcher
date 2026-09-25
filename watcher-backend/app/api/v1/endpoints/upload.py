@@ -19,7 +19,7 @@ from app.db import crud
 from app.db.session import get_db
 from app.services.hash_utils import compute_sha256_bytes
 from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, UploadFile
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
@@ -57,8 +57,9 @@ class DownloadFromURLRequest(BaseModel):
     section: str | None = None   # Override section
     fuente: str | None = "provincial"  # Source type
 
-    @validator('date')
-    def validate_date(self, v):
+    @field_validator('date')
+    @classmethod
+    def validate_date(cls, v):
         """Validate date format if provided."""
         if v and not re.match(r'^\d{8}$', v):
             raise ValueError("Date must be in YYYYMMDD format")
