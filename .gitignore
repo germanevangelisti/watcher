@@ -82,11 +82,15 @@ RESUMEN_*.md
 
 watcher-backend/data/processed/
 watcher-backend/data/raw/
+# PDFs subidos por la API (artefacto de runtime, no se versiona)
+watcher-backend/data/uploads/
 
 # SQLite databases (runtime artifacts)
 *.db
 *.db-shm
 *.db-wal
+# Copias de sqlite.db hechas para operar (backfill, forense, etc.)
+*.db.bak*
 
 # uv lockfile (regenerable, no versionado por decisión de proyecto)
 uv.lock
