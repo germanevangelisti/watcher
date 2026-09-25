@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-09-24  
 **Canónico de alcance:** [mvp.md](mvp.md)  
-**Estado:** borrador untracked — **no ejecutado** como evidencia de salida  
+**Estado:** canónico en `main` (trackeado) — **dry-run docs 2026-09-25** (gaps de arranque anotados); **aún no** es evidencia humana de salida completa  
 **Corte de datos declarado:** feb–sep 2026 (según `status.md` cabecera 2026-09-19; no inventar cortes más nuevos)
 
 > Objetivo Cooperledge: un humano ejecuta este checklist una vez; anota fecha/hora y resultado. Techo ≤ 10 pasos (no “exactamente 10”).
@@ -22,11 +22,15 @@
 
 1. **Arrancar backend** (API local según README Quick Start / `make` o Compose documentado del repo).
 2. **Arrancar frontend** (UI v2 contra esa API).
+
+> **Arranque (cooperledge / Windows, dry-run 2026-09-25):** el README asume `make start-backend` / `make start-frontend` (puertos `:8001` / `:5173`). En esa máquina no había `.env` / `.env.example` ni `make` en PATH — hace falta documentar alternativa Windows o restaurar ejemplos de env antes del run humano de evidencia.
 3. **Abrir** el dashboard de presupuesto / contraste vs Ley 11.088 (ruta de ejecución / organismos documentada en UI v2).
 4. **Verificar período + techo:** la UI declara **período medido** (N de 12; corte feb–sep u el que diga `status.md`) y el **techo** es verificable; programas sin dueño no están escondidos.
 5. **Confirmar barras** **Publicado / Comprometido / Ejecución** distintas; **no** mezclar “pagado CGE” en el mismo cociente.
 6. **Abrir alertas >100%** y ver las del corte (V.5: 3 estructurales) **con causa**; no silenciadas.
-7. **Correr** `check_match_drift.py` en el corte de salida → **exit 0** (0 filas de drift).
+7. **Correr** drift del match en el corte de salida → **exit 0** (0 filas de drift).
+   - Desde la raíz del repo: `python watcher-backend/scripts/check_match_drift.py`
+   - (Equivalente: `cd watcher-backend && python scripts/check_match_drift.py`.)
 8. **Confirmar huecos M7** visibles o documentados (p.ej. 2026-01; ~$404,52B / 364 actos sin denominador) — no cero silencioso.
 9. **Anotar** fecha/hora (America/Cordoba), commit/tip si aplica, y resultado (pass/fail por paso) en nota de demo o línea en `status.md` cuando el PO lo pida.
 

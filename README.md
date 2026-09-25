@@ -267,6 +267,11 @@ make start-frontend  # Terminal 2
 
 - **Frontend:** http://localhost:5173
 - **Backend API:** http://localhost:8001
+
+### Demo salida MVP (M6)
+
+Checklist canónico (≤10 pasos): [knowledgebase/vision/mvp-m6-checklist.md](knowledgebase/vision/mvp-m6-checklist.md). Alcance: [knowledgebase/vision/mvp.md](knowledgebase/vision/mvp.md).
+
 - **API Docs:** http://localhost:8001/docs
 
 ### Comandos Disponibles
