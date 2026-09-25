@@ -14,6 +14,7 @@ import { usePipelineStore } from "@/lib/store/pipeline-store"
 import type { StageHistoryEntry } from "@/lib/store/pipeline-store"
 import { useQueryClient } from "@tanstack/react-query"
 import { useRouter } from "@tanstack/react-router"
+import { toast } from "sonner"
 import type { SeccionDia, JurisdiccionCalendar } from "@/types"
 
 dayjs.extend(localizedFormat)
@@ -167,7 +168,29 @@ function DayDetailPanel({ dateStr, jurisdiccion, isFuture }: DayDetailPanelProps
   const dateLabel = dayjs(dateStr, "YYYYMMDD").format("dddd D [de] MMMM YYYY")
 
   function handleTrigger(section: string) {
-    triggerFromDate.mutate({ jurisdiccion_id: jurisdiccion.id, date: dateStr, section })
+    triggerFromDate.mutate(
+      { jurisdiccion_id: jurisdiccion.id, date: dateStr, section },
+      {
+        // El endpoint contesta `already_completed` cuando la fila ya está
+        // procesada. Antes eso no hacía nada visible: el botón quedaba muerto
+        // sobre un documento entero. Ahora abrimos el documento.
+        onSuccess: (data) => {
+          if (!data?.already_completed || !data.boletin_id) return
+          toast.info("Este boletín ya estaba procesado", {
+            description: "Abriendo el documento…",
+          })
+          router.navigate({
+            to: "/documentos/$id",
+            params: { id: String(data.boletin_id) },
+          })
+        },
+        onError: (err) => {
+          toast.error("No se pudo procesar la sección", {
+            description: err instanceof Error ? err.message : String(err),
+          })
+        },
+      },
+    )
   }
 
   function handleTriggerDay() {
@@ -186,9 +209,28 @@ function DayDetailPanel({ dateStr, jurisdiccion, isFuture }: DayDetailPanelProps
       : secciones
           .filter((s) => !processingIds.has(s.numero))
           .map((s) => String(s.numero))
-    if (sectionsToTrigger.length > 0) {
-      triggerDay.mutate({ jurisdiccion_id: jurisdiccion.id, date: dateStr, sections: sectionsToTrigger })
-    }
+    if (sectionsToTrigger.length === 0) return
+    triggerDay.mutate(
+      { jurisdiccion_id: jurisdiccion.id, date: dateStr, sections: sectionsToTrigger },
+      {
+        onSuccess: (results) => {
+          // Si algo arrancó a procesarse dejamos al usuario acá, mirando el log.
+          if (results.some((r) => !r.already_completed)) return
+          // Nada que procesar: todo el día ya estaba listo. No navegamos a un
+          // documento arbitrario (son hasta 5 secciones distintas y elegir una
+          // sería inventar cuál quería); avisamos y las filas de abajo ya
+          // tienen su botón "Ver".
+          toast.info("El día ya estaba procesado", {
+            description: "Usá «Ver» en cada sección para abrir su análisis.",
+          })
+        },
+        onError: (err) => {
+          toast.error("No se pudo procesar el día", {
+            description: err instanceof Error ? err.message : String(err),
+          })
+        },
+      },
+    )
   }
 
   return (
