@@ -1,8 +1,22 @@
 # Estado Actual — Watcher Agent
 
-**Última actualización:** 2026-09-19
+**Última actualización:** 2026-09-25
 **Snapshot del momento.** Se pisa al avanzar. La historia completa está en `docs/changelog.md` y el historial de git.
 
+> **Ampliación B — API de finalidades hecha, con campos/copy de honestidad**
+> (2026-09-25): `GET /presupuesto/finalidades/` publica el techo Ley/Mapas en
+> **1 / 2 / 3 + `sin_clasificar`**, y el bucket expone su `detalle` para no silenciar
+> el resto. Cierra el techo exacto contra el ancla de la Ley 11.088
+> (**$7.531,91B**, 480 filas 2026). La respuesta trae además `honestidad`: los flags
+> (`es_techo`, `inicial_es_vigente` **medido fila por fila**, `es_credito_modificado:
+> false`, `incluye_devengado_cge: false`) y las `notas` — el copy que el disclaimer de
+> la UI lee de la API en vez de recordarlo de memoria. **Sin UI visible todavía**: eso
+> es MB.
+> Verificado end-to-end (app real contra `sqlite.db`, HTTP 200; 2027 → 404). **De paso
+> se destrabó la API entera**: `upload.py:60` usaba `@validator` de pydantic v1 y con
+> pydantic 2.13 `app.api.v1.api` no se podía importar — o sea que la app no arrancaba.
+> Era el único caso del producto; pasado a `@field_validator`.
+>
 > **V.5 cerrada** (2026-09-19): el producto pasa de medir **3 a 8 meses** (feb–sep).
 > Extracción cerrada (`ok=469 fail=0`), ledger reconstruido, gate de drift en 0.
 > **No cambió una línea de código**: es una operación sobre `sqlite.db`.
@@ -21,10 +35,10 @@
 
 | Campo | Valor |
 |---|---|
-| Release | v2.0.0 + H.1 + P.7 + V.1 + V.2 + V.3 + V.4 + V.6 + V.5 |
-| Estado | **V.5 hecha (2026-09-19)**: 8 de 12 meses medidos; **3** alertas >100%, todas con causa medida |
+| Release | v2.0.0 + H.1 + P.7 + V.1 … V.6 + V.5 + **MB API (finalidades + honestidad)** |
+| Estado | **MB API hecha (2026-09-25)**: techo por finalidad 1/2/3 + `sin_clasificar` con `detalle`, cierra el techo exacto, y campos/copy de honestidad en la respuesta. V.5: 8 de 12 meses medidos; **3** alertas >100%, todas con causa medida |
 | Stack LLM | Gemini (cloud) + LocalPro/Ollama (`qwen2.5:7b`) |
-| Pendiente inmediato | **2026-01** es el único mes vencido sin ingesta. Después: V.7 (columnas del extractor) y V.8 (monto del aviso vecino), que necesitan re-extracción y son decisión de costo. |
+| Pendiente inmediato | **MB UI** (card 3+1 + disclaimer visible leyendo `honestidad`) — Must-blocking para la salida con Ampliación B, y después la evidencia M6. Quedan **2026-01** (único mes vencido sin ingesta) y V.7/V.8 (re-extracción: decisión de costo). |
 
 ---
 
