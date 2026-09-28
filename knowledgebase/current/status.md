@@ -37,8 +37,10 @@
 > pasos OK, con el **paso 7** (drift del match) re-ejecutado con log —
 > **0 filas · $0,00B · exit 0**. `story-watcher-m6-evidence` pasó a **done** y con eso el
 > **To do del kanban quedó vacío**. Al Must **Ampliación B** le queda **sólo el commit**:
-> **19** archivos siguen **sin commitear** — los **15** que se probaron en pantalla más
-> `mvp.md`, `mvp-m6-checklist.md`, `next-session.md` y `mvp-scope-discussion.md`, actualizados al cerrar.
+> **Y el commit está hecho:** `40c48a6` — **19 archivos, 2684 inserciones**
+> (`feat(presupuesto): techo por finalidad, disclaimer visible y proxy BO en pantalla`).
+> La corrida de prueba se hizo sobre el working tree **sin commitear**, así que lo probado y lo
+> commiteado son **el mismo árbol**: el commit entró después del OK. Sólo falta el **push**.
 >
 > **Ampliación B — API de finalidades hecha, con campos/copy de honestidad**
 > (2026-09-25): `GET /presupuesto/finalidades/` publica el techo Ley/Mapas en
@@ -73,9 +75,9 @@
 | Campo | Valor |
 |---|---|
 | Release | v2.0.0 + H.1 + P.7 + V.1 … V.6 + V.5 + MB API + **MB UI (techo + disclaimer + proxy BO)** + **M6 evidencia** |
-| Estado | **MB `done` de punta a punta (2026-09-28)**: UI + evidencia M6 con **prueba manual OK**; **sin commitear**. Techo 1/2/3 + `sin_clasificar` con `detalle` en pantalla, disclaimer leyendo `honestidad`, proxy BO con banner de cobertura. V.5: 8 de 12 meses medidos; **3** alertas >100%, todas con causa medida |
+| Estado | **MB `done` de punta a punta (2026-09-28)**: UI + evidencia M6 con **prueba manual OK**, commiteado `40c48a6` (falta el push). Techo 1/2/3 + `sin_clasificar` con `detalle` en pantalla, disclaimer leyendo `honestidad`, proxy BO con banner de cobertura. V.5: 8 de 12 meses medidos; **3** alertas >100%, todas con causa medida |
 | Stack LLM | Gemini (cloud) + LocalPro/Ollama (`qwen2.5:7b`) |
-| Pendiente inmediato | **Commitear los 19 archivos** — es lo único que le queda al Must (el gate humano ya pasó y el kanban quedó sin To do). Nada de producto lo bloquea: el código está verificado contra el corpus real. Quedan **2026-01** (único mes vencido sin ingesta) y V.7/V.8 (re-extracción: decisión de costo). |
+| Pendiente inmediato | **Nada del Must**: commit `40c48a6`, 3 épicas cerradas y kanban sin To do. Lo que sigue es **V.7/V.8** (obligan a **re-extraer**: decisión de costo) y **2026-01**, único mes vencido sin ingesta. El **push** a `origin/main` queda a un comando. |
 
 ---
 
@@ -284,10 +286,9 @@ Ninguno de producto. Notion MCP no disponible — el tablero quedó sin actualiz
 
 ## Próximos pasos
 
-1. **Cerrar Ampliación B:** el gate humano **ya pasó** (prueba manual de Germán OK 2026-09-28, con el checklist M6
-   completo 1–10: las 3 historias de UI y la evidencia M6 pasaron a `done`, las épicas 2 y 3 cerraron y el kanban
-   quedó sin To do). Queda **commitear los 19 archivos** (12 modificados + 7 nuevos), que es lo único abierto del Must.
-   **El commit lo hace Germán, no una sesión `impl`.**
+1. ✅ **Ampliación B cerrada** (2026-09-28): gate humano pasado (checklist M6 1–10 completo, OK de Germán), las 3
+   historias de UI y la evidencia M6 en `done`, las 3 épicas cerradas, kanban sin To do y **commit `40c48a6`**
+   (19 archivos, 2684 inserciones). **Falta sólo el push** (`git push origin main`).
 2. ✅ V.2 mergeada a `main` sin `sqlite.db` (2026-09-18).
 3. ✅ **Honestidad del contraste** (V.3/V.4) — el número que muestra la UI dice su período y su techo.
 4. ✅ Saneado (V.4.3): 74 organismos truncos reparados desde la jurisdicción del PDF.

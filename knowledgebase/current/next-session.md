@@ -2,8 +2,8 @@
 
 > **Actualización 2026-09-28 (post Ampliación B / M6):** este handoff es del **2026-09-19 (V.5)**.
 > Después pasó **MB completo** (API 2026-09-25 + UI y proxy BO 2026-09-28) y el **checklist M6 (1–10)** se
-> ejecutó el **2026-09-28 con OK de Germán**. **Lo único abierto del Must es el commit de 19 archivos**
-> (los 15 probados + `mvp.md`, `mvp-m6-checklist.md`, `next-session.md` y `mvp-scope-discussion.md` — este archivo entre ellos); no lo hace una sesión `impl`.
+> ejecutó el **2026-09-28 con OK de Germán**. **El Must quedó cerrado:** commit `40c48a6` (19 archivos, 2684 inserciones), sobre **el mismo árbol** que se
+> probó en pantalla. Sólo falta el `git push origin main`.
 > El estado vivo está en [status.md](status.md) — leer **eso** antes que este archivo.
 > La línea de base de tests de más abajo también cambió (ver el bloque de comandos).
 
