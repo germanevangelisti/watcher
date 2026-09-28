@@ -125,6 +125,106 @@ export interface EjecucionResumenResponse {
 export type JurisdiccionGasto = "provincial" | "municipal" | "fuera_presupuesto"
 export type SerieGasto = "compromiso" | "ejecucion"
 
+// ===== Ampliación B — techo por finalidad y proxy BO (en millones de ARS) =====
+
+export interface FinalidadDetalleItem {
+  clave: string;
+  /** `null` para componentes que no son finalidades del clasificador (el `6`). */
+  label?: string | null;
+  count: number;
+  monto_inicial: number | string;
+  monto_vigente: number | string;
+  participacion_techo_pct: number;
+}
+
+export interface FinalidadItem {
+  clave: string;
+  label: string;
+  count: number;
+  monto_inicial: number | string;
+  monto_vigente: number | string;
+  participacion_techo_pct: number;
+  detalle: FinalidadDetalleItem[];
+}
+
+export interface HonestidadResumen {
+  es_techo: boolean;
+  /** Medido fila por fila: no se afirma si el corte no lo sostiene. */
+  inicial_es_vigente: boolean;
+  filas_inicial_distinto_vigente: number;
+  es_credito_modificado: boolean;
+  incluye_devengado_cge: boolean;
+  /** El copy, generado de la medición de arriba. La UI lo lee, no lo inventa. */
+  notas: string[];
+}
+
+export interface FinalidadesResumen {
+  ejercicio: number;
+  total_inicial: number | string;
+  total_vigente: number | string;
+  total_registros: number;
+  items: FinalidadItem[];
+  honestidad: HonestidadResumen;
+}
+
+export interface ProxyBoDetalleItem {
+  clave: string;
+  label?: string | null;
+  count: number;
+  monto_publicado: number | string;
+  monto_techo: number | string;
+  /** `null` sin techo: un 0% ahí afirmaría algo que no se midió. */
+  pct_publicado_techo: number | null;
+}
+
+export interface ProxyBoItem {
+  clave: string;
+  label: string;
+  count: number;
+  monto_publicado: number | string;
+  monto_techo: number | string;
+  pct_publicado_techo: number | null;
+  detalle: ProxyBoDetalleItem[];
+}
+
+export interface CoberturaProxyBoResumen {
+  monto_total: number | string;
+  monto_con_programa: number | string;
+  /** Publicado que no se pudo atribuir. Se declara: no se reparte. */
+  monto_sin_programa: number | string;
+  count_sin_programa: number;
+  pct_sin_programa: number;
+  monto_atribuido_finalidad: number | string;
+  monto_no_clasificado: number | string;
+  fecha_desde: string | null;
+  fecha_hasta: string | null;
+  denominador_es_anual: boolean;
+}
+
+export interface EtapaProxyBoResumen {
+  clave: string;
+  label: string;
+  monto: number | string;
+}
+
+export interface HonestidadProxyBoResumen {
+  es_proxy_bo: boolean;
+  /** Siempre `false`: lo publicado en el BO no devenga gasto. */
+  es_devengado: boolean;
+  es_devengado_cge: boolean;
+  /** La etiqueta del numerador. La UI la muestra en vez de elegirla. */
+  etiqueta_numerador: string;
+  notas: string[];
+}
+
+export interface ProxyBoResumen {
+  ejercicio: number;
+  items: ProxyBoItem[];
+  cobertura: CoberturaProxyBoResumen;
+  etapas: EtapaProxyBoResumen[];
+  honestidad: HonestidadProxyBoResumen;
+}
+
 export interface EjecucionFilters {
   skip?: number;
   limit?: number;

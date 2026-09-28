@@ -9,6 +9,7 @@ from pathlib import Path
 from app.db.models import Boletin, EjecucionPresupuestaria, PresupuestoBase
 from app.db.session import get_db
 from app.schemas.presupuesto import (
+    CoberturaProxyBoResumen,
     CoberturaResumen,
     CoberturaTemporalResumen,
     DenominadorSinDuenoItemResumen,
@@ -16,9 +17,11 @@ from app.schemas.presupuesto import (
     EjecucionListResponse,
     EjecucionResponse,
     EjecucionResumenResponse,
+    EtapaProxyBoResumen,
     FinalidadDetalleItem,
     FinalidadesResumen,
     FinalidadItem,
+    HonestidadProxyBoResumen,
     HonestidadResumen,
     MesResumenItem,
     OrganismoResponse,
@@ -26,6 +29,9 @@ from app.schemas.presupuesto import (
     ProgramaDetailResponse,
     ProgramaResponse,
     ProgramasListResponse,
+    ProxyBoDetalleItem,
+    ProxyBoItem,
+    ProxyBoResumen,
 )
 from app.services.ejecucion_contrast import (
     BUCKET_COMPROMISO,
@@ -40,6 +46,7 @@ from app.services.ejecucion_contrast import (
 )
 from app.services.gasto_classifier import JURISDICCIONES
 from app.services.presupuesto_finalidades import fetch_finalidades
+from app.services.proxy_bo_finalidad import fetch_proxy_bo
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -336,8 +343,99 @@ async def get_finalidades(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# ===== EJECUCIÓN PRESUPUESTARIA =====
+@router.get("/finalidades/proxy-bo/", response_model=ProxyBoResumen)
+async def get_finalidades_proxy_bo(
+    ejercicio: int = Query(2026, ge=2000, le=2100),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Proxy BO: lo **publicado** en el Boletín Oficial atribuido por finalidad,
+    contra el techo de esa finalidad en la Ley/Mapas.
 
+    El numerador es publicación, no caja: llamados, adjudicaciones, contratos y
+    pagos.  La respuesta lo dice en `honestidad` (`es_devengado: false`,
+    `es_devengado_cge: false`, `etiqueta_numerador`) para que la UI lea la
+    etiqueta en vez de elegirla — rotular esto "Devengado" es el error que el
+    slice existe para no cometer.
+
+    Lo que el ledger no puede atribuir a un programa del ejercicio no se reparte
+    entre finalidades: viaja en `cobertura.monto_sin_programa` con su conteo de
+    actos.  `cobertura.fecha_desde`/`fecha_hasta` declaran el span real del
+    numerador, porque el denominador es la Ley anual y no se prorratea.
+
+    Un ejercicio sin Ley cargada es 404, igual que en `/finalidades/`: sin techo
+    no hay contra qué contrastar.  Un ejercicio con Ley y sin ledger es un $0
+    medido (no hay nada publicado), no un hueco.
+
+    Es el **Should** de Ampliación B: no bloquea el Must del techo por finalidad.
+    """
+    try:
+        proxy = await fetch_proxy_bo(db, ejercicio)
+        if proxy is None:
+            raise HTTPException(
+                status_code=404,
+                detail=(
+                    f"no hay presupuesto_base cargado para el ejercicio {ejercicio}; "
+                    "no es techo $0, es un hueco"
+                ),
+            )
+
+        return ProxyBoResumen(
+            ejercicio=proxy.ejercicio,
+            items=[
+                ProxyBoItem(
+                    clave=item.clave,
+                    label=item.label,
+                    count=item.count,
+                    monto_publicado=item.monto_publicado,
+                    monto_techo=item.monto_techo,
+                    pct_publicado_techo=item.pct_publicado_techo,
+                    detalle=[
+                        ProxyBoDetalleItem(
+                            clave=d.clave,
+                            label=d.label,
+                            count=d.count,
+                            monto_publicado=d.monto_publicado,
+                            monto_techo=d.monto_techo,
+                            pct_publicado_techo=d.pct_publicado_techo,
+                        )
+                        for d in item.detalle
+                    ],
+                )
+                for item in proxy.items
+            ],
+            cobertura=CoberturaProxyBoResumen(
+                monto_total=proxy.cobertura.monto_total,
+                monto_con_programa=proxy.cobertura.monto_con_programa,
+                monto_sin_programa=proxy.cobertura.monto_sin_programa,
+                count_sin_programa=proxy.cobertura.count_sin_programa,
+                pct_sin_programa=proxy.cobertura.pct_sin_programa,
+                monto_atribuido_finalidad=proxy.cobertura.monto_atribuido_finalidad,
+                monto_no_clasificado=proxy.cobertura.monto_no_clasificado,
+                fecha_desde=proxy.cobertura.fecha_desde,
+                fecha_hasta=proxy.cobertura.fecha_hasta,
+                denominador_es_anual=proxy.cobertura.denominador_es_anual,
+            ),
+            etapas=[
+                EtapaProxyBoResumen(clave=e.clave, label=e.label, monto=e.monto)
+                for e in proxy.etapas
+            ],
+            honestidad=HonestidadProxyBoResumen(
+                es_proxy_bo=proxy.honestidad.es_proxy_bo,
+                es_devengado=proxy.honestidad.es_devengado,
+                es_devengado_cge=proxy.honestidad.es_devengado_cge,
+                etiqueta_numerador=proxy.honestidad.etiqueta_numerador,
+                notas=list(proxy.honestidad.notas),
+            ),
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ===== EJECUCIÓN PRESUPUESTARIA =====
 @router.get("/ejecucion/resumen/", response_model=EjecucionResumenResponse)
 async def get_ejecucion_resumen(
     fecha_desde: date | None = Query(None),

@@ -1,5 +1,12 @@
 # Próxima sesión — Watcher Agent
 
+> **Actualización 2026-09-28 (post Ampliación B / M6):** este handoff es del **2026-09-19 (V.5)**.
+> Después pasó **MB completo** (API 2026-09-25 + UI y proxy BO 2026-09-28) y el **checklist M6 (1–10)** se
+> ejecutó el **2026-09-28 con OK de Germán**. **Lo único abierto del Must es el commit de 19 archivos**
+> (los 15 probados + `mvp.md`, `mvp-m6-checklist.md`, `next-session.md` y `mvp-scope-discussion.md` — este archivo entre ellos); no lo hace una sesión `impl`.
+> El estado vivo está en [status.md](status.md) — leer **eso** antes que este archivo.
+> La línea de base de tests de más abajo también cambió (ver el bloque de comandos).
+
 **Fecha del handoff:** 2026-09-19
 **Trabajo cerrado esta sesión:** **V.5 ingesta mayo–septiembre.** El producto pasó de
 medir **3 a 8 meses** (feb–sep). Extracción cerrada (`ok=469 fail=0`, 0 fallos sin
@@ -75,9 +82,14 @@ cd C:\Users\germa\watcher\watcher-backend
 uv run python .tmp_ingesta/...            # (el scratch se borra al cerrar V.5)
 uv run python scripts/etl_analisis_to_ejecucion.py   # reconstruye el ledger ENTERO
 uv run python scripts/check_match_drift.py           # gate: exit 0 = sano
-uv run pytest -q                                     # 15 failed / 670 passed (DT-2/DT-3)
+uv run pytest -q                                     # ver nota de línea base abajo
 uv run ruff check .                                  # 0 = DT-7 cerrada (2026-09-23)
 ```
+
+**Línea base de tests (2026-09-28, corregida):** `9 failed / 762 passed / 7 skipped` corriendo con
+`--ignore tests/tests/test_indexing_service.py`. Ese archivo **aborta la colección** en esta máquina
+(`OSError: [WinError 4551] An application Control policy has blocked this file` — política WDAC), y sus 6 fallos
+estaban contados dentro del viejo "15 failed". El número real, sin el archivo bloqueado, es **9**.
 
 `make` **no está disponible** en este entorno: correr los targets a mano.
 `make lint` además **pasa en vacío** si `ruff` no está en el PATH.

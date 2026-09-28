@@ -18,3 +18,5 @@ export {
 } from "./use-pipeline"
 export * from "./use-vcp-metrics"
 export { useEjecucion, useEjecucionResumen } from "./use-presupuesto"
+export { useFinalidades } from "./use-finalidades"
+export { useProxyBo } from "./use-proxy-bo"

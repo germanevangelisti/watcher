@@ -1,8 +1,45 @@
 # Estado Actual — Watcher Agent
 
-**Última actualización:** 2026-09-25
+**Última actualización:** 2026-09-28
 **Snapshot del momento.** Se pisa al avanzar. La historia completa está en `docs/changelog.md` y el historial de git.
 
+> **Ampliación B — UI cerrada** (2026-09-28): las tres historias de UI del paquete están
+> **`done`**, con la **prueba manual de Germán OK** y todos sus criterios tildados —
+> incluido el de prueba manual, que ninguna sesión `impl` tilda por su cuenta. El techo
+> por finalidad y el proxy BO están **visibles en pantalla**.
+> La card del techo (1 / 2 / 3 + `sin_clasificar` con su `detalle` a la vista) y el
+> disclaimer obligatorio van al tope de `/presupuesto/ejecucion` — **no** una ruta
+> nueva. El disclaimer **lee la afirmación de la API**: el titular sale de
+> `honestidad.inicial_es_vigente` (medido fila por fila) y las `notas[]` se muestran
+> tal cual, así que un corte con variación sancionado ≠ vigente cambia el texto solo.
+> Se suma el **Should**: panel del **proxy BO** (`GET /presupuesto/finalidades/proxy-bo/`)
+> — lo *publicado* en el Boletín contra el techo de cada finalidad, **nunca rotulado
+> "Devengado"** (el rótulo se lee de la respuesta) y con **banner de cobertura** que
+> declara lo que no se pudo atribuir en vez de repartirlo.
+>
+> **Verificado contra el corpus real** (`sqlite.db`): techo **$7.531,91B** (480 filas);
+> proxy **$1.776,41B**, span **2026-02-02 → 2026-09-18**; cobertura
+> **$404,52B / 364 actos (22,77%)** sin programa; composición **99,35% llamado**,
+> 0,27% compromiso, 0,39% pago. `2027 → 404` (hueco declarado, no ceros).
+> **De paso se arregló el formato de montos** (`formatARS`): `$7531.9B` → **`$7.531,91B`**
+> (es-AR), que es el ancla contra la que se prueba.
+> DoD medido: backend **46** tests nuevos del proxy + **35** de finalidades en verde,
+> suite completa **9 failed / 762 passed / 7 skipped** — los 9 son los pre-existentes
+> (idénticos en aislamiento, cero nuevos); frontend **34** tests verdes, `tsc -b`,
+> `vite build` y `eslint` limpios.
+> **Gate humano: pasado (2026-09-28).** Germán corrió el paso MB sobre la app local y
+> devolvió **todos los pasos OK**: el ancla $7.531,91B con sus 480 programas, las 4 filas
+> del techo con el bucket abierto al mismo nivel, el disclaimer **visible sin
+> interacción** (titular del flag + las 4 `notas[]`, incluida la que aclara que el
+> "0 filas difieren" es **por construcción, no medido**) y el proxy con su rótulo
+> "publicado en el BO" y el banner de cobertura.
+> **Y el checklist M6 completo (pasos 1–10) también cerró**: misma corrida, todos los
+> pasos OK, con el **paso 7** (drift del match) re-ejecutado con log —
+> **0 filas · $0,00B · exit 0**. `story-watcher-m6-evidence` pasó a **done** y con eso el
+> **To do del kanban quedó vacío**. Al Must **Ampliación B** le queda **sólo el commit**:
+> **19** archivos siguen **sin commitear** — los **15** que se probaron en pantalla más
+> `mvp.md`, `mvp-m6-checklist.md`, `next-session.md` y `mvp-scope-discussion.md`, actualizados al cerrar.
+>
 > **Ampliación B — API de finalidades hecha, con campos/copy de honestidad**
 > (2026-09-25): `GET /presupuesto/finalidades/` publica el techo Ley/Mapas en
 > **1 / 2 / 3 + `sin_clasificar`**, y el bucket expone su `detalle` para no silenciar
@@ -35,10 +72,10 @@
 
 | Campo | Valor |
 |---|---|
-| Release | v2.0.0 + H.1 + P.7 + V.1 … V.6 + V.5 + **MB API (finalidades + honestidad)** |
-| Estado | **MB API hecha (2026-09-25)**: techo por finalidad 1/2/3 + `sin_clasificar` con `detalle`, cierra el techo exacto, y campos/copy de honestidad en la respuesta. V.5: 8 de 12 meses medidos; **3** alertas >100%, todas con causa medida |
+| Release | v2.0.0 + H.1 + P.7 + V.1 … V.6 + V.5 + MB API + **MB UI (techo + disclaimer + proxy BO)** + **M6 evidencia** |
+| Estado | **MB `done` de punta a punta (2026-09-28)**: UI + evidencia M6 con **prueba manual OK**; **sin commitear**. Techo 1/2/3 + `sin_clasificar` con `detalle` en pantalla, disclaimer leyendo `honestidad`, proxy BO con banner de cobertura. V.5: 8 de 12 meses medidos; **3** alertas >100%, todas con causa medida |
 | Stack LLM | Gemini (cloud) + LocalPro/Ollama (`qwen2.5:7b`) |
-| Pendiente inmediato | **MB UI** (card 3+1 + disclaimer visible leyendo `honestidad`) — Must-blocking para la salida con Ampliación B, y después la evidencia M6. Quedan **2026-01** (único mes vencido sin ingesta) y V.7/V.8 (re-extracción: decisión de costo). |
+| Pendiente inmediato | **Commitear los 19 archivos** — es lo único que le queda al Must (el gate humano ya pasó y el kanban quedó sin To do). Nada de producto lo bloquea: el código está verificado contra el corpus real. Quedan **2026-01** (único mes vencido sin ingesta) y V.7/V.8 (re-extracción: decisión de costo). |
 
 ---
 
@@ -54,7 +91,7 @@
 | Épica 6: Agentes | Hecho | Sin cambios de canales |
 | Épica 7: Prod | En curso | H.1; **CI deja de fallar (2026-09-23): lint backend y build frontend en verde**; auth/UI huérfana siguen abiertos |
 | H.1 Hardware local | Hecho | Workers nproc-2, overlay Compose, LocalPro |
-| Épica P: Presupuesto | P.1–P.7.4 en `main` | Ledger + Ley 11.088 + UI dos barras |
+| Épica P: Presupuesto | P.1–P.7.4 en `main` | Ledger + Ley 11.088 + UI dos barras + **MB: techo por finalidad, disclaimer y proxy BO en pantalla (`done`, prueba manual OK; sin commitear)** |
 | Épica V: Ground truth | V.1 … V.6 hechos | El dato persistido y la pantalla dicen lo mismo que el matcher; el cociente declara período y techo; **y ahora el período es feb–sep** |
 
 ---
@@ -247,13 +284,17 @@ Ninguno de producto. Notion MCP no disponible — el tablero quedó sin actualiz
 
 ## Próximos pasos
 
-1. ✅ V.2 mergeada a `main` sin `sqlite.db` (2026-09-18).
-2. ✅ **Honestidad del contraste** (V.3/V.4) — el número que muestra la UI dice su período y su techo.
-3. ✅ Saneado (V.4.3): 74 organismos truncos reparados desde la jurisdicción del PDF.
-4. ✅ **Ingesta mayo–septiembre** (V.5, 2026-09-19) — de 3 a **8 meses** medidos. Queda **2026-01** como único mes vencido sin ingesta.
-5. **V.7** (la fuga de monto entre columnas) y **V.8** (el monto del aviso vecino en el modelo): son la causa de fondo de los peores errores de monto del corpus, están medidos y declarados, y arreglarlos obliga a **re-extraer** — decisión de costo explícita.
-6. DT-7 (residual de lint) e ingest CGE T2 cuando Hacienda publique.
-7. Tercera barra "pagado CGE" (no mezclar con el BO) sigue fuera de alcance.
+1. **Cerrar Ampliación B:** el gate humano **ya pasó** (prueba manual de Germán OK 2026-09-28, con el checklist M6
+   completo 1–10: las 3 historias de UI y la evidencia M6 pasaron a `done`, las épicas 2 y 3 cerraron y el kanban
+   quedó sin To do). Queda **commitear los 19 archivos** (12 modificados + 7 nuevos), que es lo único abierto del Must.
+   **El commit lo hace Germán, no una sesión `impl`.**
+2. ✅ V.2 mergeada a `main` sin `sqlite.db` (2026-09-18).
+3. ✅ **Honestidad del contraste** (V.3/V.4) — el número que muestra la UI dice su período y su techo.
+4. ✅ Saneado (V.4.3): 74 organismos truncos reparados desde la jurisdicción del PDF.
+5. ✅ **Ingesta mayo–septiembre** (V.5, 2026-09-19) — de 3 a **8 meses** medidos. Queda **2026-01** como único mes vencido sin ingesta.
+6. **V.7** (la fuga de monto entre columnas) y **V.8** (el monto del aviso vecino en el modelo): son la causa de fondo de los peores errores de monto del corpus, están medidos y declarados, y arreglarlos obliga a **re-extraer** — decisión de costo explícita. **Señal nueva del proxy BO:** `sin_partida` publica **$534,27B contra un techo de $738,77B (72,3%)** — el segundo publicado/techo más alto del corte, sobre un techo de partida **vacía**. Si parte de ese monto pertenece a otra partida, V.7 lo está mal-atribuyendo.
+7. DT-7 (residual de lint) e ingest CGE T2 cuando Hacienda publique.
+8. Tercera barra "pagado CGE" (no mezclar con el BO) sigue fuera de alcance.
 
 ---
 

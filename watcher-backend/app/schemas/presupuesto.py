@@ -203,6 +203,92 @@ class FinalidadesResumen(BaseModel):
     honestidad: HonestidadResumen = HonestidadResumen()
 
 
+class ProxyBoDetalleItem(BaseModel):
+    """Un componente del bucket `sin_clasificar` del proxy BO."""
+
+    clave: str
+    label: str | None = None
+    count: int = 0
+    monto_publicado: JsonMoney = 0.0
+    monto_techo: JsonMoney = 0.0
+    pct_publicado_techo: float | None = None
+
+
+class ProxyBoItem(BaseModel):
+    """Una fila del proxy BO: publicado atribuido vs techo de esa finalidad.
+
+    `pct_publicado_techo` es `None` cuando no hay techo contra el que comparar: sin
+    denominador no hay porcentaje, y un 0% ahí afirmaría algo que no se midió.
+    """
+
+    clave: str
+    label: str
+    count: int = 0
+    monto_publicado: JsonMoney = 0.0
+    monto_techo: JsonMoney = 0.0
+    pct_publicado_techo: float | None = None
+    detalle: list[ProxyBoDetalleItem] = []
+
+
+class CoberturaProxyBoResumen(BaseModel):
+    """Cuánto del publicado se pudo atribuir a una finalidad, y cuánto no.
+
+    `monto_sin_programa` se publica en vez de repartirse entre las finalidades: es
+    gasto publicado que este slice no puede atribuir, y esconderlo convertiría el
+    proxy en un reparto inventado.  `fecha_desde`/`fecha_hasta` declaran el span real
+    del numerador, porque el denominador es la Ley anual completa
+    (`denominador_es_anual`) y los dos no cubren el mismo período.
+    """
+
+    monto_total: JsonMoney = 0.0
+    monto_con_programa: JsonMoney = 0.0
+    monto_sin_programa: JsonMoney = 0.0
+    count_sin_programa: int = 0
+    pct_sin_programa: float = 0.0
+    monto_atribuido_finalidad: JsonMoney = 0.0
+    monto_no_clasificado: JsonMoney = 0.0
+    fecha_desde: date | None = None
+    fecha_hasta: date | None = None
+    denominador_es_anual: bool = True
+
+
+class EtapaProxyBoResumen(BaseModel):
+    """Composición del proxy por etapa del gasto.  Se informa, no se resta."""
+
+    clave: str
+    label: str
+    monto: JsonMoney = 0.0
+
+
+class HonestidadProxyBoResumen(BaseModel):
+    """Qué es y qué **no** es el numerador del proxy.
+
+    Existe para que la UI lea la etiqueta en vez de elegirla: el numerador es
+    `publicado en el BO`, y ni `es_devengado` ni `es_devengado_cge` pueden pasar a
+    `True` sin que esto deje de ser un proxy.  Un acto publicado no devenga gasto.
+    """
+
+    es_proxy_bo: bool = True
+    es_devengado: bool = False
+    es_devengado_cge: bool = False
+    etiqueta_numerador: str = "publicado en el BO"
+    notas: list[str] = []
+
+
+class ProxyBoResumen(BaseModel):
+    """Publicado en el BO atribuido por finalidad, contra el techo de esa finalidad.
+
+    Es un proxy de publicación (Should de Ampliación B), no ejecución: la ruta, los
+    campos y las notas evitan la palabra "devengado" a propósito.
+    """
+
+    ejercicio: int
+    items: list[ProxyBoItem] = []
+    cobertura: CoberturaProxyBoResumen = CoberturaProxyBoResumen()
+    etapas: list[EtapaProxyBoResumen] = []
+    honestidad: HonestidadProxyBoResumen = HonestidadProxyBoResumen()
+
+
 class EjecucionResumenResponse(BaseModel):
     total_canonical: int
     total_duplicates: int

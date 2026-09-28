@@ -11,6 +11,8 @@ import {
   ChevronRight,
   Landmark,
   Banknote,
+  Scale,
+  FileSearch,
 } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -31,11 +33,31 @@ import {
   TableCell,
 } from "@/components/ui/table"
 import { OrganismoContrastList } from "@/components/features/organismo-contrast"
-import { useEjecucion, useEjecucionResumen } from "@/lib/api/hooks"
+import { FinalidadesTechoCard } from "@/components/features/finalidades-techo"
+import { ProxyBoPanel } from "@/components/features/proxy-bo-finalidad"
+import {
+  useEjecucion,
+  useEjecucionResumen,
+  useFinalidades,
+  useProxyBo,
+} from "@/lib/api/hooks"
 import { formatARS, asMoney } from "@/lib/presupuesto-format"
 import type { JurisdiccionGasto, SerieGasto } from "@/types/presupuesto"
 
 const PAGE_SIZE = 50
+
+/**
+ * El `detail` del backend es el mensaje del hueco ("no es techo $0, es un hueco"),
+ * no el "Request failed with status code 404". Sin esto, el 404 se renderiza como
+ * un error de red genérico y el hueco se vuelve invisible.
+ */
+function apiError(error: unknown): Error {
+  const e = error as {
+    response?: { data?: { detail?: string } }
+    message?: string
+  }
+  return new Error(e?.response?.data?.detail ?? e?.message ?? "Error desconocido")
+}
 
 function RiesgoBadge({ riesgo }: { riesgo?: string }) {
   if (!riesgo) return <span className="text-muted-foreground text-xs">—</span>
@@ -92,6 +114,10 @@ export function EjecucionPresupuestariaPage() {
     jurisdiccion: jurisdiccionParam,
   })
 
+  // Ampliación B: techo por finalidad (Must) y proxy BO por finalidad (Should).
+  const finalidadesQuery = useFinalidades({ ejercicio: 2026 })
+  const proxyBoQuery = useProxyBo({ ejercicio: 2026 })
+
   const totalPages = ejecucionQuery.data?.total
     ? Math.ceil(ejecucionQuery.data.total / PAGE_SIZE)
     : 0
@@ -128,6 +154,87 @@ export function EjecucionPresupuestariaPage() {
           </TabsList>
         </Tabs>
       </div>
+
+      {/* ===== Ampliación B =====
+          Va al tope y separado del contraste de organismos: los montos de acá son
+          TECHO de la Ley y PUBLICACIÓN del BO, no ejecución. Mezclarlos con las
+          barras de compromiso/ejecución de abajo haría que dos numeradores
+          distintos se lean como uno. */}
+      <FadeTransition
+        isLoading={finalidadesQuery.isLoading}
+        skeleton={
+          <Card>
+            <CardContent className="p-6 space-y-3">
+              {[...Array(4)].map((_, i) => (
+                <Skeleton key={i} className="h-10 w-full" />
+              ))}
+            </CardContent>
+          </Card>
+        }
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Scale className="h-4 w-4" />
+              Techo por finalidad · Ley 11.088 / Mapas
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Cuánto de la Ley le toca a cada finalidad, agrupado en 1 / 2 / 3 +{" "}
+              <span className="text-foreground">sin clasificar</span>. Es el techo
+              sancionado, no la ejecución: no hay un % ejecutado acá porque no hay
+              ejecución en este dato. El bucket va al mismo nivel que las tres
+              finalidades y muestra su composición: colapsarlo escondería más de la
+              mitad del presupuesto.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <FinalidadesTechoCard
+              data={finalidadesQuery.data}
+              error={
+                finalidadesQuery.isError ? apiError(finalidadesQuery.error) : null
+              }
+            />
+          </CardContent>
+        </Card>
+      </FadeTransition>
+
+      <FadeTransition
+        isLoading={proxyBoQuery.isLoading}
+        skeleton={
+          <Card>
+            <CardContent className="p-6 space-y-3">
+              {[...Array(4)].map((_, i) => (
+                <Skeleton key={i} className="h-10 w-full" />
+              ))}
+            </CardContent>
+          </Card>
+        }
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <FileSearch className="h-4 w-4" />
+              Publicado en el BO por finalidad (proxy)
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Los actos que el Boletín Oficial publica para los programas de cada
+              finalidad, contra el techo de esa finalidad.{" "}
+              <span className="text-foreground">
+                No es Devengado ni Devengado CGE
+              </span>
+              : un acto publicado no devenga gasto. Es un proxy de publicación —
+              Should— y va aparte de las barras de compromiso/ejecución de abajo, que
+              son otro numerador.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <ProxyBoPanel
+              data={proxyBoQuery.data}
+              error={proxyBoQuery.isError ? apiError(proxyBoQuery.error) : null}
+            />
+          </CardContent>
+        </Card>
+      </FadeTransition>
 
       {alertas.length > 0 && (
         <div className="rounded-md border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">

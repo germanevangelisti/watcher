@@ -23,10 +23,10 @@ Los boletines oficiales de Córdoba son extensos (100–300 páginas/día). Leer
 | M1 | Pipeline ingesta → extracción | Mes vencido ingerible (`ingest_month` / sync) y procesable a `completed`; fallos justificados o cero fallos sin justificar en el corte declarado. | hecho (feb–sep) | V.5: 472 completed / 33 justified / 0 en vuelo; `ok=469 fail=0` |
 | M2 | Ledger de gasto canónico | ETL reconstruye ledger; dedup de licitaciones republicadas; total canónico reproducible; **no** versionar `sqlite.db` en git. | hecho | V.6; `etl_analisis_to_ejecucion.py`; 972 canónicas / $1.776,41B (corte V.5) |
 | M3 | Contraste honesto vs Ley 11.088 | UI/API declaran **período medido** (N de 12) y **techo verificable**; programas sin dueño separados, no escondidos; barras Publicado / Comprometido / Ejecución distintas. | hecho | V.3 / V.4; ancla Ley 11.088 |
-| **MB** | **Asimetría de techo por finalidad (Ampliación B)** | API + UI + copy: techo Ley / Mapas agrupado por finalidad **1 / 2 / 3** (+ bucket **sin_clasificar**); disclaimer visible: `inicial=vigente` en este corte; **no** es crédito modificado ni caja CGE; **no** rotular numerador BO como Devengado. | **API hecha, con campos/copy de honestidad (2026-09-25); UI visible pendiente** | `GET /presupuesto/finalidades/`: 1 $568,06B (7,54%) · 2 $268,19B (3,56%) · 3 $2.388,35B (31,71%) · `sin_clasificar` $4.307,31B (57,19%) con `detalle[]` (4 Servicios Económicos $3.066,50B, 40,71%; `sin_partida` $738,77B; Recursos $183,81B; Cuentas $168,53B; 5 $86,40B; 6 $63,30B). Cierra el techo exacto = ancla Ley 11.088 **$7.531,91B** (480 filas 2026). Bloque `honestidad` en la respuesta: `es_techo`, `inicial_es_vigente` **medido fila por fila** (+ `filas_inicial_distinto_vigente`), `es_credito_modificado: false`, `incluye_devengado_cge: false` y `notas[]` (el copy; cambia con el dato). 35 tests; sin fallos nuevos vs DT-2/DT-3 |
+| **MB** | **Asimetría de techo por finalidad (Ampliación B)** | API + UI + copy: techo Ley / Mapas agrupado por finalidad **1 / 2 / 3** (+ bucket **sin_clasificar**); disclaimer visible: `inicial=vigente` en este corte; **no** es crédito modificado ni caja CGE; **no** rotular numerador BO como Devengado. | **hecho (2026-09-28)** — API 2026-09-25; UI + proxy BO con **prueba manual de Germán OK** | `GET /presupuesto/finalidades/`: 1 $568,06B (7,54%) · 2 $268,19B (3,56%) · 3 $2.388,35B (31,71%) · `sin_clasificar` $4.307,31B (57,19%) con `detalle[]` (4 Servicios Económicos $3.066,50B, 40,71%; `sin_partida` $738,77B; Recursos $183,81B; Cuentas $168,53B; 5 $86,40B; 6 $63,30B). Cierra el techo exacto = ancla Ley 11.088 **$7.531,91B** (480 filas 2026). Bloque `honestidad` en la respuesta: `es_techo`, `inicial_es_vigente` **medido fila por fila** (+ `filas_inicial_distinto_vigente`), `es_credito_modificado: false`, `incluye_devengado_cge: false` y `notas[]` (el copy; cambia con el dato). 35 tests; sin fallos nuevos vs DT-2/DT-3. **UI**: card 3+1 + disclaimer + panel del proxy BO (`GET /presupuesto/finalidades/proxy-bo/`, $1.776,41B, cobertura 22,77% declarada, nunca rotulado Devengado) al tope de `/presupuesto/ejecucion`; 34 tests de frontend. Probado en pantalla el 2026-09-28 (**sin commitear** al momento de la prueba) |
 | M4 | Alertas y gate de drift | Alertas >100% listadas con causa; `check_match_drift.py` exit 0 en el corte de salida; **prohibido** silenciar alertas sin medición. | hecho | V.5: 3 alertas estructurales visibles; drift 0 filas |
 | M5 | Dashboard operable (UI v2) | Frontend shadcn/TanStack sirve el contraste y el listado de actos/alertas contra API local; build de frontend en verde. | hecho / en curso | UI v2; CI build frontend verde (2026-09-23); auth/UI huérfana siguen abiertos (Épica 7) |
-| M6 | Demo ≤ 10 pasos | Checklist explícito de salida MVP (arranque + M3–M4–M7 + paso MB cuando exista UI) documentado y ejecutable por un humano. | pendiente | [mvp-m6-checklist.md](mvp-m6-checklist.md); README Quick Start existe; falta ejecución humana + evidencia |
+| M6 | Demo ≤ 10 pasos | Checklist explícito de salida MVP (arranque + M3–M4–M7 + paso MB cuando exista UI) documentado y ejecutable por un humano. | **hecho (2026-09-28)** | [mvp-m6-checklist.md](mvp-m6-checklist.md); README Quick Start existe; **checklist completo (1–10) corrido por Germán el 2026-09-28 — todos los pasos OK**, paso 7 (drift) con log `exit 0`. Evidencia: `story-watcher-m6-evidence` (vault) |
 | M7 | Huecos declarados | Todo mes vencido **fuera** del corte (p.ej. 2026-01) y gasto sin denominador aparecen como hueco medido, no como cero silencioso. | hecho (declarado) | status.md / next-session: 2026-01 + $404,52B sin denominador |
 
 ### Ampliación B — detalle del Must **MB** (estrecho)
@@ -97,11 +97,14 @@ Los boletines oficiales de Córdoba son extensos (100–300 páginas/día). Leer
 - PDFs del BO Córdoba + Ley 11.088 parseada.  
 - Gemini y/o LocalPro/Ollama según tier.  
 - Decisión humana de costo para V.7/V.8.  
-- **Implementación MB** (API + UI + copy) antes de marcar salida con Ampliación B.  
-- Aprobación PO para **trackear** este `mvp.md` (hoy untracked; no commit hasta OK final).  
-- Cooperledge portfolio para reflejar “MVP alcanzado” cuando M1–M7+**MB** tengan evidencia y M6 esté ejecutado.
+- **Implementación MB** (API + UI + copy): **hecha** (API 2026-09-25, UI + proxy BO 2026-09-28, con prueba manual OK).  
+- Aprobación PO para **trackear** este `mvp.md`. *(Ya está trackeado — entró en `docs(kb): registra la Ampliación B`; la nota vieja decía "untracked" y quedó desactualizada.)*  
+- Cooperledge portfolio para reflejar “MVP alcanzado”: M1–M7 + **MB** tienen evidencia y **M6 se ejecutó** el 2026-09-28 (checklist 1–10 completo, OK de Germán). La salida formal queda a un commit de distancia.
 
 ## Demo (M6)
 
 Checklist canónico: [mvp-m6-checklist.md](mvp-m6-checklist.md).  
-Pasos 1–9 son ejecutables hoy (M3–M4–M7). El paso de **finalidad / MB** queda marcado como *cuando exista UI MB* hasta que API+UI estén hechos.
+**Ejecutado una vez: 2026-09-28**, checklist completo (pasos 1–10) por Germán, **todos los pasos OK** — incluido el
+paso 10 de **finalidad / MB**, que dejó de ser condicional al existir API+UI. Paso 7 (drift) con log: 0 filas, `exit 0`.
+La corrida se hizo sobre el working tree **sin commitear**; el registro quedó en la evidencia del vault
+(`board/stories/story-watcher-m6-evidence`).

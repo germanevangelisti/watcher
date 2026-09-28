@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-09-24  
 **Canónico de alcance:** [mvp.md](mvp.md)  
-**Estado:** canónico en `main` (trackeado) — **dry-run docs 2026-09-25** (gaps de arranque anotados); **aún no** es evidencia humana de salida completa  
+**Estado:** canónico en `main` (trackeado) — dry-run docs 2026-09-25 (gaps de arranque anotados); **corrida humana completa 2026-09-28** (Germán, pasos 1–10, todos OK). Evidencia: `story-watcher-m6-evidence`.
 **Corte de datos declarado:** feb–sep 2026 (según `status.md` cabecera 2026-09-19; no inventar cortes más nuevos)
 
 > Objetivo Cooperledge: un humano ejecuta este checklist una vez; anota fecha/hora y resultado. Techo ≤ 10 pasos (no “exactamente 10”).
@@ -11,8 +11,8 @@
 
 | Bloque | Estado | Notas |
 |--------|--------|-------|
-| Pasos 1–9 | **Ejecutables hoy** | Cubren M3, M4, M5 (arranque), M7 |
-| Paso 10 (MB) | **Pendiente de UI/API** | Aspiracional hasta implementar Must **MB**; no marcar MVP+B cerrado sin este paso en verde |
+| Pasos 1–9 | **Ejecutados 2026-09-28** | Cubren M3, M4, M5 (arranque), M7 |
+| Paso 10 (MB) | **Ejecutado 2026-09-28** | Con la UI/API de MB en el working tree (sin commitear al momento del run); no marcar MVP+B cerrado sin este paso en verde |
 
 ---
 
@@ -44,9 +44,9 @@
 
 ## Criterio de “M6 hecho”
 
-- [ ] Pasos 1–9 ejecutados una vez por un humano con resultado anotado.  
-- [ ] Paso 10 ejecutado **después** de que MB (API+UI+copy) esté implementado — hasta entonces M6 puede documentarse, pero **salida con Ampliación B** sigue bloqueada por MB.  
-- [ ] Sin silenciar alertas ni inventar sancionado≠vigente / Devengado BO.
+- [x] Pasos 1–9 ejecutados una vez por un humano con resultado anotado (2026-09-28; paso 7 con log: 0 filas, exit 0).  
+- [x] Paso 10 ejecutado **después** de que MB (API+UI+copy) esté implementado (2026-09-28, mismo run; la UI todavía **sin commitear**).  
+- [x] Sin silenciar alertas ni inventar sancionado≠vigente / Devengado BO.
 
 ## Fuera de este checklist
 

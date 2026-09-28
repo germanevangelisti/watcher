@@ -8,6 +8,13 @@
 
 > **Actualización PO (2026-09-24):** Germán aprobó **Opción B** (expansión mínima del mismo MVP). Must B estrecho aprobado: **techo Ley por finalidad 1/2/3 (+ sin_clasificar)** con disclaimers. **No** Must ahora: sancionado≠vigente, BO como Devengado, CGE en el mismo cociente, V.7/V.8, Índice de Alteración completo. Canónico reescrito: [mvp.md](mvp.md) (fila **MB** pendiente) + [mvp-m6-checklist.md](mvp-m6-checklist.md). Spike: [mvp-b-minimal-slice.md](mvp-b-minimal-slice.md). **Siguiente:** implementar MB (API+UI+copy) → ejecutar M6 → trackear mvp.md solo con OK final del PO. Este archivo queda como historial de la discusión A/B; las decisiones abiertas D1–D5 de abajo se consideran resueltas hacia B / M6+MB, no hacia redefinir el MVP.
 
+> **Actualización 2026-09-28 (cierre):** lo que este archivo describe como pendiente **ya pasó**. MB está
+> **hecho** (API 2026-09-25 + UI y proxy BO 2026-09-28) y el **checklist M6 (1–10) se ejecutó el 2026-09-28** con
+> **todos los pasos OK** de Germán. Las filas de abajo que dicen "M6 pendiente" o "mvp.md untracked" son
+> **historial de la discusión del 2026-09-24**, no el estado de hoy: `mvp.md` está trackeado y M6 figura `hecho`.
+> Estado vivo: [status.md](../current/status.md) · canónico: [mvp.md](mvp.md). Al Must Ampliación B le queda
+> **sólo el commit** de los 19 archivos.
+
 > Objetivo de esta nota: alinear Must / Should / Won't, separar **hecho con evidencia** de **aspiracional**, y dejar 3–5 decisiones A/B concretas. No implementa features ni propone commits.
 
 ---

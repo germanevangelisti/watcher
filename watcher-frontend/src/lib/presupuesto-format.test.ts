@@ -2,12 +2,23 @@ import { describe, it, expect } from "vitest"
 import { barWidth, formatARS, formatPct } from "@/lib/presupuesto-format"
 
 describe("formatARS", () => {
-  it("formats billions from API millions", () => {
-    expect(formatARS(2_627_774.687)).toBe("$2627.8B")
+  it("formats billions from API millions, with es-AR separators", () => {
+    // Coma decimal y punto de miles: es lo que lee la narrativa del producto.
+    expect(formatARS(2_627_774.687)).toBe("$2.627,77B")
   })
 
   it("formats millions from API millions", () => {
     expect(formatARS(500)).toBe("$500M")
+  })
+
+  it("renders the corte anchor the manual test compares against", () => {
+    // 7.531.910 millones de ARS = $7.531,91B: el techo 2026 completo.
+    expect(formatARS(7_531_910)).toBe("$7.531,91B")
+  })
+
+  it("groups the thousands of sub-million amounts", () => {
+    // 0.5 millones de ARS = 500.000 ARS, con punto de miles es-AR.
+    expect(formatARS(0.5)).toBe("$500.000")
   })
 
   it("returns em dash for null", () => {
