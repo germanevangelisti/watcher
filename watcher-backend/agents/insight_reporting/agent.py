@@ -15,6 +15,16 @@ from app.services.reference_firewall import ReferenceFirewallService
 from agents.orchestrator.state import AgentType, TaskDefinition, WorkflowState
 from agents.tools.analysis_tools import AnalysisTools
 from agents.tools.database_tools import DatabaseTools
+from agents.tools.presupuesto_tools import (
+    INTENT_FINALIDADES,
+    INTENT_ORGANISMO_DETALLE,
+    INTENT_ORGANISMOS,
+    INTENT_RESUMEN,
+    PresupuestoTools,
+    build_presupuesto_system_block,
+    detect_presupuesto_intents,
+    public_resumen,
+)
 
 try:
     import google.generativeai as genai
@@ -59,7 +69,7 @@ class InsightReportingAgent:
 
             if api_key and api_key != "":
                 # genai.configure() is called once at app startup in main.py
-                self.model = genai.GenerativeModel("gemini-2.0-flash")
+                self.model = genai.GenerativeModel("gemini-3.8-flash")
                 logger.info("Google Gemini client inicializado correctamente")
             else:
                 logger.warning("Google API key no encontrada - chat funcionará con fallback")
@@ -404,6 +414,37 @@ class InsightReportingAgent:
 
                 data_context = {}
 
+                # Presupuesto: chips ejecutivos (resumen / organismos / finalidades).
+                # El resumen se lee siempre —alimenta el bloque fijo del system
+                # prompt y, cuando la query lo pide, el data_context—; un fallo
+                # acá degrada a "sin datos de ejecución", nunca rompe el chat.
+                presupuesto_intents: set[str] = set()
+                presupuesto_resumen = None
+                try:
+                    presupuesto_intents = detect_presupuesto_intents(query)
+                    presupuesto_resumen = await PresupuestoTools.get_ejecucion_resumen(db)
+
+                    if presupuesto_resumen:
+                        if INTENT_RESUMEN in presupuesto_intents:
+                            data_context['ejecucion_resumen'] = public_resumen(presupuesto_resumen)
+                        if INTENT_ORGANISMOS in presupuesto_intents:
+                            data_context['organismos'] = PresupuestoTools.top_organismos(presupuesto_resumen)
+                    if INTENT_FINALIDADES in presupuesto_intents:
+                        finalidades = await PresupuestoTools.get_finalidades_desvio(db)
+                        if finalidades:
+                            data_context['finalidades'] = finalidades
+
+                    # (d) Desglose de un organismo puntual.  No depende del resumen:
+                    # lee el ledger directamente, y así también funciona para los
+                    # organismos sin fila en la Ley — Caminos de las Sierras, que es
+                    # justo el caso donde el agregado no alcanza.
+                    if INTENT_ORGANISMO_DETALLE in presupuesto_intents:
+                        desglose = await PresupuestoTools.get_organismo_desglose(db, query)
+                        if desglose:
+                            data_context['organismo_desglose'] = desglose
+                except Exception as e:
+                    logger.warning(f"Contexto de presupuesto no disponible: {e}")
+
                 # Estadísticas generales
                 if any(word in query_lower for word in ['estadísticas', 'stats', 'general', 'resumen', 'cuántos']):
                     data_context['statistics'] = await DatabaseTools.get_statistics(db)
@@ -424,7 +465,12 @@ class InsightReportingAgent:
                     )
 
                 # Entidades
-                if any(word in query_lower for word in ['beneficiario', 'entidad', 'empresa', 'organismo']):
+                # `organismo` es ambiguo: en la query (b) de presupuesto significa
+                # "quién concentra el gasto", y ahí el contexto de beneficiarios es
+                # la respuesta equivocada. Cuando la query trae señal de gasto gana
+                # presupuesto; el resto del path de transparencia queda igual.
+                if (any(word in query_lower for word in ['beneficiario', 'entidad', 'empresa', 'organismo'])
+                        and INTENT_ORGANISMOS not in presupuesto_intents):
                     data_context['entities'] = await AnalysisTools.get_entity_analysis(db, 'beneficiaries')
 
                 # Agregar contexto de búsqueda semántica si está disponible
@@ -453,8 +499,11 @@ class InsightReportingAgent:
                     data_context['statistics'] = await DatabaseTools.get_statistics(db)
 
                 # Generar respuesta usando IA con el contexto de datos
+                system_block = build_presupuesto_system_block(presupuesto_resumen)
                 if self.model:
-                    response_text = await self._generate_ai_response(query, data_context)
+                    response_text = await self._generate_ai_response(
+                        query, data_context, system_block=system_block
+                    )
                 else:
                     response_text = self._generate_fallback_response(query, data_context)
 
@@ -474,18 +523,47 @@ class InsightReportingAgent:
                 "query": query
             }
 
-    async def _generate_ai_response(self, query: str,
-                                   context: dict[str, Any] | None = None) -> str:
-        """Genera respuesta con IA"""
+    def _build_messages(self, query: str,
+                        context: dict[str, Any] | None = None,
+                        system_block: str | None = None) -> list[dict[str, str]]:
+        """Arma los mensajes que van al modelo.
+
+        `system_block` es contexto estable y viaja en el mensaje `system` —no
+        concatenado al user— para que pese igual en cada turno; el `context`
+        por query sigue yendo en el user message.
+        """
         context_str = ""
         if context:
             context_str = f"\n\nContexto adicional:\n{str(context)}"
 
-        messages = [
-            {"role": "system", "content": "Eres un asistente experto en análisis de transparencia gubernamental. Responde de forma clara y concisa."}
+        system_content = (
+            "Eres un asistente experto en análisis de transparencia gubernamental. "
+            "Responde de forma clara y concisa, en español. "
+            "La respuesta se lee en una burbuja de chat, no en un documento: prosa "
+            "breve y, si enumerás, guiones cortos ('- '); evitá encabezados ('#') y "
+            "bloques de cita ('>'). "
+            # La regla que faltaba.  El agente afirmaba "0 documentos encontrados"
+            # sobre organismos que nunca consultó, y una ausencia inventada se lee
+            # como dato verificado.  El hueco se declara, no se rellena.
+            "Nunca afirmes que no hay datos, registros o documentos sobre algo que no "
+            "consultaste. Si te piden el detalle de un organismo y sus datos no están "
+            "en el contexto, decí que no los tenés y pedí el nombre del organismo; no "
+            "lo interpretes como que no publicó nada."
+        )
+        if system_block:
+            system_content = f"{system_content}\n\n{system_block}"
+
+        return [
+            {"role": "system", "content": system_content}
         ] + self.conversation_history[-6:] + [  # Últimos 3 turnos
             {"role": "user", "content": query + context_str}
         ]
+
+    async def _generate_ai_response(self, query: str,
+                                   context: dict[str, Any] | None = None,
+                                   system_block: str | None = None) -> str:
+        """Genera respuesta con IA"""
+        messages = self._build_messages(query, context, system_block)
 
         try:
             import asyncio
