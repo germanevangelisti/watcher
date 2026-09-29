@@ -5,9 +5,17 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { FadeTransition } from "@/components/ui/fade-transition"
+import { ChatMarkdown } from "@/components/features/chat-markdown"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAgentHealth, useAgentChat, useSystemStatistics, useTopRiskDocuments, useTransparencyTrends } from "@/lib/api"
 import { Bot, Activity, MessageSquare, Send, TrendingUp, AlertTriangle, BarChart3, RefreshCw, CheckCircle2, XCircle } from "lucide-react"
+
+// Empty state del chat: preguntas ejecutivas de presupuesto (copy literal acordado con PO)
+const CHAT_SUGGESTIONS = [
+  "¿Qué porcentaje del presupuesto vigente se ha ejecutado?",
+  "¿Qué organismos concentran mayor gasto?",
+  "¿Qué finalidades presentan mayor desvío?",
+] as const
 
 export function AgentsDashboard() {
   const [chatMessage, setChatMessage] = useState("")
@@ -20,15 +28,15 @@ export function AgentsDashboard() {
   
   const chatMutation = useAgentChat()
 
-  const handleSendMessage = async () => {
-    if (!chatMessage.trim()) return
+  const sendMessage = async (text: string) => {
+    if (!text.trim() || chatMutation.isPending) return
 
-    const userMessage = { role: "user", content: chatMessage }
+    const userMessage = { role: "user", content: text }
     setChatHistory((prev) => [...prev, userMessage])
     setChatMessage("")
 
     try {
-      const response = await chatMutation.mutateAsync(chatMessage)
+      const response = await chatMutation.mutateAsync(text)
       const content = typeof response === 'string' ? response : (response.response || JSON.stringify(response))
       const assistantMessage = { role: "assistant", content }
       setChatHistory((prev) => [...prev, assistantMessage])
@@ -36,6 +44,14 @@ export function AgentsDashboard() {
       const errorMessage = { role: "assistant", content: "Error: No se pudo obtener respuesta del agente" }
       setChatHistory((prev) => [...prev, errorMessage])
     }
+  }
+
+  const handleSendMessage = () => sendMessage(chatMessage)
+
+  // Chip: rellena el input con el texto y dispara el mismo envío que "Enviar"
+  const handleSuggestion = (text: string) => {
+    setChatMessage(text)
+    void sendMessage(text)
   }
 
   const getAgentIcon = () => {
@@ -197,7 +213,22 @@ export function AgentsDashboard() {
                     <div className="text-center">
                       <Bot className="h-12 w-12 mx-auto mb-2 opacity-50" />
                       <p className="text-sm">No hay mensajes aún</p>
-                      <p className="text-xs mt-1">Envía un mensaje para comenzar</p>
+                      <p className="text-xs mt-1">Envía un mensaje o elegí una pregunta para comenzar</p>
+                      <div className="mt-4 flex flex-wrap justify-center gap-2" data-testid="chat-suggestions">
+                        {CHAT_SUGGESTIONS.map((text) => (
+                          <Button
+                            key={text}
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-auto whitespace-normal text-left text-xs"
+                            onClick={() => handleSuggestion(text)}
+                            disabled={chatMutation.isPending}
+                          >
+                            {text}
+                          </Button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -213,7 +244,13 @@ export function AgentsDashboard() {
                             : "bg-muted"
                         }`}
                       >
-                        <p className="text-sm">{msg.content}</p>
+                        {/* El agente contesta en Markdown: se renderiza. Lo que
+                            escribe el usuario va plano, tal como lo tipeó. */}
+                        {msg.role === "user" ? (
+                          <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                        ) : (
+                          <ChatMarkdown content={msg.content} />
+                        )}
                       </div>
                     </div>
                   ))

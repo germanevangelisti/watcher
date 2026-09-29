@@ -1,8 +1,14 @@
 import { useQuery } from "@tanstack/react-query"
 import apiClient from "../client"
 
+export type JurisdictionLevel = "nacion" | "provincia" | "municipio"
+
 export interface JurisdictionSummary {
+  /** Clave en required_documents.json (nacion, cordoba_provincia, cordoba_ciudad) */
+  jurisdiction_key?: string
+  /** Código real: AR, AR-X, AR-X-CBA */
   jurisdiction_code: string
+  jurisdiction_level?: JurisdictionLevel | null
   jurisdiction_id: number | null
   jurisdiction_name: string
   applicable_laws: string[]

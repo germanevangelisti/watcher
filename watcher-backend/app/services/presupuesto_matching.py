@@ -12,6 +12,8 @@ from __future__ import annotations
 import json
 import re
 import unicodedata
+from collections import defaultdict
+from collections.abc import Iterable
 from datetime import date, datetime
 
 # ── Normalización ──────────────────────────────────────────────────────────────
@@ -118,6 +120,36 @@ def preferred_organismo_display(names: list[str]) -> str:
         return (trunc, messy, -len(stripped), stripped)
 
     return min(names, key=rank).strip(" -–—")
+
+
+def display_por_canonico(names: Iterable[str | None]) -> dict[str, str]:
+    """canonical → mejor grafía observada, para agrupar lo que no está en la Ley.
+
+    `vigente_por_organismo_canonico` sólo ve las filas de `presupuesto_base`, así que
+    un organismo que publica actos pero no tiene partida en la Ley (Caminos de las
+    Sierras S.A., por ejemplo) queda fuera de su mapa: sin entrada, `remap_organismo_key`
+    devuelve el nombre crudo y cada grafía abre su propio bucket.  Este mapa cubre ese
+    hueco con los canónicos que sí aparecen en el ledger.
+    """
+    por_canon: dict[str, list[str]] = defaultdict(list)
+    for nombre in names:
+        if not nombre:
+            continue
+        clave = canonical_organismo_name(nombre)
+        if clave:
+            por_canon[clave].append(nombre)
+    return {clave: _mejor_grafia(nombres) for clave, nombres in por_canon.items()}
+
+
+def _mejor_grafia(nombres: list[str]) -> str:
+    """Grafía para mostrar, prefiriendo la mixta sobre la todo-mayúsculas.
+
+    `preferred_organismo_display` desempata por largo, y en el ledger la grafía más
+    corta suele ser la que viene gritada del PDF ("UNIDAD EJECUTORA" contra "Unidad
+    Ejecutora").  Cuando hay una mixta, gana esa.
+    """
+    mixtas = [n for n in nombres if not n.strip().isupper()]
+    return preferred_organismo_display(mixtas or nombres)
 
 
 def _distinctive_jaccard(a: str, b: str) -> float:

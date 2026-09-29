@@ -5,7 +5,8 @@
   "description": "Documentos obligatorios por jurisdicción según leyes de transparencia fiscal",
   "jurisdictions": {
     "nacion": {
-      "jurisdiction_id": null,
+      "jurisdiction_id": 100,
+      "jurisdiction_level": "nacion",
       "jurisdiction_name": "Nación Argentina",
       "jurisdiction_code": "AR",
       "applicable_laws": [
@@ -68,6 +69,7 @@
     },
     "cordoba_provincia": {
       "jurisdiction_id": 1,
+      "jurisdiction_level": "provincia",
       "jurisdiction_name": "Provincia de Córdoba",
       "jurisdiction_code": "AR-X",
       "applicable_laws": [
@@ -205,6 +207,7 @@
     },
     "cordoba_ciudad": {
       "jurisdiction_id": 2,
+      "jurisdiction_level": "municipio",
       "jurisdiction_name": "Ciudad de Córdoba",
       "jurisdiction_code": "AR-X-CBA",
       "applicable_laws": [

@@ -2,26 +2,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useTransparencyOverview } from "@/lib/api/hooks/use-transparency"
-import type { JurisdictionSummary } from "@/lib/api/hooks/use-transparency"
-import { MapPin, Building2, Landmark, FileCheck, FileX, FileDown, ChevronDown, ChevronRight, Scale } from "lucide-react"
+import type { JurisdictionLevel, JurisdictionSummary } from "@/lib/api/hooks/use-transparency"
+import { getJurisdictionLevel, JURISDICTION_LEVEL_LABEL } from "@/lib/jurisdiction-level"
+import { MapPin, Building2, Landmark, FileCheck, FileX, FileDown, ChevronDown, ChevronRight, Scale, AlertTriangle } from "lucide-react"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
 
-function getJurisdictionIcon(code: string) {
-  switch (code) {
-    case "AR":
+function getJurisdictionIcon(level: JurisdictionLevel) {
+  switch (level) {
+    case "nacion":
       return <Landmark className="h-5 w-5" />
-    case "CBA":
+    case "provincia":
       return <Building2 className="h-5 w-5" />
     default:
       return <MapPin className="h-5 w-5" />
   }
-}
-
-function getJurisdictionLevel(code: string): "nacion" | "provincia" | "municipio" {
-  if (code === "AR") return "nacion"
-  if (code === "CBA") return "provincia"
-  return "municipio"
 }
 
 function getCoverageColor(coverage: number): string {
@@ -38,10 +33,12 @@ function getCoverageBg(coverage: number): string {
 
 function JurisdictionCard({ jurisdiction }: { jurisdiction: JurisdictionSummary }) {
   const [expanded, setExpanded] = useState(false)
-  const level = getJurisdictionLevel(jurisdiction.jurisdiction_code)
+  const level = getJurisdictionLevel(jurisdiction)
+  const byType = Object.entries(jurisdiction.by_type ?? {})
 
   return (
     <div
+      data-testid={`jurisdiction-${jurisdiction.jurisdiction_code}`}
       className={cn(
         "rounded-lg border p-4 transition-colors hover:bg-muted/30",
         level === "nacion" && "border-blue-500/30 bg-blue-500/5",
@@ -60,11 +57,13 @@ function JurisdictionCard({ jurisdiction }: { jurisdiction: JurisdictionSummary 
             level === "provincia" && "bg-purple-500/10 text-purple-500",
             level === "municipio" && "bg-orange-500/10 text-orange-500"
           )}>
-            {getJurisdictionIcon(jurisdiction.jurisdiction_code)}
+            {getJurisdictionIcon(level)}
           </div>
           <div>
             <h4 className="font-semibold text-sm">{jurisdiction.jurisdiction_name}</h4>
-            <p className="text-xs text-muted-foreground capitalize">{level}</p>
+            <p className="text-xs text-muted-foreground" data-testid="jurisdiction-level">
+              {JURISDICTION_LEVEL_LABEL[level]}
+            </p>
           </div>
         </div>
 
@@ -141,12 +140,17 @@ function JurisdictionCard({ jurisdiction }: { jurisdiction: JurisdictionSummary 
           )}
 
           {/* Documents by type */}
-          {Object.keys(jurisdiction.by_type).length > 0 && (
-            <div>
-              <p className="text-xs font-medium text-muted-foreground mb-1.5">Documentos por tipo:</p>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {Object.entries(jurisdiction.by_type).map(([docType, counts]) => {
-                  const total = (counts.missing || 0) + (counts.downloaded || 0) + (counts.processed || 0)
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-1.5">Documentos por tipo:</p>
+            {byType.length === 0 ? (
+              <p className="text-xs text-muted-foreground" data-testid="by-type-empty">
+                Sin documentos en el inventario para esta jurisdicción. Sincronizá el inventario
+                (POST /api/v1/compliance/documents/sync).
+              </p>
+            ) : (
+              <div className="grid gap-2 sm:grid-cols-2" data-testid="by-type-list">
+                {byType.map(([docType, counts]) => {
+                  const total = counts.total ?? (counts.missing || 0) + (counts.downloaded || 0) + (counts.processed || 0)
                   const available = (counts.downloaded || 0) + (counts.processed || 0)
                   const pct = total > 0 ? (available / total) * 100 : 0
 
@@ -162,8 +166,8 @@ function JurisdictionCard({ jurisdiction }: { jurisdiction: JurisdictionSummary 
                   )
                 })}
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -174,7 +178,21 @@ export function TransparencyMap() {
   const { data, isLoading, error } = useTransparencyOverview()
 
   if (error) {
-    return null // Silently fail if compliance data is not available yet
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MapPin className="h-5 w-5" />
+            Mapa de Transparencia del Estado
+          </CardTitle>
+          <CardDescription className="flex items-center gap-1.5 text-red-600">
+            <AlertTriangle className="h-4 w-4" />
+            No se pudo cargar el inventario de documentos (GET /compliance/documents/overview).
+            Verificá que el backend esté activo.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    )
   }
 
   if (isLoading) {
@@ -212,8 +230,8 @@ export function TransparencyMap() {
   // Sort jurisdictions: nacion first, then provincia, then municipio
   const levelOrder = { nacion: 0, provincia: 1, municipio: 2 }
   const sortedJurisdictions = [...data.jurisdictions].sort((a, b) => {
-    const aLevel = levelOrder[getJurisdictionLevel(a.jurisdiction_code)] ?? 3
-    const bLevel = levelOrder[getJurisdictionLevel(b.jurisdiction_code)] ?? 3
+    const aLevel = levelOrder[getJurisdictionLevel(a)] ?? 3
+    const bLevel = levelOrder[getJurisdictionLevel(b)] ?? 3
     return aLevel - bLevel
   })
 
@@ -234,16 +252,22 @@ export function TransparencyMap() {
             <div className={cn("text-2xl font-bold", getCoverageColor(data.overall_coverage))}>
               {data.overall_coverage.toFixed(0)}%
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground" data-testid="overall-coverage">
               Cobertura global ({data.total_processed}/{data.total_documents})
             </p>
           </div>
         </div>
+        {data.total_documents === 0 && (
+          <p className="text-xs text-muted-foreground mt-2" data-testid="inventory-empty">
+            El inventario de documentos requeridos está vacío. Ejecutá la sincronización
+            (POST /api/v1/compliance/documents/sync) para cargarlo desde required_documents.json.
+          </p>
+        )}
       </CardHeader>
       <CardContent className="space-y-3">
         {sortedJurisdictions.map((jurisdiction) => (
           <JurisdictionCard
-            key={jurisdiction.jurisdiction_code}
+            key={jurisdiction.jurisdiction_key ?? jurisdiction.jurisdiction_code}
             jurisdiction={jurisdiction}
           />
         ))}

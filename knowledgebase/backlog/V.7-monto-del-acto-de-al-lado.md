@@ -59,6 +59,39 @@ mismo** expediente `0378-219684/2026` con tres objetos distintos (plataforma, le
 pistolas) porque los tres están en la misma página; 7503 y 7504 comparten
 `2026/000016`. No es una segunda historia: es el mismo texto aplanado.
 
+**Tercer síntoma, misma causa — el nombre del organismo** (agregado 2026-09-29,
+medido en el gate manual del pack fix-ui+chat). Si el número del vecino se hereda,
+el **nombre** del vecino también. Hay filas del ledger cuyo `organismo` es una
+**cadena** de organismos pegados con ` - `:
+
+| Actos | Monto | `organismo` en el ledger |
+|---|---|---|
+| 1 | $45.552,79 M | `Agencia Córdoba de Inversión y Financiamiento Sociedad de Economía Mixta (ACIF S.E.M.) - Secretaría de Infraestructura Hídrica y Gasífera Ministerio de Infraestructura y Servicios Públicos` |
+| 1 | $34.026,00 M | `SECRETARÍA DE ASUNTOS INSTITUCIONALES - SECRETARÍA GENERAL DE LA GOBERNACIÓN - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA` |
+| 2 | $150,75 M | `SECRETARÍA DE ASUNTOS INSTITUCIONALES - … - SECRETARIA GENERAL DE SALUD Y DESARROLLO HUMANO - MINISTERIO DE ECONOMÍA Y GESTIÓN PÚBLICA - MINISTERIO DE SALUD` |
+
+**La correlación es el argumento**: los organismos que aparecen **dentro** de esas
+cadenas son *los mismos* que esta historia ya identificó como afectados
+(**Infraestructura Hídrica**, **Asuntos Institucionales**, **Salud y Desarrollo
+Humano**). Que el nombre de un organismo se pegue al de otro, y que los organismos que
+se pegan sean exactamente los del robo de monto, apunta a **una sola causa**: la página
+aplanada. Un nombre encadenado, además, rompe **dos** cosas — la atribución del monto y
+la identidad del organismo (se ve en V.9/V.10).
+
+**Falta la verificación de geometría**, y acá no se saltea: igual que los tres casos de
+arriba, hay que leer el PDF con `extract_text(layout=True)` y confirmar que los
+segmentos de la cadena provienen de **columnas distintas**. Puede haber un caso
+legítimo —un acto firmado por una cadena de autoridades y publicado como tal—, así que
+**no se cuenta como caso verificado hasta esa lectura**. Lo que se afirma es que la
+firma existe y que el conjunto de organismos coincide sospechosamente.
+
+**No partir por ` - ` para arreglarlo.** Hay nombres **legítimos** con guion que un
+`split` ingenuo rompería: `Dirección de Inteligencia Fiscal - Área Determinaciones`
+($8.657,49 M), `Universidad Nacional de Córdoba - Facultad de Derecho` ($3.115,17 M),
+`Universidad Nacional de Córdoba - Secretaría de Planeamiento` ($349,07 M),
+`Subsecretaría de Infraestructura Urbana, dependiente del Ministerio de Infraestructura
+y Servicios Públicos` ($558,41 M).
+
 ## Mecanismo nombrado
 
 `app/services/extractors/pdfplumber_extractor.py:126` usa `page.extract_text()` sin
