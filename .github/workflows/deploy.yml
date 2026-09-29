@@ -1,10 +1,16 @@
 name: Deploy to GCE
 
+# INTERIM 2026-09-29 (PO): push-deploy desactivado — SSH a watcher-prod falla
+# (gcloud.compute.ssh key propagation / firewall / IAP / OS Login).
+# Ticket: vault wiki board/stories/story-watcher-fix-deploy-ssh (id watcher-fix-deploy-ssh).
+# Solo workflow_dispatch hasta fix. Para reactivar auto-deploy tras SSH verde, restaurar
+# el bloque workflow_run comentado abajo.
 on:
-  workflow_run:
-    workflows: ["CI - Watcher Agent"]
-    branches: [main]
-    types: [completed]
+  workflow_dispatch:
+  # workflow_run:
+  #   workflows: ["CI - Watcher Agent"]
+  #   branches: [main]
+  #   types: [completed]
 
 concurrency:
   group: deploy-production
@@ -12,7 +18,8 @@ concurrency:
 
 jobs:
   deploy:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    # Con solo workflow_dispatch no hay workflow_run; if legacy se omite.
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
