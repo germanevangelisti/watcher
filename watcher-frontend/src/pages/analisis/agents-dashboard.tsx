@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { FadeTransition } from "@/components/ui/fade-transition"
+import { ChatMarkdown } from "@/components/features/chat-markdown"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAgentHealth, useAgentChat, useSystemStatistics, useTopRiskDocuments, useTransparencyTrends } from "@/lib/api"
 import { Bot, Activity, MessageSquare, Send, TrendingUp, AlertTriangle, BarChart3, RefreshCw, CheckCircle2, XCircle } from "lucide-react"
@@ -243,7 +244,13 @@ export function AgentsDashboard() {
                             : "bg-muted"
                         }`}
                       >
-                        <p className="text-sm">{msg.content}</p>
+                        {/* El agente contesta en Markdown: se renderiza. Lo que
+                            escribe el usuario va plano, tal como lo tipeó. */}
+                        {msg.role === "user" ? (
+                          <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                        ) : (
+                          <ChatMarkdown content={msg.content} />
+                        )}
                       </div>
                     </div>
                   ))
