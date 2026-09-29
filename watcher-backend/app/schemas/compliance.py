@@ -240,7 +240,9 @@ class RequiredDocumentResponse(RequiredDocumentBase):
 
 class JurisdictionDocumentsSummary(BaseModel):
     """Resumen de documentos de una jurisdicción"""
-    jurisdiction_code: str
+    jurisdiction_key: str | None = None  # clave en required_documents.json (nacion, cordoba_provincia, ...)
+    jurisdiction_code: str  # código real: AR, AR-X, AR-X-CBA
+    jurisdiction_level: str | None = None  # nacion | provincia | municipio
     jurisdiction_id: int | None = None
     jurisdiction_name: str
     applicable_laws: list[str]

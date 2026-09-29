@@ -6,14 +6,20 @@ Gestiona el inventario de documentos obligatorios por jurisdicción y su estado.
 
 import hashlib
 import json
+import logging
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from sqlalchemy import and_, select
+from sqlalchemy import and_, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..db.models import ComplianceCheck, RequiredDocument
+from ..db.models import ComplianceCheck, Jurisdiccion, RequiredDocument
+
+logger = logging.getLogger(__name__)
+
+# jurisdiction_level (config) -> Jurisdiccion.tipo (DB)
+LEVEL_TO_TIPO = {"nacion": "nacion", "provincia": "provincia", "municipio": "capital"}
 
 
 class DocumentTracker:
@@ -31,9 +37,66 @@ class DocumentTracker:
                 self._config = json.load(f)
         return self._config
 
+    async def resolve_jurisdiction_id(self, juris_data: dict[str, Any]) -> int | None:
+        """
+        Resuelve el id real en `jurisdicciones` para una jurisdicción del config.
+
+        Busca primero por el id del config (si el nombre coincide) y luego por nombre.
+        Devuelve None si la fila no existe — nunca se usa None como "sin filtro".
+        """
+        config_id = juris_data.get("jurisdiction_id")
+        name = juris_data["jurisdiction_name"]
+
+        if config_id is not None:
+            row = await self.db.get(Jurisdiccion, config_id)
+            if row is not None and row.nombre == name:
+                return row.id
+
+        result = await self.db.execute(select(Jurisdiccion.id).filter(Jurisdiccion.nombre == name))
+        found = result.scalar_one_or_none()
+        if found is not None and config_id is not None and found != config_id:
+            logger.warning(
+                "Jurisdicción %r existe con id=%s pero el config dice %s; se usa el de la DB",
+                name, found, config_id,
+            )
+        return found
+
+    async def ensure_jurisdiction(self, juris_data: dict[str, Any]) -> int:
+        """Get-or-create de la fila `Jurisdiccion` (seed idempotente, p. ej. Nación id=100)."""
+        existing = await self.resolve_jurisdiction_id(juris_data)
+        if existing is not None:
+            return existing
+
+        config_id = juris_data.get("jurisdiction_id")
+        if config_id is not None and await self.db.get(Jurisdiccion, config_id) is not None:
+            # El id del config está tomado por otra jurisdicción: crear con id autogenerado
+            logger.warning("jurisdicciones.id=%s ocupado; %r se crea con id autogenerado",
+                           config_id, juris_data["jurisdiction_name"])
+            config_id = None
+
+        row = Jurisdiccion(
+            nombre=juris_data["jurisdiction_name"],
+            tipo=LEVEL_TO_TIPO.get(juris_data.get("jurisdiction_level", ""), "provincia"),
+            extra_data={"jurisdiction_code": juris_data.get("jurisdiction_code")},
+        )
+        if config_id is not None:
+            row.id = config_id
+        self.db.add(row)
+        await self.db.flush()
+
+        if config_id is not None and self.db.bind.dialect.name == "postgresql":
+            # Un id explícito no avanza la secuencia SERIAL; alinearla para no colisionar
+            await self.db.execute(text(
+                "SELECT setval(pg_get_serial_sequence('jurisdicciones', 'id'), "
+                "(SELECT MAX(id) FROM jurisdicciones))"
+            ))
+        return row.id
+
     async def sync_required_documents(self) -> dict[str, int]:
         """
         Sincroniza documentos requeridos desde config a la base de datos.
+        Asegura que cada jurisdicción exista en `jurisdicciones` y adopta filas
+        huérfanas (`jurisdiccion_id` NULL de syncs viejos) por nombre de documento.
         Retorna conteo por jurisdicción.
         """
         config = self.load_config()
@@ -41,7 +104,16 @@ class DocumentTracker:
 
         for juris_code, juris_data in config.get("jurisdictions", {}).items():
             count = 0
-            jurisdiction_id = juris_data.get("jurisdiction_id")
+            jurisdiction_id = await self.ensure_jurisdiction(juris_data)
+
+            doc_names = [d["document_name"] for d in juris_data.get("documents", [])]
+            if doc_names:
+                await self.db.execute(
+                    update(RequiredDocument)
+                    .where(RequiredDocument.jurisdiccion_id.is_(None))
+                    .where(RequiredDocument.document_name.in_(doc_names))
+                    .values(jurisdiccion_id=jurisdiction_id)
+                )
 
             for doc_def in juris_data.get("documents", []):
                 # Buscar si ya existe (usando document_name como identificador único)
@@ -240,13 +312,19 @@ class DocumentTracker:
         config = self.load_config()
         overview = []
 
-        for juris_code, juris_data in config.get("jurisdictions", {}).items():
-            jurisdiction_id = juris_data.get("jurisdiction_id")
+        for juris_key, juris_data in config.get("jurisdictions", {}).items():
+            jurisdiction_id = await self.resolve_jurisdiction_id(juris_data)
 
-            summary = await self.get_jurisdiction_summary(jurisdiction_id)
+            if jurisdiction_id is None:
+                # Sin fila en DB (inventario sin sync): cero, no "todos los docs"
+                summary = {"total": 0, "coverage_percentage": 0.0, "by_type": {}}
+            else:
+                summary = await self.get_jurisdiction_summary(jurisdiction_id)
 
             overview.append({
-                "jurisdiction_code": juris_code,
+                "jurisdiction_key": juris_key,
+                "jurisdiction_code": juris_data.get("jurisdiction_code", juris_key),
+                "jurisdiction_level": juris_data.get("jurisdiction_level"),
                 "jurisdiction_id": jurisdiction_id,
                 "jurisdiction_name": juris_data["jurisdiction_name"],
                 "applicable_laws": juris_data.get("applicable_laws", []),
