@@ -136,6 +136,19 @@ Ordenado por valor de negocio. Estatus: `idea` | `refinado` | `en progreso` | `h
 | V.6 | Dedup de licitaciones republicadas | `_normalize_acto` unifica grafías; A/B medido; contra-ejemplos con test | ✅ hecho |
 | V.7 | El monto del acto de al lado | El extractor no mezcla columnas (4ª sección) | ⬜ pendiente |
 | V.8 | El monto del aviso vecino | Guard en `crud.py:208` contra el **texto de entrada** (no la cita) | ⬜ pendiente* |
+| V.9 | Canónicas distintas para el mismo organismo | El agregado no muestra al mismo organismo en dos buckets | ⬜ pendiente |
+| V.10 | El buscador de ejecución no encuentra lo que sí está | Buscar `CAMINOS DE LAS SIERRAS` devuelve 27 actos, no 23 | ⬜ pendiente |
+
+> **V.9 y V.10 (2026-09-29)** nacen del gate manual del pack fix-ui + chat, al verificar
+> el bugfix de agrupación de organismos. Son **defectos vecinos, no regresiones** de ese
+> fix: el bugfix cerró "una canónica, muchas grafías"; V.9 es "una entidad, varias
+> canónicas" y V.10 es el mismo matching por grafía hecho por un usuario tipeando en el
+> buscador. Ninguno mueve totales (el dinero está, mal atribuido). **Orden sugerido: V.9
+> antes que V.10** — arreglar el buscador sin arreglar las canónicas deja el mismo
+> organismo en dos filas de la tabla.
+>
+> **V.7 ganó un tercer síntoma** con la misma causa (el **nombre** del organismo
+> encadenado, no sólo el monto); ver ahí la evidencia y lo que falta verificar.
 
 \* El caso catastrófico de V.8 ($3,0B en una fila, alerta fabricada de 10.850%) está
 **reparado a mano contra el PDF**, con evidencia en `datos_extra`; la reparación se
@@ -182,6 +195,7 @@ Medición 2026-09-14 tras P.7.3: `presupuesto_base` 480 filas; match **90/131** 
 | DT-5 | 6 módulos de test no colectan: `watcher_monolith` y `kba_agent` no existen en el repo | 7 | ✅ resuelto (2026-09-18: 3 revividos por prefijo, 3 con `importorskip`) |
 | DT-6 | `ruff.toml` (80 bytes) tiene precedencia sobre `pyproject.toml` en ruff y solo define `per-file-ignores`: `select` y `line-length = 100` nunca se aplicaron. Ruff corría con defaults | 7 | ✅ causa raíz resuelta (2026-09-18) |
 | DT-7 | Residual de lint tras el autofix: 643 errores sin autofix posible — `E501` 439 (líneas >100), `B904` 97 (`raise` sin `from`), `N806` 34. Concentrados en `app/db/models.py` (49 E501), endpoints y agents | 7 | ✅ cerrado (2026-09-23): gate acotado a `app`/`agents`/`tests`, 5 reglas ignoradas con motivo, 34 residuales arreglados a mano |
+| DT-8 | `make start-backend` usa el `uvicorn` del **PATH**, que en esta máquina es el shim de pyenv **3.9.10**: `config.py:16` usa `str \| None` (PEP 604) y el backend **no arranca** (`TypeError: unsupported operand type(s) for \|`). Además el target vigila sólo `app/`, así que los cambios en `agents/` no recargan | 7 | ⬜ abierto |
 
 > Sincronizado con commits hasta `da098b7` — 2026-06-26. Bugs DT-3..DT-6 detectados en P.7 (2026-09-13).
 > DT-4..DT-7 trabajados el 2026-09-18 (rama `chore/lint-normalization`). Detalle de DT-6: la deuda real era 8.327 errores, no 2.668 — el número chico era el de los defaults, no el del ruleset del proyecto.
@@ -194,3 +208,19 @@ Medición 2026-09-14 tras P.7.3: `presupuesto_base` 480 filas; match **90/131** 
 > `from e`) y `UP042` (24 enums: pasar a `StrEnum` cambia `str()` y hay enums que se
 > serializan). **Lo que queda pendiente no es "0 errores", son esas 2 reglas**: B904
 > y UP042 siguen sin arreglar, sólo que ahora dejan de romper CI y están declaradas.
+>
+> **DT-8 (2026-09-29) — documentada, no arreglada.** Detectada al arrancar el backend para
+> el gate manual: `make start-backend` invoca `uvicorn` pelado, y en esta máquina eso
+> resuelve al shim de **pyenv 3.9.10**, no al intérprete del proyecto. El `.venv` de la
+> raíz **también** es 3.9.10; el correcto es `watcher-backend/.venv` (**3.11.0**). Como
+> `config.py:16` usa `str | None` (PEP 604), el arranque muere con `TypeError:
+> unsupported operand type(s) for |: 'type' and 'NoneType'`. **El comando que funciona:**
+>
+> ```bash
+> cd ~/watcher/watcher-backend && .venv/bin/python -m uvicorn app.main:app \
+>   --reload --reload-dir app --reload-dir agents --host 0.0.0.0 --port 8001
+> ```
+>
+> El `--reload-dir agents` extra tapa el **segundo** defecto del target: el Makefile vigila
+> sólo `app/`, así que los cambios en `agents/` (donde vive el chat) no recargan y se
+> prueban versiones viejas sin darse cuenta. No se tocó el Makefile en esta sesión.
