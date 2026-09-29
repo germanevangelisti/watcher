@@ -1,7 +1,58 @@
 # Estado Actual — Watcher Agent
 
-**Última actualización:** 2026-09-28
+**Última actualización:** 2026-09-29
 **Snapshot del momento.** Se pisa al avanzar. La historia completa está en `docs/changelog.md` y el historial de git.
+
+> **Pack fix-ui + chat-insights — cerrado** (2026-09-29): los **7 tickets que estaban en
+> `testing` pasan a `done`** por decisión del PO, con la implementación commiteada y
+> pusheada en `feat/pack-fix-ui-chat-p0`: `5ce5a83` jerarquía nación/provincia/ciudad +
+> Mapa de Transparencia · `6967572` 3 chips ejecutivos · `8de9e64` bugfix de agrupación de
+> organismos · `7b1ca44` tools de presupuesto + system block + **regla de honestidad** ·
+> `cdf2702` markdown en las burbujas del chat · `e83bffa` `.env.example` · `149156c` docs KB.
+>
+> **Lo que cambia para el ciudadano:** el chat deja de contestar transparencia cuando le
+> preguntan por presupuesto (los tres chips ahora resuelven a `ejecucion_resumen`,
+> `organismos` y `finalidades`, con el desglose de un organismo puntual como cuarto
+> camino), y **sin datos ya no inventa la ausencia** — la regla del system prompt prohíbe
+> afirmar que no hay registros sobre algo que no se consultó, y la sonda lo verifica.
+> Antes, *"desglosa los gastos de Caminos de las Sierras"* devolvía *"0 documentos
+> encontrados"* sobre un organismo que había publicado 27 actos.
+>
+> **El bugfix de agrupación (frontera MB: excepción documentada + OK PO, sin cambio de
+> shape):** `display_by_canon` se armaba sólo con los nombres de la Ley, así que cada
+> grafía de un organismo **sin partida** abría su propio bucket y el mayor se leía como el
+> total — **30 organismos mostraban una fracción de lo publicado** (Caminos de las
+> Sierras **55.399,83 → 76.631,78 M**; Deán Funes 0,35 → 3.471,93 M). 181 → **151**
+> buckets, totales **bit a bit idénticos**, y 31/31 fusiones comparten huella ortográfica
+> (0 destinos mezclan dos organismos).
+>
+> **DoD medido:** suite backend **840 passed / 10 failed / 7 skipped** — las 10 rojas son
+> las pre-existentes (DT-2 de `indexing_service`, `security_middleware` y el e2e
+> adversarial), **cero nuevas**; frontend **59/59**. Contra el corpus real: **151** buckets
+> · **$1.776.409,53 M** · **972 actos**; EPEC 276 (agregado) contra 278 (desglose del chat)
+> sigue declarado como diferencia de criterio, no como error.
+>
+> **El gate manual le dejó dos defectos vecinos a la épica V** (documentados, no
+> arreglados): **V.9** — el canonicalizador devuelve canónicas distintas para el mismo
+> organismo, así que APROSS, CEPROCOR y UNC Fac. de Derecho quedan en 2–3 buckets
+> ($2.924,75 M = 0,16% del proxy BO); es el **piso** del bugfix, que sólo puede unir lo que
+> comparte canónica. **V.10** — el buscador de `/presupuesto/ejecucion` filtra con `ilike`
+> sobre la columna **cruda**, así que quien escribe bien el nombre obtiene **menos** que
+> quien escribe mal (23 actos donde hay 27). Orden: **V.9 antes que V.10**. Y **V.7** ganó
+> un tercer síntoma con la misma causa (el extractor también hereda el *nombre* del
+> organismo de la columna vecina), declarado como sospecha **sin verificar** hasta leer la
+> geometría del PDF.
+>
+> **Trampa de lectura, para no repetirla:** **0,09%** = pagos/techo · **23,49%** =
+> compromiso/techo · **22,77%** = porción publicada **sin partida de la Ley**
+> (`cobertura.pct_sin_denominador`) — **no es cobertura**. La cobertura se declara aparte:
+> **8 de 12 meses (feb–sep)**, con **2026-01** vencido sin ingesta.
+>
+> **DT-8** (nueva, documentada y **no** arreglada): `make start-backend` invoca `uvicorn`
+> pelado, que en esta máquina es el shim de **pyenv 3.9.10**, y muere en `config.py:16`
+> (`str | None`, PEP 604). El intérprete correcto es `watcher-backend/.venv` (**3.11.0**).
+> Además el target vigila sólo `app/`, así que los cambios en `agents/` no recargan. El
+> comando que funciona está en `knowledgebase/backlog/backlog.md`.
 
 > **Ampliación B — UI cerrada** (2026-09-28): las tres historias de UI del paquete están
 > **`done`**, con la **prueba manual de Germán OK** y todos sus criterios tildados —
@@ -74,10 +125,10 @@
 
 | Campo | Valor |
 |---|---|
-| Release | v2.0.0 + H.1 + P.7 + V.1 … V.6 + V.5 + MB API + **MB UI (techo + disclaimer + proxy BO)** + **M6 evidencia** |
-| Estado | **MB `done` de punta a punta (2026-09-28)**: UI + evidencia M6 con **prueba manual OK**, commiteado `40c48a6` (falta el push). Techo 1/2/3 + `sin_clasificar` con `detalle` en pantalla, disclaimer leyendo `honestidad`, proxy BO con banner de cobertura. V.5: 8 de 12 meses medidos; **3** alertas >100%, todas con causa medida |
-| Stack LLM | Gemini (cloud) + LocalPro/Ollama (`qwen2.5:7b`) |
-| Pendiente inmediato | **Nada del Must**: commit `40c48a6`, 3 épicas cerradas y kanban sin To do. Lo que sigue es **V.7/V.8** (obligan a **re-extraer**: decisión de costo) y **2026-01**, único mes vencido sin ingesta. El **push** a `origin/main` queda a un comando. |
+| Release | v2.0.0 + H.1 + P.7 + V.1 … V.6 + V.5 + MB API + **MB UI (techo + disclaimer + proxy BO)** + **M6 evidencia** + **pack fix-ui + chat-insights (2026-09-29)** |
+| Estado | **Pack fix-ui + chat `done`** (2026-09-29): los 7 tickets de `testing` cerrados por el PO, con el chat ya resolviendo presupuesto (chips, desglose por organismo, tools) y la **regla de honestidad** contra las ausencias inventadas. El bugfix de agrupación cerró "una canónica, muchas grafías" (151 buckets, totales idénticos). Rama `feat/pack-fix-ui-chat-p0` **pusheada**. V.5: 8 de 12 meses medidos; **3** alertas >100%, todas con causa medida |
+| Stack LLM | Gemini (cloud, `gemini-3.8-flash` en el chat) + LocalPro/Ollama (`qwen2.5:7b`) |
+| Pendiente inmediato | **V.9 → V.10** (canónicas duplicadas, después el buscador por grafía: defectos vecinos del bugfix, ~0,16% del proxy BO) y **V.7/V.8** (obligan a **re-extraer**: decisión de costo). **2026-01** sigue siendo el único mes vencido sin ingesta. **DT-8**: arreglar `make start-backend` (intérprete) — documentado, no arreglado. Nada del pack quedó en `testing` |
 
 ---
 
@@ -91,10 +142,10 @@
 | Épica 3: Feature Engineering | Hecho | Sin cambios en H.1 |
 | Épica 4–5: Índice / retrieval | Hecho | Rerank local-first; colección local separada |
 | Épica 6: Agentes | Hecho | Sin cambios de canales |
-| Épica 7: Prod | En curso | H.1; **CI deja de fallar (2026-09-23): lint backend y build frontend en verde**; auth/UI huérfana siguen abiertos |
+| Épica 7: Prod | En curso | H.1; **CI deja de fallar (2026-09-23): lint backend y build frontend en verde**; auth/UI huérfana siguen abiertos; **DT-8 abierta (2026-09-29): `make start-backend` no arranca** (intérprete del PATH) |
 | H.1 Hardware local | Hecho | Workers nproc-2, overlay Compose, LocalPro |
-| Épica P: Presupuesto | P.1–P.7.4 en `main` | Ledger + Ley 11.088 + UI dos barras + **MB: techo por finalidad, disclaimer y proxy BO en pantalla (`done`, prueba manual OK; sin commitear)** |
-| Épica V: Ground truth | V.1 … V.6 hechos | El dato persistido y la pantalla dicen lo mismo que el matcher; el cociente declara período y techo; **y ahora el período es feb–sep** |
+| Épica P: Presupuesto | P.1–P.7.4 en `main` | Ledger + Ley 11.088 + UI dos barras + **MB: techo por finalidad, disclaimer y proxy BO en pantalla (`done`)** + **bugfix de agrupación de organismos (`8de9e64`)** |
+| Épica V: Ground truth | V.1 … V.6 hechos; **V.9/V.10 abiertas** | El dato persistido y la pantalla dicen lo mismo que el matcher; el cociente declara período y techo; **y ahora el período es feb–sep**. El gate del pack sumó **V.9** (canónicas duplicadas) y **V.10** (buscador por grafía cruda): el bugfix unificó grafías, no identidades |
 
 ---
 
@@ -286,16 +337,26 @@ Ninguno de producto. Notion MCP no disponible — el tablero quedó sin actualiz
 
 ## Próximos pasos
 
-1. ✅ **Ampliación B cerrada** (2026-09-28): gate humano pasado (checklist M6 1–10 completo, OK de Germán), las 3
+1. ✅ **Pack fix-ui + chat-insights cerrado** (2026-09-29): los 7 tickets de `testing` a `done`
+   (jerarquía compliance, chips, bugfix de agrupación, tools de presupuesto + honestidad,
+   desglose por organismo, markdown del chat, Mapa de Transparencia + docs-por-tipo).
+   Commits `5ce5a83` · `6967572` · `8de9e64` · `7b1ca44` · `cdf2702` · `e83bffa` · `149156c`,
+   rama `feat/pack-fix-ui-chat-p0` **pusheada**. PR pendiente de abrir.
+2. **V.9 → V.10**: canónicas duplicadas por organismo y, después, el buscador de
+   `/presupuesto/ejecucion` que filtra por grafía cruda. Son los defectos que el gate del
+   pack dejó a la vista (~0,16% del proxy BO, sin mover ningún total). **No** tocar el
+   canonicalizador sin re-verificar 151 / $1.776.409,53 M / EPEC 276-278.
+3. ✅ **Ampliación B cerrada** (2026-09-28): gate humano pasado (checklist M6 1–10 completo, OK de Germán), las 3
    historias de UI y la evidencia M6 en `done`, las 3 épicas cerradas, kanban sin To do y **commit `40c48a6`**
-   (19 archivos, 2684 inserciones). **Falta sólo el push** (`git push origin main`).
-2. ✅ V.2 mergeada a `main` sin `sqlite.db` (2026-09-18).
-3. ✅ **Honestidad del contraste** (V.3/V.4) — el número que muestra la UI dice su período y su techo.
-4. ✅ Saneado (V.4.3): 74 organismos truncos reparados desde la jurisdicción del PDF.
-5. ✅ **Ingesta mayo–septiembre** (V.5, 2026-09-19) — de 3 a **8 meses** medidos. Queda **2026-01** como único mes vencido sin ingesta.
-6. **V.7** (la fuga de monto entre columnas) y **V.8** (el monto del aviso vecino en el modelo): son la causa de fondo de los peores errores de monto del corpus, están medidos y declarados, y arreglarlos obliga a **re-extraer** — decisión de costo explícita. **Señal nueva del proxy BO:** `sin_partida` publica **$534,27B contra un techo de $738,77B (72,3%)** — el segundo publicado/techo más alto del corte, sobre un techo de partida **vacía**. Si parte de ese monto pertenece a otra partida, V.7 lo está mal-atribuyendo.
-7. DT-7 (residual de lint) e ingest CGE T2 cuando Hacienda publique.
-8. Tercera barra "pagado CGE" (no mezclar con el BO) sigue fuera de alcance.
+   (19 archivos, 2684 inserciones).
+4. ✅ V.2 mergeada a `main` sin `sqlite.db` (2026-09-18).
+5. ✅ **Honestidad del contraste** (V.3/V.4) — el número que muestra la UI dice su período y su techo.
+6. ✅ Saneado (V.4.3): 74 organismos truncos reparados desde la jurisdicción del PDF.
+7. ✅ **Ingesta mayo–septiembre** (V.5, 2026-09-19) — de 3 a **8 meses** medidos. Queda **2026-01** como único mes vencido sin ingesta.
+8. **V.7** (la fuga de monto entre columnas) y **V.8** (el monto del aviso vecino en el modelo): son la causa de fondo de los peores errores de monto del corpus, están medidos y declarados, y arreglarlos obliga a **re-extraer** — decisión de costo explícita. **Señal nueva del proxy BO:** `sin_partida` publica **$534,27B contra un techo de $738,77B (72,3%)** — el segundo publicado/techo más alto del corte, sobre un techo de partida **vacía**. Si parte de ese monto pertenece a otra partida, V.7 lo está mal-atribuyendo. **V.7 ganó un tercer síntoma** (el *nombre* del organismo heredado de la columna vecina), todavía **sin verificar geometría**.
+9. **DT-8**: `make start-backend` arranca con el intérprete equivocado y no vigila `agents/`. Comando que funciona documentado en el backlog.
+10. DT-7 (residual de lint) e ingest CGE T2 cuando Hacienda publique.
+11. Tercera barra "pagado CGE" (no mezclar con el BO) sigue fuera de alcance.
 
 ---
 
