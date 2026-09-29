@@ -46,6 +46,7 @@ from app.services.ejecucion_contrast import (
 )
 from app.services.gasto_classifier import JURISDICCIONES
 from app.services.presupuesto_finalidades import fetch_finalidades
+from app.services.presupuesto_matching import display_por_canonico
 from app.services.proxy_bo_finalidad import fetch_proxy_bo
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy import and_, func, or_, select
@@ -535,6 +536,18 @@ async def get_ejecucion_resumen(
         vig_result = await db.execute(vig_q)
         vig_rows = [(r[0], float(r[1] or 0.0)) for r in vig_result.all()]
         vigente_por_org, display_by_canon = vigente_por_organismo_canonico(vig_rows)
+        ledger_rows = org_rows.all()
+        # `display_by_canon` sale sólo de `presupuesto_base`: un organismo que publica
+        # actos pero no tiene partida en la Ley queda fuera del mapa, y ahí
+        # `remap_organismo_key` devuelve el nombre crudo.  El resultado es que cada
+        # grafía abre su propio bucket — "Caminos de las Sierras S.A." y "CAMINOS DE
+        # LAS SIERRAS S.A." contaban como dos organismos, y el mayor de los dos se
+        # mostraba como si fuera el total.  Se completan con los canónicos del ledger;
+        # el nombre de la Ley gana cuando el organismo sí está en ella.
+        display_by_canon = {
+            **display_por_canonico(r.org_key for r in ledger_rows),
+            **display_by_canon,
+        }
         denominador = aggregate_denominador_sin_dueno(vig_rows)
         spend_rows = [
             (
@@ -543,7 +556,7 @@ async def get_ejecucion_resumen(
                 float(r.total),
                 int(r.cnt),
             )
-            for r in org_rows.all()
+            for r in ledger_rows
         ]
 
         contrast = aggregate_organismos(spend_rows, vigente_por_org)

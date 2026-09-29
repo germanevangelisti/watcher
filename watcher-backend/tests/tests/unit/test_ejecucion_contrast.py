@@ -14,7 +14,10 @@ from app.services.ejecucion_contrast import (
     remap_organismo_key,
     vigente_por_organismo_canonico,
 )
-from app.services.presupuesto_matching import canonical_organismo_name
+from app.services.presupuesto_matching import (
+    canonical_organismo_name,
+    display_por_canonico,
+)
 
 
 class TestBucketEtapa:
@@ -345,3 +348,57 @@ class TestDenominadorSinDueno:
         d = aggregate_denominador_sin_dueno([])
         assert d.monto_total == 0.0
         assert d.pct_sin_dueno == 0.0
+
+
+class TestDisplayPorCanonico:
+    """El mapa que impide que cada grafía abra su propio bucket.
+
+    `display_by_canon` salía sólo de la Ley; un organismo con actos publicados
+    pero sin partida quedaba fuera y `remap_organismo_key` devolvía el nombre
+    crudo.  Estas pruebas fijan las dos mitades del arreglo: que las grafías se
+    unifican, y que el resultado no inventa un nombre nuevo.
+    """
+
+    def test_grafias_de_un_organismo_comparten_entrada(self):
+        d = display_por_canonico(
+            [
+                "Caminos de las Sierras S.A.",
+                "CAMINOS DE LAS SIERRAS S.A.",
+                "CÁMINOS DE LAS SIERRAS S.A.",
+            ]
+        )
+        assert list(d) == ["CAMINOS DE SIERRAS S.A."]
+        assert len(set(d.values())) == 1
+
+    def test_organismos_distintos_no_se_pisan(self):
+        d = display_por_canonico(["EPEC", "Universidad Provincial de Córdoba"])
+        assert len(d) == 2
+
+    def test_prefiere_la_grafia_mixta_sobre_la_gritada(self):
+        # El PDF grita y el ledger también escribe en mixta: el desempate por
+        # largo de `preferred_organismo_display` elegiría la corta, que es la
+        # mayúscula.  En pantalla se lee mejor la mixta.
+        d = display_por_canonico(["UNIDAD EJECUTORA", "Unidad Ejecutora"])
+        assert d["UNIDAD EJECUTORA"] == "Unidad Ejecutora"
+
+    def test_sin_grafia_mixta_cae_a_la_que_hay(self):
+        d = display_por_canonico(["CAMINOS DE LAS SIERRAS S.A."])
+        assert d == {"CAMINOS DE SIERRAS S.A.": "CAMINOS DE LAS SIERRAS S.A."}
+
+    def test_ignora_vacios_y_nulos(self):
+        assert display_por_canonico([None, "", "   "]) == {}
+
+    def test_unifica_lo_que_la_ley_no_tiene(self):
+        # La unión es la que hace que el bucket del ledger sea uno solo: sin el
+        # mapa, `remap_organismo_key` devuelve cada grafía cruda y quedan dos.
+        d = display_por_canonico(["Unidad Ejecutora", "UNIDAD EJECUTORA"])
+        filas = [("Unidad Ejecutora", "pago", 100.0, 1), ("UNIDAD EJECUTORA", "pago", 25.0, 1)]
+        agrupado = aggregate_organismos(
+            [(remap_organismo_key(org, d), etapa, monto, cnt) for org, etapa, monto, cnt in filas],
+            {},
+        )
+        assert len(agrupado) == 1
+        assert agrupado[0].organismo == "Unidad Ejecutora"
+        assert agrupado[0].monto_total == 125.0
+        assert agrupado[0].monto_ejecucion == 125.0
+        assert agrupado[0].count == 2
