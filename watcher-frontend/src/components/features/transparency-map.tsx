@@ -3,8 +3,10 @@ import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useTransparencyOverview } from "@/lib/api/hooks/use-transparency"
 import type { JurisdictionLevel, JurisdictionSummary } from "@/lib/api/hooks/use-transparency"
+import { toApplicableLaw, type ApplicableLaw } from "@/lib/applicable-law"
+import { fileTypeRows, legalTypeRows, type FileTypeInfo } from "@/lib/file-type"
 import { getJurisdictionLevel, JURISDICTION_LEVEL_LABEL } from "@/lib/jurisdiction-level"
-import { MapPin, Building2, Landmark, FileCheck, FileX, FileDown, ChevronDown, ChevronRight, Scale, AlertTriangle } from "lucide-react"
+import { MapPin, Building2, Landmark, FileCheck, FileX, FileDown, ChevronDown, ChevronRight, Scale, AlertTriangle, ExternalLink } from "lucide-react"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
 
@@ -31,10 +33,54 @@ function getCoverageBg(coverage: number): string {
   return "bg-red-500"
 }
 
-function JurisdictionCard({ jurisdiction }: { jurisdiction: JurisdictionSummary }) {
+/**
+ * Una ley aplicable: link a la fuente oficial si existe, y si no el nombre con
+ * el estado "sin URL". Nunca se fabrica un href para una ley sin fuente.
+ */
+function LawBadge({ law }: { law: ApplicableLaw }) {
+  const url = law.official_url?.trim()
+  if (!url) {
+    return (
+      <Badge variant="secondary" className="text-xs font-normal" data-testid="law-sin-url">
+        <Scale className="h-3 w-3 mr-1 shrink-0" />
+        {law.name}
+        <span className="ml-1 text-muted-foreground">sin URL</span>
+      </Badge>
+    )
+  }
+  return (
+    <Badge variant="secondary" className="text-xs font-normal">
+      <Scale className="h-3 w-3 mr-1 shrink-0" />
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        data-testid="law-link"
+      >
+        {law.name}
+        <ExternalLink className="h-3 w-3 ml-1 inline opacity-70" aria-hidden="true" />
+        <span className="sr-only"> (abre en pestaña nueva)</span>
+      </a>
+    </Badge>
+  )
+}
+
+function JurisdictionCard({
+  jurisdiction,
+  taxonomy,
+}: {
+  jurisdiction: JurisdictionSummary
+  taxonomy?: FileTypeInfo[] | null
+}) {
   const [expanded, setExpanded] = useState(false)
   const level = getJurisdictionLevel(jurisdiction)
-  const byType = Object.entries(jurisdiction.by_type ?? {})
+  // Eje primario: tipo de archivo. Sin `by_file_type` (backend anterior a 1.1.0)
+  // se cae al eje legal de siempre — el contrato viejo sigue funcionando.
+  const usesFileTypeAxis = Object.keys(jurisdiction.by_file_type ?? {}).length > 0
+  const rows = usesFileTypeAxis
+    ? fileTypeRows(jurisdiction.by_file_type, taxonomy)
+    : legalTypeRows(jurisdiction.by_type)
 
   return (
     <div
@@ -128,40 +174,58 @@ function JurisdictionCard({ jurisdiction }: { jurisdiction: JurisdictionSummary 
           {(jurisdiction.applicable_laws?.length ?? 0) > 0 && (
             <div>
               <p className="text-xs font-medium text-muted-foreground mb-1.5">Leyes aplicables:</p>
-              <div className="flex flex-wrap gap-1.5">
-                {jurisdiction.applicable_laws.map((law, i) => (
-                  <Badge key={i} variant="secondary" className="text-xs font-normal">
-                    <Scale className="h-3 w-3 mr-1" />
-                    {law}
-                  </Badge>
+              <div className="flex flex-wrap gap-1.5" data-testid="applicable-laws">
+                {jurisdiction.applicable_laws.map((raw, i) => (
+                  <LawBadge key={i} law={toApplicableLaw(raw)} />
                 ))}
               </div>
             </div>
           )}
 
-          {/* Documents by type */}
+          {/* Documents by type — eje primario: tipo de archivo */}
           <div>
-            <p className="text-xs font-medium text-muted-foreground mb-1.5">Documentos por tipo:</p>
-            {byType.length === 0 ? (
+            <p className="text-xs font-medium text-muted-foreground mb-1.5" data-testid="by-type-heading">
+              {usesFileTypeAxis ? "Documentos por tipo de archivo:" : "Documentos por tipo (categoría legal):"}
+            </p>
+            {rows.length === 0 ? (
               <p className="text-xs text-muted-foreground" data-testid="by-type-empty">
                 Sin documentos en el inventario para esta jurisdicción. Sincronizá el inventario
                 (POST /api/v1/compliance/documents/sync).
               </p>
             ) : (
-              <div className="grid gap-2 sm:grid-cols-2" data-testid="by-type-list">
-                {byType.map(([docType, counts]) => {
-                  const total = counts.total ?? (counts.missing || 0) + (counts.downloaded || 0) + (counts.processed || 0)
-                  const available = (counts.downloaded || 0) + (counts.processed || 0)
-                  const pct = total > 0 ? (available / total) * 100 : 0
+              <div
+                className="grid gap-2 sm:grid-cols-2"
+                data-testid={usesFileTypeAxis ? "by-file-type-list" : "by-type-list"}
+                data-axis={usesFileTypeAxis ? "file-type" : "legal"}
+              >
+                {rows.map((row) => {
+                  const pct = row.total > 0 ? (row.available / row.total) * 100 : 0
 
                   return (
-                    <div key={docType} className="flex items-center justify-between text-xs p-2 rounded bg-muted/50">
-                      <span className="text-muted-foreground capitalize">
-                        {docType.replace(/_/g, " ")}
-                      </span>
-                      <span className={cn("font-medium", getCoverageColor(pct))}>
-                        {available}/{total}
-                      </span>
+                    <div
+                      key={row.key}
+                      className="text-xs p-2 rounded bg-muted/50"
+                      data-testid={`type-row-${row.key}`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-muted-foreground capitalize">
+                          {row.label}
+                        </span>
+                        <span className={cn("font-medium shrink-0", getCoverageColor(pct))}>
+                          {row.available}/{row.total}
+                        </span>
+                      </div>
+                      {row.legalCategories.length > 0 && (
+                        <p
+                          className="mt-1 text-[11px] text-muted-foreground/80"
+                          data-testid={`legal-categories-${row.key}`}
+                        >
+                          <span className="text-muted-foreground/60">legal: </span>
+                          {row.legalCategories
+                            .map((c) => `${c.label} (${c.count})`)
+                            .join(" · ")}
+                        </p>
+                      )}
                     </div>
                   )
                 })}
@@ -269,6 +333,7 @@ export function TransparencyMap() {
           <JurisdictionCard
             key={jurisdiction.jurisdiction_key ?? jurisdiction.jurisdiction_code}
             jurisdiction={jurisdiction}
+            taxonomy={data.file_type_taxonomy}
           />
         ))}
       </CardContent>

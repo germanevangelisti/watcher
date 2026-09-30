@@ -1,7 +1,28 @@
 # Estado Actual — Watcher Agent
 
-**Última actualización:** 2026-09-29
+**Última actualización:** 2026-09-30
 **Snapshot del momento.** Se pisa al avanzar. La historia completa está en `docs/changelog.md` y el historial de git.
+
+> **Épica `fix-ui-dashboard-datos` — cerrada: 4 de 4 `done`** (2026-09-30): los dos P1 que
+> estaban en `testing` pasaron a **`done`** con el **gate manual del PO OK** (links abiertos en
+> Nación, Provincia y Ciudad; tipos de archivo + mapping legal a la vista en `/`).
+> Commit de la implementación: **`4810d09`** (rama `feat/pack-fix-ui-dashboard-p1`).
+> **`story-watcher-fix-leyes-links`**: `applicable_laws` pasó de `string[]` a
+> `{ name, official_url }[]` (contrato de datos 1.1.0) — **5 de 8 leyes** con URL oficial de InfoLeg
+> **verificada una por una**; las **3 sin fuente oficial quedan sin URL y sin link inventado**
+> (decisión del PO, la UI muestra el nombre + "sin URL"). Se corrigió además la etiqueta de la
+> **Ley Provincial 10.471**: adhiere al **Capítulo IX de la Ley 27.341**, no a la 25.917
+> (config **v1.1.1**).
+> **`story-watcher-fix-taxonomia-tipos`**: nuevo eje `by_file_type` (pdf/csv/xlsx) con la
+> categoría legal como *mapping* secundario, publicado junto a `file_type_taxonomy`; `by_type`
+> legal **intacto** y la FE cae a él con backend viejo (no break silencioso).
+> DoD medido: backend **850 passed / 9 failed / 7 skipped** (las 9 pre-existentes, cero nuevas)
+> · frontend **71/71** · `tsc`/`eslint`/`ruff` limpios. Conteos contra la DB real: AR-X
+> **12 = 4 pdf + 6 csv + 2 xlsx** · AR-X-CBA **5 = 3 + 1 + 1**.
+> **Queda abierto, fuera de la épica**: los 5 documentos de Nación siguen con
+> `jurisdiccion_id = NULL` en la DB local, así que su card se ve en **0** — se arregla con un
+> `POST /api/v1/compliance/documents/sync` (no se corrió: escribir en la DB del PO no era de
+> estas historias).
 
 > **Pack fix-ui + chat-insights — cerrado** (2026-09-29): los **7 tickets que estaban en
 > `testing` pasan a `done`** por decisión del PO, con la implementación commiteada y

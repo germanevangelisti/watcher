@@ -5,7 +5,7 @@ Schemas para sistema de Compliance
 from datetime import date, datetime
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 # ============================================================================
 # COMPLIANCE CHECK SCHEMAS
@@ -238,6 +238,36 @@ class RequiredDocumentResponse(RequiredDocumentBase):
         from_attributes = True
 
 
+class ApplicableLaw(BaseModel):
+    """Ley aplicable a una jurisdicción, con la URL de su fuente oficial.
+
+    `official_url` es `None` cuando no hay fuente oficial verificable: la UI
+    muestra el nombre + "sin URL" y **no** inventa un link (decisión PO 2026-09-28).
+    """
+    name: str
+    official_url: str | None = None
+
+
+class FileTypeBucket(BaseModel):
+    """Conteos de una jurisdicción agrupados por **tipo de archivo**.
+
+    `legal_categories` es el mapping al eje legal (`document_type`): cuántos
+    documentos de este tipo de archivo pertenecen a cada categoría legal. La
+    suma de `legal_categories` es igual a `total`.
+    """
+    total: int
+    missing: int
+    downloaded: int
+    processed: int
+    legal_categories: dict[str, int] = Field(default_factory=dict)
+
+
+class FileTypeInfo(BaseModel):
+    """Una entrada de la taxonomía de tipos de archivo (etiqueta para la UI)."""
+    key: str
+    label: str
+
+
 class JurisdictionDocumentsSummary(BaseModel):
     """Resumen de documentos de una jurisdicción"""
     jurisdiction_key: str | None = None  # clave en required_documents.json (nacion, cordoba_provincia, ...)
@@ -245,13 +275,32 @@ class JurisdictionDocumentsSummary(BaseModel):
     jurisdiction_level: str | None = None  # nacion | provincia | municipio
     jurisdiction_id: int | None = None
     jurisdiction_name: str
-    applicable_laws: list[str]
+    applicable_laws: list[ApplicableLaw]
     total_documents: int
     missing: int
     downloaded: int
     processed: int
     coverage_percentage: float
+    # Eje legal (contrato original, se mantiene para no romper consumidores).
     by_type: dict[str, dict[str, int]]
+    # Eje primario de presentación (contrato 1.1.0): tipo de archivo + mapping legal.
+    by_file_type: dict[str, FileTypeBucket] = Field(default_factory=dict)
+
+    @field_validator("applicable_laws", mode="before")
+    @classmethod
+    def _coerce_legacy_law_strings(cls, value: Any) -> Any:
+        """Tolera el contrato viejo (`applicable_laws: string[]`).
+
+        Un string suelto no trae URL: se envuelve como `{name, official_url: None}`
+        en vez de romper el endpoint. Evita un 500 si el config desplegado quedó
+        en la versión anterior a este cambio (contrato 1.0.0 → 1.1.0).
+        """
+        if not isinstance(value, list):
+            return value
+        return [
+            {"name": item, "official_url": None} if isinstance(item, str) else item
+            for item in value
+        ]
 
 
 class DocumentsOverviewResponse(BaseModel):
@@ -261,6 +310,9 @@ class DocumentsOverviewResponse(BaseModel):
     total_missing: int
     total_processed: int
     overall_coverage: float
+    # Taxonomía de tipos de archivo, en orden de presentación (vacía si el
+    # productor es anterior a este campo).
+    file_type_taxonomy: list[FileTypeInfo] = Field(default_factory=list)
 
 
 class DocumentUpdateRequest(BaseModel):

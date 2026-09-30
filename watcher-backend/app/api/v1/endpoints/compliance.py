@@ -26,6 +26,7 @@ from ....schemas.compliance import (
 )
 from ....services.compliance_engine import ComplianceEngine
 from ....services.document_tracker import DocumentTracker
+from ....services.file_type_taxonomy import file_type_taxonomy
 
 router = APIRouter()
 
@@ -514,7 +515,9 @@ async def get_documents_overview(
         "total_documents": total_docs,
         "total_missing": total_missing,
         "total_processed": total_processed,
-        "overall_coverage": round(overall_coverage, 2)
+        "overall_coverage": round(overall_coverage, 2),
+        # Una sola fuente de verdad para etiquetas y orden de los tipos de archivo.
+        "file_type_taxonomy": file_type_taxonomy()
     }
 
 

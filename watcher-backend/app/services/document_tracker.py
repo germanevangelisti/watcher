@@ -15,6 +15,7 @@ from sqlalchemy import and_, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..db.models import ComplianceCheck, Jurisdiccion, RequiredDocument
+from .file_type_taxonomy import UNKNOWN_FILE_TYPE, file_type_order
 
 logger = logging.getLogger(__name__)
 
@@ -209,6 +210,7 @@ class DocumentTracker:
             "processed": 0,
             "failed": 0,
             "by_type": {},
+            "by_file_type": {},
             "by_check": {},
             "coverage_percentage": 0.0
         }
@@ -231,6 +233,34 @@ class DocumentTracker:
                 summary["by_type"][doc.document_type]["downloaded"] += 1
             elif doc.status == "processed":
                 summary["by_type"][doc.document_type]["processed"] += 1
+
+            # Eje primario: tipo de ARCHIVO, con la categoría legal como mapping.
+            # Cada documento cae en un solo bucket, así que los conteos cierran
+            # contra `total` y contra la suma de `legal_categories`.
+            file_type = doc.expected_format or UNKNOWN_FILE_TYPE
+            bucket = summary["by_file_type"].setdefault(file_type, {
+                "total": 0,
+                "missing": 0,
+                "downloaded": 0,
+                "processed": 0,
+                "legal_categories": {}
+            })
+            bucket["total"] += 1
+            if doc.status == "missing":
+                bucket["missing"] += 1
+            elif doc.status == "downloaded":
+                bucket["downloaded"] += 1
+            elif doc.status == "processed":
+                bucket["processed"] += 1
+            bucket["legal_categories"][doc.document_type] = (
+                bucket["legal_categories"].get(doc.document_type, 0) + 1
+            )
+
+        # Orden estable de presentación: la taxonomía primero.
+        summary["by_file_type"] = {
+            file_type: summary["by_file_type"][file_type]
+            for file_type in sorted(summary["by_file_type"], key=file_type_order)
+        }
 
         # Calcular cobertura (procesados / total)
         if summary["total"] > 0:
@@ -317,7 +347,7 @@ class DocumentTracker:
 
             if jurisdiction_id is None:
                 # Sin fila en DB (inventario sin sync): cero, no "todos los docs"
-                summary = {"total": 0, "coverage_percentage": 0.0, "by_type": {}}
+                summary = {"total": 0, "coverage_percentage": 0.0, "by_type": {}, "by_file_type": {}}
             else:
                 summary = await self.get_jurisdiction_summary(jurisdiction_id)
 
@@ -334,7 +364,8 @@ class DocumentTracker:
                 "processed": summary.get("processed", 0),
                 "failed": summary.get("failed", 0),
                 "coverage_percentage": summary["coverage_percentage"],
-                "by_type": summary["by_type"]
+                "by_type": summary["by_type"],
+                "by_file_type": summary.get("by_file_type", {})
             })
 
         return overview

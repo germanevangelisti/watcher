@@ -1,7 +1,7 @@
 {
   "$schema": "./required_documents.schema.json",
-  "version": "1.0.0",
-  "last_updated": "2026-02-09",
+  "version": "1.1.1",
+  "last_updated": "2026-09-30",
   "description": "Documentos obligatorios por jurisdicción según leyes de transparencia fiscal",
   "jurisdictions": {
     "nacion": {
@@ -10,9 +10,18 @@
       "jurisdiction_name": "Nación Argentina",
       "jurisdiction_code": "AR",
       "applicable_laws": [
-        "Ley 27.275 (Acceso a la Información Pública)",
-        "Decreto 780/2024 (Reglamentación)",
-        "Ley 24.156 (Administración Financiera)"
+        {
+          "name": "Ley 27.275 (Acceso a la Información Pública)",
+          "official_url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/265000-269999/265949/norma.htm"
+        },
+        {
+          "name": "Decreto 780/2024 (Reglamentación)",
+          "official_url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/400000-404999/403572/norma.htm"
+        },
+        {
+          "name": "Ley 24.156 (Administración Financiera)",
+          "official_url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/554/texact.htm"
+        }
       ],
       "documents": [
         {
@@ -73,9 +82,18 @@
       "jurisdiction_name": "Provincia de Córdoba",
       "jurisdiction_code": "AR-X",
       "applicable_laws": [
-        "Ley 25.917 Art. 7 (Federal de Responsabilidad Fiscal)",
-        "Ley Provincial 10.471 (Adhesión a Ley 25.917)",
-        "Ley Provincial 8803 (Transparencia y Acceso a la Información)"
+        {
+          "name": "Ley 25.917 Art. 7 (Federal de Responsabilidad Fiscal)",
+          "official_url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/95000-99999/97698/texact.htm"
+        },
+        {
+          "name": "Ley Provincial 10.471 (Adhesión al Capítulo IX de la Ley 27.341)",
+          "official_url": null
+        },
+        {
+          "name": "Ley Provincial 8803 (Transparencia y Acceso a la Información)",
+          "official_url": null
+        }
       ],
       "documents": [
         {
@@ -211,8 +229,14 @@
       "jurisdiction_name": "Ciudad de Córdoba",
       "jurisdiction_code": "AR-X-CBA",
       "applicable_laws": [
-        "Ley 25.917 Art. 7 (aplica por adhesión provincial)",
-        "Ordenanza Municipal de Transparencia"
+        {
+          "name": "Ley 25.917 Art. 7 (aplica por adhesión provincial)",
+          "official_url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/95000-99999/97698/texact.htm"
+        },
+        {
+          "name": "Ordenanza Municipal de Transparencia",
+          "official_url": null
+        }
       ],
       "documents": [
         {
