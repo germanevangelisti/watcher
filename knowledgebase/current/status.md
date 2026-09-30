@@ -6,8 +6,9 @@
 > **Épica `fix-ui-dashboard-datos` — cerrada: 4 de 4 `done`** (2026-09-30): los dos P1 que
 > estaban en `testing` pasaron a **`done`** con el **gate manual del PO OK** (links abiertos en
 > Nación, Provincia y Ciudad; tipos de archivo + mapping legal a la vista en `/`).
+> Commit de la implementación: **`4810d09`** (rama `feat/pack-fix-ui-dashboard-p1`).
 > **`story-watcher-fix-leyes-links`**: `applicable_laws` pasó de `string[]` a
-> `{ name, official_url }[]` (contrato 1.1.0) — **5 de 8 leyes** con URL oficial de InfoLeg
+> `{ name, official_url }[]` (contrato de datos 1.1.0) — **5 de 8 leyes** con URL oficial de InfoLeg
 > **verificada una por una**; las **3 sin fuente oficial quedan sin URL y sin link inventado**
 > (decisión del PO, la UI muestra el nombre + "sin URL"). Se corrigió además la etiqueta de la
 > **Ley Provincial 10.471**: adhiere al **Capítulo IX de la Ley 27.341**, no a la 25.917
