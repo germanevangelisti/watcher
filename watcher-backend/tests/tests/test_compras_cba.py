@@ -415,3 +415,23 @@ async def test_ml_authorization_code_stores_refresh_token_and_status_hides_it(mo
     assert await auth.token() == "USER-AT"
     status = auth.status()
     assert status["token_de_usuario"] is True and "USER" not in str(status)
+
+
+
+def test_ml_catalog_keeps_digit_variant_token(monkeypatch):
+    import asyncio
+
+    monkeypatch.setenv("ML_ACCESS_TOKEN", "x")
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        if req.url.path == "/sites/MLA/search":
+            return httpx.Response(403)
+        if req.url.path == "/products/search":
+            return httpx.Response(200, json={"results": [
+                {"id": "MLA1", "name": "Resma Papel Oficio 500 Hojas"},
+                {"id": "MLA2", "name": "Resma Papel A4 500 Hojas"}]})
+        return httpx.Response(200, json={"results": [{"price": 9000, "currency_id": "ARS"}]})
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    res = asyncio.run(MercadoLibreSource(client=client).search("Resmas de papel A4", "resmas"))
+    assert [r.url.rsplit("/", 1)[-1] for r in res.references] == ["MLA2"]

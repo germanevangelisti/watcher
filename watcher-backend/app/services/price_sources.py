@@ -290,7 +290,7 @@ class MercadoLibreSource:
     @staticmethod
     def _stems(text: str) -> list[str]:
         from app.services.compras_cba import _norm
-        return [w[:5] for w in re.findall(r"[a-z0-9]+", _norm(text)) if len(w) >= 3]
+        return [w[:5] for w in re.findall(r"[a-z0-9]+", _norm(text)) if len(w) >= 3 or (len(w) == 2 and any(ch.isdigit() for ch in w))]
 
     async def _catalog_search(self, item: str, headers: dict, unit: str | None = None) -> SourceResult:
         """Fallback for app tokens: ``/sites/MLA/search`` is forbidden to
@@ -309,6 +309,12 @@ class MercadoLibreSource:
             return SourceResult(self.name, False, reason="no disponible (respuesta inválida)")
         stop = {"del", "los", "las", "con", "para", "sin", "por", "una", "uno", "unos", "unas"}
         wanted = [w for w in self._stems(item) if w not in stop][:2]
+        # A short model/size token with a digit ("A4", "R16") separates
+        # variants that share the noun ("resmas A4" vs "resmas oficio").
+        from app.services.compras_cba import _norm
+        digit = next((w for w in re.findall(r"[a-z0-9]+", _norm(item)) if re.search(r"\d", w) and re.search(r"[a-z]", w)), None)
+        if digit and digit[:5] not in wanted:
+            wanted.append(digit[:5])
         refs: list[PriceReference] = []
         for prod in products:
             if len(refs) >= self.max_products:
