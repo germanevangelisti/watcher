@@ -24,9 +24,11 @@ import statistics
 from dataclasses import asdict, dataclass, field
 from datetime import date
 
-from app.db.models import Analisis, Boletin, EjecucionPresupuestaria
+from app.db.models import Analisis, Boletin, EjecucionPresupuestaria, FuenteExternaCache
+from app.services.compras_cba import ComprasCbaSource, Proceso, ProcesoMatch, Renglon
 from app.services.fts_service import _FTS5_STOPWORDS, _sin_acentos
 from app.services.price_sources import (
+    ComprasCbaReferenceSource,
     PriceReference,
     PriceSource,
     SourceResult,
@@ -206,6 +208,9 @@ class Extraction:
     monto_total: float | None
     metodo: str  # "llm" | "regex"
     detalle: str | None = None
+    fuente_cantidad: str | None = None  # "texto" | "compras_cba_grilla" | "compras_cba_pliego"
+    renglones: list[dict] = field(default_factory=list)
+    proceso: dict | None = None
 
 
 _QTY_RE = re.compile(
@@ -312,6 +317,98 @@ async def extract(row: EjecucionPresupuestaria, fragment: str | None, provider=N
 
 
 # ---------------------------------------------------------------------------
+# ComprasCba enrichment (quantities per renglón) with a persistent cache
+# ---------------------------------------------------------------------------
+
+CACHE_TTL_FOUND_S = 30 * 86400
+CACHE_TTL_NOT_FOUND_S = 3 * 86400
+CACHE_TTL_REFERENCES_S = 7 * 86400
+
+
+def compras_cba_enabled() -> bool:
+    return os.getenv("PRECIO_MERCADO_COMPRAS_CBA", "1").strip().lower() not in ("0", "false", "no")
+
+
+async def cache_get(db: AsyncSession, key: str, ttl_s: float):
+    from datetime import datetime
+
+    row = await db.get(FuenteExternaCache, key)
+    if row is None or row.fetched_at is None:
+        return None
+    if (datetime.utcnow() - row.fetched_at).total_seconds() > ttl_s:
+        return None
+    try:
+        return json.loads(row.payload)
+    except ValueError:
+        return None
+
+
+async def cache_set(db: AsyncSession, key: str, payload) -> None:
+    from datetime import datetime
+
+    row = await db.get(FuenteExternaCache, key)
+    data = json.dumps(payload, ensure_ascii=False)
+    if row is None:
+        db.add(FuenteExternaCache(key=key, payload=data, fetched_at=datetime.utcnow()))
+    else:
+        row.payload, row.fetched_at = data, datetime.utcnow()
+    await db.commit()
+
+
+async def find_proceso(db: AsyncSession, row: EjecucionPresupuestaria, source: ComprasCbaSource,
+                       cantidad_hint: float | None) -> ProcesoMatch:
+    key = f"compras_cba:proceso:{row.id}"
+    cached = await cache_get(db, key, CACHE_TTL_FOUND_S)
+    if cached is not None:
+        match = ProcesoMatch.from_dict(cached)
+        if match.found or await cache_get(db, key, CACHE_TTL_NOT_FOUND_S) is not None:
+            return match
+    match = await source.find(row.fecha_boletin, row.monto, row.concepto, cantidad_hint)
+    if match.found or (match.reason or "").startswith("ningún proceso"):
+        await cache_set(db, key, match.to_dict())  # portal outages are not cached
+    return match
+
+
+def apply_renglones(ext: Extraction, match: ProcesoMatch) -> Extraction:
+    """Fill quantity/unit from the process renglones when the act text had none."""
+    if not match.found or match.proceso is None:
+        return ext
+    p = match.proceso
+    ext.proceso = {"nro": p.nro, "tipo": p.tipo, "servicio": p.servicio, "objeto": p.objeto,
+                   "estado": p.estado, "presupuesto_total": p.presupuesto_total,
+                   "fecha_limite": p.fecha_limite, "documento": match.documento,
+                   "origen": match.renglones_origen, "url": match.portal_url, "motivo": match.reason}
+    ext.renglones = [asdict(r) for r in p.renglones]
+    with_qty = [r for r in p.renglones if r.cantidad]
+    if ext.cantidad is None and len(with_qty) == 1:
+        ext.cantidad = with_qty[0].cantidad
+        ext.unidad = ext.unidad or "unidades"
+        ext.fuente_cantidad = f"compras_cba_{match.renglones_origen}"
+    return ext
+
+
+def references_loader(db: AsyncSession, source: ComprasCbaSource, fecha: date | None):
+    """Async callable for ComprasCbaReferenceSource, cached per act month."""
+
+    async def load() -> list[Proceso]:
+        key = f"compras_cba:referencias:{(fecha or date.today()).strftime('%Y-%m')}"
+        cached = await cache_get(db, key, CACHE_TTL_REFERENCES_S)
+        if cached is None:
+            procesos = await source.reference_renglones(fecha)
+            cached = [asdict(p) for p in procesos]
+            if cached:
+                await cache_set(db, key, cached)
+        out = []
+        for d in cached:
+            d = dict(d)
+            d["renglones"] = [Renglon(**r) for r in d.get("renglones", [])]
+            out.append(Proceso(**d))
+        return out
+
+    return load
+
+
+# ---------------------------------------------------------------------------
 # References and comparison
 # ---------------------------------------------------------------------------
 
@@ -369,10 +466,11 @@ async def internal_references(db: AsyncSession, row: EjecucionPresupuestaria, it
     return SourceResult("corpus", True, references=refs, reason=reason)
 
 
-def classify(unit_price: float | None, references: list[PriceReference], th: Thresholds) -> dict:
+def classify(unit_price: float | None, references: list[PriceReference], th: Thresholds,
+             motivo_sin_precio: str = "el acto no declara una cantidad extraíble") -> dict:
     prices = [r.unit_price for r in references if r.unit_price > 0]
     if unit_price is None:
-        return {"clasificacion": "sin_datos_suficientes", "motivo": "el acto no declara una cantidad extraíble",
+        return {"clasificacion": "sin_datos_suficientes", "motivo": motivo_sin_precio,
                 "mediana": statistics.median(prices) if prices else None, "desvio": None, "n_referencias": len(prices)}
     if len(prices) < th.min_references:
         return {"clasificacion": "sin_datos_suficientes",
@@ -410,6 +508,7 @@ async def analyze(
     external_sources: list[PriceSource] | None = None,
     thresholds: Thresholds | None = None,
     use_llm: bool = True,
+    compras: ComprasCbaSource | None = None,
 ) -> AnalysisResult | None:
     th = thresholds or Thresholds.from_env()
     res = (await db.execute(
@@ -432,18 +531,40 @@ async def analyze(
             use_llm = False
 
     ext = await extract(row, fragment, provider=provider, use_llm=use_llm)
+    if ext.cantidad:
+        ext.fuente_cantidad = "texto"
+    if compras is None and compras_cba_enabled():
+        compras = ComprasCbaSource()
+    compras_status = None
+    if compras is not None:
+        match = await find_proceso(db, row, compras, ext.cantidad)
+        ext = apply_renglones(ext, match)
+        compras_status = SourceResult(
+            "compras_cba", match.found or (match.reason or "").startswith("ningún proceso"),
+            reason=(f"proceso {match.proceso.nro}: {len(match.proceso.renglones)} renglones ({match.renglones_origen or 'sin tabla'})"
+                    + (f"; {match.reason}" if match.reason else "")) if match.found and match.proceso else match.reason,
+        )
     unit_price = ext.monto_total / ext.cantidad if ext.monto_total and ext.cantidad else None
+    motivo_sin_precio = "el acto no declara una cantidad extraíble"
+    if unit_price is None and len([r for r in ext.renglones if r.get("cantidad")]) > 1:
+        motivo_sin_precio = (f"{len(ext.renglones)} renglones de bienes distintos: el monto del acto no se "
+                             "desglosa por renglón, no hay un precio unitario único")
 
     sources = external_sources if external_sources is not None else default_external_sources()
+    if external_sources is None and compras is not None:
+        sources = [*sources, ComprasCbaReferenceSource(references_loader(db, compras, row.fecha_boletin))]
     internal = await internal_references(db, row, ext.item)
     externals = await asyncio.gather(*(s.search(ext.item, ext.unidad) for s in sources), return_exceptions=True)
     results: list[SourceResult] = [internal]
+    if compras_status is not None:
+        results.append(compras_status)
     for s, r in zip(sources, externals, strict=True):
         results.append(r if isinstance(r, SourceResult) else SourceResult(getattr(s, "name", "?"), False, reason=f"no disponible ({r})"))
 
-    # Listing prices are per publication: only comparable when the act is per unit.
-    references = [ref for r in results for ref in r.references]
-    comparison = classify(unit_price, references, th)
+    # The act's own process is not a reference for itself.
+    own = (ext.proceso or {}).get("nro")
+    references = [ref for r in results for ref in r.references if not (own and ref.process_id == own)]
+    comparison = classify(unit_price, references, th, motivo_sin_precio)
 
     reason = detection_reason(row.concepto, row.tipo_operacion)
     return AnalysisResult(

@@ -1385,3 +1385,12 @@ class PrecioMercadoAnalisis(Base):
     proveedor_llm = Column(String, nullable=True)
     resultado_json = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class FuenteExternaCache(Base):
+    """Cache of external source lookups (ComprasCba processes and reference grids)."""
+    __tablename__ = "fuente_externa_cache"
+
+    key = Column(String, primary_key=True)
+    payload = Column(Text, nullable=False)
+    fetched_at = Column(DateTime, default=datetime.utcnow)

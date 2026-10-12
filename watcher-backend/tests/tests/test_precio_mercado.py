@@ -17,6 +17,12 @@ from app.services.price_sources import MercadoLibreSource, PriceReference, Sourc
 TH = svc.Thresholds(observable=0.30, alerta=1.00, min_references=3)
 
 
+@pytest.fixture(autouse=True)
+def _no_compras_cba(monkeypatch):
+    """These tests cover the core flow; ComprasCba has its own test module."""
+    monkeypatch.setenv("PRECIO_MERCADO_COMPRAS_CBA", "0")
+
+
 @pytest_asyncio.fixture
 async def session():
     from app.db.models import Base
@@ -209,15 +215,19 @@ async def test_external_source_failure_degrades(session):
 
 
 @pytest.mark.asyncio
-async def test_mercadolibre_403_is_reported_as_unavailable():
+async def test_mercadolibre_403_is_reported_as_unavailable(monkeypatch):
+    for var in ("ML_ACCESS_TOKEN", "ML_CLIENT_ID", "ML_CLIENT_SECRET"):
+        monkeypatch.delenv(var, raising=False)
     transport = httpx.MockTransport(lambda req: httpx.Response(403, json={"message": "forbidden"}))
     async with httpx.AsyncClient(transport=transport) as client:
         r = await MercadoLibreSource(client=client).search("resma a4")
-    assert r.available is False and "token" in r.reason
+    assert r.available is False and "credenciales" in r.reason
 
 
 @pytest.mark.asyncio
-async def test_mercadolibre_parses_results():
+async def test_mercadolibre_parses_results(monkeypatch):
+    for var in ("ML_ACCESS_TOKEN", "ML_CLIENT_ID", "ML_CLIENT_SECRET"):
+        monkeypatch.delenv(var, raising=False)
     payload = {"results": [{"title": "Resma A4 75g", "price": 9500, "permalink": "https://ml/1"},
                            {"title": "sin precio", "price": None}]}
     transport = httpx.MockTransport(lambda req: httpx.Response(200, json=payload))

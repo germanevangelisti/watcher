@@ -8,12 +8,19 @@ async ``search`` method so tests can inject fakes without network access.
 
 from __future__ import annotations
 
+import json
+import logging
 import os
+import re
+import time
 from dataclasses import dataclass, field
 from datetime import date
+from pathlib import Path
 from typing import Protocol
 
 import httpx
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -27,7 +34,8 @@ class PriceReference:
     url: str | None = None
     quantity: float | None = None
     unit: str | None = None
-    kind: str = "externa"  # "interna" | "externa"
+    kind: str = "externa"  # "interna" | "externa" | "oficial"
+    process_id: str | None = None  # source-side process id, to exclude the act's own process
 
 
 @dataclass
@@ -44,6 +52,91 @@ class PriceSource(Protocol):
     async def search(self, item: str, unit: str | None = None) -> SourceResult: ...
 
 
+ML_TOKEN_URL = "https://api.mercadolibre.com/oauth/token"
+ML_TOKEN_CACHE = Path(__file__).resolve().parents[2] / ".cache" / "ml_token.json"
+
+
+class MercadoLibreAuth:
+    """Access token for the Mercado Libre API, refreshed automatically.
+
+    Order: ``ML_ACCESS_TOKEN`` (fixed, as is) -> cached token while valid ->
+    ``refresh_token`` grant when a refresh token is known (cache or
+    ``ML_REFRESH_TOKEN``) -> ``client_credentials`` grant with
+    ``ML_CLIENT_ID`` / ``ML_CLIENT_SECRET``. Refresh tokens are single use, so
+    the newest one is kept in ``.cache/ml_token.json`` (gitignored), never in
+    the ``.env``. Secrets are never logged.
+    """
+
+    def __init__(self, cache_path: Path = ML_TOKEN_CACHE, client: httpx.AsyncClient | None = None,
+                 clock=time.time):
+        self.cache_path = cache_path
+        self._client = client
+        self._clock = clock
+        self._memory: dict | None = None
+
+    @staticmethod
+    def configured() -> bool:
+        return bool(os.getenv("ML_ACCESS_TOKEN") or (os.getenv("ML_CLIENT_ID") and os.getenv("ML_CLIENT_SECRET")))
+
+    def _load(self) -> dict:
+        if self._memory is not None:
+            return self._memory
+        try:
+            self._memory = json.loads(self.cache_path.read_text("utf-8"))
+        except (OSError, ValueError):
+            self._memory = {}
+        return self._memory
+
+    def _save(self, data: dict) -> None:
+        self._memory = data
+        try:
+            self.cache_path.parent.mkdir(parents=True, exist_ok=True)
+            self.cache_path.write_text(json.dumps(data), "utf-8")
+        except OSError as exc:
+            logger.warning("mercadolibre: could not persist token cache (%s)", type(exc).__name__)
+
+    def invalidate(self) -> None:
+        data = dict(self._load())
+        data.pop("access_token", None)
+        self._save(data)
+
+    async def token(self) -> str | None:
+        fixed = os.getenv("ML_ACCESS_TOKEN")
+        if fixed:
+            return fixed
+        client_id, secret = os.getenv("ML_CLIENT_ID"), os.getenv("ML_CLIENT_SECRET")
+        if not (client_id and secret):
+            return None
+        cached = self._load()
+        if cached.get("access_token") and cached.get("expires_at", 0) > self._clock() + 60:
+            return cached["access_token"]
+        refresh = cached.get("refresh_token") or os.getenv("ML_REFRESH_TOKEN")
+        form = {"client_id": client_id, "client_secret": secret}
+        form.update({"grant_type": "refresh_token", "refresh_token": refresh} if refresh
+                    else {"grant_type": "client_credentials"})
+        try:
+            if self._client is not None:
+                resp = await self._client.post(ML_TOKEN_URL, data=form, headers={"accept": "application/json"})
+            else:
+                async with httpx.AsyncClient(timeout=10) as client:
+                    resp = await client.post(ML_TOKEN_URL, data=form, headers={"accept": "application/json"})
+        except Exception as exc:
+            logger.warning("mercadolibre: token request failed (%s)", type(exc).__name__)
+            return None
+        if resp.status_code != 200:
+            logger.warning("mercadolibre: token grant %s rejected (HTTP %s)", form["grant_type"], resp.status_code)
+            if refresh and cached.get("refresh_token"):
+                self._save({})  # a stale rotated refresh token: next call retries from scratch
+            return None
+        body = resp.json()
+        self._save({
+            "access_token": body.get("access_token"),
+            "expires_at": self._clock() + float(body.get("expires_in", 21600)),
+            "refresh_token": body.get("refresh_token") or refresh,
+        })
+        return body.get("access_token")
+
+
 class MercadoLibreSource:
     """Mercado Libre Argentina public search (``/sites/MLA/search``).
 
@@ -56,31 +149,41 @@ class MercadoLibreSource:
     name = "mercadolibre"
     base_url = "https://api.mercadolibre.com/sites/MLA/search"
 
-    def __init__(self, timeout_s: float = 8.0, limit: int = 20, client: httpx.AsyncClient | None = None):
+    def __init__(self, timeout_s: float = 8.0, limit: int = 20, client: httpx.AsyncClient | None = None,
+                 auth: MercadoLibreAuth | None = None):
         self.timeout_s = timeout_s
         self.limit = limit
         self._client = client
+        self.auth = auth or MercadoLibreAuth(client=client)
+
+    async def _get(self, params: dict, headers: dict) -> httpx.Response:
+        if self._client is not None:
+            return await self._client.get(self.base_url, params=params, headers=headers)
+        async with httpx.AsyncClient(timeout=self.timeout_s) as client:
+            return await client.get(self.base_url, params=params, headers=headers)
 
     async def search(self, item: str, unit: str | None = None) -> SourceResult:
-        headers = {}
-        token = os.getenv("ML_ACCESS_TOKEN")
-        if token:
-            headers["Authorization"] = f"Bearer {token}"
         params = {"q": item, "limit": self.limit, "condition": "new"}
-        try:
-            if self._client is not None:
-                resp = await self._client.get(self.base_url, params=params, headers=headers)
-            else:
-                async with httpx.AsyncClient(timeout=self.timeout_s) as client:
-                    resp = await client.get(self.base_url, params=params, headers=headers)
-        except Exception as exc:  # network errors, timeouts
-            return SourceResult(self.name, False, reason=f"no disponible ({type(exc).__name__})")
+        resp = None
+        for attempt in range(2):
+            headers = {}
+            token = await self.auth.token()
+            if token:
+                headers["Authorization"] = f"Bearer {token}"
+            try:
+                resp = await self._get(params, headers)
+            except Exception as exc:  # network errors, timeouts
+                return SourceResult(self.name, False, reason=f"no disponible ({type(exc).__name__})")
+            if resp.status_code == 401 and token and attempt == 0:
+                self.auth.invalidate()  # expired or revoked: refresh once and retry
+                continue
+            break
 
         if resp.status_code in (401, 403):
-            return SourceResult(
-                self.name, False,
-                reason="no disponible: la API de Mercado Libre exige un token (ML_ACCESS_TOKEN)",
-            )
+            reason = ("no disponible: la API de Mercado Libre rechazó el token configurado"
+                      if MercadoLibreAuth.configured()
+                      else "no disponible: la API de Mercado Libre exige credenciales (ML_CLIENT_ID / ML_CLIENT_SECRET)")
+            return SourceResult(self.name, False, reason=reason)
         if resp.status_code != 200:
             return SourceResult(self.name, False, reason=f"no disponible (HTTP {resp.status_code})")
 
@@ -106,11 +209,57 @@ class MercadoLibreSource:
         return SourceResult(self.name, True, references=refs)
 
 
-def default_external_sources() -> list[PriceSource]:
-    """External sources enabled by default.
+class ComprasCbaReferenceSource:
+    """Official reference prices: renglones of finalized ComprasCba processes.
 
-    No official reference-price source (SIPRO precios testigo, COMPR.AR,
-    Compras Públicas Córdoba) exposes a public API reachable without
-    credentials, so only Mercado Libre is wired for now.
+    Each renglón of an electronic process carries the "precio de referencia"
+    the buying agency estimated per unit. It is an official estimate, not a
+    market quote, and it is labelled as such.
+    """
+
+    name = "compras_cba_referencias"
+
+    def __init__(self, procesos_loader):
+        # ``procesos_loader`` is an async callable returning ``list[Proceso]``
+        # (cached by the service); injected so tests need no network.
+        self._load = procesos_loader
+
+    async def search(self, item: str, unit: str | None = None) -> SourceResult:
+        from app.services.compras_cba import PORTAL_HISTORICO, _norm
+
+        try:
+            procesos = await self._load()
+        except Exception as exc:
+            return SourceResult(self.name, False, reason=f"no disponible ({type(exc).__name__})")
+        words = re.findall(r"[a-z]{4,}", _norm(item))[:3]
+        if not words:
+            return SourceResult(self.name, True, reason="ítem sin palabras clave")
+        stem = words[0].rstrip("s")
+        refs = []
+        for p in procesos:
+            for r in p.renglones:
+                if r.precio_referencia and stem in _norm(r.descripcion):
+                    observed = p.fecha_limite or ""
+                    if len(observed) >= 10 and observed[2] == "/":
+                        observed = f"{observed[6:10]}-{observed[3:5]}-{observed[0:2]}"
+                    refs.append(PriceReference(
+                        source=f"ComprasCba - precio de referencia oficial ({p.servicio})",
+                        description=f"{p.nro}: {r.descripcion}"[:200],
+                        unit_price=r.precio_referencia,
+                        observed_on=observed,
+                        url=PORTAL_HISTORICO,
+                        quantity=r.cantidad,
+                        kind="oficial",
+                        process_id=p.nro,
+                    ))
+        return SourceResult(self.name, True, references=refs[:30],
+                            reason=None if refs else "ningún renglón de referencia coincide")
+
+
+def default_external_sources() -> list[PriceSource]:
+    """External sources that need no database: Mercado Libre.
+
+    The ComprasCba reference source needs the cached portal grid and is built
+    by the service (see ``precio_mercado_service.analyze``).
     """
     return [MercadoLibreSource()]
