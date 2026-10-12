@@ -53,7 +53,7 @@ class Settings(BaseModel):
     ANTHROPIC_API_KEY: str | None = os.getenv("ANTHROPIC_API_KEY")
 
     # LLM Provider selection
-    LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "google")
+    LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "ollama")
 
     # Hardware / local pipeline (H.1)
     HARDWARE_PROFILE: str = os.getenv("HARDWARE_PROFILE", "")

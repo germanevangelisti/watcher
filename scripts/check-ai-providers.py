@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Check status of Watcher AI providers (config + live ping).
 
 Loads repo-root `.env`, reports selection (intelligence / LLM / embeddings),
@@ -84,7 +84,7 @@ def _print_config(resolved_tier: str) -> None:
     print(f"  HARDWARE_PROFILE      : {os.getenv('HARDWARE_PROFILE') or '(auto)'}")
     print(f"  INTELLIGENCE_PROVIDER : {os.getenv('INTELLIGENCE_PROVIDER', 'auto')}")
     print(f"  resolved analysis tier: {resolved_tier}")
-    print(f"  LLM_PROVIDER          : {os.getenv('LLM_PROVIDER', 'google')}")
+    print(f"  LLM_PROVIDER          : {os.getenv('LLM_PROVIDER', 'ollama')}")
     print(f"  LLM_MODEL             : {os.getenv('LLM_MODEL') or '(provider default)'}")
     print(f"  GOOGLE_API_KEY        : {_mask(os.getenv('GOOGLE_API_KEY'))}")
     print(f"  ANTHROPIC_API_KEY     : {_mask(os.getenv('ANTHROPIC_API_KEY'))}")
@@ -199,7 +199,7 @@ async def check_ollama(timeout: float) -> CheckResult:
 
 async def check_gemini(timeout: float) -> CheckResult:
     key = (os.getenv("GOOGLE_API_KEY") or "").strip()
-    model = (os.getenv("LLM_MODEL") or "gemini-2.0-flash").strip()
+    model = (os.getenv("LLM_MODEL") or "gemini-2.5-flash").strip()
     if not key:
         return CheckResult(
             name="gemini",
@@ -280,7 +280,7 @@ async def check_gemini(timeout: float) -> CheckResult:
         return CheckResult(
             name="gemini",
             configured=True,
-            ok=True if soft else False,
+            ok=bool(soft),
             detail=("rate-limited (key/reachable): " if soft else "") + f"{type(e).__name__}: {e}",
             latency_ms=latency,
         )

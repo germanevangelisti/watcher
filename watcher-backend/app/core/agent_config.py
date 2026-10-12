@@ -103,7 +103,7 @@ class AgentSystemConfig(BaseModel):
     # API Keys y recursos (se lee desde variable de entorno para evitar hardcoding)
     google_api_key: str = Field(default_factory=lambda: os.getenv("GOOGLE_API_KEY", ""))
     anthropic_api_key: str = Field(default_factory=lambda: os.getenv("ANTHROPIC_API_KEY", ""))
-    llm_provider: str = Field(default_factory=lambda: os.getenv("LLM_PROVIDER", "google"))
+    llm_provider: str = Field(default_factory=lambda: os.getenv("LLM_PROVIDER", "ollama"))
     enable_observability: bool = True
     log_level: str = "INFO"
 

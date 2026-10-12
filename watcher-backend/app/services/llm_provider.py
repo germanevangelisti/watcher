@@ -65,13 +65,13 @@ class GoogleGeminiProvider(LLMProvider):
 
     provider_id = "google"
 
-    def __init__(self, api_key: str | None = None, model: str = "gemini-2.0-flash"):
+    def __init__(self, api_key: str | None = None, model: str = "gemini-2.5-flash"):
         """
         Initialize Google Gemini provider
 
         Args:
             api_key: Google API key (reads from GOOGLE_API_KEY env var if not provided)
-            model: Model name (default: gemini-2.0-flash)
+            model: Model name (default: gemini-2.5-flash)
         """
         try:
             import google.generativeai as genai
@@ -386,7 +386,7 @@ class LLMProviderFactory:
             ValueError: If provider type is not supported
         """
         if provider_type == LLMProviderType.GOOGLE:
-            return GoogleGeminiProvider(api_key=api_key, model=model or "gemini-2.0-flash")
+            return GoogleGeminiProvider(api_key=api_key, model=model or "gemini-2.5-flash")
         elif provider_type == LLMProviderType.ANTHROPIC:
             return AnthropicProvider(api_key=api_key, model=model or "claude-3-5-sonnet-20241022")
         elif provider_type == LLMProviderType.OLLAMA:
@@ -399,20 +399,20 @@ class LLMProviderFactory:
         """
         Create an LLM provider based on environment configuration
 
-        Reads LLM_PROVIDER environment variable (default: google)
+        Reads LLM_PROVIDER environment variable (default: ollama)
         Reads LLM_MODEL environment variable for model selection
 
         Returns:
             LLMProvider instance
         """
-        provider_str = os.getenv("LLM_PROVIDER", "google").strip().lower()
+        provider_str = os.getenv("LLM_PROVIDER", "ollama").strip().lower()
         model = os.getenv("LLM_MODEL", None)  # None = use provider default
 
         try:
             provider_type = _resolve_provider_type(provider_str)
         except ValueError:
-            logger.warning(f"Invalid LLM_PROVIDER '{provider_str}', defaulting to Google")
-            provider_type = LLMProviderType.GOOGLE
+            logger.warning(f"Invalid LLM_PROVIDER '{provider_str}', defaulting to Ollama")
+            provider_type = LLMProviderType.OLLAMA
 
         return LLMProviderFactory.create_provider(provider_type, model=model)
 
@@ -459,7 +459,7 @@ def resolve_llm_provider() -> LLMProvider:
     Ollama —el único sin secreto ni paquete extra— y se loguea fuerte, porque
     cambiar de proveedor mueve el contexto del boletín fuera de la máquina.
     """
-    provider_str = os.getenv("LLM_PROVIDER", "google").strip().lower()
+    provider_str = os.getenv("LLM_PROVIDER", "ollama").strip().lower()
 
     provider, motivo = _construir_o_motivo(provider_str)
     if provider is not None:
@@ -495,7 +495,7 @@ def resolve_llm_provider() -> LLMProvider:
 _PROVEEDORES = (
     ("ollama", "Ollama", None, None, None, None, False),
     ("google", "Google Gemini", "google.generativeai", "google-generativeai",
-     "GOOGLE_API_KEY", "gemini-2.0-flash", True),
+     "GOOGLE_API_KEY", "gemini-2.5-flash", True),
     ("anthropic", "Anthropic Claude", "anthropic", "anthropic",
      "ANTHROPIC_API_KEY", "claude-3-5-sonnet-20241022", True),
 )
@@ -609,10 +609,10 @@ def configured_provider() -> dict:
     panel lo diga es la diferencia entre elegir y enterarse.
     """
     bruto = os.getenv("LLM_PROVIDER")
-    valor = (bruto or "google").strip().lower()
+    valor = (bruto or "ollama").strip().lower()
 
     if bruto is None:
-        origen = "LLM_PROVIDER no está definido: el código usa google"
+        origen = "LLM_PROVIDER no está definido: el código usa ollama"
     elif valor == "auto":
         origen = (
             "LLM_PROVIDER=auto → local, porque hay un OLLAMA_BASE_URL configurado"

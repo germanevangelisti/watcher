@@ -42,7 +42,7 @@ const CATALOGO = {
       local: false,
       available: true,
       reason: "remoto: el contexto del boletín sale de la máquina",
-      model: "gemini-2.0-flash",
+      model: "gemini-2.5-flash",
       models: [],
     },
     {

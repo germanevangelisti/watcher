@@ -490,3 +490,22 @@ async def test_el_endpoint_avisa_si_el_servidor_local_esta_apagado(monkeypatch, 
 
     assert respuesta.status_code == 400
     assert SIN_SERVIDOR in respuesta.json()["detail"]
+
+
+def test_default_provider_is_ollama_when_unset(monkeypatch):
+    """Without `LLM_PROVIDER`, the chat defaults to local Ollama."""
+    monkeypatch.delenv("LLM_PROVIDER", raising=False)
+    monkeypatch.setenv("OLLAMA_BASE_URL", SIN_SERVIDOR)
+
+    config = lp.configured_provider()
+
+    assert config["requested"] == "ollama"
+    assert config["provider"] == "ollama"
+    assert "ollama" in config["origin"]
+
+
+def test_gemini_default_model_is_not_retired():
+    """gemini-2.0-flash was retired by Google; defaults must not use it."""
+    assert lp.GoogleGeminiProvider.__init__.__defaults__[-1] == "gemini-2.5-flash"
+    google = next(p for p in lp._PROVEEDORES if p[0] == "google")
+    assert google[5] == "gemini-2.5-flash"

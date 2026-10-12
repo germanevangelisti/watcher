@@ -44,7 +44,7 @@ class WatcherService:
         if api_key and genai is not None:
             try:
                 # genai.configure() is called once at app startup in main.py
-                self.model = genai.GenerativeModel("gemini-2.0-flash")
+                self.model = genai.GenerativeModel("gemini-2.5-flash")
                 logger.info("Google Gemini client inicializado correctamente")
             except Exception as e:
                 logger.error(f"Error inicializando Gemini: {e}")
@@ -61,7 +61,7 @@ class WatcherService:
             )
 
         # Configuración optimizada
-        self.model_name = "gemini-2.0-flash"
+        self.model_name = "gemini-2.5-flash"
         self.max_tokens_per_request = 8000  # Chunks más grandes para capturar actos completos
         self.max_tokens_per_minute = 1000000
         self.requests_per_minute = 60
