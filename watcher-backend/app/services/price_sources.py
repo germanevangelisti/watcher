@@ -187,15 +187,20 @@ class MercadoLibreSource:
             products = resp.json().get("results", [])
         except ValueError:
             return SourceResult(self.name, False, reason="no disponible (respuesta inválida)")
-        wanted = self._stems(item)[:3]
+        stop = {"del", "los", "las", "con", "para", "sin", "por", "una", "uno", "unos", "unas"}
+        wanted = [w for w in self._stems(item) if w not in stop][:2]
         today = date.today().isoformat()
         refs: list[PriceReference] = []
         for prod in products:
             if len(refs) >= self.max_products:
                 break
             name = str(prod.get("name", ""))
-            have = set(self._stems(name))
-            if wanted and not all(w in have for w in wanted):
+            name_stems = self._stems(name)
+            have = set(name_stems)
+            head = next((w for w in name_stems if not w.isdigit() and w not in {"pack", "kit", "combo", "set", "x"}), "")
+            # The searched good must be the product's head noun, not an
+            # accessory ("Sellador de neumáticos", "Pillow top para colchones").
+            if wanted and (not all(w in have for w in wanted) or head != wanted[0]):
                 continue  # catalog search is loose ("resma" matches printer combos)
             try:
                 ir = await self._get({}, headers, self.product_items_url.format(id=prod.get("id")))
