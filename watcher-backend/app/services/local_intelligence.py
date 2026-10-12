@@ -6,14 +6,12 @@ does not change. Concurrent calls are capped (default 1) to fit a 12 GB GPU.
 
 from __future__ import annotations
 
-import asyncio
 import json
 import logging
 from typing import Any
 
 import httpx
 from app.core.hardware import (
-    llm_max_concurrent,
     ollama_base_url,
     ollama_model,
     ollama_num_ctx,
@@ -24,10 +22,9 @@ from app.services.analysis_schema import (
     FRAGMENT_ANALYSIS_SCHEMA,
 )
 from app.services.intelligence_provider import FreeProvider, IntelligenceProvider
+from app.services.llm_concurrency import llm_semaphore
 
 logger = logging.getLogger(__name__)
-
-_LLM_SEM: asyncio.Semaphore | None = None
 
 
 def salvage_fragment_json(raw: str) -> dict[str, Any] | None:
@@ -63,13 +60,6 @@ def salvage_fragment_json(raw: str) -> dict[str, Any] | None:
         "actos": actos,
         "resumen_general": "JSON truncado; actos recuperados",
     }
-
-
-def _llm_semaphore() -> asyncio.Semaphore:
-    global _LLM_SEM
-    if _LLM_SEM is None:
-        _LLM_SEM = asyncio.Semaphore(llm_max_concurrent())
-    return _LLM_SEM
 
 
 def _normalize_actos(result: dict[str, Any], metadata: dict[str, Any], model_name: str) -> dict[str, Any]:
@@ -147,7 +137,7 @@ class LocalProProvider(IntelligenceProvider):
         }
         url = f"{self.base_url}/api/chat"
         try:
-            async with _llm_semaphore(), httpx.AsyncClient(timeout=self.timeout_s) as client:
+            async with llm_semaphore(), httpx.AsyncClient(timeout=self.timeout_s) as client:
                 response = await client.post(url, json=payload)
                 response.raise_for_status()
                 body = response.json()

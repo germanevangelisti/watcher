@@ -9,9 +9,16 @@ from agents.historical_intelligence import HistoricalIntelligenceAgent
 from agents.insight_reporting import InsightReportingAgent
 from agents.orchestrator import AgentOrchestrator
 from agents.orchestrator.state import AgentType
+from agents.tools.presupuesto_tools import budget_tool_names
 from app.core.agent_config import DEFAULT_AGENT_CONFIG
 from app.core.events import EventType, event_bus
 from app.db.session import get_db
+from app.services.llm_provider import (
+    build_provider,
+    configured_provider,
+    estado_de_ollama,
+    provider_catalog,
+)
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -142,7 +149,13 @@ async def get_agent_status(agent_type: str):
         "capabilities": {
             "document_intelligence": ["extract_document", "classify_content", "extract_entities"],
             "anomaly_detection": ["analyze_document", "calculate_transparency_score", "detect_red_flags"],
-            "insight_reporting": ["generate_report", "answer_query", "generate_summary"]
+            # Las tools de presupuesto se derivan de `PRESUPUESTO_TOOLS`, que es la
+            # misma tabla que usa el router del chat: la lista no puede quedar
+            # desincronizada de lo que el agente realmente puede invocar.
+            "insight_reporting": [
+                "generate_report", "answer_query", "generate_summary",
+                *budget_tool_names(),
+            ],
         }.get(agent_type, [])
     }
 
@@ -150,6 +163,27 @@ async def get_agent_status(agent_type: str):
 class ChatRequest(BaseModel):
     query: str
     context: dict[str, Any] | None = None
+    # Elección explícita de proveedor para **este** turno, desde el panel de
+    # agentes.  `None` = el que resolvió el entorno, que es el comportamiento
+    # de siempre.
+    provider: str | None = None
+    model: str | None = None
+
+
+@router.get("/llm/providers")
+async def list_llm_providers():
+    """Qué proveedores de LLM se pueden usar, con cuál arranca el chat y por qué.
+
+    El proveedor del chat sale de `LLM_PROVIDER` en el `.env`, que no se ve
+    desde ninguna pantalla: hasta ahora la única forma de saber si las
+    respuestas las escribía Gemini o el modelo local era leer el log.  El
+    catálogo dice, para cada uno, si está disponible y **qué le falta** — un
+    selector que ofrece opciones que van a fallar no sirve para comparar nada.
+    """
+    return {
+        "providers": await provider_catalog(),
+        "configured": configured_provider(),
+    }
 
 
 @router.post("/chat")
@@ -157,21 +191,62 @@ async def chat_with_agent(request: ChatRequest):
     """
     Interactúa con el Insight Agent mediante chat con datos reales
     """
+    proveedor = None
+    if request.provider:
+        # Se construye antes de tocar la base: si el proveedor elegido no se
+        # puede usar, el turno no gasta una consulta para después fallar.
+        try:
+            proveedor = build_provider(request.provider, request.model)
+            if request.provider.strip().lower() == "ollama":
+                await _exigir_modelo_local(request.model)
+        except ValueError as exc:
+            # **Sin fallback.**  Acá el usuario eligió un proveedor para
+            # compararlo: contestarle con Ollama le haría comparar Ollama contra
+            # Ollama y concluir algo falso sobre Gemini.  Mejor un error que
+            # dice qué falta.
+            raise HTTPException(status_code=400, detail=str(exc))
+
     try:
         # Usar el nuevo método que consulta datos reales
-        result = await insight_agent.query_with_data(request.query)
+        result = await insight_agent.query_with_data(request.query, provider=proveedor)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
+async def _exigir_modelo_local(model: str | None) -> None:
+    """Un modelo local elegido a mano tiene que estar descargado.
+
+    `OllamaProvider` no hace I/O al construirse (a propósito), así que un modelo
+    que ya no está en el servidor —el valor recordado en el navegador después de
+    borrarlo, por ejemplo— no falla al elegirlo: falla en cada turno, con un
+    error de HTTP que no dice cuál es el problema.
+    """
+    if not model:
+        return
+
+    estado = await estado_de_ollama()
+    if not estado["responde"]:
+        raise ValueError(estado["motivo"])
+    if model not in estado["modelos"]:
+        disponibles = ", ".join(estado["modelos"]) or "ninguno"
+        raise ValueError(
+            f"el modelo «{model}» no está descargado en el servidor local "
+            f"(hay: {disponibles})"
+        )
+
+
 @router.post("/chat/clear")
 async def clear_chat_history():
     """
-    Limpia el historial de conversación
+    Limpia el historial de conversación del Insight Agent.
+
+    Idempotente: sobre un historial ya vacío responde igual (200) con
+    `cleared: 0`. El campo `cleared` son los mensajes borrados (2 por turno),
+    para que el FE pueda distinguir "limpié" de "ya estaba limpio" sin adivinar.
     """
-    insight_agent.clear_conversation()
-    return {"message": "Historial de conversación limpiado"}
+    cleared = insight_agent.clear_conversation()
+    return {"message": "Historial de conversación limpiado", "cleared": cleared}
 
 
 @router.get("/insights/statistics")

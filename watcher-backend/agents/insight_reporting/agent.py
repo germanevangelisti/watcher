@@ -4,35 +4,97 @@ Insight & Reporting Agent
 Genera insights accionables, reportes y responde queries en lenguaje natural
 """
 import logging
-import os
+import re
+import unicodedata
 from datetime import datetime
 from typing import Any
 
 from app.core.agent_config import InsightReportingConfig
 from app.db.database import AsyncSessionLocal
+from app.services.llm_provider import LLMProvider, resolve_llm_provider
 from app.services.reference_firewall import ReferenceFirewallService
 
 from agents.orchestrator.state import AgentType, TaskDefinition, WorkflowState
 from agents.tools.analysis_tools import AnalysisTools
 from agents.tools.database_tools import DatabaseTools
 from agents.tools.presupuesto_tools import (
-    INTENT_FINALIDADES,
-    INTENT_ORGANISMO_DETALLE,
     INTENT_ORGANISMOS,
-    INTENT_RESUMEN,
     PresupuestoTools,
+    build_actos_system_block,
+    build_corpus_system_block,
     build_presupuesto_system_block,
     detect_presupuesto_intents,
-    public_resumen,
+    route_presupuesto,
 )
 
-try:
-    import google.generativeai as genai
-    GOOGLE_AI_AVAILABLE = True
-except ImportError:
-    GOOGLE_AI_AVAILABLE = False
-
 logger = logging.getLogger(__name__)
+
+
+# ------------------------------------------------------- turnos sin pedido
+#
+# Un "gracias" no es una consulta, y hasta 2026-10-01 corría el pipeline entero:
+# el router de presupuesto, la búsqueda sobre el corpus —`search_bm25("gracias")`
+# devuelve boletines que contienen esa palabra, así que `fragmentos` quedaba
+# lleno y el bloque de ausencia **no** se emitía— y, con los últimos 3 turnos en
+# el prompt, el modelo contestaba **la pregunta anterior** sobre un contexto que
+# no la cubría.  Medido: el turno *"gracias"* posterior a *"desglosá los actos de
+# Caminos de las Sierras de abril de 2026"* devolvió *"No encontré información
+# específica sobre actos de Caminos de las Sierras S.A. …"* citando como fuente
+# una búsqueda que nunca fue sobre eso.
+#
+# El corte es determinístico y va **antes** de abrir la base: un turno sin pedido
+# no consulta nada, no cita fuentes y no llama al modelo (en local tarda segundos
+# y puede reabrir el turno anterior).  El vocabulario es **cerrado**: el turno es
+# de cortesía sólo si *todas* sus palabras están acá, así que *"gracias, ¿y el
+# total?"* sigue el camino normal.  Es una lista, no un detector semántico: si
+# aparece una fórmula nueva, se agrega la palabra.
+_MARCADORES_DE_CORTESIA = frozenset([
+    "gracias", "hola", "buenas", "buenos", "dia", "dias", "tardes", "noches",
+    "tal", "saludos", "chau", "chao", "adios", "ok", "okey", "dale", "listo",
+    "perfecto", "genial", "excelente", "joya", "barbaro", "util", "utiles",
+    "amable", "favor", "disculpas", "perdon",
+])
+_SALUDOS = frozenset(["hola", "buenas", "buenos", "dia", "dias", "tardes", "noches", "tal", "saludos"])
+_FUNCIONES = frozenset([
+    "a", "al", "buen", "bueno", "con", "de", "del", "el", "en", "es", "esta",
+    "e", "la", "las", "le", "lo", "los", "mas", "me", "mi", "mil", "muchas",
+    "muchisimas", "muchisimo", "muy", "nada", "no", "o", "para", "por", "que",
+    "se", "si", "soy", "su", "te", "todo", "todos", "tu", "un", "una", "y", "ya",
+])
+_PALABRAS_DE_CORTESIA = _MARCADORES_DE_CORTESIA | _FUNCIONES
+
+_RESPUESTA_SALUDO = (
+    "¡Hola! Puedo desglosar un organismo, comparar finalidades o buscar un tema "
+    "en los boletines. ¿Qué querés ver?"
+)
+_RESPUESTA_CORTESIA = (
+    "De nada. Cuando quieras seguimos: puedo desglosar un organismo, comparar "
+    "finalidades o buscar un tema en los boletines."
+)
+
+
+def _palabras(texto: str) -> list[str]:
+    """Tokeniza en minúsculas, sin acentos y sin signos: `¿¡Gracias!!` → `gracias`."""
+    sin_acentos = unicodedata.normalize("NFKD", texto.lower())
+    sin_acentos = "".join(c for c in sin_acentos if not unicodedata.combining(c))
+    return re.findall(r"[^\W\d_]+", sin_acentos)
+
+
+def respuesta_si_es_turno_sin_pedido(query: str) -> str | None:
+    """La respuesta corta de un turno de cortesía, o `None` si el turno pide algo.
+
+    `None` es "no es de cortesía", no "no hay respuesta": el llamador sigue con el
+    camino normal.  Un turno vacío o de puras palabras funcionales (`"¿y eso?"`)
+    tampoco entra — eso suele ser un seguimiento, y adivinar cuesta más que buscar.
+    """
+    palabras = _palabras(query)
+    if not palabras or not all(p in _PALABRAS_DE_CORTESIA for p in palabras):
+        return None
+    if not any(p in _MARCADORES_DE_CORTESIA for p in palabras):
+        return None
+    if any(p in _SALUDOS for p in palabras):
+        return _RESPUESTA_SALUDO
+    return _RESPUESTA_CORTESIA
 
 
 class InsightReportingAgent:
@@ -56,27 +118,12 @@ class InsightReportingAgent:
         self.config = config or InsightReportingConfig()
         self.agent_type = AgentType.INSIGHT_REPORTING
 
-        # Cliente Google Gemini para generación de texto
-        self.model = None
-        if GOOGLE_AI_AVAILABLE:
-            # Intentar obtener API key del config, luego de env, luego de agent_config
-            api_key = os.getenv('GOOGLE_API_KEY')
-
-            # Si no está en env, intentar desde DEFAULT_AGENT_CONFIG
-            if not api_key:
-                from app.core.agent_config import DEFAULT_AGENT_CONFIG
-                api_key = DEFAULT_AGENT_CONFIG.google_api_key
-
-            if api_key and api_key != "":
-                # genai.configure() is called once at app startup in main.py
-                self.model = genai.GenerativeModel("gemini-3.8-flash")
-                logger.info("Google Gemini client inicializado correctamente")
-            else:
-                logger.warning("Google API key no encontrada - chat funcionará con fallback")
-
-        # Retrieval is lazy so importing the API does not download HF models.
-        self.retrieval_service = None
-        self._retrieval_init_attempted = False
+        # Cliente LLM para generación de texto.  Está detrás de la capa de
+        # providers: `resolve_llm_provider()` respeta `LLM_PROVIDER` y cae a
+        # Ollama local si lo configurado no se puede construir (falta la API
+        # key, falta el SDK).  Construirlo no hace I/O, así que el import del
+        # módulo de la API no depende de que el servidor local esté arriba.
+        self.provider = resolve_llm_provider()
 
         # Historial de conversación
         self.conversation_history: list[dict[str, str]] = []
@@ -86,18 +133,70 @@ class InsightReportingAgent:
 
         logger.info("InsightReportingAgent inicializado")
 
-    def _ensure_retrieval(self):
-        if self._retrieval_init_attempted or not self.config.use_vector_db:
-            return self.retrieval_service
-        self._retrieval_init_attempted = True
-        try:
-            from app.services.retrieval_service import get_retrieval_service
+    async def _buscar_en_corpus(self, query: str, top_k: int = 5) -> list[Any]:
+        """Busca en los boletines: semántica **y** keyword.
 
-            self.retrieval_service = get_retrieval_service()
-            logger.info("RetrievalService inicializado para búsqueda semántica")
+        Hasta 2026-10-01 esto era `get_retrieval_service()`, **sin sesión de base**:
+        `RetrievalService` dejaba `fts_service = None`, `search_bm25` nunca corría
+        (un log de debug, invisible) y `hybrid_search` fusionaba una lista vacía con
+        otra.  Se creía híbrida y era semántica sola — y en una máquina sin
+        embeddings locales, nada.
+
+        La sesión es por búsqueda: `keyword_search` corre en un hilo y el servicio
+        la retiene, así que no puede ser una guardada en este singleton.
+        """
+        if not self.config.use_vector_db:
+            return []
+        from app.services.retrieval_service import retrieval_service_con_sesion
+
+        async with retrieval_service_con_sesion() as servicio:
+            return await servicio.hybrid_search(query=query, top_k=top_k, rerank=True)
+
+    async def _contexto_de_corpus(self, query: str) -> dict[str, Any]:
+        """Los fragmentos del corpus y, cuando no hay, **el hueco declarado**.
+
+        El estado viaja al system prompt (`build_corpus_system_block`): sin él, el
+        modelo no puede distinguir *no busqué* de *busqué y no había* y contesta
+        *"no se publicó"* — que es lo que pasó con obra pública en septiembre.
+        """
+        if not self.config.use_vector_db:
+            return {
+                "ejecutada": False,
+                "resultados": 0,
+                "motivo": "la búsqueda sobre el corpus está deshabilitada en esta configuración",
+            }
+
+        try:
+            resultados = await self._buscar_en_corpus(query)
         except Exception as e:
-            logger.warning("No se pudo inicializar RetrievalService: %s", e)
-        return self.retrieval_service
+            logger.warning("Búsqueda sobre el corpus falló: %s: %s", type(e).__name__, e)
+            return {
+                "ejecutada": True,
+                "resultados": 0,
+                "motivo": f"la búsqueda falló ({type(e).__name__}); no hubo revisión del corpus",
+            }
+
+        if resultados:
+            logger.info("Contexto del corpus: %d fragmentos", len(resultados))
+            return {
+                "ejecutada": True,
+                "resultados": len(resultados),
+                "fragmentos": [
+                    {"texto": r.text[:500], "score": r.score, "document_id": r.document_id}
+                    for r in resultados
+                ],
+            }
+
+        logger.warning(
+            "Búsqueda sobre el corpus sin resultados para %r: el modelo va a declarar "
+            "que no lo encontró (nunca que no se publicó).",
+            query,
+        )
+        return {
+            "ejecutada": True,
+            "resultados": 0,
+            "motivo": "la búsqueda se ejecutó y no devolvió fragmentos",
+        }
 
     async def execute(self, workflow: WorkflowState,
                      task: TaskDefinition) -> dict[str, Any]:
@@ -193,13 +292,11 @@ class InsightReportingAgent:
                 "content": query
             })
 
-            # Limitar historial
-            if len(self.conversation_history) > self.config.max_conversation_history * 2:
-                self.conversation_history = self.conversation_history[-self.config.max_conversation_history * 2:]
+            self._trim_history()
 
             # Generar respuesta
-            if self.model:
-                response_text = await self._generate_ai_response(query, context)
+            if self.provider:
+                response_text, _ = await self._generate_ai_response(query, context)
             else:
                 response_text = self._generate_fallback_response(query, context)
 
@@ -324,7 +421,7 @@ class InsightReportingAgent:
 
     async def _create_narrative(self, metrics: dict[str, Any]) -> str:
         """Crea narrativa basada en métricas"""
-        if self.model:
+        if self.provider:
             return await self._generate_ai_narrative(metrics)
         else:
             return self._generate_template_narrative(metrics)
@@ -344,18 +441,11 @@ class InsightReportingAgent:
         """
 
         try:
-            import asyncio
-
-            response = await asyncio.to_thread(
-                self.model.generate_content,
+            return await self.provider.generate_text(
                 prompt,
-                generation_config=genai.types.GenerationConfig(
-                    temperature=self.config.temperature,
-                    max_output_tokens=self.config.max_tokens
-                )
+                temperature=self.config.temperature,
+                max_tokens=self.config.max_tokens,
             )
-
-            return response.text.strip()
 
         except Exception as e:
             logger.error(f"Error generando narrativa con IA: {e}")
@@ -397,16 +487,42 @@ class InsightReportingAgent:
 
         return recommendations if recommendations else ["No hay recomendaciones específicas"]
 
-    async def query_with_data(self, query: str) -> dict[str, Any]:
+    async def query_with_data(self, query: str,
+                              provider: LLMProvider | None = None) -> dict[str, Any]:
         """
         Responde una query consultando los datos reales de la base de datos
 
         Args:
             query: Pregunta del usuario
+            provider: proveedor con el que redactar **este** turno.  `None` usa
+                el del agente (el que resolvió el entorno).  El agente no lo
+                construye: quien elige un proveedor explícito es el llamador, y
+                sólo él puede fallar con un motivo visible en vez de caer a
+                Ollama en silencio.
 
         Returns:
-            Respuesta con datos reales
+            Respuesta con datos reales, y `llm` con quién la redactó (`None` si
+            la escribió el sistema y no un modelo).
         """
+        # Un turno sin pedido se contesta antes de tocar la base: no hay consulta
+        # que hacer, y buscar igual —lo que se hacía— llenaba el contexto de
+        # fragmentos que no eran de nada y le devolvía el turno anterior al modelo.
+        # `data_used` va vacío a propósito: no se consultó ninguna fuente, y la
+        # burbuja no tiene que citar ninguna.
+        cortesia = respuesta_si_es_turno_sin_pedido(query)
+        if cortesia is not None:
+            self._remember_turn(query, cortesia)
+            return {
+                "success": True,
+                "query": query,
+                "response": cortesia,
+                "data_used": [],
+                # Texto fijo del agente: no hay modelo que declarar, y decir
+                # "Ollama" acá atribuiría a un modelo una frase que no escribió.
+                "llm": None,
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+
         try:
             async with AsyncSessionLocal() as db:
                 # Detectar tipo de consulta y obtener datos relevantes
@@ -414,34 +530,19 @@ class InsightReportingAgent:
 
                 data_context = {}
 
-                # Presupuesto: chips ejecutivos (resumen / organismos / finalidades).
-                # El resumen se lee siempre —alimenta el bloque fijo del system
-                # prompt y, cuando la query lo pide, el data_context—; un fallo
-                # acá degrada a "sin datos de ejecución", nunca rompe el chat.
+                # Presupuesto: el router declara qué tool sirve cada intent y con qué
+                # key entra al contexto (`PRESUPUESTO_TOOLS`).  El resumen se lee
+                # siempre —alimenta el bloque fijo del system prompt y, cuando la
+                # query lo pide, el data_context—; un fallo acá degrada a "sin datos
+                # de ejecución", nunca rompe el chat.
                 presupuesto_intents: set[str] = set()
                 presupuesto_resumen = None
                 try:
                     presupuesto_intents = detect_presupuesto_intents(query)
                     presupuesto_resumen = await PresupuestoTools.get_ejecucion_resumen(db)
-
-                    if presupuesto_resumen:
-                        if INTENT_RESUMEN in presupuesto_intents:
-                            data_context['ejecucion_resumen'] = public_resumen(presupuesto_resumen)
-                        if INTENT_ORGANISMOS in presupuesto_intents:
-                            data_context['organismos'] = PresupuestoTools.top_organismos(presupuesto_resumen)
-                    if INTENT_FINALIDADES in presupuesto_intents:
-                        finalidades = await PresupuestoTools.get_finalidades_desvio(db)
-                        if finalidades:
-                            data_context['finalidades'] = finalidades
-
-                    # (d) Desglose de un organismo puntual.  No depende del resumen:
-                    # lee el ledger directamente, y así también funciona para los
-                    # organismos sin fila en la Ley — Caminos de las Sierras, que es
-                    # justo el caso donde el agregado no alcanza.
-                    if INTENT_ORGANISMO_DETALLE in presupuesto_intents:
-                        desglose = await PresupuestoTools.get_organismo_desglose(db, query)
-                        if desglose:
-                            data_context['organismo_desglose'] = desglose
+                    data_context.update(await route_presupuesto(
+                        db, query, presupuesto_resumen, presupuesto_intents,
+                    ))
                 except Exception as e:
                     logger.warning(f"Contexto de presupuesto no disponible: {e}")
 
@@ -473,26 +574,20 @@ class InsightReportingAgent:
                         and INTENT_ORGANISMOS not in presupuesto_intents):
                     data_context['entities'] = await AnalysisTools.get_entity_analysis(db, 'beneficiaries')
 
-                # Agregar contexto de búsqueda semántica si está disponible
-                if self._ensure_retrieval():
-                    try:
-                        search_results = await self.retrieval_service.hybrid_search(
-                            query=query,
-                            top_k=5,
-                            rerank=True
-                        )
-                        if search_results:
-                            data_context['semantic_context'] = [
-                                {
-                                    'text': r.text[:500],
-                                    'score': r.score,
-                                    'document_id': r.document_id
-                                }
-                                for r in search_results
-                            ]
-                            logger.info(f"Agregado contexto semántico: {len(search_results)} chunks")
-                    except Exception as e:
-                        logger.warning(f"Error en búsqueda semántica: {e}")
+                # Búsqueda sobre el corpus de boletines.  Los fragmentos entran al
+                # contexto con **el nombre de lo que son**: `corpus_boletines`.  La
+                # clave se llamó `semantic_context` y el FE la rotulaba "Búsqueda
+                # semántica", pero los fragmentos son el resultado de
+                # `hybrid_search` —keyword + semántica, fusionadas con RRF— y desde
+                # el bloqueo de Smart App Control esta máquina sólo corre la mitad
+                # de keyword: el chip afirmaba una búsqueda semántica que no había
+                # ocurrido.  **El hueco no entra acá**: va al system prompt
+                # (`build_corpus_system_block`), porque no es una fuente consultada
+                # sino un estado que el modelo tiene que poder declarar.  Meterlo en
+                # `data_used` lo mostraría como si fuera un dato encontrado.
+                corpus = await self._contexto_de_corpus(query)
+                if corpus.get("fragmentos"):
+                    data_context['corpus_boletines'] = corpus['fragmentos']
 
                 # Si no se encontró contexto específico, obtener estadísticas
                 if not data_context:
@@ -500,18 +595,46 @@ class InsightReportingAgent:
 
                 # Generar respuesta usando IA con el contexto de datos
                 system_block = build_presupuesto_system_block(presupuesto_resumen)
-                if self.model:
-                    response_text = await self._generate_ai_response(
-                        query, data_context, system_block=system_block
+                corpus_block = build_corpus_system_block(corpus)
+                if corpus_block:
+                    system_block = f"{system_block}\n\n{corpus_block}"
+
+                # El proveedor del turno: el elegido para esta consulta si lo
+                # hay, y si no el del agente.  `del_modelo` distingue la
+                # respuesta redactada por el modelo del texto de fallback, que
+                # sale por el mismo camino cuando el modelo no contesta: la
+                # burbuja no puede decir "Ollama" sobre un texto que el sistema
+                # escribió solo.
+                provider_efectivo = provider or self.provider
+                llm_del_turno = None
+                if provider_efectivo:
+                    response_text, del_modelo = await self._generate_ai_response(
+                        query, data_context, system_block=system_block,
+                        provider=provider_efectivo,
                     )
+                    if del_modelo:
+                        # `getattr` y no acceso directo: los dobles de test no
+                        # implementan el contrato entero, y un turno no puede
+                        # caerse porque un provider falso no se sepa nombrar.
+                        llm_del_turno = {
+                            "provider": getattr(provider_efectivo, "provider_id", None),
+                            "model": getattr(provider_efectivo, "model_name", None),
+                        }
                 else:
                     response_text = self._generate_fallback_response(query, data_context)
+
+                # Memoria de turnos: recién acá, con la respuesta ya generada.
+                # Éste es el único path del chat del FE, y hasta ahora no escribía
+                # historial (sólo lo hacía `answer_query`), así que
+                # `_generate_ai_response` leía siempre una lista vacía.
+                self._remember_turn(query, response_text)
 
                 return {
                     "success": True,
                     "query": query,
                     "response": response_text,
                     "data_used": list(data_context.keys()),
+                    "llm": llm_del_turno,
                     "timestamp": datetime.utcnow().isoformat()
                 }
 
@@ -545,13 +668,30 @@ class InsightReportingAgent:
             # La regla que faltaba.  El agente afirmaba "0 documentos encontrados"
             # sobre organismos que nunca consultó, y una ausencia inventada se lee
             # como dato verificado.  El hueco se declara, no se rellena.
-            "Nunca afirmes que no hay datos, registros o documentos sobre algo que no "
-            "consultaste. Si te piden el detalle de un organismo y sus datos no están "
-            "en el contexto, decí que no los tenés y pedí el nombre del organismo; no "
-            "lo interpretes como que no publicó nada."
+            #
+            # La primera redacción hablaba de "datos, registros o documentos" y del
+            # detalle de un organismo: el 2026-10-01 el chat contestó "No se publicó
+            # información sobre obra pública en septiembre" — con cinco boletines de
+            # septiembre publicando obra, y sin haber buscado— porque *publicar* no
+            # es ninguna de esas tres palabras.  Va en general y con el verbo que el
+            # ciudadano lee.
+            "Nunca afirmes que algo no existe, no se publicó, no se registró o no hay "
+            "datos, registros ni documentos sobre algo que no consultaste. Si el "
+            "contexto no trae resultados de una búsqueda, decí que no lo encontraste "
+            "o que no lo tenés — nunca que no se publicó ni que no existe. Si te "
+            "piden el detalle de un organismo y sus datos no están en el contexto, "
+            "decí que no los tenés y pedí el nombre del organismo; no lo interpretes "
+            "como que no publicó nada."
         )
         if system_block:
             system_content = f"{system_content}\n\n{system_block}"
+
+        # Las reglas de citación sólo aplican a las respuestas que traen actos: el
+        # resto del chat no cambia de comportamiento.  Van acá y no en el bloque fijo
+        # de presupuesto porque dependen del contexto de esta query, no de la Ley.
+        actos_block = build_actos_system_block((context or {}).get("actos"))
+        if actos_block:
+            system_content = f"{system_content}\n\n{actos_block}"
 
         return [
             {"role": "system", "content": system_content}
@@ -561,47 +701,95 @@ class InsightReportingAgent:
 
     async def _generate_ai_response(self, query: str,
                                    context: dict[str, Any] | None = None,
-                                   system_block: str | None = None) -> str:
-        """Genera respuesta con IA"""
+                                   system_block: str | None = None,
+                                   provider: LLMProvider | None = None) -> tuple[str, bool]:
+        """Genera respuesta con IA, a través del provider elegido para el turno.
+
+        Los mensajes van **enteros**, con sus roles: cada provider decide cómo
+        los aplana (Gemini los une en un texto, Ollama los manda como roles
+        reales).  Aplanarlos acá era lo que dejaba el bloque de sistema pegado
+        al user message.
+
+        Devuelve `(texto, lo_redactó_el_modelo)`.  El segundo valor existe
+        porque el fallo del modelo sale por acá mismo con el texto de fallback:
+        sin él, la burbuja declararía el proveedor sobre una respuesta que el
+        proveedor nunca escribió — que es la clase de dato falso que esta
+        pantalla existe para no mostrar.
+        """
         messages = self._build_messages(query, context, system_block)
+        usado = provider or self.provider
 
         try:
-            import asyncio
-
-            # Convertir el historial de mensajes a formato Gemini
-            conversation_text = "\n\n".join([
-                f"{msg['role'].upper()}: {msg['content']}"
-                for msg in messages
-            ])
-
-            response = await asyncio.to_thread(
-                self.model.generate_content,
-                conversation_text,
-                generation_config=genai.types.GenerationConfig(
-                    temperature=self.config.temperature,
-                    max_output_tokens=self.config.max_tokens
-                )
+            texto = await usado.generate_chat(
+                messages,
+                temperature=self.config.temperature,
+                max_tokens=self.config.max_tokens,
             )
-
-            return response.text.strip()
+            return texto, True
 
         except Exception as e:
             logger.error(f"Error generando respuesta con IA: {e}")
-            return self._generate_fallback_response(query, context)
+            return self._generate_fallback_response(query, context), False
 
     def _generate_fallback_response(self, query: str,
                                    context: dict[str, Any] | None = None) -> str:
-        """Genera respuesta fallback sin IA"""
-        return f"He recibido tu consulta: '{query}'. En este momento, la funcionalidad de chat requiere configurar la API de Google. Por favor, consulta los datos directamente en el dashboard."
+        """Respuesta sin IA: cuando no hay modelo, o cuando el modelo falló.
+
+        El texto dice exactamente eso.  Antes culpaba a "la API de Google", que
+        ya no es la única opción ni la que se usa: un mensaje que manda al
+        usuario a arreglar lo que no está roto cuesta más que no decir nada.
+        """
+        return (
+            f"No puedo redactar una respuesta para '{query}': no hay un modelo de "
+            "lenguaje disponible (Ollama local no respondió y no hay una API "
+            "configurada). Los datos del panel siguen disponibles en el dashboard."
+        )
 
     def set_firewall(self, fw: "ReferenceFirewallService") -> None:
         """Attach a ReferenceFirewallService for answer validation (Fase IV)."""
         self._firewall = fw
 
-    def clear_conversation(self) -> None:
-        """Limpia el historial de conversación"""
+    def _trim_history(self) -> None:
+        """Recorta el historial a `max_conversation_history` turnos (pares).
+
+        El límite se cuenta en pares user/assistant, de ahí el `* 2`. Los turnos
+        se recortan por el principio: lo viejo se va, lo reciente queda —que es lo
+        que lee `_build_messages` para resolver referencias del tipo "y el mes
+        anterior".
+        """
+        tope = self.config.max_conversation_history * 2
+        if len(self.conversation_history) > tope:
+            self.conversation_history = self.conversation_history[-tope:]
+
+    def _remember_turn(self, user_message: str, assistant_message: str) -> None:
+        """Cierra un turno: agrega user + assistant al historial y lo recorta.
+
+        Se llama **después** de generar la respuesta, no antes: si el par se
+        appendea antes, la query actual entra dos veces al prompt (una en el
+        historial y otra como último mensaje user), y un fallo de generación
+        dejaría un turno sin respuesta.
+
+        Límite conocido: el historial vive **en memoria del proceso y es del
+        proceso**, no de la sesión — `insight_agent` es un singleton del módulo
+        `agents.py`, así que dos usuarios del mismo backend comparten memoria y
+        un reinicio la borra. Persistencia durable / multi-usuario está fuera del
+        alcance de esta historia (ver Won't de `chat-turn-memory`).
+        """
+        self.conversation_history.append({"role": "user", "content": user_message})
+        self.conversation_history.append({"role": "assistant", "content": assistant_message})
+        self._trim_history()
+
+    def clear_conversation(self) -> int:
+        """Limpia el historial de conversación.
+
+        Devuelve cuántos mensajes se borraron, para que el llamador pueda
+        distinguir "limpié 4" de "ya estaba vacío" sin adivinar. Es idempotente:
+        sobre un historial vacío no falla, devuelve 0.
+        """
+        borrados = len(self.conversation_history)
         self.conversation_history.clear()
-        logger.info("Historial de conversación limpiado")
+        logger.info("Historial de conversación limpiado (%d mensajes)", borrados)
+        return borrados
 
     async def generate_monthly_summary(self, year: int = 2025,
                                        month: int = 8) -> dict[str, Any]:

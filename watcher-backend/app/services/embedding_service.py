@@ -35,11 +35,19 @@ except ImportError:
 # Try to import ChromaDB
 try:
     import chromadb
+    from chromadb.api.types import EmbeddingFunction as ChromaEmbeddingFunction
     from chromadb.config import Settings
     CHROMADB_AVAILABLE = True
 except ImportError:
     logger.warning("ChromaDB not installed. Install with: pip install chromadb")
     CHROMADB_AVAILABLE = False
+
+    class ChromaEmbeddingFunction:  # type: ignore[no-redef]
+        """Base vacía: sin ChromaDB no hay protocolo que cumplir.
+
+        Las dos funciones de embedding heredan de esta base para que las clases se
+        definan igual; con ChromaDB instalado la base real aporta `embed_query`.
+        """
 
 # Try to import Google Generative AI
 try:
@@ -52,8 +60,14 @@ except ImportError:
 try:
     from sentence_transformers import SentenceTransformer
     SENTENCE_TRANSFORMERS_AVAILABLE = True
-except ImportError:
+    SENTENCE_TRANSFORMERS_ERROR: str | None = None
+except ImportError as exc:
     SENTENCE_TRANSFORMERS_AVAILABLE = False
+    # El motivo se guarda entero a propósito.  En la máquina de desarrollo el
+    # paquete está instalado y lo que falla es un DLL bloqueado por la política
+    # de control de aplicaciones: "no está instalado" manda a instalar algo que
+    # ya está, y el problema real —que no hay embeddings locales— queda tapado.
+    SENTENCE_TRANSFORMERS_ERROR = f"{type(exc).__name__}: {exc}"
     SentenceTransformer = None  # type: ignore[misc, assignment]
 
 
@@ -62,7 +76,7 @@ EMBEDDING_DIM = 3072
 LOCAL_COLLECTION_NAME = "watcher_documents_local"
 
 
-class GoogleEmbeddingFunction:
+class GoogleEmbeddingFunction(ChromaEmbeddingFunction):
     """ChromaDB-compatible embedding function using Google gemini-embedding-001."""
 
     def __init__(self, api_key: str, model: str = EMBEDDING_MODEL):
@@ -73,8 +87,8 @@ class GoogleEmbeddingFunction:
         """Required by ChromaDB 1.x."""
         return "google-gemini-embedding"
 
-    def __call__(self, input: list[str]) -> list[list[float]]:
-        """Generate embeddings for a list of texts."""
+    def _embed(self, input: list[str], task_type: str) -> list[list[float]]:
+        """Embeddea con el `task_type` que corresponda a la operación."""
         embeddings = []
         batch_size = 100
 
@@ -85,7 +99,7 @@ class GoogleEmbeddingFunction:
                     result = genai.embed_content(
                         model=self.model,
                         content=text,
-                        task_type="retrieval_document"
+                        task_type=task_type
                     )
                     embeddings.append(result['embedding'])
                 except Exception as e:
@@ -94,8 +108,21 @@ class GoogleEmbeddingFunction:
 
         return embeddings
 
+    def __call__(self, input: list[str]) -> list[list[float]]:
+        """Indexar: el texto entra como documento."""
+        return self._embed(input, "retrieval_document")
 
-class LocalEmbeddingFunction:
+    def embed_query(self, input: list[str]) -> list[list[float]]:
+        """Buscar: ChromaDB llama esto, no `__call__`.
+
+        Y la consulta no es un documento: `retrieval_query` es el `task_type` que
+        Gemini espera acá. Heredar el default del `__call__` habría embeddeado cada
+        query como documento — no rompe, degrada en silencio, que es peor.
+        """
+        return self._embed(input, "retrieval_query")
+
+
+class LocalEmbeddingFunction(ChromaEmbeddingFunction):
     """ChromaDB-compatible embedding function using sentence-transformers."""
 
     def __init__(self, model_name: str):
@@ -124,6 +151,15 @@ class LocalEmbeddingFunction:
             normalize_embeddings=True,
         )
         return vectors.tolist()
+
+    def embed_query(self, input: list[str]) -> list[list[float]]:
+        """Buscar: ChromaDB llama esto, no `__call__`.
+
+        El modelo es simétrico, así que la consulta se embeddea igual que el
+        documento — pero el método tiene que existir igual, porque `query()` falla
+        con AttributeError si no está.
+        """
+        return self.__call__(input)
 
 
 class EmbeddingService:
@@ -211,9 +247,26 @@ class EmbeddingService:
                     logger.warning("Local embedding model failed to load: %s", exc)
                     self.embedding_fn = None
             else:
-                logger.warning(
-                    "Local embeddings requested but sentence-transformers is not installed"
+                logger.error(
+                    "Embeddings locales NO disponibles: sentence-transformers no se pudo "
+                    "importar (%s). Con esto no se pueden vectorizar las consultas, así "
+                    "que la búsqueda semántica queda apagada — y la colección '%s', que "
+                    "sí tiene los documentos indexados, no se va a consultar.",
+                    SENTENCE_TRANSFORMERS_ERROR,
+                    LOCAL_COLLECTION_NAME,
                 )
+
+        # Sin función de embedding no hay forma de vectorizar una consulta: ni
+        # indexar ni buscar.  Se declara acá para que `search()` lo diga en vez de
+        # devolver [] como si el corpus estuviera vacío.
+        self.degraded_reason: str | None = None
+        if self.embedding_fn is None:
+            self.degraded_reason = (
+                f"no hay función de embedding disponible (provider="
+                f"'{self.embedding_provider}'; sentence-transformers: "
+                f"{SENTENCE_TRANSFORMERS_ERROR or 'importado'}): las consultas no se "
+                "pueden vectorizar"
+            )
 
         # Initialize ChromaDB client
         self.client = None
@@ -255,6 +308,14 @@ class EmbeddingService:
                 logger.info(f"ChromaDB initialized at {self.persist_directory}")
                 logger.info(f"Collection '{collection_name}' ready with {self.collection.count()} documents")
 
+                # La degradación que dejó el chat sin corpus (2026-10-01): sin EF
+                # local la colección NO se renombra, así que este servicio abre la
+                # `watcher_documents` vacía mientras los documentos reales están en
+                # la `*_local`.  Se creía una búsqueda sin coincidencias y era una
+                # búsqueda contra una colección vacía.
+                if self.collection.count() == 0:
+                    self._avisar_si_hay_documentos_en_otra_coleccion()
+
             except Exception as e:
                 logger.error(f"Error initializing ChromaDB: {e}")
                 self.client = None
@@ -265,8 +326,49 @@ class EmbeddingService:
             "embeddings_created": 0,
             "documents_added": 0,
             "searches_performed": 0,
-            "errors": 0
+            "errors": 0,
         }
+
+    def _avisar_si_hay_documentos_en_otra_coleccion(self) -> None:
+        """Si esta colección está vacía pero el disco no lo está, decirlo **fuerte**.
+
+        Es el caso que dejó el chat sin corpus el 2026-10-01: el servicio abría
+        `watcher_documents` (0 documentos) mientras `watcher_documents_local` tenía
+        983 chunks, y cada búsqueda devolvía 0 resultados con un log de INFO.  Un
+        `0 results` que puede ser "no hay coincidencias" **o** "estoy mirando una
+        colección vacía" no sirve para decidir nada.
+
+        No cambia la colección elegida: sin función de embedding no habría con qué
+        vectorizar la consulta igual.  Sólo deja de mentir sobre la causa.
+        """
+        if self.client is None:
+            return
+        try:
+            otras = self.client.list_collections()
+        except Exception as e:  # pragma: no cover - depende del cliente
+            logger.warning("No se pudieron listar las colecciones: %s", e)
+            return
+
+        for otra in otras:
+            nombre = getattr(otra, "name", otra)
+            if nombre == self.collection_name:
+                continue
+            try:
+                total = (otra.count() if hasattr(otra, "count")
+                         else self.client.get_collection(nombre).count())
+            except Exception:  # pragma: no cover
+                continue
+            if not total:
+                continue
+            logger.error(
+                "La colección '%s' (la que consulta este servicio) está VACÍA, y '%s' "
+                "tiene %d documentos. Toda búsqueda va a devolver 0 resultados que no "
+                "significan 'sin coincidencias'. Causa: %s",
+                self.collection_name,
+                nombre,
+                total,
+                self.degraded_reason or "colección configurada distinta de la que tiene los datos",
+            )
 
     def chunk_text(
         self,
@@ -536,6 +638,13 @@ class EmbeddingService:
                         "distance": results['distances'][0][i] if 'distances' in results else None,
                     })
 
+            if not formatted_results and getattr(self, "degraded_reason", None):
+                logger.error(
+                    "Búsqueda sin resultados y el servicio de embeddings está degradado: "
+                    "%s. El corpus puede no estar vacío: no se pudo consultar. Un 0 acá "
+                    "no significa 'sin coincidencias'.",
+                    self.degraded_reason,
+                )
             logger.info(f"Search for '{query}' returned {len(formatted_results)} results")
 
             return formatted_results

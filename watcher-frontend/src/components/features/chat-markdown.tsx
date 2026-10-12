@@ -19,6 +19,9 @@ import { cn } from "@/lib/utils"
  *   la mitad. Solo `**negrita**`, `__negrita__`, `*cursiva*` y `` `código` ``.
  * - **Encabezados → texto en negrita**, no `<h1>`: un título gigante adentro de
  *   una burbuja de chat rompe la lectura y el ancho es de 80%.
+ * - **Links sólo `http`/`https`**, abiertos en pestaña nueva con
+ *   `rel="noopener noreferrer"`. Es la única navegación del chat —cada acto cita su
+ *   boletín oficial—, así que un esquema que no sea web no se vuelve clickeable.
  * - **Sin anidado.** `*cursiva **con negrita** adentro*` no se soporta; el modelo
  *   no lo emite y adivinarlo es más riesgo que beneficio.
  */
@@ -37,9 +40,15 @@ const HEADING = /^#{1,6}\s+(.*)$/
 const QUOTE = /^>\s?(.*)$/
 const HR = /^(?:-{3,}|\*{3,}|_{3,})$/
 
-// Alternation en orden de especificidad: `**` antes que `*`, para que la negrita
-// no se coma un asterisco y deje el otro colgado.
-const INLINE = /(\*\*[^*\n]+\*\*|__[^_\n]+__|\*[^*\n]+\*|`[^`\n]+`)/g
+// Alternation en orden de especificidad: el link antes que todo (su corchete no se
+// solapa con nada), `**` antes que `*`, para que la negrita no se coma un asterisco
+// y deje el otro colgado.
+//
+// El link es la **navegación** del chat: cada acto cita su boletín oficial.  Sólo
+// `http`/`https` — un `javascript:` o un `data:` que viniera en la respuesta queda
+// como texto muerto en vez de volverse clickeable.
+const LINK = /\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/
+const INLINE = /(\[[^\]\n]+\]\(https?:\/\/[^\s)]+\)|\*\*[^*\n]+\*\*|__[^_\n]+__|\*[^*\n]+\*|`[^`\n]+`)/g
 
 /** Parte el texto en bloques: párrafos, listas, citas, encabezados y reglas. */
 function parseBlocks(lines: string[], depth = 0): Block[] {
@@ -142,7 +151,20 @@ function renderInline(text: string): ReactNode[] {
     const at = match.index ?? 0
     if (at > last) out.push(text.slice(last, at))
 
-    if (token.startsWith("**") || token.startsWith("__")) {
+    const link = token.startsWith("[") ? token.match(LINK) : null
+    if (link) {
+      out.push(
+        <a
+          key={key++}
+          href={link[2]}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline underline-offset-2 decoration-current/40 hover:decoration-current break-all"
+        >
+          {link[1]}
+        </a>,
+      )
+    } else if (token.startsWith("**") || token.startsWith("__")) {
       out.push(
         <strong key={key++} className="font-semibold">
           {token.slice(2, -2)}

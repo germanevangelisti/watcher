@@ -228,8 +228,11 @@ async def test_search_basic(tmp_path):
         n_results=5
     )
 
-    # Results should be a list
-    assert isinstance(results, list)
+    # `isinstance(results, list)` no alcanza: `[]` es exactamente lo que devuelve el
+    # camino roto, porque `search()` se come la excepción. Assertar el tipo dejó pasar
+    # meses de búsqueda semántica muerta. Se asserta que el documento vuelva.
+    assert results, "la búsqueda devolvió [] — el camino de collection.query() está roto"
+    assert any(r["document"] for r in results)
 
 
 @pytest.mark.dia
@@ -267,8 +270,10 @@ async def test_search_with_filter(tmp_path):
         filter={"level": "provincial"}
     )
 
+    # Igual que en `test_search_basic`: el tipo no dice nada, el contenido sí.
+    assert results, "la búsqueda filtrada devolvió [] — el camino de query() está roto"
     # Should only return provincial documents
-    assert isinstance(results, list)
+    assert all(r["metadata"]["level"] == "provincial" for r in results)
 
 
 @pytest.mark.dia

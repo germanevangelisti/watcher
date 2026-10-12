@@ -352,5 +352,74 @@ def test_get_fts_service_factory(test_db):
     assert service.db == test_db
 
 
+# ---------------------------------------------------------------------------
+# Texto libre → expresión FTS5 (2026-10-01)
+#
+# FTS5 no recibe texto: recibe una **expresión de consulta**. Una pregunta en
+# lenguaje natural (`"¿qué se publicó sobre obra pública en septiembre?"`) no es
+# una expresión válida — el `?` es sintaxis — así que `MATCH` levantaba
+# `syntax error` y `search_bm25` devolvía `[]`, que se lee como "sin
+# coincidencias". Lo encontró el chat: después de arreglarle la sesión que
+# faltaba, su mitad keyword seguía muda por esto.
+# ---------------------------------------------------------------------------
+
+
+def test_la_pregunta_en_lenguaje_natural_se_tokeniza():
+    from app.services.fts_service import _fts5_match_expression
+
+    assert _fts5_match_expression("¿qué se publicó sobre obra pública en septiembre?") == (
+        '"publicó" OR "obra" OR "pública" OR "septiembre"'
+    )
+
+
+def test_sin_terminos_buscables_no_se_consulta_el_indice():
+    from app.services.fts_service import _fts5_match_expression
+
+    # Sólo palabras vacías, o vacío: no hay nada que buscar.
+    assert _fts5_match_expression("¿qué? de la que se") == ""
+    assert _fts5_match_expression("de la que y el") == ""
+    assert _fts5_match_expression("") == ""
+
+
+def test_los_operadores_de_fts5_no_llegan_al_match():
+    from app.services.fts_service import _fts5_match_expression
+
+    expresion = _fts5_match_expression('decreto* OR "hospital" NEAR/2 ^texto :col -excluido')
+
+    assert '"decreto"' in expresion
+    assert '"hospital"' in expresion
+    # Ni el `*`, ni las comillas del usuario, ni NEAR/`^`/`:`/`-` sobreviven.
+    assert "*" not in expresion
+    assert "NEAR" not in expresion
+    assert "^" not in expresion
+    assert ":" not in expresion
+    assert "-" not in expresion
+
+
+def test_una_pregunta_del_chat_encuentra_en_vez_de_romper(test_db, sample_chunks):
+    """El caso que llegaba del chat: pregunta con `¿…?`, no un término suelto."""
+    service = FTSService(test_db)
+
+    results = service.search_bm25("¿qué se publicó sobre la licitación pública?", top_k=5)
+
+    assert results, "la pregunta tiene que encontrar, no romper"
+    assert any("licitación pública" in r.text for r in results)
+
+
+def test_un_texto_sin_terminos_no_rompe_y_devuelve_vacio(test_db, sample_chunks):
+    service = FTSService(test_db)
+
+    # Sin ningún término buscable, ni siquiera se consulta el índice.
+    assert service.search_bm25("¿qué? de la que se", top_k=5) == []
+
+
+def test_una_referencia_de_acto_normalizada_no_rompe(test_db, sample_chunks):
+    """El firewall de referencias pasa `RES-2026-123`: los guiones también son sintaxis."""
+    service = FTSService(test_db)
+
+    assert service.search_bm25("RES-2026-123", top_k=5) == []  # no está en el corpus de prueba
+    assert service.search_bm25("licitación-pública", top_k=5), "pero un término que sí está, encuentra"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

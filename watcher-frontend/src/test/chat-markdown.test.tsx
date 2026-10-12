@@ -129,16 +129,84 @@ describe("ChatMarkdown — casos borde", () => {
   })
 })
 
+// ------------------------------------------------- citas al boletín oficial
+//
+// Es la única navegación del chat: con el drill-down a los actos, cada acto cita su
+// boletín. Si el parser no renderiza el link, la cita llega como texto muerto y el
+// ciudadano no tiene cómo llegar al documento.
+
+const URL_BOLETIN = "https://boletin.cordoba.gob.ar/2026/20260410"
+
+describe("ChatMarkdown — links", () => {
+  it("renderiza [texto](url) como un link real", () => {
+    const el = mount(`El acto está en el [Boletín Oficial N° 4](${URL_BOLETIN}).`)
+
+    const link = el.querySelector("a")
+    expect(link).not.toBeNull()
+    expect(link!.getAttribute("href")).toBe(URL_BOLETIN)
+    expect(link!.textContent).toBe("Boletín Oficial N° 4")
+    // No queda el Markdown crudo a la vista.
+    expect(el.textContent).not.toContain("](")
+  })
+
+  it("abre en pestaña nueva sin darle la referencia al boletín", () => {
+    const el = mount(`[fuente](${URL_BOLETIN})`)
+
+    const link = el.querySelector("a")!
+    expect(link.getAttribute("target")).toBe("_blank")
+    expect(link.getAttribute("rel")).toBe("noopener noreferrer")
+  })
+
+  it("renderiza varios links en la misma respuesta", () => {
+    const el = mount(
+      `- [Acto 1](https://boletin.cordoba.gob.ar/2026/20260410)\n` +
+        `- [Acto 2](https://boletin.cordoba.gob.ar/2026/20260805)`,
+    )
+
+    const links = Array.from(el.querySelectorAll("a"))
+    expect(links.map((a) => a.getAttribute("href"))).toEqual([
+      "https://boletin.cordoba.gob.ar/2026/20260410",
+      "https://boletin.cordoba.gob.ar/2026/20260805",
+    ])
+  })
+
+  it("el link convive con la negrita", () => {
+    const el = mount(`**Fuente:** [Boletín](${URL_BOLETIN})`)
+
+    expect(el.querySelector("strong")!.textContent).toBe("Fuente:")
+    expect(el.querySelector("a")!.textContent).toBe("Boletín")
+  })
+
+  it("un esquema que no sea web queda como texto, no como link", () => {
+    // El contenido es no confiable: `javascript:` en la respuesta no se vuelve
+    // clickeable ni por accidente.
+    const el = mount("[tocá acá](javascript:alert(1))")
+
+    expect(el.querySelector("a")).toBeNull()
+    expect(el.textContent).toContain("tocá acá")
+  })
+
+  it("un corchete suelto no rompe el párrafo", () => {
+    const el = mount("El acto [sic] del día 3 (40,77 M).")
+
+    expect(el.querySelector("a")).toBeNull()
+    expect(el.textContent).toBe("El acto [sic] del día 3 (40,77 M).")
+  })
+})
+
 // ------------------------------------------------------- integración: la burbuja
 
 const mutateAsync = vi.fn()
+const clearAsync = vi.fn()
 
 vi.mock("@/lib/api", () => ({
   useAgentHealth: () => ({ data: undefined, isLoading: false, refetch: vi.fn() }),
   useSystemStatistics: () => ({ data: undefined, isLoading: false }),
   useTopRiskDocuments: () => ({ data: [], isLoading: false }),
   useTransparencyTrends: () => ({ isLoading: false }),
+  useLlmProviders: () => ({ data: undefined, isLoading: false, isError: false }),
   useAgentChat: () => ({ mutateAsync, isPending: false }),
+  useAgentChatClear: () => ({ mutateAsync: clearAsync, isPending: false }),
 }))
 
 describe("la burbuja del asistente renderiza el Markdown", () => {

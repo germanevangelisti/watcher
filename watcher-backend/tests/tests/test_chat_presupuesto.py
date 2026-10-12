@@ -419,12 +419,27 @@ class _SessionCtx:
 
 @pytest.fixture
 def wired_agent(monkeypatch, session):
-    """Agente con la sesión sembrada detrás de `AsyncSessionLocal`."""
+    """Agente con la sesión sembrada detrás de `AsyncSessionLocal`.
+
+    Se corta la búsqueda sobre el corpus: si no, el agente arma el
+    `RetrievalService` real y el test termina leyendo el ChromaDB **de la máquina**
+    (`~/.watcher/chromadb`), así que `data_used` cambiaría según lo que cada
+    desarrollador tenga indexado.  Acá se mide el contrato de las tools de
+    presupuesto, no la recuperación vectorial.
+    """
     from agents.insight_reporting import agent as agent_module
 
     monkeypatch.setattr(agent_module, "AsyncSessionLocal", lambda: _SessionCtx(session))
     agente = agent_module.InsightReportingAgent()
-    agente.model = None  # sin genai instalado: cae al fallback, y alcanza
+    # Se corta la búsqueda sobre el corpus: el agente arma su propio
+    # `RetrievalService` (con sesión) y el test terminaría leyendo el ChromaDB
+    # **de la máquina** (`~/.watcher/chromadb`), así que `data_used` cambiaría
+    # según lo que cada desarrollador tenga indexado.
+    async def _sin_corpus(*_args, **_kwargs):
+        return []
+
+    monkeypatch.setattr(agent_module.InsightReportingAgent, "_buscar_en_corpus", _sin_corpus)
+    agente.provider = None  # sin provider: cae al fallback, y alcanza
     return agente
 
 
@@ -552,9 +567,20 @@ def test_resolver_no_inventa_un_organismo():
 
 
 def test_el_prompt_prohibe_afirmar_ausencias_que_no_consulto(agent):
+    """La regla contra las ausencias inventadas, palabra por palabra.
+
+    El 2026-10-01 el chat contestó *"No se publicó información sobre obra pública en
+    septiembre"* — con cinco boletines de septiembre publicando obra y sin haber
+    buscado.  La redacción vieja hablaba de "datos, registros o documentos" y del
+    detalle de un organismo: *publicar* no era ninguna de esas tres palabras, así que
+    un 7B no la aplicó.  Se afirma el verbo que el ciudadano lee, y que la ausencia
+    se declara como límite propio ("no lo encontré") y no como hecho del mundo.
+    """
     system = agent._build_messages("hola", None)[0]["content"]
 
-    assert "Nunca afirmes que no hay datos" in system
+    assert "Nunca afirmes que algo no existe, no se publicó" in system
+    assert "nunca que no se publicó ni que no existe" in system
+    assert "decí que no lo encontraste" in system
     assert "pedí el nombre del organismo" in system
 
 
