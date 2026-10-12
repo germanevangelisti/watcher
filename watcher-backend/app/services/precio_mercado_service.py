@@ -345,9 +345,11 @@ async def internal_references(db: AsyncSession, row: EjecucionPresupuestaria, it
     for other, url, fragment in (await db.execute(stmt)).all():
         if not detection_reason(other.concepto, other.tipo_operacion):
             continue
-        key = (round(other.monto or 0), other.fecha_boletin)
-        if key in seen or (round(other.monto or 0) == round(row.monto or 0) and other.fecha_boletin == row.fecha_boletin):
-            continue  # republications of the same act are not references
+        # The same act is republished across days and sometimes attributed to
+        # another organismo: the amount is the stable key, not the date.
+        key = round(other.monto or 0)
+        if key in seen or key == round(row.monto or 0):
+            continue
         seen.add(key)
         similar += 1
         qty, unit = regex_extract(" ".join(t for t in (other.concepto, fragment) if t))

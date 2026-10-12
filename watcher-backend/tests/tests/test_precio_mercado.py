@@ -52,6 +52,9 @@ async def _seed(db):
              tipo_operacion="licitacion", organismo="C", fecha_boletin=date(2026, 1, 15)),
         dict(id=5, concepto="Adquisición de 100 resmas de papel", monto=3_000_000.0,
              tipo_operacion="licitacion", organismo="D", fecha_boletin=date(2026, 5, 2)),
+        # Republication of act 5 on another day under another organismo: not a reference.
+        dict(id=9, concepto="Adquisición de 100 resmas de papel", monto=3_000_000.0,
+             tipo_operacion="licitacion", organismo="G", fecha_boletin=date(2026, 5, 4)),
         # Not observable: works, subsidies, duplicates.
         dict(id=6, concepto="Obra de construcción de escuela", monto=9e8, tipo_operacion="licitacion",
              organismo="E", fecha_boletin=date(2026, 4, 1)),
@@ -105,8 +108,8 @@ def test_detection_reason_accepts_goods_and_rejects_services():
 async def test_list_observables_excludes_works_subsidies_and_duplicates(session):
     items, total = await svc.list_observables(session)
     ids = {i.id for i in items}
-    assert ids == {1, 2, 3, 4, 5}
-    assert total == 5
+    assert ids == {1, 2, 3, 4, 5, 9}
+    assert total == 6
     resmas = next(i for i in items if i.id == 1)
     assert resmas.boletin_url == "https://boletin.example/20260430"
     assert "resma" in resmas.motivo
@@ -182,6 +185,7 @@ def test_thresholds_from_env(monkeypatch):
 @pytest.mark.asyncio
 async def test_internal_references_and_classification(session):
     # Act 5: 30.000/u vs internal refs 10.000, 11.000, 9.000 -> median 10.000, +200% -> alerta.
+    # Act 9 (same amount, other day/organismo) is a republication and must not count.
     result = await svc.analyze(session, 5, use_llm=False, external_sources=[], thresholds=TH)
     internos = [r for r in result.referencias if r["kind"] == "interna"]
     assert len(internos) == 3
@@ -248,7 +252,7 @@ async def test_api_observables_and_analysis(session, monkeypatch):
     app.dependency_overrides[get_db] = _db
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as client:
         r = await client.get("/precio-mercado/observables")
-        assert r.status_code == 200 and r.json()["total"] == 5
+        assert r.status_code == 200 and r.json()["total"] == 6
         r = await client.post("/precio-mercado/analizar/5")
         assert r.status_code == 200 and r.json()["comparacion"]["clasificacion"] == "alerta"
         r = await client.get("/precio-mercado/analisis/5")
