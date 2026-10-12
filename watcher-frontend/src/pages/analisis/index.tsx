@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router"
-import { Bot, AlertTriangle, Workflow, Activity } from "lucide-react"
+import { Bot, AlertTriangle, Workflow, Activity, Tag } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
@@ -36,6 +36,30 @@ export function AnalisisHub() {
             </p>
             <Button variant="outline" size="sm" className="w-full">
               Ver Pipeline &rarr;
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Precio de mercado */}
+        <Card className="hover:bg-surface-elevated transition-colors cursor-pointer"
+              onClick={() => navigate({ to: "/analisis/precio-mercado" })}>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-yellow-500/10">
+                <Tag className="h-6 w-6 text-yellow-400" />
+              </div>
+              <CardTitle>Precio de mercado</CardTitle>
+            </div>
+            <CardDescription>
+              Compras de bienes estandarizables
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Compara el precio unitario contra referencias con fuente y fecha, sin dictamen
+            </p>
+            <Button variant="outline" size="sm" className="w-full">
+              Ver gastos observables &rarr;
             </Button>
           </CardContent>
         </Card>

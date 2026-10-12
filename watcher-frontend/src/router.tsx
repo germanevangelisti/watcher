@@ -14,6 +14,7 @@ import { PipelineStatusPage } from "./pages/analisis/pipeline-status"
 import { PipelineWorkflowPage } from "./pages/pipeline"
 import { VerificacionPage } from "./pages/analisis/verificacion"
 import { EjecucionPresupuestariaPage } from "./pages/presupuesto/ejecucion"
+import { PrecioMercadoPage } from "./pages/analisis/precio-mercado"
 
 function RootComponent() {
   const router = useRouter()
@@ -112,6 +113,12 @@ const verificacionRoute = createRoute({
   component: VerificacionPage,
 })
 
+const precioMercadoRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/analisis/precio-mercado",
+  component: PrecioMercadoPage,
+})
+
 // Presupuesto routes
 const presupuestoRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -148,6 +155,7 @@ const routeTree = rootRoute.addChildren([
   alertaDetailRoute,
   pipelineStatusRoute,
   verificacionRoute,
+  precioMercadoRoute,
   pipelineWorkflowRoute,
   presupuestoRoute,
   ejecucionRoute,

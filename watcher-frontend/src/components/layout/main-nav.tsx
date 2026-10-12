@@ -1,4 +1,4 @@
-import { Home, FileText, Brain, BarChart3, Workflow, Landmark } from "lucide-react"
+import { Home, FileText, Brain, BarChart3, Workflow, Landmark, Tag } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface MainNavProps {
@@ -33,6 +33,11 @@ const navItems = [
     icon: BarChart3,
   },
   {
+    title: "Precio de mercado",
+    href: "/analisis/precio-mercado",
+    icon: Tag,
+  },
+  {
     title: "Presupuesto",
     href: "/presupuesto",
     icon: Landmark,
@@ -44,9 +49,11 @@ export function MainNav({ currentPath = "/", onNavigate }: MainNavProps) {
     <nav className="space-y-1 px-2 py-4">
       {navItems.map((item) => {
         const Icon = item.icon
-        const isActive = item.href === "/"
-          ? currentPath === "/"
-          : currentPath.startsWith(item.href)
+        // The most specific matching item wins, so /analisis/precio-mercado
+        // does not also highlight /analisis.
+        const matches = (href: string) => (href === "/" ? currentPath === "/" : currentPath.startsWith(href))
+        const best = navItems.filter((n) => matches(n.href)).sort((a, b) => b.href.length - a.href.length)[0]
+        const isActive = best?.href === item.href
         
         return (
           <button
