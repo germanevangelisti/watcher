@@ -60,6 +60,37 @@ export interface SourceStatus {
   motivo: string | null
 }
 
+export interface Comparacion {
+  clasificacion: Clasificacion
+  motivo: string | null
+  mediana: number | null
+  desvio: number | null
+  n_referencias: number
+}
+
+export interface RenglonAnalisis {
+  numero: number | null
+  item: string
+  cantidad: number | null
+  unidad: string
+  precio_unitario: number | null
+  origen_precio: string | null
+  comparacion: Comparacion
+  fuentes: SourceStatus[]
+  referencias: PriceReference[]
+}
+
+export interface AgregadoRenglones {
+  renglones: number
+  por_clasificacion: Partial<Record<Clasificacion, number>>
+  monto_total_acto: number | null
+  estimado_mercado: number | null
+  desvio: number | null
+  clasificacion: Clasificacion
+  motivo: string | null
+  nota: string
+}
+
 export interface AnalisisPrecio {
   acto: Observable
   extraccion: {
@@ -73,13 +104,9 @@ export interface AnalisisPrecio {
     proceso?: ProcesoCompras | null
   }
   precio_unitario: number | null
-  comparacion: {
-    clasificacion: Clasificacion
-    motivo: string | null
-    mediana: number | null
-    desvio: number | null
-    n_referencias: number
-  }
+  comparacion: Comparacion
+  renglones_analisis?: RenglonAnalisis[]
+  agregado?: AgregadoRenglones | null
   umbrales: { observable: number; alerta: number; min_references: number }
   fuentes: SourceStatus[]
   referencias: PriceReference[]

@@ -326,3 +326,92 @@ def test_ml_catalog_fallback_on_403(monkeypatch):
     res = asyncio.run(MercadoLibreSource(client=client).search("resma papel"))
     assert res.available
     assert [r.unit_price for r in res.references] == [12000.0]
+
+
+# ----------------------------------------------------------------- pack normalization
+
+
+@pytest.mark.parametrize(("title", "attrs", "unit", "expected"), [
+    ("Pack 5 Resmas Papel Obra Oficio 75g", None, "resmas", 5),
+    ("4 Resmas Papel Husares A4 500 Hojas 70 Gr", None, "resma", 4),
+    ("Resma Papel A4 500 Hojas Report", None, "resmas", None),   # 500 hojas is content, not a count
+    ("Resmas Papel A4 90g Paquete 3 Unidades", None, "resmas", 3),
+    ("Guantes de nitrilo caja x 100", None, "unidad", 100),
+    ("Lapicera azul x 10 u", None, None, 10),
+    ("Aceite de girasol 900 ml", None, "litros", None),
+    ("Cartucho de tinta", [{"id": "UNITS_PER_PACK", "value_name": "2"}], "cartuchos", 2),
+    ("Neumático 235/70 R16", None, "neumaticos", None),
+])
+def test_pack_size_is_generic(title, attrs, unit, expected):
+    from app.services.price_sources import pack_size
+
+    assert pack_size(title, attrs, unit) == expected
+
+
+def test_listing_reference_divides_by_pack():
+    from app.services.price_sources import listing_reference
+
+    ref = listing_reference("Pack 5 Resmas Papel A4", 50_000, None, "resmas")
+    assert ref.unit_price == 10_000 and ref.quantity == 5 and "÷ 5" in ref.description
+
+
+# ----------------------------------------------------------------- per-renglón analysis
+
+
+class _FakeSource:
+    name = "fake"
+
+    def __init__(self, prices):
+        self.prices = prices
+        self.queries = []
+
+    async def search(self, item, unit=None):
+        from app.services.price_sources import PriceReference, SourceResult
+
+        self.queries.append((item, unit))
+        key = next((k for k in self.prices if k in item.lower()), None)
+        refs = [PriceReference("fake", item, p, "2026-10-12") for p in self.prices.get(key, [])]
+        return SourceResult(self.name, True, references=refs)
+
+
+@pytest.mark.asyncio
+async def test_each_renglon_gets_its_own_references_and_an_aggregate(session):
+    src = _FakeSource({"resmas de papel a4": [7000, 8000, 9000], "oficio": [9000, 10000, 11000],
+                       "libros": [3000, 3500, 4000]})
+    result = await svc.analyze(session, 1, use_llm=False, external_sources=[src], thresholds=TH,
+                               compras=cc.ComprasCbaSource(FakeFetcher()))
+    rows = result.renglones_analisis
+    assert [r["item"] for r in rows] == ["Resmas de papel A4", "Resmas de papel oficio", "Libros de actas"]
+    assert [r["unidad"] for r in rows] == ["resmas", "resmas", "libros"]
+    # Presencial pliego: no per-renglón amount, stated and references still shown.
+    assert all(r["precio_unitario"] is None for r in rows)
+    assert "monto total" in rows[0]["comparacion"]["motivo"]
+    assert rows[0]["comparacion"]["mediana"] == 8000 and len(rows[2]["referencias"]) == 3
+    agg = result.agregado
+    assert agg["estimado_mercado"] == 12000 * 8000 + 1200 * 10000 + 5880 * 3500
+    assert agg["clasificacion"] == "observable"  # 186M vs 128.6M estimate: +45%
+    assert result.comparacion["clasificacion"] == "observable"
+
+
+# ----------------------------------------------------------------- ML user OAuth
+
+
+@pytest.mark.asyncio
+async def test_ml_authorization_code_stores_refresh_token_and_status_hides_it(monkeypatch, tmp_path):
+    _ml_env(monkeypatch, ML_CLIENT_ID="app", ML_CLIENT_SECRET="s3cret")
+    seen = {}
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        seen.update(dict(x.split("=", 1) for x in req.content.decode().split("&")))
+        return httpx.Response(200, json={"access_token": "USER-AT", "refresh_token": "USER-RT",
+                                         "expires_in": 21600, "user_id": 42})
+
+    auth = MercadoLibreAuth(cache_path=tmp_path / "t.json", client=httpx.AsyncClient(transport=httpx.MockTransport(handler)))
+    url = auth.authorization_url("https://example.org/cb", "st4te")
+    assert url.startswith("https://auth.mercadolibre.com.ar/authorization?") and "client_id=app" in url and "state=st4te" in url
+    out = await auth.exchange_code("TG-code", "https://example.org/cb")
+    assert out == {"ok": True, "usuario_id": 42, "refresh_token_guardado": True}
+    assert seen["grant_type"] == "authorization_code" and seen["code"] == "TG-code"
+    assert await auth.token() == "USER-AT"
+    status = auth.status()
+    assert status["token_de_usuario"] is True and "USER" not in str(status)

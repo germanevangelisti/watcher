@@ -124,4 +124,31 @@ describe("renglones de ComprasCba", () => {
     expect(within(screen.getByTestId("renglones")).getByText("12000")).toBeTruthy()
     expect(proceso.textContent).toContain("pliego.pdf")
   })
+
+  it("muestra el análisis por renglón con su clasificación y el agregado", () => {
+    const cmp = { clasificacion: "sin_datos_suficientes" as const, motivo: "solo se conoce el monto total del acto", mediana: 8000, desvio: null, n_referencias: 3 }
+    analizarState = {
+      ...analizarState,
+      data: {
+        ...RESULTADO,
+        renglones_analisis: [
+          { numero: 1, item: "Resmas de papel A4", cantidad: 12000, unidad: "resmas", precio_unitario: null, origen_precio: null,
+            comparacion: cmp, fuentes: [],
+            referencias: [{ source: "Mercado Libre", description: "Pack 5 Resmas (pack de 5: precio ÷ 5)", unit_price: 8000,
+              observed_on: "2026-10-12", url: null, quantity: 5, unit: "resmas", kind: "externa" }] },
+          { numero: 2, item: "Libros de actas", cantidad: 5880, unidad: "libros", precio_unitario: 3000, origen_precio: "precio de referencia del proceso",
+            comparacion: { ...cmp, clasificacion: "dentro_de_rango", motivo: null, mediana: 3500, desvio: -0.14 }, fuentes: [], referencias: [] },
+        ],
+        agregado: { renglones: 2, por_clasificacion: {}, monto_total_acto: 186031008, estimado_mercado: 116580000,
+          desvio: 0.6, clasificacion: "observable", motivo: null, nota: "estimado = suma" },
+      },
+    }
+    render(<PrecioMercadoPage />)
+    const rows = screen.getAllByTestId("renglon-analisis")
+    expect(rows).toHaveLength(2)
+    expect(rows[0].textContent).toContain("solo monto total")
+    expect(rows[0].textContent).toContain("12000 resmas")
+    expect(rows[1].textContent).toContain("-14%")
+    expect(screen.getByTestId("agregado-renglones").textContent).toContain("60%")
+  })
 })

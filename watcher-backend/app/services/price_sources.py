@@ -52,6 +52,72 @@ class PriceSource(Protocol):
     async def search(self, item: str, unit: str | None = None) -> SourceResult: ...
 
 
+# ---------------------------------------------------------------------------
+# Pack normalization
+# ---------------------------------------------------------------------------
+
+_PACK_WORDS = r"(?:pack|kit|caja|combo|set|bulto|paquete|blister|lote)"
+_COUNT_WORDS = r"(?:unidades|unidad|unid|uds|un|u)"
+
+
+def unit_stem(unit: str | None) -> str | None:
+    """Comparable stem of a unit or item head noun ("Resmas" -> "resma")."""
+    from app.services.compras_cba import _norm
+
+    if not unit:
+        return None
+    words = re.findall(r"[a-z]+", _norm(unit))
+    if not words or words[0] in ("unidad", "unidades", "u", "un", "publicacion"):
+        return None
+    return words[0][:5]
+
+
+def pack_size(title: str, attributes: list[dict] | None = None, unit: str | None = None) -> int | None:
+    """How many units of the act's good one listing sells, when the title or
+    the ML attributes say so ("Pack 5 resmas", "caja x 10", "3 unidades",
+    UNITS_PER_PACK). Generic: the only product knowledge is the act's own
+    unit stem. ``None`` means "one unit, as far as we can tell"."""
+    from app.services.compras_cba import _norm
+
+    t = _norm(title)
+    candidates: list[int] = []
+    stem = unit_stem(unit)
+    if stem:
+        # "5 resmas", "x5 resmas", "resmas x 5"
+        candidates += [int(n) for n in re.findall(rf"\b(?:x\s*)?(\d{{1,4}})\s*(?:x\s*)?{stem}\w*", t)]
+        candidates += [int(n) for n in re.findall(rf"\b{stem}\w*\s*x\s*(\d{{1,4}})\b", t)]
+    if not candidates:
+        candidates += [int(n) for n in re.findall(rf"\b{_PACK_WORDS}\s*(?:de|x|por)?\s*(\d{{1,4}})\b(?!\s*(?:g|gr|grs|kg|ml|cc|l|lt|mm|cm|m|hojas)\b)", t)]
+        candidates += [int(n) for n in re.findall(rf"\b(?:x\s*)?(\d{{1,4}})\s*{_COUNT_WORDS}\b", t)]
+    if not candidates:
+        for a in attributes or []:
+            aid = str(a.get("id", "")).upper()
+            if aid in ("UNITS_PER_PACK", "UNITS_PER_PACKAGE", "PACKAGE_UNITS", "SALE_FORMAT", "UNITS_PER_SALE"):
+                m = re.search(r"\d+", str(a.get("value_name") or ""))
+                if m:
+                    candidates.append(int(m.group()))
+    candidates = [c for c in candidates if 2 <= c <= 1000]
+    return max(candidates) if candidates else None
+
+
+def listing_reference(title: str, price: float, url: str | None, unit: str | None,
+                      attributes: list[dict] | None = None, note: str = "") -> PriceReference:
+    """A Mercado Libre price normalized to the act's unit."""
+    n = pack_size(title, attributes, unit)
+    desc = title[:170] + (note or "")
+    if n:
+        desc += f" (pack de {n}: precio ÷ {n})"
+    return PriceReference(
+        source="Mercado Libre",
+        description=desc[:240],
+        unit_price=float(price) / (n or 1),
+        observed_on=date.today().isoformat(),
+        url=url,
+        quantity=float(n) if n else None,
+        unit=(unit or "unidad"),
+    )
+
+
 ML_TOKEN_URL = "https://api.mercadolibre.com/oauth/token"
 ML_TOKEN_CACHE = Path(__file__).resolve().parents[2] / ".cache" / "ml_token.json"
 
@@ -100,6 +166,58 @@ class MercadoLibreAuth:
         data.pop("access_token", None)
         self._save(data)
 
+    AUTH_URL = "https://auth.mercadolibre.com.ar/authorization"
+
+    def authorization_url(self, redirect_uri: str, state: str, code_challenge: str | None = None) -> str:
+        from urllib.parse import urlencode
+
+        q = {"response_type": "code", "client_id": os.getenv("ML_CLIENT_ID", ""),
+             "redirect_uri": redirect_uri, "state": state}
+        if code_challenge:
+            q.update({"code_challenge": code_challenge, "code_challenge_method": "S256"})
+        return f"{self.AUTH_URL}?{urlencode(q)}"
+
+    def status(self) -> dict:
+        """Token state without any secret value."""
+        c = self._load()
+        return {"configurado": self.configured(), "token_de_usuario": bool(c.get("user") and c.get("refresh_token")),
+                "usuario_id": c.get("user_id"),
+                "expira_en_s": max(0, int(c.get("expires_at", 0) - self._clock())) if c.get("access_token") else 0}
+
+    async def exchange_code(self, code: str, redirect_uri: str, code_verifier: str | None = None) -> dict:
+        """authorization_code grant: stores the user access + refresh token in
+        the gitignored cache. Returns a secret-free summary."""
+        client_id, secret = os.getenv("ML_CLIENT_ID"), os.getenv("ML_CLIENT_SECRET")
+        if not (client_id and secret):
+            return {"ok": False, "error": "faltan ML_CLIENT_ID / ML_CLIENT_SECRET"}
+        form = {"grant_type": "authorization_code", "client_id": client_id, "client_secret": secret,
+                "code": code, "redirect_uri": redirect_uri}
+        if code_verifier:
+            form["code_verifier"] = code_verifier
+        try:
+            if self._client is not None:
+                resp = await self._client.post(ML_TOKEN_URL, data=form, headers={"accept": "application/json"})
+            else:
+                async with httpx.AsyncClient(timeout=10) as client:
+                    resp = await client.post(ML_TOKEN_URL, data=form, headers={"accept": "application/json"})
+        except Exception as exc:
+            return {"ok": False, "error": f"no disponible ({type(exc).__name__})"}
+        if resp.status_code != 200:
+            try:
+                err = resp.json().get("error") or resp.json().get("message")
+            except ValueError:
+                err = None
+            return {"ok": False, "error": f"HTTP {resp.status_code}" + (f": {err}" if err else "")}
+        body = resp.json()
+        self._save({
+            "access_token": body.get("access_token"),
+            "expires_at": self._clock() + float(body.get("expires_in", 21600)),
+            "refresh_token": body.get("refresh_token"),
+            "user": True,
+            "user_id": body.get("user_id"),
+        })
+        return {"ok": True, "usuario_id": body.get("user_id"), "refresh_token_guardado": bool(body.get("refresh_token"))}
+
     async def token(self) -> str | None:
         fixed = os.getenv("ML_ACCESS_TOKEN")
         if fixed:
@@ -133,6 +251,8 @@ class MercadoLibreAuth:
             "access_token": body.get("access_token"),
             "expires_at": self._clock() + float(body.get("expires_in", 21600)),
             "refresh_token": body.get("refresh_token") or refresh,
+            "user": bool(refresh) and bool(cached.get("user") or os.getenv("ML_REFRESH_TOKEN")),
+            "user_id": cached.get("user_id"),
         })
         return body.get("access_token")
 
@@ -172,7 +292,7 @@ class MercadoLibreSource:
         from app.services.compras_cba import _norm
         return [w[:5] for w in re.findall(r"[a-z0-9]+", _norm(text)) if len(w) >= 3]
 
-    async def _catalog_search(self, item: str, headers: dict) -> SourceResult:
+    async def _catalog_search(self, item: str, headers: dict, unit: str | None = None) -> SourceResult:
         """Fallback for app tokens: ``/sites/MLA/search`` is forbidden to
         client_credentials tokens, but the catalog (``/products/search``) and
         each product's active listings (``/products/{id}/items``) are not."""
@@ -189,7 +309,6 @@ class MercadoLibreSource:
             return SourceResult(self.name, False, reason="no disponible (respuesta inválida)")
         stop = {"del", "los", "las", "con", "para", "sin", "por", "una", "uno", "unos", "unas"}
         wanted = [w for w in self._stems(item) if w not in stop][:2]
-        today = date.today().isoformat()
         refs: list[PriceReference] = []
         for prod in products:
             if len(refs) >= self.max_products:
@@ -212,14 +331,9 @@ class MercadoLibreSource:
                             and i.get("currency_id", "ARS") == "ARS")
             if not prices:
                 continue
-            refs.append(PriceReference(
-                source="Mercado Libre",
-                description=f"{name[:180]} (mediana de {len(prices)} publicaciones)",
-                unit_price=prices[len(prices) // 2],
-                observed_on=today,
-                url=f"https://www.mercadolibre.com.ar/p/{prod.get('id')}",
-                unit="publicación",
-            ))
+            refs.append(listing_reference(
+                name, prices[len(prices) // 2], f"https://www.mercadolibre.com.ar/p/{prod.get('id')}",
+                unit or item, prod.get("attributes"), f" (mediana de {len(prices)} publicaciones)"))
         return SourceResult(self.name, True, references=refs)
 
     async def search(self, item: str, unit: str | None = None) -> SourceResult:
@@ -240,7 +354,7 @@ class MercadoLibreSource:
             break
 
         if resp.status_code == 403 and headers.get("Authorization"):
-            return await self._catalog_search(item, headers)
+            return await self._catalog_search(item, headers, unit)
         if resp.status_code in (401, 403):
             reason = ("no disponible: la API de Mercado Libre rechazó el token configurado"
                       if MercadoLibreAuth.configured()
@@ -254,20 +368,13 @@ class MercadoLibreSource:
         except ValueError:
             return SourceResult(self.name, False, reason="no disponible (respuesta inválida)")
 
-        today = date.today().isoformat()
         refs = []
         for r in results:
             price = r.get("price")
             if not isinstance(price, (int, float)) or price <= 0:
                 continue
-            refs.append(PriceReference(
-                source="Mercado Libre",
-                description=str(r.get("title", ""))[:200],
-                unit_price=float(price),
-                observed_on=today,
-                url=r.get("permalink"),
-                unit="publicación",
-            ))
+            refs.append(listing_reference(str(r.get("title", "")), price, r.get("permalink"),
+                                          unit or item, r.get("attributes")))
         return SourceResult(self.name, True, references=refs)
 
 

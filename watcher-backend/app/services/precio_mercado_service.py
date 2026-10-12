@@ -497,6 +497,72 @@ def classify(unit_price: float | None, references: list[PriceReference], th: Thr
     return {"clasificacion": cls, "motivo": None, "mediana": med, "desvio": desvio, "n_referencias": len(prices)}
 
 
+def renglon_unit(descripcion: str) -> str:
+    """Unit of a renglón: its head noun ("Resmas de papel A4" -> "resmas")."""
+    words = re.findall(r"[^\W\d_]+", normalize(descripcion))
+    return words[0] if words else "unidad"
+
+
+async def analyze_renglones(db: AsyncSession, row: EjecucionPresupuestaria, ext: Extraction,
+                            sources: list, th: Thresholds, own: str) -> tuple[list[dict], dict | None]:
+    """One analysis per renglón of the act's own process.
+
+    The renglón's unit amount is the process "precio de referencia" (or
+    presupuesto / cantidad) when the portal publishes it; presencial pliegos
+    only give the act's total, which is then stated and the references are
+    still shown per renglón."""
+    renglones = [r for r in ext.renglones if (r.get("descripcion") or "").strip()]
+    if len(renglones) < 2:
+        return [], None
+    out: list[dict] = []
+    for r in renglones:
+        desc = r["descripcion"].strip()
+        qty = r.get("cantidad")
+        unit = renglon_unit(desc)
+        unit_price = r.get("precio_referencia")
+        origen_precio = "precio de referencia del proceso" if unit_price else None
+        if not unit_price and r.get("presupuesto") and qty:
+            unit_price, origen_precio = r["presupuesto"] / qty, "presupuesto del renglón / cantidad"
+        found = await asyncio.gather(*(s.search(desc, unit) for s in sources), return_exceptions=True)
+        refs = [ref for res in found if isinstance(res, SourceResult) for ref in res.references
+                if not (own and (ref.process_id or "").split(".")[0] == own)]
+        motivo = "solo se conoce el monto total del acto, no el monto de este renglón"
+        out.append({
+            "numero": r.get("numero"), "item": desc, "cantidad": qty, "unidad": unit,
+            "precio_unitario": unit_price, "origen_precio": origen_precio,
+            "comparacion": classify(unit_price, refs, th, motivo),
+            "fuentes": [{"fuente": getattr(s, "name", "?"), "disponible": res.available if isinstance(res, SourceResult) else False,
+                         "referencias": len(res.references) if isinstance(res, SourceResult) else 0,
+                         "motivo": res.reason if isinstance(res, SourceResult) else f"no disponible ({res})"}
+                        for s, res in zip(sources, found, strict=True)],
+            "referencias": [asdict(x) for x in refs],
+        })
+    counts: dict[str, int] = {}
+    for a in out:
+        c = a["comparacion"]["clasificacion"]
+        counts[c] = counts.get(c, 0) + 1
+    # Market estimate of the whole act: sum(cantidad x mediana) when every renglón has both.
+    estimable = all(a["cantidad"] and a["comparacion"]["mediana"] for a in out)
+    estimado = sum(a["cantidad"] * a["comparacion"]["mediana"] for a in out) if estimable else None
+    desvio = ((ext.monto_total - estimado) / estimado) if estimado and ext.monto_total else None
+    if desvio is None:
+        cls = "sin_datos_suficientes"
+    elif desvio > th.alerta:
+        cls = "alerta"
+    elif desvio > th.observable:
+        cls = "observable"
+    else:
+        cls = "dentro_de_rango"
+    agregado = {
+        "renglones": len(out), "por_clasificacion": counts, "monto_total_acto": ext.monto_total,
+        "estimado_mercado": estimado, "desvio": desvio, "clasificacion": cls,
+        "motivo": None if estimado else "no todos los renglones tienen cantidad y mediana de referencias",
+        "nota": "estimado = Σ cantidad × mediana de referencias por renglón; las referencias de publicación "
+                "no incluyen logística ni condiciones de la licitación",
+    }
+    return out, agregado
+
+
 @dataclass
 class AnalysisResult:
     acto: dict
@@ -507,6 +573,8 @@ class AnalysisResult:
     fuentes: list[dict] = field(default_factory=list)
     referencias: list[dict] = field(default_factory=list)
     proveedor_llm: str | None = None
+    renglones_analisis: list[dict] = field(default_factory=list)
+    agregado: dict | None = None
     aviso: str = ("Comparación orientativa con fuentes y fechas. No constituye dictamen: "
                   "precios de publicación y actos con distinto alcance pueden no ser comparables.")
 
@@ -577,6 +645,11 @@ async def analyze(
     references = [ref for r in results for ref in r.references
                   if not (own and (ref.process_id or "").split(".")[0] == own)]
     comparison = classify(unit_price, references, th, motivo_sin_precio)
+    renglones_analisis, agregado = await analyze_renglones(db, row, ext, sources, th, own)
+    if agregado is not None and unit_price is None:
+        comparison = {**comparison, "clasificacion": agregado["clasificacion"],
+                      "motivo": comparison["motivo"] if agregado["desvio"] is None else
+                      f"agregado de {agregado['renglones']} renglones vs estimado de mercado"}
 
     reason = detection_reason(row.concepto, row.tipo_operacion)
     return AnalysisResult(
@@ -587,5 +660,7 @@ async def analyze(
         umbrales=asdict(th),
         fuentes=[{"fuente": r.source, "disponible": r.available, "referencias": len(r.references), "motivo": r.reason} for r in results],
         referencias=[asdict(r) for r in references],
+        renglones_analisis=renglones_analisis,
+        agregado=agregado,
         proveedor_llm=(f"{getattr(provider, 'provider_id', '?')}:{getattr(provider, 'model_name', '?')}" if provider and use_llm else None),
     )

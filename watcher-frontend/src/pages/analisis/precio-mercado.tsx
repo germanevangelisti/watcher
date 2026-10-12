@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useAnalizarPrecio, useObservables } from "@/lib/api"
-import type { AnalisisPrecio, Clasificacion } from "@/types/precio-mercado"
+import type { AgregadoRenglones, AnalisisPrecio, Clasificacion, RenglonAnalisis } from "@/types/precio-mercado"
 import { CLASIFICACION_LABEL, formatArs } from "@/lib/precio-mercado-format"
 
 const CLASIFICACION_STYLE: Record<Clasificacion, string> = {
@@ -18,6 +18,61 @@ function ClasificacionChip({ value }: { value: Clasificacion }) {
     <span data-testid="clasificacion" className={`rounded px-2 py-0.5 text-xs font-medium ${CLASIFICACION_STYLE[value]}`}>
       {CLASIFICACION_LABEL[value]}
     </span>
+  )
+}
+
+const pct = (v: number | null) => (v != null ? `${(v * 100).toFixed(0)}%` : "-")
+
+function AnalisisPorRenglon({ rows, agregado }: { rows: RenglonAnalisis[]; agregado?: AgregadoRenglones | null }) {
+  return (
+    <div data-testid="analisis-renglones">
+      <h3 className="mb-1 font-medium">Análisis por renglón</h3>
+      <table className="w-full text-left text-xs">
+        <thead className="text-muted-foreground">
+          <tr>
+            <th>Renglón</th><th>Ítem</th><th>Cantidad</th><th>Precio unitario</th>
+            <th>Mediana</th><th>Desvío</th><th>Clasificación</th><th>Referencias</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr key={i} className="border-t border-border align-top" data-testid="renglon-analisis">
+              <td>{r.numero ?? i + 1}</td>
+              <td>{r.item}</td>
+              <td>{r.cantidad != null ? `${r.cantidad} ${r.unidad}` : "-"}</td>
+              <td title={r.origen_precio ?? undefined}>{r.precio_unitario != null ? formatArs(r.precio_unitario) : "solo monto total"}</td>
+              <td>{formatArs(r.comparacion.mediana)}</td>
+              <td>{pct(r.comparacion.desvio)}</td>
+              <td><ClasificacionChip value={r.comparacion.clasificacion} /></td>
+              <td>
+                {r.referencias.length === 0 ? "0" : (
+                  <details>
+                    <summary className="cursor-pointer">{r.referencias.length}</summary>
+                    <ul className="mt-1 space-y-0.5">
+                      {r.referencias.map((ref, j) => (
+                        <li key={j}>
+                          {ref.url ? <a className="underline" href={ref.url} target="_blank" rel="noreferrer">{ref.source}</a> : ref.source}
+                          {": "}{ref.description} · {formatArs(ref.unit_price)} · {ref.observed_on}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {agregado && (
+        <p className="mt-2 text-xs" data-testid="agregado-renglones">
+          <span className="font-medium">Agregado:</span> monto del acto {formatArs(agregado.monto_total_acto)} vs
+          estimado de mercado {agregado.estimado_mercado != null ? formatArs(agregado.estimado_mercado) : "no calculable"}
+          {" "}(desvío {pct(agregado.desvio)}) · <ClasificacionChip value={agregado.clasificacion} />
+          {agregado.motivo && <span className="text-muted-foreground"> · {agregado.motivo}</span>}
+          <span className="block text-muted-foreground">{agregado.nota}</span>
+        </p>
+      )}
+    </div>
   )
 }
 
@@ -78,6 +133,10 @@ function Resultado({ data }: { data: AnalisisPrecio }) {
               </table>
             )}
           </div>
+        )}
+
+        {data.renglones_analisis && data.renglones_analisis.length > 0 && (
+          <AnalisisPorRenglon rows={data.renglones_analisis} agregado={data.agregado} />
         )}
 
         <div>
