@@ -27,7 +27,30 @@ export interface PriceReference {
   url: string | null
   quantity: number | null
   unit: string | null
-  kind: "interna" | "externa"
+  kind: "interna" | "externa" | "oficial"
+  process_id?: string | null
+}
+
+export interface Renglon {
+  numero: number | null
+  descripcion: string
+  cantidad: number | null
+  precio_referencia: number | null
+  presupuesto: number | null
+}
+
+export interface ProcesoCompras {
+  nro: string
+  tipo: string
+  servicio: string
+  objeto: string
+  estado: string
+  presupuesto_total: number | null
+  fecha_limite: string | null
+  documento: string | null
+  origen: string | null
+  url: string
+  motivo: string | null
 }
 
 export interface SourceStatus {
@@ -45,6 +68,9 @@ export interface AnalisisPrecio {
     unidad: string | null
     monto_total: number | null
     metodo: "llm" | "regex"
+    fuente_cantidad?: string | null
+    renglones?: Renglon[]
+    proceso?: ProcesoCompras | null
   }
   precio_unitario: number | null
   comparacion: {

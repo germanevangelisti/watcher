@@ -51,6 +51,35 @@ function Resultado({ data }: { data: AnalisisPrecio }) {
           <div><dt className="text-muted-foreground">Umbrales</dt><dd>&gt;{umbrales.observable * 100}% / &gt;{umbrales.alerta * 100}% · mín. {umbrales.min_references}</dd></div>
         </dl>
 
+        {extraccion.proceso && (
+          <div data-testid="proceso-compras">
+            <h3 className="mb-1 font-medium">
+              Proceso en ComprasCba:{" "}
+              <a className="underline" href={extraccion.proceso.url} target="_blank" rel="noreferrer">{extraccion.proceso.nro}</a>
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              {extraccion.proceso.tipo} · {extraccion.proceso.servicio} · {extraccion.proceso.estado}
+              {extraccion.proceso.documento && <> · renglones del pliego “{extraccion.proceso.documento}”</>}
+              {extraccion.proceso.origen === "grilla" && <> · renglones publicados en el portal</>}
+            </p>
+            {extraccion.renglones && extraccion.renglones.length > 0 && (
+              <table className="mt-1 w-full text-left text-xs" data-testid="renglones">
+                <thead className="text-muted-foreground">
+                  <tr><th>Renglón</th><th>Descripción</th><th>Cantidad</th><th>Precio de referencia</th></tr>
+                </thead>
+                <tbody>
+                  {extraccion.renglones.map((r, i) => (
+                    <tr key={i} className="border-t border-border">
+                      <td>{r.numero ?? i + 1}</td><td>{r.descripcion}</td>
+                      <td>{r.cantidad ?? "-"}</td><td>{formatArs(r.precio_referencia)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
+
         <div>
           <h3 className="mb-1 font-medium">Fuentes consultadas</h3>
           <ul className="space-y-1" data-testid="fuentes">

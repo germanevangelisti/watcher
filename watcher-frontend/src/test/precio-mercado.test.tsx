@@ -100,3 +100,28 @@ describe("pantalla precio de mercado", () => {
     expect(formatArs(1000)).toContain("1.000")
   })
 })
+
+describe("renglones de ComprasCba", () => {
+  it("muestra el proceso y las cantidades por renglón del pliego", () => {
+    analizarState = {
+      ...analizarState,
+      data: {
+        ...RESULTADO,
+        extraccion: {
+          ...RESULTADO.extraccion,
+          renglones: [
+            { numero: 1, descripcion: "Resmas de papel A4", cantidad: 12000, precio_referencia: null, presupuesto: null },
+            { numero: 3, descripcion: "Libros de actas", cantidad: 5880, precio_referencia: null, presupuesto: null },
+          ],
+          proceso: { nro: "1/2026", tipo: "Licitación Presencial", servicio: "199 - Policia", objeto: "RESMAS", estado: "ADJUDICADA",
+            presupuesto_total: 186031008, fecha_limite: "13/05/2026", documento: "pliego.pdf", origen: "pliego", url: "https://portal", motivo: null },
+        },
+      },
+    }
+    render(<PrecioMercadoPage />)
+    const proceso = screen.getByTestId("proceso-compras")
+    expect(within(proceso).getByText("1/2026")).toBeTruthy()
+    expect(within(screen.getByTestId("renglones")).getByText("12000")).toBeTruthy()
+    expect(proceso.textContent).toContain("pliego.pdf")
+  })
+})
