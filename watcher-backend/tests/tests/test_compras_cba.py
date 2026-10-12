@@ -298,3 +298,31 @@ async def test_official_references_need_every_key_word():
 
     res = await ComprasCbaReferenceSource(loader).search("resmas de cartulina")
     assert res.references == []
+
+
+def test_ml_catalog_fallback_on_403(monkeypatch):
+    import asyncio
+
+    import httpx
+    from app.services.price_sources import MercadoLibreSource
+
+    monkeypatch.setenv("ML_ACCESS_TOKEN", "x")
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        path = req.url.path
+        if path == "/sites/MLA/search":
+            return httpx.Response(403, json={"message": "forbidden"})
+        if path == "/products/search":
+            return httpx.Response(200, json={"results": [
+                {"id": "MLA1", "name": "Impresora con regalo"},
+                {"id": "MLA2", "name": "Resma Papel A4 500 Hojas"}]})
+        if path == "/products/MLA2/items":
+            return httpx.Response(200, json={"results": [
+                {"price": 10000, "currency_id": "ARS"}, {"price": 12000, "currency_id": "ARS"},
+                {"price": 30000, "currency_id": "ARS"}]})
+        return httpx.Response(404)
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    res = asyncio.run(MercadoLibreSource(client=client).search("resma papel"))
+    assert res.available
+    assert [r.unit_price for r in res.references] == [12000.0]

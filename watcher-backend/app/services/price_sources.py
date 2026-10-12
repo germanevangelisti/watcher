@@ -156,11 +156,66 @@ class MercadoLibreSource:
         self._client = client
         self.auth = auth or MercadoLibreAuth(client=client)
 
-    async def _get(self, params: dict, headers: dict) -> httpx.Response:
+    catalog_url = "https://api.mercadolibre.com/products/search"
+    product_items_url = "https://api.mercadolibre.com/products/{id}/items"
+    max_products = 5
+
+    async def _get(self, params: dict, headers: dict, url: str | None = None) -> httpx.Response:
+        url = url or self.base_url
         if self._client is not None:
-            return await self._client.get(self.base_url, params=params, headers=headers)
+            return await self._client.get(url, params=params, headers=headers)
         async with httpx.AsyncClient(timeout=self.timeout_s) as client:
-            return await client.get(self.base_url, params=params, headers=headers)
+            return await client.get(url, params=params, headers=headers)
+
+    @staticmethod
+    def _stems(text: str) -> list[str]:
+        from app.services.compras_cba import _norm
+        return [w[:5] for w in re.findall(r"[a-z0-9]+", _norm(text)) if len(w) >= 3]
+
+    async def _catalog_search(self, item: str, headers: dict) -> SourceResult:
+        """Fallback for app tokens: ``/sites/MLA/search`` is forbidden to
+        client_credentials tokens, but the catalog (``/products/search``) and
+        each product's active listings (``/products/{id}/items``) are not."""
+        try:
+            resp = await self._get({"status": "active", "site_id": "MLA", "q": item, "limit": 20},
+                                   headers, self.catalog_url)
+        except Exception as exc:
+            return SourceResult(self.name, False, reason=f"no disponible ({type(exc).__name__})")
+        if resp.status_code != 200:
+            return SourceResult(self.name, False, reason=f"no disponible (catálogo HTTP {resp.status_code})")
+        try:
+            products = resp.json().get("results", [])
+        except ValueError:
+            return SourceResult(self.name, False, reason="no disponible (respuesta inválida)")
+        wanted = self._stems(item)[:3]
+        today = date.today().isoformat()
+        refs: list[PriceReference] = []
+        for prod in products:
+            if len(refs) >= self.max_products:
+                break
+            name = str(prod.get("name", ""))
+            have = set(self._stems(name))
+            if wanted and not all(w in have for w in wanted):
+                continue  # catalog search is loose ("resma" matches printer combos)
+            try:
+                ir = await self._get({}, headers, self.product_items_url.format(id=prod.get("id")))
+                items = ir.json().get("results", []) if ir.status_code == 200 else []
+            except Exception:
+                continue
+            prices = sorted(float(i["price"]) for i in items
+                            if isinstance(i.get("price"), (int, float)) and i["price"] > 0
+                            and i.get("currency_id", "ARS") == "ARS")
+            if not prices:
+                continue
+            refs.append(PriceReference(
+                source="Mercado Libre",
+                description=f"{name[:180]} (mediana de {len(prices)} publicaciones)",
+                unit_price=prices[len(prices) // 2],
+                observed_on=today,
+                url=f"https://www.mercadolibre.com.ar/p/{prod.get('id')}",
+                unit="publicación",
+            ))
+        return SourceResult(self.name, True, references=refs)
 
     async def search(self, item: str, unit: str | None = None) -> SourceResult:
         params = {"q": item, "limit": self.limit, "condition": "new"}
@@ -179,6 +234,8 @@ class MercadoLibreSource:
                 continue
             break
 
+        if resp.status_code == 403 and headers.get("Authorization"):
+            return await self._catalog_search(item, headers)
         if resp.status_code in (401, 403):
             reason = ("no disponible: la API de Mercado Libre rechazó el token configurado"
                       if MercadoLibreAuth.configured()
