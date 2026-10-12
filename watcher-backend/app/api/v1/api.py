@@ -28,6 +28,7 @@ from app.api.v1.endpoints import (
     observability,
     pipeline,
     pipeline_runs,
+    precio_mercado,
     presupuesto,
     processing_logs,
     redflags,
@@ -64,6 +65,7 @@ api_router.include_router(analisis.router, prefix="/analisis", tags=["analisis"]
 api_router.include_router(alertas.router, prefix="/alertas", tags=["alertas"])
 api_router.include_router(actos.router, prefix="/actos", tags=["actos"])
 api_router.include_router(presupuesto.router, prefix="/presupuesto", tags=["presupuesto"])
+api_router.include_router(precio_mercado.router, prefix="/precio-mercado", tags=["precio-mercado"])
 api_router.include_router(metricas.router, prefix="/metricas", tags=["metricas"])
 api_router.include_router(redflags.router, prefix="/redflags", tags=["redflags"])
 

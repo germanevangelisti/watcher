@@ -1373,3 +1373,15 @@ class IngestionRun(Base):
 
     def __repr__(self):
         return f"<IngestionRun(id={self.id}, pipeline={self.pipeline_name}, status={self.status})>"
+
+
+class PrecioMercadoAnalisis(Base):
+    """Stored result of a user-triggered precio-mercado analysis (epic:precio-mercado)."""
+    __tablename__ = "precio_mercado_analisis"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    ejecucion_id = Column(Integer, ForeignKey("ejecucion_presupuestaria.id"), index=True, nullable=False)
+    clasificacion = Column(String(32), nullable=False)
+    proveedor_llm = Column(String, nullable=True)
+    resultado_json = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
