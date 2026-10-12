@@ -281,3 +281,20 @@ async def test_ml_without_credentials_says_what_is_missing(monkeypatch, tmp_path
     async with httpx.AsyncClient(transport=transport) as client:
         res = await MercadoLibreSource(client=client, auth=MercadoLibreAuth(cache_path=tmp_path / "t.json")).search("x")
     assert not res.available and "ML_CLIENT_ID" in res.reason
+
+
+def test_amount_match_requires_a_related_object():
+    procesos = cc.parse_grid(GRID)
+    # Same amount as the resmas process, unrelated object (an upstream mis-parse).
+    assert cc.match_proceso(procesos, 186_031_008.0, "Adquisición de uniformes", None) is None
+
+
+@pytest.mark.asyncio
+async def test_official_references_need_every_key_word():
+    procesos = cc.parse_grid(GRID)
+
+    async def loader():
+        return procesos
+
+    res = await ComprasCbaReferenceSource(loader).search("resmas de cartulina")
+    assert res.references == []

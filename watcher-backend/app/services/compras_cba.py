@@ -274,7 +274,11 @@ def match_proceso(procesos: list[Proceso], monto: float | None, concepto: str | 
     """Official budget equal to the act amount wins; then a renglón with the
     quantity the act states plus a related object; then a strong object match."""
     if monto:
-        by_amount = [p for p in procesos if p.presupuesto_total and abs(p.presupuesto_total - monto) <= max(1.0, monto * 0.001)]
+        # Amount alone is not enough: boletín acts sometimes carry another act's
+        # amount (a mis-parse upstream), so the object must share a word too.
+        by_amount = [p for p in procesos
+                     if p.presupuesto_total and abs(p.presupuesto_total - monto) <= max(1.0, monto * 0.001)
+                     and _shared(p.objeto + " " + " ".join(r.descripcion for r in p.renglones), concepto or "") >= 1]
         if by_amount:
             return max(by_amount, key=lambda p: object_similarity(p.objeto, concepto or ""))
     if cantidad_hint:

@@ -231,14 +231,16 @@ class ComprasCbaReferenceSource:
             procesos = await self._load()
         except Exception as exc:
             return SourceResult(self.name, False, reason=f"no disponible ({type(exc).__name__})")
-        words = re.findall(r"[a-z]{4,}", _norm(item))[:3]
+        words = [w for w in re.findall(r"[a-z]{4,}", _norm(item)) if w not in ("para", "destino", "con")][:2]
         if not words:
             return SourceResult(self.name, True, reason="ítem sin palabras clave")
-        stem = words[0].rstrip("s")
+        # Every key word must appear ("aceite de soja" is not "aceite de girasol").
+        stems = [w.rstrip("s") for w in words]
         refs = []
         for p in procesos:
             for r in p.renglones:
-                if r.precio_referencia and stem in _norm(r.descripcion):
+                desc = _norm(r.descripcion)
+                if r.precio_referencia and all(s in desc for s in stems):
                     observed = p.fecha_limite or ""
                     if len(observed) >= 10 and observed[2] == "/":
                         observed = f"{observed[6:10]}-{observed[3:5]}-{observed[0:2]}"

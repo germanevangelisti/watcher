@@ -357,7 +357,7 @@ async def cache_set(db: AsyncSession, key: str, payload) -> None:
 
 async def find_proceso(db: AsyncSession, row: EjecucionPresupuestaria, source: ComprasCbaSource,
                        cantidad_hint: float | None) -> ProcesoMatch:
-    key = f"compras_cba:proceso:{row.id}"
+    key = f"compras_cba:proceso:v2:{row.id}"
     cached = await cache_get(db, key, CACHE_TTL_FOUND_S)
     if cached is not None:
         match = ProcesoMatch.from_dict(cached)
@@ -562,8 +562,10 @@ async def analyze(
         results.append(r if isinstance(r, SourceResult) else SourceResult(getattr(s, "name", "?"), False, reason=f"no disponible ({r})"))
 
     # The act's own process is not a reference for itself.
-    own = (ext.proceso or {}).get("nro")
-    references = [ref for r in results for ref in r.references if not (own and ref.process_id == own)]
+    # "2026/000038.01" is a republication of "2026/000038": compare the base number.
+    own = ((ext.proceso or {}).get("nro") or "").split(".")[0]
+    references = [ref for r in results for ref in r.references
+                  if not (own and (ref.process_id or "").split(".")[0] == own)]
     comparison = classify(unit_price, references, th, motivo_sin_precio)
 
     reason = detection_reason(row.concepto, row.tipo_operacion)
