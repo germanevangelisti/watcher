@@ -219,11 +219,20 @@ _QTY_RE = re.compile(
 )
 
 
+_PAREN_QTY_RE = re.compile(r"\(\s*(\d{1,3}(?:\.\d{3})+|\d+)\s*\)\s+([a-z]{3,})")
+
+
 def regex_extract(text: str) -> tuple[float | None, str | None]:
     """Quantity + unit from text like ``"5.000 resmas"`` or ``"dos (2) tráilers"``."""
     m = _QTY_RE.search(normalize(text))
     if not m:
-        return None, None
+        # "cuatro mil (4.000) colchones": the number in parentheses is explicit
+        # even when the unit is not one of the known unit words.
+        p = _PAREN_QTY_RE.search(normalize(text))
+        if not p:
+            return None, None
+        qty = float(p.group(1).replace(".", ""))
+        return (qty if qty > 0 else None), p.group(2)
     raw = m.group("paren") or m.group("num")
     try:
         qty = float(raw.replace(".", ""))
@@ -357,7 +366,8 @@ async def cache_set(db: AsyncSession, key: str, payload) -> None:
 
 async def find_proceso(db: AsyncSession, row: EjecucionPresupuestaria, source: ComprasCbaSource,
                        cantidad_hint: float | None) -> ProcesoMatch:
-    key = f"compras_cba:proceso:v2:{row.id}"
+    # The quantity hint changes the match, so it is part of the key.
+    key = f"compras_cba:proceso:v3:{row.id}:{int(cantidad_hint) if cantidad_hint else 0}"
     cached = await cache_get(db, key, CACHE_TTL_FOUND_S)
     if cached is not None:
         match = ProcesoMatch.from_dict(cached)

@@ -134,7 +134,8 @@ async def test_list_observables_filters_by_text_and_organismo(session):
 
 def test_regex_extract_quantities():
     assert svc.regex_extract("Adquisición de 1.000 resmas de papel") == (1000.0, "resmas")
-    assert svc.regex_extract("Adquisición de dos (2) tráilers gastronómicos")[0] is None  # unit not in list
+    assert svc.regex_extract("Adquisición de dos (2) tráilers gastronómicos") == (2.0, "trailers")
+    assert svc.regex_extract("adquisición de cuatro mil (4.000) colchones") == (4000.0, "colchones")
     assert svc.regex_extract("compra de dos (2) equipos") == (2.0, "equipos")
     assert svc.regex_extract("Adquisición de resmas de papel") == (None, None)
 
