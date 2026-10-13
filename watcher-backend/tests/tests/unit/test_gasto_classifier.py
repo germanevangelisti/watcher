@@ -21,6 +21,9 @@ from app.services.gasto_classifier import (
     JURISDICCION_FUERA,
     JURISDICCION_MUNICIPAL,
     JURISDICCION_PROVINCIAL,
+    NIVEL_PROVINCIAL,
+    OBJETO_OTRO,
+    TIPO_LICITACION,
     _parse_section,
     classify_gasto,
 )
@@ -431,6 +434,11 @@ class TestApiContract:
             "is_gasto_publico": True,
             "etapa_gasto": ETAPA_LLAMADO,
             "jurisdiccion_gasto": JURISDICCION_PROVINCIAL,
+            "tipo_gasto": TIPO_LICITACION,
+            "objeto": OBJETO_OTRO,
+            "nivel": NIVEL_PROVINCIAL,
+            "municipio": None,
+            "gasto_motivo": "keyword licitacion",
         }
 
     def test_acepta_fila_de_analisis(self):

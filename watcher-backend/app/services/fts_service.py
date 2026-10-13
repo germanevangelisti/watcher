@@ -9,6 +9,8 @@ The backend is chosen automatically based on DATABASE_URL.
 """
 
 import logging
+import re
+import unicodedata
 from typing import Any
 
 from app.core.config import settings
@@ -16,6 +18,50 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
+
+# Palabras vacías del español. El backend Postgres ya las descarta solo
+# (`plainto_tsquery('spanish', …)` usa el diccionario del idioma); esto es el
+# equivalente mínimo para SQLite, donde el texto se usa como **expresión de
+# consulta** y no hay diccionario que lo limpie.
+_FTS5_STOPWORDS = frozenset([
+    "a", "al", "algo", "algunas", "algunos", "ante", "antes", "como", "con",
+    "contra", "cual", "cuando", "de", "del", "desde", "donde", "durante", "e",
+    "el", "ella", "ellas", "ellos", "en", "entre", "era", "eres", "es", "esa",
+    "esas", "ese", "eso", "esos", "esta", "estaba", "estado", "estas", "este",
+    "esto", "estos", "fue", "ha", "hasta", "la", "las", "le", "les", "lo",
+    "los", "mas", "me", "mi", "mis", "mucho", "muy", "no", "nos", "o", "os",
+    "otra", "otras", "otro", "otros", "para", "pero", "poco", "por", "porque",
+    "que", "se", "si", "sin", "sobre", "son", "su", "sus", "te", "tener",
+    "tiene", "todo", "todos", "tu", "tus", "un", "una", "uno", "unos", "y", "ya",
+])
+
+
+def _sin_acentos(token: str) -> str:
+    """`qué` → `que`: las palabras vacías se comparan sin acentos."""
+    return unicodedata.normalize("NFKD", token).encode("ascii", "ignore").decode()
+
+
+def _fts5_match_expression(query: str) -> str:
+    """Convierte texto libre en una expresión FTS5 válida (o `""` si no queda nada).
+
+    SQLite FTS5 **no** recibe texto: recibe una expresión de consulta donde `?`,
+    `"`, `*`, `-`, `^`, `:` y `NEAR` son sintaxis. Una pregunta en lenguaje natural
+    (`"¿qué se publicó sobre obra pública en septiembre?"`) es una expresión
+    inválida y `MATCH` levanta `syntax error` — que el llamador veía como
+    *0 resultados*. Se tokeniza, se descartan las palabras vacías y se citan los
+    términos, unidos con **OR**: una pregunta del chat trae verbos conjugados
+    (*"se publicó"*) que el boletín no escribe, y exigirlos todos vacía el
+    resultado. El OR no ensucia el ranking porque es BM25 el que ordena: los
+    términos raros pesan más que los comunes. (El backend Postgres usa
+    `plainto_tsquery`, que AND-ea; la diferencia es deliberada y está del lado
+    del recall.)
+    """
+    tokens = re.findall(r"[^\W_]+", query.lower(), flags=re.UNICODE)
+    lexemas = [
+        t for t in dict.fromkeys(tokens)
+        if len(t) > 1 and _sin_acentos(t) not in _FTS5_STOPWORDS
+    ]
+    return " OR ".join(f'"{t}"' for t in lexemas)
 
 
 class FTSSearchResult:
@@ -135,8 +181,18 @@ class FTSService:
     def _search_sqlite(
         self, query: str, top_k: int, filters: dict[str, Any] | None
     ) -> list[FTSSearchResult]:
+        match_expression = _fts5_match_expression(query)
+        if not match_expression:
+            # Sólo palabras vacías (o vacío): no hay nada que buscar. Antes esto
+            # llegaba a `MATCH` y moría con syntax error.
+            logger.info(
+                "FTS: '%s' no deja ningún término buscable (sólo palabras vacías o "
+                "signos): no se consulta el índice y se devuelve [].", query,
+            )
+            return []
+
         where_clauses, params = self._build_filter_clauses(filters)
-        params["query"] = query
+        params["query"] = match_expression
         params["limit"] = top_k
 
         # SQLite FTS5 uses boolean 0/1

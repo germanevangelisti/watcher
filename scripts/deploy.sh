@@ -44,7 +44,7 @@ DATABASE_URL=postgresql+asyncpg://watcher:${DB_PASSWORD}@db:5432/watcher
 SYNC_DATABASE_URL=postgresql://watcher:${DB_PASSWORD}@db:5432/watcher
 GOOGLE_API_KEY=${GOOGLE_API_KEY}
 LLM_PROVIDER=google
-LLM_MODEL=gemini-2.0-flash
+LLM_MODEL=gemini-2.5-flash
 ENVIRONMENT=production
 ALLOWED_ORIGINS=http://34.170.135.94,https://34.170.135.94
 EOF

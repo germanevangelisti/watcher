@@ -96,4 +96,8 @@ watcher-backend/data/uploads/
 uv.lock
 # PM launcher helper
 .impl-goal.txt
+# Capturas y scripts de screenshot de las sesiones (scratch, no versionado)
+.pm-shots/
+# Muestra de etiquetado de M8 y su scoring (insumo de una sesión, no del repo)
+.tmp-muestra-gasto/
 

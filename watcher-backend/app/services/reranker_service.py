@@ -81,7 +81,7 @@ class GoogleReranker(BaseReranker):
     Uses Google Gemini to score each result's relevance to the query.
     """
 
-    def __init__(self, api_key: str | None = None, model: str = "gemini-2.0-flash"):
+    def __init__(self, api_key: str | None = None, model: str = "gemini-2.5-flash"):
         """
         Initialize Google re-ranker.
 

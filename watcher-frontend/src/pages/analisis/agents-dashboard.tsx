@@ -6,9 +6,52 @@ import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { FadeTransition } from "@/components/ui/fade-transition"
 import { ChatMarkdown } from "@/components/features/chat-markdown"
+import { LlmProviderCard } from "@/components/features/llm-provider-card"
+import { chatSources } from "@/lib/chat-sources"
+import {
+  llmCredit,
+  readStoredSelection,
+  storeSelection,
+  type ChatLlmSelection,
+} from "@/lib/llm-providers"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useAgentHealth, useAgentChat, useSystemStatistics, useTopRiskDocuments, useTransparencyTrends } from "@/lib/api"
-import { Bot, Activity, MessageSquare, Send, TrendingUp, AlertTriangle, BarChart3, RefreshCw, CheckCircle2, XCircle } from "lucide-react"
+import { useAgentHealth, useAgentChat, useAgentChatClear, useLlmProviders, useSystemStatistics, useTopRiskDocuments, useTransparencyTrends } from "@/lib/api"
+import type { ChatLlm } from "@/lib/api"
+import { Bot, Activity, MessageSquare, Send, TrendingUp, AlertTriangle, BarChart3, RefreshCw, CheckCircle2, XCircle, Trash2 } from "lucide-react"
+
+/**
+ * Fuentes de un turno del asistente. Se declaran desde las claves que el backend
+ * consultó de verdad (`data_used`); si el turno no trae ninguna, no se inventa una
+ * cita: se dice que no hay fuentes estructuradas. En un producto de transparencia
+ * una respuesta sin respaldo tiene que poder distinguirse de una con respaldo.
+ */
+function ChatSources({ dataUsed }: { dataUsed?: string[] }) {
+  const sources = chatSources(dataUsed)
+
+  if (sources.length === 0) {
+    return (
+      <p className="mt-2 text-[11px] text-muted-foreground" data-testid="chat-sources-empty">
+        Sin fuentes estructuradas
+      </p>
+    )
+  }
+
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-1.5" data-testid="chat-sources">
+      <span className="text-[11px] text-muted-foreground">Fuentes:</span>
+      {sources.map((source) => (
+        <Badge
+          key={source.key}
+          variant="outline"
+          className="text-[10px] font-normal"
+          data-testid={`chat-source-${source.key}`}
+        >
+          {source.label}
+        </Badge>
+      ))}
+    </div>
+  )
+}
 
 // Empty state del chat: preguntas ejecutivas de presupuesto (copy literal acordado con PO)
 const CHAT_SUGGESTIONS = [
@@ -17,16 +60,67 @@ const CHAT_SUGGESTIONS = [
   "¿Qué finalidades presentan mayor desvío?",
 ] as const
 
+/**
+ * El motivo que devolvió el backend, si lo hay.
+ *
+ * El 400 del proveedor elegido trae la causa exacta ("falta ANTHROPIC_API_KEY",
+ * "el modelo «x» no está descargado"). Un "no se pudo obtener respuesta" encima
+ * de eso borraría la única información que el usuario necesita para arreglarlo.
+ */
+function extraerDetalleDeError(error: unknown): string | null {
+  if (typeof error !== "object" || error === null) return null
+
+  const dato = (error as { response?: { data?: unknown } }).response?.data
+  if (typeof dato === "string") return dato.trim() || null
+  if (typeof dato !== "object" || dato === null) return null
+
+  const detalle = (dato as { detail?: unknown }).detail
+  return typeof detalle === "string" && detalle.trim() ? detalle : null
+}
+
 export function AgentsDashboard() {
   const [chatMessage, setChatMessage] = useState("")
-  const [chatHistory, setChatHistory] = useState<Array<{ role: string; content: string }>>([])
+  const [chatHistory, setChatHistory] = useState<
+    Array<{ role: string; content: string; dataUsed?: string[]; llm?: ChatLlm | null; isError?: boolean }>
+  >([])
+  // Se inicializa leyendo lo recordado por el navegador: la elección sobrevive a
+  // recargar la página, que es lo que hace usable comparar entre sesiones.
+  const [llmSelection, setLlmSelection] = useState<ChatLlmSelection | null>(() =>
+    readStoredSelection(),
+  )
 
   const { data: health, isLoading: healthLoading, refetch: refetchHealth } = useAgentHealth()
   const { data: stats, isLoading: statsLoading } = useSystemStatistics()
   const { data: topRisk, isLoading: riskLoading } = useTopRiskDocuments(5)
   const { isLoading: trendsLoading } = useTransparencyTrends()
-  
+  const { data: llmCatalog, isLoading: llmLoading, isError: llmError } = useLlmProviders()
+
   const chatMutation = useAgentChat()
+  const clearMutation = useAgentChatClear()
+  const [clearFailed, setClearFailed] = useState(false)
+
+  const handleLlmChange = (selection: ChatLlmSelection) => {
+    setLlmSelection(selection)
+    storeSelection(selection)
+  }
+
+  /**
+   * Lo que se muestra en el selector y lo que viaja en el turno salen de acá.
+   *
+   * Sin elección explícita se usa el proveedor que el entorno está usando —el que
+   * la tarjeta ya muestra como valor inicial—, y se manda nombrado. Dejar que el
+   * backend decida mientras la pantalla afirma un proveedor permitiría que un
+   * cambio en el `.env` cambie quién responde sin que la pantalla se entere: es
+   * exactamente el default invisible que esta tarjeta vino a destapar.
+   */
+  const llmEffective: ChatLlmSelection | null =
+    llmSelection ??
+    (llmCatalog?.configured
+      ? {
+          provider: llmCatalog.configured.provider,
+          ...(llmCatalog.configured.model ? { model: llmCatalog.configured.model } : {}),
+        }
+      : null)
 
   const sendMessage = async (text: string) => {
     if (!text.trim() || chatMutation.isPending) return
@@ -36,17 +130,52 @@ export function AgentsDashboard() {
     setChatMessage("")
 
     try {
-      const response = await chatMutation.mutateAsync(text)
+      const response = await chatMutation.mutateAsync({
+        query: text,
+        provider: llmEffective?.provider,
+        model: llmEffective?.model,
+      })
       const content = typeof response === 'string' ? response : (response.response || JSON.stringify(response))
-      const assistantMessage = { role: "assistant", content }
+      // `data_used` se guarda con el mensaje: es lo que permite citar la fuente
+      // que el agente consultó, y se pierde si sólo se guarda el texto.
+      const dataUsed = typeof response === 'string' ? undefined : response.data_used
+      // El proveedor se guarda **por burbuja** y no se lee del selector al
+      // renderizar: se puede cambiar de proveedor entre mensajes, y una burbuja
+      // vieja tiene que seguir diciendo quién la escribió.
+      const llm = typeof response === 'string' ? undefined : response.llm
+      const assistantMessage = { role: "assistant", content, dataUsed, llm }
       setChatHistory((prev) => [...prev, assistantMessage])
-    } catch {
-      const errorMessage = { role: "assistant", content: "Error: No se pudo obtener respuesta del agente" }
+    } catch (error) {
+      // El 400 del backend dice qué le falta al proveedor elegido: pisarlo con un
+      // "no se pudo" genérico borraría justamente lo que el usuario necesita para
+      // arreglarlo (una key, un paquete, un modelo sin descargar).
+      const detalle = extraerDetalleDeError(error)
+      const errorMessage = {
+        role: "assistant",
+        content: detalle
+          ? `Error: ${detalle}`
+          : "Error: No se pudo obtener respuesta del agente",
+        isError: true,
+      }
       setChatHistory((prev) => [...prev, errorMessage])
     }
   }
 
   const handleSendMessage = () => sendMessage(chatMessage)
+
+  // "Limpiar chat": vacía la conversación en pantalla y el historial del
+  // servidor. La UI se limpia siempre y el fallo del server se declara: mostrar
+  // un chat vacío sobre un agente que todavía recuerda los turnos es peor que un
+  // error visible. Si el borrado falló, el botón queda habilitado para reintentar.
+  const handleClearChat = () => {
+    setChatHistory([])
+    setChatMessage("")
+    setClearFailed(false)
+    clearMutation.mutateAsync().catch(() => setClearFailed(true))
+  }
+
+  const canClear =
+    (chatHistory.length > 0 || clearFailed) && !chatMutation.isPending && !clearMutation.isPending
 
   // Chip: rellena el input con el texto y dispara el mismo envío que "Enviar"
   const handleSuggestion = (text: string) => {
@@ -197,15 +326,47 @@ export function AgentsDashboard() {
         <TabsContent value="chat" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                Chat con Insight Agent
-              </CardTitle>
-              <CardDescription>
-                Realiza consultas sobre el sistema y obtén insights
-              </CardDescription>
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <MessageSquare className="h-5 w-5" />
+                    Chat con Insight Agent
+                  </CardTitle>
+                  <CardDescription>
+                    Realiza consultas sobre el sistema y obtén insights
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 shrink-0"
+                  onClick={handleClearChat}
+                  disabled={!canClear}
+                  data-testid="chat-clear"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Limpiar chat
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
+              {clearFailed && (
+                <p className="text-xs text-red-600" role="status" data-testid="chat-clear-error">
+                  Se limpió el chat en pantalla, pero el servidor no confirmó el borrado: el
+                  agente puede seguir recordando los turnos anteriores. Reintentá "Limpiar chat".
+                </p>
+              )}
+
+              {/* Configuración del proveedor: va arriba de la conversación
+                  porque es lo que decide quién va a redactar lo que sigue. */}
+              <LlmProviderCard
+                catalog={llmCatalog}
+                isLoading={llmLoading}
+                isError={llmError}
+                selection={llmEffective}
+                onChange={handleLlmChange}
+              />
+
               {/* Chat History */}
               <div className="border rounded-lg p-4 h-96 overflow-y-auto space-y-4">
                 {chatHistory.length === 0 ? (
@@ -238,6 +399,7 @@ export function AgentsDashboard() {
                       className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                     >
                       <div
+                        data-role={msg.role}
                         className={`max-w-[80%] rounded-lg p-3 ${
                           msg.role === "user"
                             ? "bg-primary text-primary-foreground"
@@ -249,7 +411,22 @@ export function AgentsDashboard() {
                         {msg.role === "user" ? (
                           <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                         ) : (
-                          <ChatMarkdown content={msg.content} />
+                          <>
+                            <ChatMarkdown content={msg.content} />
+                            {/* Con qué se redactó: es el dato que permite
+                                comparar dos respuestas a la misma pregunta, y
+                                sin él la comparación es de memoria. */}
+                            {!msg.isError && llmCredit(msg.llm, llmCatalog?.providers) && (
+                              <p
+                                className="mt-2 text-[11px] text-muted-foreground"
+                                data-testid="chat-llm-credit"
+                              >
+                                {llmCredit(msg.llm, llmCatalog?.providers)}
+                              </p>
+                            )}
+                            {/* Una burbuja de error no lleva fuentes: no hubo consulta. */}
+                            {!msg.isError && <ChatSources dataUsed={msg.dataUsed} />}
+                          </>
                         )}
                       </div>
                     </div>

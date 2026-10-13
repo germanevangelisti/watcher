@@ -3,13 +3,16 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 import { AgentsDashboard } from "@/pages/analisis/agents-dashboard"
 
 const mutateAsync = vi.fn()
+const clearAsync = vi.fn()
 
 vi.mock("@/lib/api", () => ({
   useAgentHealth: () => ({ data: undefined, isLoading: false, refetch: vi.fn() }),
   useSystemStatistics: () => ({ data: undefined, isLoading: false }),
   useTopRiskDocuments: () => ({ data: [], isLoading: false }),
   useTransparencyTrends: () => ({ isLoading: false }),
+  useLlmProviders: () => ({ data: undefined, isLoading: false, isError: false }),
   useAgentChat: () => ({ mutateAsync, isPending: false }),
+  useAgentChatClear: () => ({ mutateAsync: clearAsync, isPending: false }),
 }))
 
 const CHIPS = [
@@ -30,6 +33,8 @@ function openChatTab() {
 beforeEach(() => {
   mutateAsync.mockReset()
   mutateAsync.mockResolvedValue({ response: "El 12% del vigente." })
+  clearAsync.mockReset()
+  clearAsync.mockResolvedValue({ message: "ok", cleared: 2 })
 })
 
 describe("Chat con Insights — empty state chips", () => {
@@ -48,7 +53,9 @@ describe("Chat con Insights — empty state chips", () => {
     openChatTab()
     fireEvent.click(screen.getByRole("button", { name: CHIPS[0] }))
 
-    expect(mutateAsync).toHaveBeenCalledWith(CHIPS[0])
+    // El turno viaja como `{query}` desde que el chat puede elegir proveedor; sin
+    // elección el cuerpo es sólo la query, que es el contrato de siempre.
+    expect(mutateAsync).toHaveBeenCalledWith({ query: CHIPS[0] })
     await waitFor(() => expect(screen.getByText("El 12% del vigente.")).toBeTruthy())
     // El mensaje del usuario queda en el historial y los chips ya no se muestran
     expect(screen.getByText(CHIPS[0])).toBeTruthy()

@@ -17,12 +17,13 @@ import logging
 import re
 import unicodedata
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import Awaitable, Callable, Iterable
+from dataclasses import dataclass
 from datetime import date
 from typing import Any
 
 from app.api.v1.endpoints.presupuesto import get_ejecucion_resumen as _endpoint_resumen
-from app.db.models import EjecucionPresupuestaria, PresupuestoBase
+from app.db.models import Boletin, EjecucionPresupuestaria, PresupuestoBase
 from app.services.ejecucion_contrast import pct_vs_vigente
 from app.services.presupuesto_finalidades import fetch_finalidades
 from app.services.presupuesto_matching import canonical_organismo_name, preferred_organismo_display
@@ -38,6 +39,15 @@ INTENT_FINALIDADES = "finalidades"
 # Cuarta pregunta, la que faltaba: "desglosá los gastos de X".  Las otras tres son
 # agregadas; ninguna devuelve el detalle de un organismo puntual.
 INTENT_ORGANISMO_DETALLE = "organismo_detalle"
+# Quinta: bajar del desglose agregado a LA FILA.  "desglosá los 2 actos de abril"
+# trae "actos", no una palabra de gasto, así que (d) no la agarra.
+INTENT_ACTOS_DETALLE = "actos_detalle"
+
+# Tope de actos que se listan.  Distribución real sobre el corpus, por (organismo
+# canónico, mes): 20 actos cubren el 97,2% de las consultas (10 cubren 94,8%; 30,
+# el 99,1%).  No es sólo UX: `_build_messages` serializa el contexto sin truncar, y
+# el organismo más grande del corpus tiene 187 filas (~15k tokens).
+TOPE_ACTOS = 20
 
 # Disciplina de honestidad heredada de Ampliación B (sin tocar su UI)
 HONESTIDAD = (
@@ -65,6 +75,53 @@ _DETALLE_WORDS = (
     "desglos", "detall", "discrimin", "por etapa", "por mes", "composicion",
     "en que se gasto", "a que se destin", "como se compone",
 )
+# "los actos": la palabra sola ya es un pedido de detalle.  Se compara contra los
+# **tokens** de la frase, no como substring: "contacto" contiene "acto" y no tiene
+# nada que ver con el gasto.
+_ACTOS_TOKENS = frozenset({"acto", "actos"})
+
+# Centinelas que el extractor deja donde no hay dato.  En el corpus, `beneficiario`
+# vale literalmente "No especificado" en 964 de 972 filas: mostrarlo como campo
+# convertiría una ausencia en un dato.
+_SENTINELAS = frozenset({
+    "", "-", "--", "n/a", "na", "s/d", "sd", "none", "null", "no especificado",
+    "sin especificar", "no informado", "no informada", "sin datos",
+})
+
+_MESES = {
+    "enero": 1, "febrero": 2, "marzo": 3, "abril": 4, "mayo": 5, "junio": 6,
+    "julio": 7, "agosto": 8, "septiembre": 9, "setiembre": 9, "octubre": 10,
+    "noviembre": 11, "diciembre": 12,
+}
+
+
+def _tokens(texto: str) -> set[str]:
+    """Palabras sueltas de la frase normalizada."""
+    return set(re.sub(r"[^a-z0-9]+", " ", _norm(texto)).split())
+
+
+def _dato_real(valor: Any) -> str | None:
+    """El valor si aporta información; None si es NULL, vacío o centinela."""
+    if valor is None:
+        return None
+    texto = str(valor).strip()
+    return None if texto.lower() in _SENTINELAS else texto
+
+
+def _mes_de_la_consulta(consulta: str, ejercicio: int) -> str | None:
+    """Mes nombrado en la consulta ("abril", "abril de 2026") como `YYYY-MM`.
+
+    Sin esto, "desglosá los actos de Caminos de abril" listaría el ejercicio entero
+    y el tope recortaría justo lo que el usuario pidió ver.  Resolver la referencia
+    cuando el mes vive en el turno anterior ("y de abril?") es otra capacidad: la de
+    `story-watcher-chat-turn-memory`.
+    """
+    q = _norm(consulta)
+    for nombre, numero in _MESES.items():
+        if re.search(rf"\b{nombre}\b", q):
+            anio = re.search(r"\b(20\d{2})\b", q)
+            return f"{int(anio.group(1)) if anio else ejercicio}-{numero:02d}"
+    return None
 
 
 def detect_presupuesto_intents(query: str) -> set[str]:
@@ -75,6 +132,7 @@ def detect_presupuesto_intents(query: str) -> set[str]:
     (b) "organismos que concentran mayor gasto" → organismos
     (c) "finalidades con mayor desvío"          → finalidades
     (d) "desglosá los gastos de <organismo>"    → organismo_detalle
+    (e) "desglosá los actos de <organismo>"     → actos_detalle
     """
     q = _norm(query)
     intents: set[str] = set()
@@ -103,6 +161,13 @@ def detect_presupuesto_intents(query: str) -> set[str]:
         any(w in q for w in _DESVIO_WORDS) and has_presupuesto
     ):
         intents.add(INTENT_FINALIDADES)
+
+    # (e) Pedir "los actos" ya es pedir la fila: no necesita además una palabra de
+    # gasto, que es justamente lo que la dejaba afuera ("los 2 actos de abril" no
+    # trae ninguna).  No excluye a (d): "desglosá los gastos y los actos de X" pide
+    # las dos cosas y las dos se contestan.
+    if _ACTOS_TOKENS & _tokens(query):
+        intents.add(INTENT_ACTOS_DETALLE)
 
     return intents
 
@@ -428,6 +493,140 @@ class PresupuestoTools:
         }
 
 
+    @staticmethod
+    async def get_actos(
+        db: AsyncSession, consulta: str, mes: str | None = None,
+        tope: int = TOPE_ACTOS, ejercicio: int | None = None,
+    ) -> dict[str, Any] | None:
+        """Las filas reales de un organismo — un acto publicado por fila.
+
+        El escalón que faltaba: el desglose contesta "cuánto y en qué etapas", esto
+        contesta "cuáles".  Cada acto viaja con **la cita a su boletín oficial**
+        (`source_url`, join server-side), que es cómo el ciudadano llega al documento
+        sin que el modelo tenga que inventar una URL.
+
+        Tres decisiones que no son de estilo:
+
+        - El organismo se resuelve por **canónica** (`resolver_familia_organismo`),
+          no con el `ilike %x%` del endpoint.  Medido sobre el corpus: `%CAMINOS DE
+          LAS SIERRAS%` da 23 actos y `%SIERRAS%` da 27 — el mismo defecto del bug de
+          agrupación, un piso más abajo.
+        - **Tope** (ver `TOPE_ACTOS`) con `total_actos` y `hay_mas` declarados: sin
+          tope, el peor organismo mete ~15k tokens al prompt sin avisar.
+        - `None` **sólo** si la consulta no nombra ningún organismo.  Un organismo
+          que existe y no publicó en el mes pedido devuelve ceros: eso es un dato
+          verificado, no un hueco, y el agente puede afirmarlo.
+
+        `mes` es `YYYY-MM`; si no se pasa, se busca el mes nombrado en la consulta
+        ("abril", "abril de 2026").  Sin mes, el ejercicio entero.
+        """
+        ejercicio = ejercicio or await PresupuestoTools.resolve_ejercicio(db)
+        mes = mes or _mes_de_la_consulta(consulta, ejercicio)
+
+        filas = (await db.execute(
+            select(EjecucionPresupuestaria, Boletin.source_url, Boletin.filename)
+            .outerjoin(Boletin, Boletin.id == EjecucionPresupuestaria.boletin_id)
+            .where(
+                EjecucionPresupuestaria.is_duplicate == 0,
+                extract("year", EjecucionPresupuestaria.fecha_boletin) == ejercicio,
+            )
+        )).all()
+        if not filas:
+            return None
+
+        # La familia se resuelve sobre TODO el ejercicio, no sobre el mes: si el
+        # organismo publicó en otros meses, la consulta lo nombra igual y la
+        # respuesta correcta es "en abril, ninguno".
+        por_canon: dict[str, list[Any]] = defaultdict(list)
+        for ejecucion, source_url, filename in filas:
+            clave = canonical_organismo_name(ejecucion.organismo)
+            if clave:
+                por_canon[clave].append((ejecucion, source_url, filename))
+
+        familia = resolver_familia_organismo(consulta, list(por_canon))
+        if not familia:
+            return None
+
+        propias = [
+            fila for canon in familia for fila in por_canon.get(canon, [])
+            if mes is None or _mes_de(fila[0].fecha_boletin) == mes
+        ]
+        # Más recientes primero, y entre el mismo día el de mayor monto: cuando el
+        # tope recorta, lo que queda es lo más relevante, no un corte arbitrario.
+        propias.sort(
+            key=lambda f: (str(f[0].fecha_boletin), float(f[0].monto or 0.0)), reverse=True,
+        )
+
+        listadas = propias[:tope]
+        hay_mas = len(propias) > len(listadas)
+        grafias = sorted({
+            str(f[0].organismo) for f in propias if f[0].organismo
+        })
+        if not grafias:
+            # El mes pedido no tiene filas, pero el organismo se reconoció: la
+            # respuesta de ceros tiene que poder decir de quién está hablando.
+            grafias = sorted(familia)
+
+        actos = [
+            {
+                clave: valor
+                for clave, valor in (
+                    ("fecha", _fecha_de(ejecucion.fecha_boletin)),
+                    ("concepto", _dato_real(ejecucion.concepto)),
+                    ("monto", _m(ejecucion.monto)),
+                    ("etapa", _dato_real(ejecucion.etapa_gasto)),
+                    ("tipo_operacion", _dato_real(ejecucion.tipo_operacion)),
+                    ("riesgo", _dato_real(ejecucion.riesgo_watcher)),
+                    # Sólo si es un nombre real: en el corpus es centinela en 964/972.
+                    ("beneficiario", _dato_real(ejecucion.beneficiario)),
+                    ("partida", _dato_real(ejecucion.partida_presupuestaria)),
+                    ("boletin_id", ejecucion.boletin_id),
+                    ("boletin", _dato_real(filename)),
+                    ("source_url", _dato_real(source_url)),
+                )
+                if valor is not None
+            }
+            for ejecucion, source_url, filename in listadas
+        ]
+
+        periodo = f" de {mes}" if mes else ""
+        if hay_mas:
+            nota = (
+                f"Se listan los {len(actos)} actos más recientes de {len(propias)}{periodo}; "
+                f"quedan {len(propias) - len(actos)} sin listar. Decilo explícitamente."
+            )
+        else:
+            nota = f"Están los {len(actos)} actos{periodo}, sin recortes."
+
+        return {
+            "ejercicio": ejercicio,
+            "unidad": "millones de ARS",
+            "organismo": preferred_organismo_display(grafias) if grafias else None,
+            "grafias_unificadas": grafias,
+            "mes": mes,
+            "total_actos": len(propias),
+            "actos_listados": len(actos),
+            "hay_mas": hay_mas,
+            "monto_total": _m(sum(float(f[0].monto or 0.0) for f in propias)),
+            "sin_cita": sum(1 for f in listadas if not _dato_real(f[1])),
+            "nota": nota,
+            "actos": actos,
+            "honestidad": list(HONESTIDAD),
+        }
+
+
+def _mes_de(fecha: Any) -> str:
+    """`YYYY-MM` de una fecha del ledger (o de su representación en texto)."""
+    return fecha.strftime("%Y-%m") if hasattr(fecha, "strftime") else str(fecha)[:7]
+
+
+def _fecha_de(fecha: Any) -> str | None:
+    """`YYYY-MM-DD` de una fecha del ledger."""
+    if fecha is None:
+        return None
+    return fecha.strftime("%Y-%m-%d") if hasattr(fecha, "strftime") else str(fecha)[:10]
+
+
 def public_resumen(resumen: dict[str, Any]) -> dict[str, Any]:
     """El resumen sin los objetos internos (para el contexto del modelo)."""
     return {k: v for k, v in resumen.items() if not k.startswith("_")}
@@ -466,3 +665,187 @@ def build_presupuesto_system_block(resumen: dict[str, Any] | None) -> str:
         "Aclarará el período cubierto cuando des un %."
     )
     return "\n".join(lines)
+
+
+def build_corpus_system_block(corpus: dict[str, Any] | None) -> str:
+    """Declara el estado de la búsqueda sobre el corpus, **cuando no trajo nada**.
+
+    El chat contestó *"No se publicó información sobre obra pública en septiembre"*
+    (2026-10-01) con cero evidencia: cinco boletines de septiembre publicaban
+    licitaciones de obra.  El modelo no tenía cómo distinguir *no busqué* de *busqué
+    y no había*, así que eligió la lectura fuerte — y una ausencia inventada se lee
+    como dato verificado.
+
+    Con el estado declarado el modelo tiene un **hecho** que reportar en vez de una
+    inferencia que hacer.  Con resultados el bloque no se emite: los fragmentos ya
+    están en el contexto y el resto del chat no cambia de comportamiento.
+    """
+    if not corpus or corpus.get("resultados"):
+        return ""
+
+    if not corpus.get("ejecutada"):
+        return (
+            "BÚSQUEDA SOBRE EL CORPUS DE BOLETINES: NO se ejecutó "
+            f"({corpus.get('motivo') or 'sin motivo informado'}). "
+            "No podés afirmar nada sobre lo que el Boletín Oficial publicó o dejó de "
+            "publicar en este turno: no revisaste el corpus. Decí que no lo buscaste."
+        )
+
+    return (
+        "BÚSQUEDA SOBRE EL CORPUS DE BOLETINES: se ejecutó y NO devolvió fragmentos. "
+        "Eso NO significa que el tema no se haya publicado: significa que **esta "
+        "búsqueda** no lo encontró. Decí que no lo encontraste en el corpus — nunca "
+        "que no se publicó, que no existe o que no hay información. Si la pregunta "
+        "pide saber qué se publicó sobre algo, aclarales que tu búsqueda no lo halló "
+        "y no respondas por la ausencia."
+    )
+
+
+def build_actos_system_block(actos: dict[str, Any] | None) -> str:
+    """Reglas del system prompt cuando el contexto trae actos individuales.
+
+    Sin esto la cita muere en el contexto: `get_actos` devuelve `source_url` por acto,
+    pero nada le dice al modelo que lo escriba, así que el drill-down a la fila llegaba
+    sin la fuente oficial — y el link del parser FE existía para nadie.  Se emite sólo
+    cuando hay actos: el resto del chat no cambia de comportamiento.
+    """
+    if not actos:
+        return ""
+
+    return (
+        "ACTOS INDIVIDUALES EN EL CONTEXTO:\n"
+        "- Listá cada acto con su fecha, su concepto y su monto. No los resumas en un total.\n"
+        "- Citá el boletín de cada acto como link Markdown: el nombre del boletín como "
+        "texto y su `source_url` como destino, con **la URL exacta del contexto**. Nunca "
+        "inventes ni armes una URL.\n"
+        "- Si un acto no trae `source_url`, decí que no tenés la cita de ese acto; no la "
+        "completes ni la deduzcas.\n"
+        "- Respetá la `nota`: si dice que quedaron actos sin listar, decilo explícitamente "
+        "en vez de presentar lo listado como el total.\n"
+        "- Si `beneficiario` o `partida` no están en un acto, es porque el extractor no los "
+        "publicó: no los inventes ni los muestres como vacíos."
+    )
+
+
+# ------------------------------------------------------- router de las tools
+#
+# El contrato del corte: **intent → key → tool**, declarado en una tabla en vez de
+# repartido entre `detect_presupuesto_intents` y una cadena de `if` en
+# `query_with_data`.  Agregar una tool es agregar una fila acá; la lista de
+# capabilities del health se deriva de la misma tabla, así que no puede quedar
+# desincronizada.  El disparo sigue siendo determinístico sobre la frase (el Won't de
+# la historia permite ese MVP): lo que cambia es que el *mapa* es un dato, no código.
+
+
+@dataclass(frozen=True)
+class PresupuestoTool:
+    """Una tool de presupuesto y su contrato con el chat.
+
+    `key` es el nombre con el que el resultado entra al `data_context` — y por eso a
+    `data_used`, que es lo que el FE muestra por burbuja.  Es contrato público: no se
+    renombra sin mirar el mapa de `chat-sources.ts`.
+    """
+
+    name: str
+    intent: str
+    key: str
+    description: str
+    fetch: Callable[[AsyncSession, str, dict[str, Any] | None], Awaitable[Any]]
+
+
+async def _fetch_resumen(db, query, resumen):
+    return public_resumen(resumen) if resumen else None
+
+
+async def _fetch_organismos(db, query, resumen):
+    return PresupuestoTools.top_organismos(resumen) if resumen else None
+
+
+async def _fetch_finalidades(db, query, resumen):
+    return await PresupuestoTools.get_finalidades_desvio(db)
+
+
+async def _fetch_desglose(db, query, resumen):
+    return await PresupuestoTools.get_organismo_desglose(db, query)
+
+
+async def _fetch_actos(db, query, resumen):
+    return await PresupuestoTools.get_actos(db, query)
+
+
+PRESUPUESTO_TOOLS: tuple[PresupuestoTool, ...] = (
+    PresupuestoTool(
+        name="get_ejecucion_resumen",
+        intent=INTENT_RESUMEN,
+        key="ejecucion_resumen",
+        description="Publicado en BO contra el vigente: %, actos y período cubierto.",
+        fetch=_fetch_resumen,
+    ),
+    PresupuestoTool(
+        name="top_organismos",
+        intent=INTENT_ORGANISMOS,
+        key="organismos",
+        description="Top de organismos por gasto publicado.",
+        fetch=_fetch_organismos,
+    ),
+    PresupuestoTool(
+        name="get_finalidades_desvio",
+        intent=INTENT_FINALIDADES,
+        key="finalidades",
+        description="Finalidades por desvío contra su techo de la Ley.",
+        fetch=_fetch_finalidades,
+    ),
+    PresupuestoTool(
+        name="get_organismo_desglose",
+        intent=INTENT_ORGANISMO_DETALLE,
+        key="organismo_desglose",
+        description="Desglose por etapa de un organismo, resuelto por canónica.",
+        fetch=_fetch_desglose,
+    ),
+    PresupuestoTool(
+        name="get_actos",
+        intent=INTENT_ACTOS_DETALLE,
+        key="actos",
+        description="Actos individuales de un organismo, cada uno con la cita a su boletín.",
+        fetch=_fetch_actos,
+    ),
+)
+
+
+def budget_tool_names() -> list[str]:
+    """Nombres estables de las tools de presupuesto (health / capabilities)."""
+    return [t.name for t in PRESUPUESTO_TOOLS]
+
+
+async def route_presupuesto(
+    db: AsyncSession, query: str, resumen: dict[str, Any] | None,
+    intents: set[str] | None = None,
+) -> dict[str, Any]:
+    """Corre las tools que la query pide y devuelve el contexto de presupuesto.
+
+    `intents` se puede pasar ya calculado para no detectar dos veces en el mismo
+    turno (el agente lo necesita además para decidir el path de transparencia).
+
+    Cada tool corre en su **propio** try: una caída degrada esa key, no todo el
+    contexto.  Antes un fallo en el resumen se llevaba también el desglose y los
+    actos, que leen el ledger directo y no dependen de la Ley.
+
+    Una tool que devuelve vacío **no agrega su key**: `data_used` lista lo que
+    realmente se consultó y trajo algo, y el prompt declara el hueco en vez de
+    recibir una key vacía como si fuera un dato.
+    """
+    if intents is None:
+        intents = detect_presupuesto_intents(query)
+
+    contexto: dict[str, Any] = {}
+    for tool in PRESUPUESTO_TOOLS:
+        if tool.intent not in intents:
+            continue
+        try:
+            valor = await tool.fetch(db, query, resumen)
+        except Exception as e:  # una tool caída no se lleva las otras
+            logger.warning("Tool de presupuesto %s no disponible: %s", tool.name, e)
+            continue
+        if valor:
+            contexto[tool.key] = valor
+    return contexto

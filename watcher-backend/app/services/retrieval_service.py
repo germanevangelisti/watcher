@@ -9,6 +9,8 @@ Provides unified interface for:
 
 import asyncio
 import logging
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from typing import Any
 
 from app.services.embedding_service import get_embedding_service
@@ -138,7 +140,11 @@ class RetrievalService:
             List of SearchResult ordered by BM25 score
         """
         if not self.fts_service:
-            logger.debug("FTS service not initialized (no db_session), skipping keyword search")
+            logger.warning(
+                "Búsqueda por keyword pedida sin sesión de base: no se ejecuta y "
+                "devuelve []. Quien la pidió va a creer que no hay coincidencias en "
+                "el corpus. Construir el servicio con `retrieval_service_con_sesion()`.",
+            )
             return []
 
         try:
@@ -346,3 +352,32 @@ def get_retrieval_service(db_session: Session | None = None) -> RetrievalService
         RetrievalService instance
     """
     return RetrievalService(db_session)
+
+
+@asynccontextmanager
+async def retrieval_service_con_sesion() -> AsyncIterator[RetrievalService]:
+    """Un `RetrievalService` **con** sesión, para quien busca de verdad.
+
+    Sin sesión, `RetrievalService` deja `fts_service = None` y
+    `keyword_search` devuelve `[]` en silencio (sólo un log de debug): quien
+    llame `get_retrieval_service()` sin argumentos se queda con la mitad
+    semántica creyendo que hizo una búsqueda híbrida.
+
+    La sesión es del llamador y vive lo que dura la búsqueda.  No puede ser la
+    del request —`keyword_search` corre en un hilo vía `asyncio.to_thread`— ni
+    una guardada en un singleton, porque dos consultas simultáneas se pisarían
+    la sesión.
+
+    Uso:
+        async with retrieval_service_con_sesion() as servicio:
+            resultados = await servicio.hybrid_search(query, top_k=5)
+    """
+    # Import perezoso: el engine sync no tiene por qué existir para quien sólo
+    # importa este módulo (los tests de la capa semántica, por ejemplo).
+    from app.db.sync_session import SyncSessionLocal
+
+    session = SyncSessionLocal()
+    try:
+        yield RetrievalService(session)
+    finally:
+        session.close()

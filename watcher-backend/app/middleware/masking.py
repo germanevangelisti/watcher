@@ -3,14 +3,15 @@ masking.py — CUIT masking middleware for privacy protection.
 
 Argentine CUITs (Clave Única de Identificación Tributaria) are 11-digit tax
 identifiers formatted as XX-XXXXXXXX-X. This middleware intercepts HTTP
-responses and replaces any CUIT found in JSON response bodies with a masked
-representation (XX-XXXXXXXX-X → **-********-*).
+responses and replaces any CUIT found in the **string values** of a JSON
+response body with a masked representation (XX-XXXXXXXX-X → **-********-*).
 
 Only applies to JSON responses (Content-Type: application/json).
 """
 
 from __future__ import annotations
 
+import json
 import re
 from collections.abc import Callable
 from typing import Any
@@ -52,7 +53,7 @@ class CUITMaskingMiddleware(BaseHTTPMiddleware):
     ASGI middleware that masks Argentine CUIT numbers in JSON responses.
 
     Safe to use in production — non-JSON responses are passed through
-    unmodified. Masking is applied to the serialised response body.
+    unmodified. Masking is applied to the string values of the parsed body.
     """
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
@@ -68,9 +69,17 @@ class CUITMaskingMiddleware(BaseHTTPMiddleware):
             body_bytes += chunk
 
         try:
-            text = body_bytes.decode("utf-8")
-            masked_text = mask_cuit(text)
-            masked_bytes = masked_text.encode("utf-8")
+            # Parse first, then mask.  Running the CUIT regex over the serialised
+            # text also matches *numbers* whose integer part is 11 digits — which
+            # is every monto in pesos of that size — and substituting a number
+            # with the mask literal leaves a body that is not valid JSON at all,
+            # so no client can parse the response: the gasto listing was getting
+            # `"monto":**-********-*` and the frontend answered "Respuesta JSON
+            # inválida del API" on every filter.  `mask_value` walks the parsed
+            # structure and only touches strings, so CUITs in `beneficiario` and
+            # friends are still masked and the payload stays parseable.
+            payload = json.loads(body_bytes.decode("utf-8"))
+            masked_bytes = json.dumps(mask_value(payload), ensure_ascii=False).encode("utf-8")
         except Exception:
             # If anything fails, return the original response unmodified
             masked_bytes = body_bytes
