@@ -184,6 +184,15 @@ See [Makefile](Makefile) for unified development commands:
 - Attach logs or screenshots if relevant
 - Reference related tickets/PRs
 
+## Cursor Cloud specific instructions
+
+- Python dependencies live in `/opt/watcher-venv` (editable install of `watcher-backend[dev,ai]`). Login shells prepend that directory via `/etc/profile.d/watcher-venv.sh`. `uvicorn`, `pytest`, `ruff`, and `alembic` are also on `/usr/local/bin`.
+- Frontend dependencies are `npm ci` in `watcher-frontend` (Node 22). Dev servers: API on port 8001, Vite on port 5173. Vite proxies `/api` to the API. `watcher-frontend/.env` is copied from `.env.example` on boot when missing.
+- The default database is SQLite at `watcher-backend/sqlite.db`. Neo4j stays disabled unless `NEO4J_URI` is set. Do not copy the repo-root `.env.example` to `.env` here: it enables Ollama and local sentence-transformers, and the `[local]` extra (torch) is not installed.
+- Boot sets `EMBEDDING_PROVIDER=google` when that variable is unset. Development mode otherwise defaults to local embeddings. `GOOGLE_API_KEY` is optional; the API starts without it and logs that Google features are unavailable.
+- Postgres and Neo4j from `docker compose` are optional. Docker is not part of this environment.
+- Checks that match CI: `ruff check app agents tests` in `watcher-backend`; in `watcher-frontend`, `npm run lint`, `npm run test -- --run`, and `npm run build`. Backend tests: `pytest` from the repo root (`pytest.ini`). On Python 3.12, expect a small set of pre-existing failures (security-middleware event loop, indexing mocks, adversarial VCP corpus); the rest of the suite passes.
+
 ## Questions & Clarifications
 
 - **For AI Agents**: Ask Opus 4.5 in ticket thread
