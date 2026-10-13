@@ -1,7 +1,159 @@
 # Estado Actual — Watcher Agent
 
-**Última actualización:** 2026-10-01
+**Última actualización:** 2026-10-12
 **Snapshot del momento.** Se pisa al avanzar. La historia completa está en `docs/changelog.md` y el historial de git.
+
+> **MVP re-priorizado: el producto ahora busca gasto público, no lo contrasta** (2026-10-12).
+> Germán reencuadró la salida: *"la nueva prioridad del MVP es leer boletines en búsqueda de gasto
+> público nivel provincial y municipal y desde allí el usuario decidirá si analizar en profundidad"*.
+> Los Must **M1–M7 + MB** (contraste fiscal vs Ley 11.088) quedan como **línea base alcanzada**, sin
+> cambios; los Must **M8–M10** definen la salida vigente (`knowledgebase/vision/mvp.md`, commit
+> `1c2453e`). Plan, historias y gate: épica `epic:precio-mercado` en el vault
+> (`board/epics/epic-watcher-precio-mercado.md`).
+>
+> **Estado de las ramas: la pila no llega a `main`.** `feat/precio-mercado` (12 commits, +3103) tiene
+> el PR **#5 en draft, con base `feat/chat-insights-pack-2`** (2 commits, +6416) — rama que
+> **tampoco está mergeada a `main` y no tiene PR abierto**. Las **7 historias del pack de chat**
+> siguen en `testing` esperando el gate manual: ése es el eslabón que traba la cadena entera.
+> Retargetear PR #5 a `main` recién después de mergear el chat.
+>
+> **Lo que ya está implementado y pusheado** en la rama (no está en el kanban: las 4 historias
+> originales siguen en `todo` por decisión de Germán, así que **las 13 notas del épico están en
+> `todo` con 0 criterios tildados** aunque parte esté hecha): detección heurística de **83
+> observables sobre 1.220 actos**, pantalla `/analisis/precio-mercado`, análisis por ítem y **por
+> renglón** con agregado, cantidades desde el texto y desde ComprasCba (grilla o pliego), y
+> referencias (corpus, precios oficiales de ComprasCba, Mercado Libre con fallback a catálogo —
+> `/sites/MLA/search` da 403 con ambos tokens). Cobertura medida: 16 con cantidad, 16 analizables,
+> 4 con ≥ 3 refs ML; 5 `dentro_de_rango`, 78 `sin datos suficientes`.
+>
+> **Brecha medida que define la Fase 1 (P0):** el corpus son **803 boletines, 100% BO provincial**;
+> lo municipal entra sólo como **edictos de municipios/comunas del interior** (228 de 1.220 actos,
+> 77 organismos) y **Municipalidad de Córdoba (capital): 0 actos** — su Boletín Electrónico
+> Municipal no se ingiere.
+>
+> **Higiene de esta sesión:** los 11 artefactos scratch del worktree (`.pm-shots/*.png`, scripts de
+> screenshot, `.tmp-dashboard.png`) quedaron fuera de `git status` con una regla de `.gitignore`
+> (no se borraron: son evidencia de gates). `CLAUDE.md` dejó de apuntar a V.7/V.8 como próxima
+> sesión. **Sin commit ni push: los corre Germán.**
+>
+> **`.env` ya dice `LLM_PROVIDER=ollama`** (verificado 2026-10-12): el pendiente "urgente" de los
+> bloques de abajo quedó cerrado. El SDK de Google sigue instalado, pero dejó de ser el default.
+>
+> **M8 hecho: el gasto público se detecta y se lista** (2026-10-12, historia
+> `pm-gasto-deteccion-ampliada` en `testing`). El punto de extensión fue el clasificador que **ya
+> existía** (`app/services/gasto_classifier.py`, rules-only, ya persistido por P.7), no la heurística
+> de precio-mercado: ganó `tipo_gasto` (figura/objeto) y `nivel` (nivel de gobierno) como ejes
+> **independientes** de `etapa_gasto` (el momento) y `jurisdiccion_gasto` (de quién es el
+> presupuesto). Precedencia: instrumento > objeto > procedimiento.
+>
+> **Medido sobre `sqlite.db`**: **4.639 actos con monto clasificados (100 %)** — sin `tipo_gasto` ni
+> `nivel` en NULL, y `otro`/`no_es_gasto` siempre con motivo. El listado por defecto son **1.265
+> actos · $1.781,46 B**, con **$1.033,00 B de republicaciones excluidas de la suma** (se listan
+> marcadas: sin ese descuento se contaba dos veces la Licitación 5576 de EPEC, $237,29 B, lo que V.6
+> arregló en el ledger). **449 obras + servicios** donde la heurística vieja veía 83 bienes, 272 actos
+> municipales/comunales, y **0 `desconocido`** en el listado (los 3.374 `no_es_gasto` quedan fuera por
+> defecto, con su nivel y su motivo).
+>
+> **Un hallazgo cambió el diseño**: con el gate de P.7 solo, `obra`/`servicio`/`compra directa` sin
+> keyword de etapa caían en `no_es_gasto`. Se separaron **figura** y **pertenencia al ledger**:
+> "Contrátase el servicio de limpieza" **se lista** y **no entra al ledger** (sin evidencia de etapa);
+> la fila declara las dos cosas. El ledger no se tocó: sus 1.220 filas conservan sus totales.
+>
+> **Backfill aplicado con backup `sqlite.db.bak-m8-20261012`** (script con dry-run por defecto; el
+> dry-run se verificó antes sobre una copia). Endpoint `GET /gasto/detectado` (filtros y paginado en
+> SQL, contra las columnas persistidas) y pantalla `/analisis/precio-mercado` con filtros, total, suma
+> y *Analizar en profundidad* por fila — deshabilitado **con el motivo a la vista** para los 45 actos
+> que no están en el ledger, porque el análisis de precio todavía lee el ledger.
+>
+> DoD: backend **5 failed / 1119 passed / 7 skipped** (las 5 rojas son preexistentes, cero nuevas;
+> +106 tests del listado + 3 del middleware) · frontend **128/128** · `ruff`, `tsc -b` y `eslint`
+> limpios. **Falta**: las etiquetas de la muestra ciega (150 actos en
+> `watcher-backend/.tmp-muestra-gasto/`, criterio de precisión pendiente) y la prueba manual de
+> Germán. Sin commit ni push: los corre Germán.
+>
+> **Bug del producto que apareció al abrir la pantalla (mismo día, arreglado).** El listado decía *"No
+> se pudo cargar la lista"* **con el endpoint devolviendo 200**. No era la historia: el
+> `CUITMaskingMiddleware` (`app/middleware/masking.py`) corría el regex de CUIT sobre el **texto JSON
+> serializado**, así que **cualquier número con 11 dígitos enteros** — un monto en pesos normal —
+> matcheaba y se reemplazaba por la máscara `**-********-*` **sin comillas**: JSON inválido para
+> cualquier cliente, y el `transformResponse` del frontend tirando *"Respuesta JSON inválida del API"*.
+> El listado fue la primera víctima porque devuelve montos en pesos (APROSS $21,6B, ACIF $9.571B).
+> **Arreglado**: el middleware parsea el cuerpo y enmascara la estructura (`mask_value`, sólo strings),
+> así que el CUIT de `beneficiario` se sigue enmascarando y el payload queda parseable. **Tres tests
+> nuevos cubren el camino que faltaba** — los existentes sólo probaban las funciones puras, que es
+> exactamente por qué llegó hasta producción. Verificado por HTTP real: 0 asteriscos, JSON estricto
+> válido. **Límite declarado (decisión de PO)**: sigue enmascarando cualquier secuencia de 11 dígitos
+> *dentro de un string* (p. ej. un número de expediente).
+>
+> **Y el listado mostró su propio defecto al verse**: la columna «Concepto» pintaba el *motivo* de la
+> clasificación (`keyword obra`) en vez del acto, porque el endpoint no devolvía la descripción. Ahora
+> devuelve `concepto` (`descripcion`, o el fragmento) con el motivo como línea secundaria, y `q` busca
+> también en `fragmento`.
+>
+> **Tercer eje `objeto`, y seis arreglos del clasificador (2026-10-12, después del primer etiquetado a
+> mano del PO).** El PO etiquetó 13 actos y `tipo_gasto` dio **4/13**: **4 de las 9 fallas eran una
+> convención sin cerrar** — actos que nombran las dos cosas (*"Licitación para la **obra** de
+> drenaje"*), etiquetados por el procedimiento donde las reglas daban el objeto. **Decisión del PO:
+> separar los ejes.** `tipo_gasto` = la figura/procedimiento (`licitacion`, `concurso_precios`,
+> **`subasta_electronica`**, `compra_directa`, `contratacion`, `subsidio_transferencia`, `otro`,
+> `no_es_gasto`) y **`objeto`** = qué se compra (`obra`, `bien`, `servicio`, `transferencia`, `otro`,
+> `no_aplica`), columna nueva en `Analisis` y en el ledger, con filtro en la API y en la pantalla. Un
+> acto se lee *«Licitación · Obra»*.
+>
+> **El mismo etiquetado pasó de 4/13 a 9/13**, y las 4 fallas que quedan ya no son del clasificador
+> sino desacuerdos de taxonomía con nombre (dos actos que dicen literalmente *SUBASTA ELECTRÓNICA*; un
+> reintegro de impuesto; un incentivo educativo). **Cada decisión de taxonomía pagó un hallazgo** —
+> seis arreglos reales: `subasta electronica` estaba dentro de `concurso_precios` y es figura propia de
+> la Ley 10.155 (24 actos); **"CONTRÁTASE X" no matcheaba `\bcontrato\b`** y la familia entera de
+> contrataciones quedaba afuera (16 → 25); "Concurso **Privado** de Precios" no matcheaba (dos actos de
+> Cosquín en `otro`); `limpieza` pelado leía **insumos** de limpieza como *servicio*; "OTÓRGUENSE un
+> incentivo educativo" caía en `no_es_gasto` (la puerta de gasto lo perdía, junto con aportes y becas);
+> y el `nivel` por mera **mención** de "municipalidad" (una subasta de un juzgado provincial quedaba
+> `municipal` porque la municipalidad era *parte* en el expediente).
+>
+> **Distribución tras los arreglos** (backfill aplicado con backup `sqlite.db.bak-m8-ojeto-20261012`):
+> `no_es_gasto` 3.389 · `licitacion` 946 · `subsidio_transferencia` 196 · `concurso_precios` 53 ·
+> `contratacion` 25 · `subasta_electronica` 24 · `otro` 6. Por objeto: `obra` 360 · `otro` 331 ·
+> `bien` 311 · `transferencia` 196 · `servicio` 52. **Dos consecuencias declaradas**: el listado pasó
+> de **1.265 a 1.250** actos porque una palabra de objeto ya no alcanza para entrar (hace falta figura
+> o señal de etapa: más estricto), y **`compra_directa` da 0 actos** (Córdoba dice *"Contratación
+> Directa"*) — decisión pendiente del PO.
+>
+> DoD de esta pasada: backend **5 failed / 1124 passed / 7 skipped** · frontend **128/128** · `ruff`,
+> `tsc -b` y `eslint` limpios. El archivo de predicciones de la muestra se **recalcula** con el
+> clasificador de hoy antes de medir; las etiquetas del PO sobreviven (se resuelven por `muestra_id`).
+> **Falta**: que el PO revise las 4 filas donde discrepa la taxonomía y siga etiquetando (las 41
+> dudosas van primero), más la prueba manual.
+>
+> **Y la muestra se etiquetó, se midió y se arregló lo que midió (2026-10-13).** Las 100 filas (el
+> mínimo del criterio) las etiquetó **el asistente, no el PO** — declarado así, porque el criterio dice
+> "a mano" y esto mide *concordancia con el asistente* (más fuerte que el juez LLM local, más débil que
+> un juicio humano). Primer resultado: `nivel` **89%** y `tipo_gasto` **81%**, los dos **apenas debajo**
+> del umbral. Mirando *qué* fallaba, **8 de las 11 de `nivel` eran bugs** (5 de `municipal` por mera
+> mención en actos judiciales donde la municipalidad es la parte actora, 2 de `comunal` porque
+> `_RE_COMUNA` se evaluaba antes que el organismo, 1 entidad nacional sin nivel propio), y
+> `tipo_gasto` fallaba **en las dos direcciones**: 11 actos que sí disponen de dinero se perdían
+> (*"ADQUIÉRASE un vehículo"*, *"OTORGA el valor de"*, *"abónese"*, *"préstamo"*, *"remuneraciones"*) y
+> 8 que no disponen entraban (ventas, concesiones donde se cobra canon, *"transferencia"* entre cuentas
+> propias, convenios tributarios, solicitudes de subsidio).
+>
+> **Cuatro arreglos, una línea cada uno**: el organismo decide el nivel (la mención queda última),
+> `nacional` existe, los verbos de compra y transferencia entran a la puerta **pero con la precedencia
+> más débil** (puesto antes del llamado convertía "Licitación para la compra de X" en un contrato, y
+> los tests lo atraparon), y la plata que entra sale del listado. Resultado: **`nivel` 99,0% (Wilson
+> ≥ 94,6%) ✅ y `tipo_gasto` 93,0% (≥ 86,3%) ✅**; `objeto` 69 → **82,0%** (sin umbral acordado).
+>
+> **Efecto en el corpus** (backfill con backup `sqlite.db.bak-m8-fixes-20261013`): el listado pasa de
+> **1.265 · $1.781,46 B a 1.243 · $1.751,60 B** — menos actos, porque una venta y una recaudación
+> dejan de contarse como gasto. `nivel`: `desconocido` 3.121 → **2.564**, `provincial` 1.072 →
+> **1.635**, `municipal` 350 → **323**, `nacional` **25**. DoD: backend **5 failed / 1126 passed** ·
+> frontend **128/128** · `ruff`, `tsc -b`, `eslint` limpios.
+>
+> **Queda abierto del PO**: revisar las 100 etiquetas del asistente
+> (`.tmp-muestra-gasto/etiquetas-claude-*.json`, `nota` en las dudosas) y decidir si el criterio se
+> acepta como "etiquetado por el asistente"; `compra_directa` en 0 actos (¿se fusiona con
+> `contratacion`?); y la compulsa abreviada, que sigue dentro de `concurso_precios` aunque sea figura
+> propia de la Ley 10.155 como la subasta.
 
 > **Ahora se puede elegir con qué proveedor contesta el chat — y el default dejó de ser local**
 > (2026-10-01, hecho). Con qué modelo redactaba el chat era una decisión **invisible**: salía de
@@ -429,10 +581,10 @@
 
 | Campo | Valor |
 |---|---|
-| Release | v2.0.0 + H.1 + P.7 + V.1 … V.6 + V.5 + MB API + **MB UI (techo + disclaimer + proxy BO)** + **M6 evidencia** + **pack fix-ui + chat-insights (2026-09-29)** + **selector de proveedor del chat (2026-10-01)** |
-| Estado | **El chat se puede comparar** (2026-10-01): proveedor elegible desde el panel, cada burbuja declara con qué se redactó, y elegir algo imposible falla con el motivo en vez de caer a local. El pack fix-ui + chat sigue `done` (2026-09-29, rama `feat/pack-fix-ui-chat-p0` pusheada, PR pendiente). V.5: 8 de 12 meses medidos; **3** alertas >100%, todas con causa medida |
-| Stack LLM | **El chat resuelve a Gemini hoy** (`LLM_PROVIDER=google` en `.env` + `google-generativeai` instalado ⇒ `fallback: false`): el contexto del boletín **sale de la máquina**. La tarjeta del panel lo muestra y el arreglo es `LLM_PROVIDER=ollama`. Local disponible: Ollama `qwen2.5:7b` y `qwen2.5:14b` (elegibles). Claude: sin key, no se puede usar |
-| Pendiente inmediato | **`.env` → `LLM_PROVIDER=ollama`** (una línea, del PO; sin ella el chat manda el contexto a Google por defecto). Después: **V.9 → V.10** (canónicas duplicadas, después el buscador por grafía: defectos vecinos del bugfix, ~0,16% del proxy BO) y **V.7/V.8** (obligan a **re-extraer**: decisión de costo). **2026-01** sigue siendo el único mes vencido sin ingesta. **DT-8**: arreglar `make start-backend` (intérprete) — documentado, no arreglado. **7 historias del chat en `testing`**, ninguna en `done` |
+| Release | v2.0.0 + H.1 + P.7 + V.1 … V.6 + V.5 + MB API + **MB UI (techo + disclaimer + proxy BO)** + **M6 evidencia** + **pack fix-ui + chat-insights (2026-09-29)** + **selector de proveedor del chat (2026-10-01)** + **MVP reencuadrado (2026-10-12)** |
+| Estado | **MVP reencuadrado (2026-10-12)**: la salida vigente es detectar **gasto público provincial y municipal**, listarlo para elegir y analizar en profundidad a pedido (M8–M10, `vision/mvp.md` + épica `epic:precio-mercado`). **La pila de PRs no llega a `main`**: PR #5 (draft) tiene base `feat/chat-insights-pack-2`, sin mergear y sin PR propio. Línea base alcanzada: V.1–V.6 + V.5 (8 de 12 meses) + MB; **3** alertas >100% con causa medida |
+| Stack LLM | **`LLM_PROVIDER=ollama`** (verificado 2026-10-12): el chat resuelve a **local** por defecto. El SDK `google-generativeai` sigue instalado, pero ya no es el default. Local: Ollama `qwen2.5:7b` y `qwen2.5:14b`. Claude: sin key, no se puede usar |
+| Pendiente inmediato | **Fase 1 (P0) del MVP reencuadrado**: `pm-gasto-deteccion-ampliada` (M8) y después `pm-municipal-cobertura` (M9, depende de la anterior). **Antes**: mergear `feat/chat-insights-pack-2` (gate manual de sus 7 historias) y recién ahí retargetear PR #5 a `main`. **Decisiones del gate**: Córdoba capital como 1er municipio y corte · costo de re-extracción si la clasificación necesita más texto · OCR local vs externo · ML como referencia secundaria o apagada. **Depriorizado por el reencuadre**: V.7/V.8 (obligan a re-extraer), V.9/V.10, DT-8, **2026-01** sin ingesta |
 
 ---
 
@@ -641,11 +793,18 @@ Ninguno de producto. Notion MCP no disponible — el tablero quedó sin actualiz
 
 ## Próximos pasos
 
-0. **`LLM_PROVIDER=ollama` en `.env`** (una línea, del PO). Mientras no esté, el chat manda el
-   contexto de los boletines a Google **por defecto** — la tarjeta del panel lo dice en voz alta,
-   pero el default sigue siendo remoto. Es el efecto de haber instalado los SDKs para poder comparar.
-   Y **el gate manual del selector**: elegir Ollama en la tarjeta, preguntar, ver la burbuja firmada
-   *"Redactado con Ollama · qwen2.5:7b"*, cambiar a `qwen2.5:14b` y ver que la firma cambia.
+0. **Fase 1 (P0) del MVP reencuadrado (2026-10-12) — esto es lo que hay que hacer ahora.**
+   `pm-gasto-deteccion-ampliada` (M8: todos los tipos de gasto, precisión medida ≥ 90% nivel /
+   ≥ 80% tipo sobre ≥ 100 actos etiquetados) y después `pm-municipal-cobertura` (M9, depende de la
+   anterior). **Antes, desbloquear la pila de ramas**: gate manual de `feat/chat-insights-pack-2`
+   (7 historias en `testing`) → merge a `main` → recién ahí retargetear PR #5 a `main`.
+   **Decisiones del gate** (épica `epic:precio-mercado`): Córdoba capital como 1er municipio y
+   corte; costo de **re-extracción** si la clasificación necesita más texto que el fragmento de
+   ~290 caracteres; OCR local vs externo; ML como referencia secundaria o apagado.
+0b. ✅ **`LLM_PROVIDER=ollama` en `.env`** (verificado 2026-10-12): hecho — el chat ya no manda el
+   contexto de los boletines a Google por defecto. Queda el **gate manual del selector**: elegir
+   Ollama en la tarjeta, preguntar, ver la burbuja firmada *"Redactado con Ollama · qwen2.5:7b"*,
+   cambiar a `qwen2.5:14b` y ver que la firma cambia.
 1. ✅ **Elegir el proveedor del chat** (2026-10-01): catálogo con motivos, 400 sin fallback, crédito
    por burbuja y comparación real 7B vs 14B. Historia `story-watcher-chat-llm-selector` en `testing`.
    **Migrar `google-generativeai` → `google.genai`** queda como historia aparte (el SDK está deprecado).

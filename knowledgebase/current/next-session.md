@@ -1,5 +1,64 @@
 # Próxima sesión — Watcher Agent
 
+> **Actualización 2026-10-12 — el MVP se reencuadró: la próxima sesión NO es V.7/V.8.**
+> Germán re-priorizó la salida: *"la nueva prioridad del MVP es leer boletines en búsqueda de gasto
+> público nivel provincial y municipal y desde allí el usuario decidirá si analizar en profundidad"*.
+> Los Must **M1–M7 + MB** quedan como **línea base alcanzada**; la salida vigente son **M8–M10**
+> (`knowledgebase/vision/mvp.md`, commit `1c2453e`) y la épica `epic:precio-mercado` del vault.
+> **Todas las notas de abajo que dicen que el trabajo siguiente es V.7/V.8 quedan superadas por
+> esto**: V.7/V.8 sigue siendo la causa de fondo de los peores errores de monto y obliga a
+> **re-extraer**, pero está **depriorizado**, no borrado.
+>
+> **Trabajo de la próxima sesión — Fase 1 (P0):**
+> 1. **Desbloquear la pila de ramas.** `feat/precio-mercado` (PR #5, draft) tiene **base
+>    `feat/chat-insights-pack-2`**, rama que **no está mergeada a `main` ni tiene PR abierto**. Las
+>    7 historias del pack de chat esperan gate manual: correrlo → mergear → **recién ahí** retargetear
+>    PR #5 a `main`. Hoy **nada** de las dos ramas llega a `main`.
+> 2. **`pm-gasto-deteccion-ampliada` (M8)** — clasificar **todo** acto con monto por `tipo_gasto`
+>    (licitación, compra directa, contratación, concurso, adjudicación, obra, servicio,
+>    subsidio/transferencia, `otro` con motivo), con organismo y nivel; precisión medida ≥ 90% nivel
+>    / ≥ 80% tipo sobre ≥ 100 actos etiquetados. Hoy hay **83 observables de 1.220**: ése es el techo
+>    que la historia levanta.
+> 3. **`pm-municipal-cobertura` (M9, depende de la anterior)** — `nivel` provincial/municipal/comunal
+>    + conector del **Boletín Municipal de Córdoba capital** (hoy **0 actos** de la capital; los 228
+>    actos municipales entran sólo como edictos de municipios del interior) + banner de cobertura.
+> 4. **Decisiones del gate** antes de codear lo que las necesita: Córdoba capital como 1er municipio
+>    y corte temporal; **costo de re-extracción** si la clasificación no alcanza con el fragmento de
+>    ~290 caracteres; OCR local vs externo; ML como referencia secundaria o apagado.
+>
+> **Ya hecho en la rama, no rehacer:** detección heurística de observables, pantalla
+> `/analisis/precio-mercado`, análisis por ítem y **por renglón** con agregado, cantidades desde el
+> texto y desde ComprasCba (grilla o pliego), referencias (corpus + precios oficiales de ComprasCba +
+> Mercado Libre con fallback a catálogo). Cobertura medida: 16 con cantidad, 16 analizables, 4 con
+> ≥ 3 refs ML; 5 `dentro_de_rango`, 78 `sin datos suficientes`. **Las 4 historias originales siguen
+> en `todo` por decisión de Germán**, así que el kanban no refleja lo hecho.
+> **`.env` ya dice `LLM_PROVIDER=ollama`** (verificado 2026-10-12): el pendiente urgente de abajo
+> quedó cerrado.
+>
+> **Actualización 2026-10-12 (segunda) — M8 hecho, y lo que queda es tuyo.**
+> `pm-gasto-deteccion-ampliada` pasó a `testing`: el gasto público se detecta y se lista (ver
+> [status.md](status.md) y la nota de la historia). Medido: **4.639 actos con monto clasificados
+> (100 %)**, listado de **1.265 actos · $1.781,46 B**, 449 obras+servicios, y la suma descuenta
+> republicaciones. Backfill aplicado con backup `sqlite.db.bak-m8-20261012`.
+>
+> **La próxima sesión arranca por acá:**
+> 1. **Etiquetar la muestra ciega** — `watcher-backend/.tmp-muestra-gasto/gasto_muestra_etiquetado.md`
+>    (150 actos, `nivel_real` y `tipo_gasto_real`; **la predicción no está en ese archivo**, va en un
+>    JSON aparte que no hay que abrir). Después: `.\.venv\Scripts\python.exe
+>    scripts/medir_clasificacion_gasto.py` → precisión por eje con cota de Wilson al 95 %. El criterio
+>    es ≥ 90 % nivel / ≥ 80 % tipo; si no llega, **la muestra dice dónde falla** (desagregado por
+>    fragmento corto y por municipal).
+> 2. **Prueba manual del listado** (`/analisis/precio-mercado`): filtros, total y suma, y *Analizar en
+>    profundidad* en un acto del ledger. El botón está deshabilitado con motivo para los 45 actos que
+>    no están en el ledger.
+> 3. **Después: `pm-municipal-cobertura` (M9)** — el `nivel` ya está etiquetado en el corpus
+>    (municipal 350 / comunal 96 en el universo; 272 en el listado) y `municipio` sale del organismo
+>    (364 actos). Falta el conector del Boletín Municipal de Córdoba capital (**0 actos** hoy) y el
+>    banner de cobertura. Requiere tu decisión de corte temporal.
+> 4. **Decisión pendiente**: el ledger existente no tiene `tipo_gasto`/`nivel` en sus 1.220 filas —
+>    los llena un rebuild del ETL, que toca los contadores y los números del contraste vs la Ley. El
+>    listado no lo necesita; se dejó sin correr a propósito.
+
 > **Actualización 2026-10-01 (cuarta):** **el chat ahora deja elegir el proveedor y declara con
 > cuál se redactó** (tarjeta en el tab *Chat con Insights*), para poder comparar la calidad de las
 > respuestas. Ver [status.md](status.md) y la historia `story-watcher-chat-llm-selector` (en
