@@ -1,6 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import apiClient from "../client"
-import type { AnalisisPrecio, ObservablesResponse } from "@/types/precio-mercado"
+import type {
+  AnalisisPrecio,
+  GastoDetectadoResponse,
+  GastoFiltros,
+  ObservablesResponse,
+} from "@/types/precio-mercado"
 
 /** Gastos observables detectados sobre los actos existentes (epic:precio-mercado). */
 export function useObservables(params: { q?: string; limit?: number; offset?: number } = {}) {
@@ -11,6 +16,28 @@ export function useObservables(params: { q?: string; limit?: number; offset?: nu
       const qp = new URLSearchParams({ limit: String(limit), offset: String(offset) })
       if (q) qp.append("q", q)
       const { data } = await apiClient.get<ObservablesResponse>(`/precio-mercado/observables?${qp.toString()}`)
+      return data
+    },
+  })
+}
+
+/**
+ * M8 — gasto público detectado en los boletines, con filtros, total y suma.
+ * Los filtros y el paginado corren en SQL contra las columnas persistidas, así
+ * que vaciar un filtro es una query nueva, no un re-cálculo del corpus.
+ */
+export function useGastoDetectado(filtros: GastoFiltros = {}) {
+  const { limit = 50, offset = 0, ...resto } = filtros
+  const qp = new URLSearchParams({ limit: String(limit), offset: String(offset) })
+  for (const [clave, valor] of Object.entries(resto)) {
+    // `""` significa "sin filtro": mandarlo como query vacía filtría por vacío.
+    if (valor !== undefined && valor !== null && valor !== "") qp.append(clave, String(valor))
+  }
+  const query = qp.toString()
+  return useQuery({
+    queryKey: ["gasto-detectado", query],
+    queryFn: async () => {
+      const { data } = await apiClient.get<GastoDetectadoResponse>(`/gasto/detectado?${query}`)
       return data
     },
   })

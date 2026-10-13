@@ -2,11 +2,12 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 import { render, screen, fireEvent, within } from "@testing-library/react"
 import { PrecioMercadoPage } from "@/pages/analisis/precio-mercado"
 import { formatArs } from "@/lib/precio-mercado-format"
-import type { AnalisisPrecio } from "@/types/precio-mercado"
+import type { AnalisisPrecio, GastoDetectadoResponse, GastoFiltros } from "@/types/precio-mercado"
 
 /**
- * epic:precio-mercado - la pantalla lista los gastos observables, el análisis
- * se dispara a pedido y el resultado muestra fuentes y fechas, sin dictamen.
+ * epic:precio-mercado (M8) - la pantalla lista el gasto detectado con filtros,
+ * total y suma, el análisis se dispara a pedido y el resultado muestra fuentes y
+ * fechas, sin dictamen.
  */
 
 const mutate = vi.fn()
@@ -25,8 +26,40 @@ const OBSERVABLES = {
   }],
 }
 
+/** Dos filas que cubren los dos universos: una en el ledger y otra no. */
+const DETECTADO: GastoDetectadoResponse = {
+  total: 2,
+  suma: 186031508,
+  republicaciones_excluidas: 2000,
+  items: [
+    {
+      analisis_id: 415, ejecucion_id: 292, fecha: "2026-04-30", boletin_id: 1,
+      boletin_url: "https://boletin.example/1", organismo: "MINISTERIO DE DESARROLLO SOCIAL",
+      municipio: null, nivel: "provincial", tipo_gasto: "licitacion", objeto: "bien",
+      etapa_gasto: "llamado",
+      concepto: "Licitación pública para la provisión de cemento portland",
+      gasto_motivo: "keyword licitacion", monto: 186031008, es_gasto_publico: true,
+      en_ledger: true, is_duplicate_gasto: false, ultima_clasificacion: null,
+    },
+    {
+      analisis_id: 500, ejecucion_id: null, fecha: "2026-05-31", boletin_id: 2,
+      boletin_url: null, organismo: "MUNICIPALIDAD DE CARRILOBO", municipio: "Carrilobo",
+      nivel: "municipal", tipo_gasto: "licitacion", objeto: "obra", etapa_gasto: null,
+      concepto: "Llamado a licitación para la obra de cordón cuneta",
+      gasto_motivo: "keyword licitacion", monto: 500, es_gasto_publico: true,
+      en_ledger: false, is_duplicate_gasto: true, ultima_clasificacion: null,
+    },
+  ],
+}
+
+/** Filtros con los que la pantalla pidió el listado, en orden. */
+const llamadas: GastoFiltros[] = []
+
 vi.mock("@/lib/api", () => ({
-  useObservables: () => ({ data: OBSERVABLES, isLoading: false, isError: false }),
+  useGastoDetectado: (filtros: GastoFiltros) => {
+    llamadas.push(filtros)
+    return { data: DETECTADO, isLoading: false, isError: false }
+  },
   useAnalizarPrecio: () => analizarState,
 }))
 
@@ -47,23 +80,79 @@ const RESULTADO: AnalisisPrecio = {
 
 beforeEach(() => {
   mutate.mockReset()
+  llamadas.length = 0
   analizarState = { mutate, isPending: false, isError: false }
 })
 
-describe("pantalla precio de mercado", () => {
-  it("lista los gastos observables con monto y motivo", () => {
+describe("pantalla gasto detectado", () => {
+  it("lista el gasto con su tipo y nivel, y muestra total y suma", () => {
     render(<PrecioMercadoPage />)
-    const tabla = screen.getByTestId("observables")
-    expect(within(tabla).getByText(/RESMAS DE PAPEL/)).toBeTruthy()
-    expect(within(tabla).getByText(/«resma»/)).toBeTruthy()
-    expect(screen.getByText("1 actos detectados")).toBeTruthy()
+    const tabla = screen.getByTestId("gasto-detectado")
+    // Dos ejes: la figura (procedimiento) y el objeto de lo que se compra.
+    expect(within(tabla).getAllByText("Licitación").length).toBe(2)
+    expect(within(tabla).getByText("Provincia")).toBeTruthy()
+    expect(within(tabla).getByText("Bienes")).toBeTruthy()
+    expect(within(tabla).getByText("Obra")).toBeTruthy()
+    expect(within(tabla).getByText("Carrilobo")).toBeTruthy()
+    // Lo que el ciudadano lee para elegir es el acto, no el motivo de la clasificación.
+    expect(within(tabla).getByText(/provisión de cemento portland/)).toBeTruthy()
+    expect(screen.getByTestId("totales").textContent).toContain("2 actos")
+    expect(screen.getByTestId("totales").textContent).toContain(formatArs(DETECTADO.suma))
+  })
+
+  it("sin descripción cae al motivo, para no dejar la celda vacía", () => {
+    const original = DETECTADO.items[0].concepto
+    DETECTADO.items[0].concepto = null
+    try {
+      render(<PrecioMercadoPage />)
+      expect(within(screen.getByTestId("gasto-detectado")).getAllByText("keyword licitacion").length).toBeGreaterThan(0)
+    } finally {
+      DETECTADO.items[0].concepto = original
+    }
+  })
+
+  it("declara la republicación en vez de sumarla en silencio", () => {
+    render(<PrecioMercadoPage />)
+    expect(screen.getByTestId("republicaciones").textContent).toContain(formatArs(2000))
+    expect(within(screen.getByTestId("gasto-detectado")).getByText("republicación")).toBeTruthy()
   })
 
   it("el análisis se dispara solo cuando el usuario lo pide", () => {
     render(<PrecioMercadoPage />)
     expect(mutate).not.toHaveBeenCalled()
-    fireEvent.click(screen.getByRole("button", { name: "Analizar" }))
-    expect(mutate).toHaveBeenCalledWith(415)
+    fireEvent.click(screen.getAllByRole("button", { name: "Analizar en profundidad" })[0])
+    expect(mutate).toHaveBeenCalledWith(292)
+  })
+
+  it("no ofrece analizar un acto que no está en el ledger, y dice por qué", () => {
+    render(<PrecioMercadoPage />)
+    const botones = screen.getAllByRole("button", { name: "Analizar en profundidad" })
+    expect(botones[1]).toHaveProperty("disabled", true)
+    expect(botones[1].getAttribute("title")).toContain("no está en el ledger")
+    fireEvent.click(botones[1])
+    expect(mutate).not.toHaveBeenCalled()
+  })
+
+  it("los filtros viajan al hook", () => {
+    const ultimo = () => llamadas[llamadas.length - 1]
+    render(<PrecioMercadoPage />)
+    // Sin filtro explícito, el listado pide solo gasto.
+    expect(ultimo()).toEqual(expect.objectContaining({ solo_gasto: true }))
+
+    fireEvent.change(screen.getByTestId("filtro-tipo"), { target: { value: "compra_directa" } })
+    fireEvent.change(screen.getByTestId("filtro-objeto"), { target: { value: "obra" } })
+    fireEvent.change(screen.getByTestId("filtro-nivel"), { target: { value: "municipal" } })
+    fireEvent.change(screen.getByTestId("filtro-organismo"), { target: { value: "CARRILOBO" } })
+    fireEvent.change(screen.getByTestId("filtro-desde"), { target: { value: "2026-05-01" } })
+    fireEvent.change(screen.getByTestId("filtro-monto-min"), { target: { value: "1000" } })
+
+    expect(ultimo()).toEqual(expect.objectContaining({
+      tipo: "compra_directa", objeto: "obra", nivel: "municipal", organismo: "CARRILOBO",
+      fecha_desde: "2026-05-01", monto_min: "1000", solo_gasto: true,
+    }))
+
+    fireEvent.click(screen.getByTestId("filtro-solo-gasto"))
+    expect(ultimo()).toEqual(expect.objectContaining({ solo_gasto: false }))
   })
 
   it("muestra clasificación, fuentes caídas y aviso sin dictamen", () => {
