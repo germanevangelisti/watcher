@@ -131,6 +131,25 @@ class Analisis(Base):
     etapa_gasto = Column(String(20), nullable=True)
     jurisdiccion_gasto = Column(String(20), nullable=True)
 
+    # M8 — Figura/objeto del gasto y nivel de gobierno: dos ejes más, independientes
+    # de etapa_gasto/jurisdiccion_gasto.
+    # tipo_gasto: licitacion | concurso_precios | compra_directa | contratacion |
+    #             subsidio_transferencia | otro | no_es_gasto   (figura/procedimiento)
+    # objeto:     obra | bien | servicio | transferencia | otro | no_aplica
+    # nivel:      provincial | municipal | comunal | desconocido
+    # gasto_motivo: por qué se clasificó así (obligatorio en `otro`/`no_es_gasto`).
+    # municipio:  nombre del municipio/comuna, sólo cuando el organismo lo nombra.
+    tipo_gasto = Column(String(30), nullable=True, index=True)
+    objeto = Column(String(20), nullable=True, index=True)
+    nivel = Column(String(20), nullable=True, index=True)
+    municipio = Column(String(120), nullable=True)
+    gasto_motivo = Column(Text, nullable=True)
+    # Republicación del mismo acto dentro del universo de detección (mismo
+    # `dedup_keys` que el ledger).  La `suma` del listado lo descuenta; NULL se
+    # lee como 0 y es lo que deja el camino incremental, que no ve el corpus
+    # entero: el flag es un hecho del corpus, no de un boletín.
+    is_duplicate_gasto = Column(Integer, nullable=True)
+
     # Relación con boletín
     boletin = relationship("Boletin", back_populates="analisis")
 
@@ -261,6 +280,13 @@ class EjecucionPresupuestaria(Base):
     # Compromiso (llamado/adjudicacion/contrato) y ejecución (pago) no se suman juntos.
     etapa_gasto = Column(String(20), nullable=True, index=True)
     jurisdiccion = Column(String(20), nullable=True, index=True)
+
+    # M8 — copia de la figura/objeto del acto de origen, para que el análisis por
+    # acto (que trabaja por `ejecucion_id`) no tenga que re-clasificar ni pueda
+    # discrepar del listado de detección.
+    tipo_gasto = Column(String(30), nullable=True, index=True)
+    objeto = Column(String(20), nullable=True, index=True)
+    nivel = Column(String(20), nullable=True, index=True)
 
 
     # Acumuladores
@@ -1373,3 +1399,24 @@ class IngestionRun(Base):
 
     def __repr__(self):
         return f"<IngestionRun(id={self.id}, pipeline={self.pipeline_name}, status={self.status})>"
+
+
+class PrecioMercadoAnalisis(Base):
+    """Stored result of a user-triggered precio-mercado analysis (epic:precio-mercado)."""
+    __tablename__ = "precio_mercado_analisis"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    ejecucion_id = Column(Integer, ForeignKey("ejecucion_presupuestaria.id"), index=True, nullable=False)
+    clasificacion = Column(String(32), nullable=False)
+    proveedor_llm = Column(String, nullable=True)
+    resultado_json = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class FuenteExternaCache(Base):
+    """Cache of external source lookups (ComprasCba processes and reference grids)."""
+    __tablename__ = "fuente_externa_cache"
+
+    key = Column(String, primary_key=True)
+    payload = Column(Text, nullable=False)
+    fetched_at = Column(DateTime, default=datetime.utcnow)

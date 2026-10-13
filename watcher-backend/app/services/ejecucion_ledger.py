@@ -158,8 +158,13 @@ async def _load_accumulators(
 
 
 def _ensure_classification(acto: Analisis, section) -> bool:
-    """Backfill classification on an acto that predates P.7.1. Returns True if set."""
-    if acto.is_gasto_publico is not None and acto.etapa_gasto:
+    """Backfill classification on an acto that predates P.7.1. Returns True if set.
+
+    `tipo_gasto` is part of the test because an acto classified by P.7.1 has
+    `is_gasto_publico` and `etapa_gasto` but predates the M8 axes; without it
+    the live path would keep writing ledgers with a null figura.
+    """
+    if acto.is_gasto_publico is not None and acto.etapa_gasto and acto.tipo_gasto:
         return False
     classification = classify_gasto(
         {
@@ -170,9 +175,10 @@ def _ensure_classification(acto: Analisis, section) -> bool:
         },
         section=section,
     )
-    acto.is_gasto_publico = classification.is_gasto_publico
-    acto.etapa_gasto = classification.etapa_gasto
-    acto.jurisdiccion_gasto = classification.jurisdiccion
+    # Single source of truth for which fields the classifier owns, so a new axis
+    # cannot be added to the dataclass and forgotten here.
+    for name, value in classification.as_analisis_fields().items():
+        setattr(acto, name, value)
     return True
 
 
@@ -306,6 +312,9 @@ async def upsert_boletin_ejecucion(db: AsyncSession, boletin_id: int) -> LedgerR
                 riesgo_watcher=riesgo or None,
                 etapa_gasto=acto.etapa_gasto,
                 jurisdiccion=acto.jurisdiccion_gasto or JURISDICCION_PROVINCIAL,
+                tipo_gasto=acto.tipo_gasto,
+                objeto=acto.objeto,
+                nivel=acto.nivel,
                 monto_acumulado_mes=monthly_acc[(org_norm, fecha.year, month)],
                 monto_acumulado_trimestre=quarterly_acc[(org_norm, fecha.year, quarter)],
                 monto_acumulado_anual=annual_acc[(org_norm, fecha.year)],

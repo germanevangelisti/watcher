@@ -1,7 +1,53 @@
 # MVP — Watcher Agent
 
-**Fecha:** 2026-09-24  
-**Definición de salida:** Un ciudadano (o el PO) puede, en ≤ 10 pasos documentados, ver el **gasto publicado vs Ley 11.088** de la Provincia de Córdoba con **período y techo declarados**, alertas >100% **visibles y no silenciadas**, corpus de boletines **feb–sep 2026** (u otro corte declarado) con gate de drift en verde, y el **techo Ley por finalidad 1/2/3 (+ sin_clasificar) visible con disclaimer** (`inicial=vigente` en este corte; no es crédito modificado ni caja CGE) — sin reescribir la historia pre-v1.1.
+**Fecha:** 2026-10-12 (re-priorización del PO; versión anterior 2026-09-24)  
+**Definición de salida (vigente desde 2026-10-12):** Un usuario puede, en ≤ 10 pasos documentados, abrir **un listado de todo el gasto público publicado en los boletines provinciales y municipales** del corte declarado (licitaciones, compras directas, contrataciones, adjudicaciones, obras y servicios), filtrarlo por tipo, nivel (provincial / municipal), organismo, fecha y monto, con la **cobertura municipal declarada** (qué municipios y meses están y cuáles no), y **elegir un acto para analizarlo en profundidad** (precio por renglón, referencias con fuente y fecha, sin dictamen).
+
+> **Re-priorización (Germán, 2026-10-12):** *"la nueva prioridad del MVP es leer boletines en búsqueda de gasto público nivel provincial y municipal y desde allí el usuario decidirá si analizar en profundidad"*. Los Must **M1–M7 + MB** (contraste fiscal vs Ley 11.088) quedan como **línea base alcanzada** (evidencia abajo, sin cambios). Los Must nuevos **M8–M10** definen la salida ahora. Plan, historias y gate: épica `epic:precio-mercado` en el vault (`board/epics/epic-watcher-precio-mercado.md`).
+
+## Must have — salida vigente (desde 2026-10-12)
+
+| ID | Capacidad | Criterio de aceptación | Estado | Evidencia |
+|----|-----------|------------------------|--------|-----------|
+| **M8** | **Detección de gasto público (todos los tipos)** | Todo acto con monto del corpus queda clasificado por `tipo_gasto` (licitación, compra directa, contratación, concurso, adjudicación, obra, servicio, subsidio/transferencia, otro) con organismo y monto; los no clasificables quedan como `otro` con motivo; precisión medida sobre ≥ 100 actos etiquetados (≥ 90% nivel, ≥ 80% tipo). | pendiente | Hoy: heurística de bienes estandarizables, 83 *observables* de 1.220 actos (rama `feat/precio-mercado`). Historia `pm-gasto-deteccion-ampliada` |
+| **M9** | **Nivel provincial y municipal con cobertura declarada** | Cada acto tiene `nivel` (provincial / municipal / comunal) y municipio; Boletín Municipal de la Ciudad de Córdoba ingerido en el corte declarado; banner de cobertura municipal (municipios presentes / ausentes, meses). | pendiente | Medido 2026-10-12: 803 boletines 100% BO provincial; 228 actos municipales/comunales (77 organismos) llegan como edictos del interior; **Municipalidad de Córdoba: 0**. Historia `pm-municipal-cobertura` |
+| **M10** | **Listado para elegir + análisis en profundidad a pedido** | Pantalla con filtros tipo / nivel / organismo / fecha / monto, totales visibles y acción *analizar en profundidad* por acto; el análisis (precio unitario o por renglón, referencias con fuente y fecha, clasificación sin dictamen) corre sólo cuando el usuario lo pide. | en curso | `/analisis/precio-mercado` + `POST /precio-mercado/analizar/{id}` con análisis por renglón (PR #5 draft) |
+
+### Should (fase 2 de la épica)
+
+- Adjudicaciones de ComprasCba como precio real: Acta de Prelación (subastas) y actas/resoluciones (presenciales), backfill 12 meses, referencia `adjudicada` con proveedor / CUIT / fecha.
+- Matching acto ↔ proceso robusto (servicio + nro + año; expediente).
+- Variantes y packs en referencias de publicación; Mercado Libre como referencia secundaria (búsqueda 403 con cualquier token; sólo catálogo).
+
+### Won't (para esta salida)
+
+- Dictamen, scoring de riesgo o alertas automáticas por desvío.
+- Análisis profundo en lote o dentro del pipeline.
+- Boletines municipales distintos de Córdoba capital (brecha **declarada**, historias aparte tras gate).
+- Scraping del sitio web de Mercado Libre.
+
+### Métricas de la salida vigente
+
+| Métrica | Umbral |
+|---------|--------|
+| Actos con `tipo_gasto` y `nivel` | 100% de los actos con monto (los dudosos como `otro` con motivo) |
+| Precisión sobre muestra etiquetada (≥ 100) | ≥ 90% nivel · ≥ 80% tipo |
+| Cobertura municipal | Córdoba capital feb–sep ingerido; municipios ausentes listados |
+| Demo | Checklist ≤ 10 pasos (listado → filtro muni/prov → elegir → analizar) ejecutado por Germán |
+| Tests | Sin fallos nuevos fuera de los conocidos |
+
+### Riesgos / dependencias de la salida vigente
+
+- Fragmentos cortos (~290 caracteres) pueden no alcanzar para clasificar: re-extracción = **decisión de costo de Germán**.
+- Formato del Boletín Municipal de Córdoba distinto al provincial (parser nuevo).
+- Portal ComprasCba sin API (postbacks ASP.NET) para la fase 2.
+- Decisiones humanas: aceptar este reencuadre; Córdoba capital como primer municipio; OCR/LLM sobre documentos; Mercado Libre sí/no.
+
+---
+
+# Línea base alcanzada (MVP 2026-09-24: contraste fiscal vs Ley 11.088)
+
+**Definición de salida anterior (alcanzada, M6 corrido el 2026-09-28):** Un ciudadano (o el PO) puede, en ≤ 10 pasos documentados, ver el **gasto publicado vs Ley 11.088** de la Provincia de Córdoba con **período y techo declarados**, alertas >100% **visibles y no silenciadas**, corpus de boletines **feb–sep 2026** (u otro corte declarado) con gate de drift en verde, y el **techo Ley por finalidad 1/2/3 (+ sin_clasificar) visible con disclaimer** (`inicial=vigente` en este corte; no es crédito modificado ni caja CGE) — sin reescribir la historia pre-v1.1.
 
 > **Nota de alcance:** el README aún marca “MVP v1.1” (pipeline + UI v2). Este `mvp.md` define la **salida de MVP ahora** (post v1.1 + vertical Presupuesto P.* + honestidad V.1–V.6 + **Ampliación B** mínima): el producto deja de ser “pipeline que corre” y pasa a ser “contraste fiscal verificable”, con lectura ciudadana de asimetría de techo por finalidad.
 >
