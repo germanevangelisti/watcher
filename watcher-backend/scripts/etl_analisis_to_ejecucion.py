@@ -42,6 +42,7 @@ from app.services.presupuesto_matching import (
     _token_jaccard,
     build_presupuesto_index,
     dedup_keys,
+    duplicados_de_filas,
     extract_numero_acto,
     extract_obra_code,
     first_beneficiario,
@@ -92,11 +93,20 @@ _ADDED_COLUMNS: dict[str, list[tuple[str, str]]] = {
         ("analisis_id", "INTEGER"),
         ("etapa_gasto", "TEXT"),
         ("jurisdiccion", "TEXT"),
+        ("tipo_gasto", "TEXT"),
+        ("objeto", "TEXT"),
+        ("nivel", "TEXT"),
     ],
     "analisis": [
         ("is_gasto_publico", "INTEGER"),
         ("etapa_gasto", "TEXT"),
         ("jurisdiccion_gasto", "TEXT"),
+        ("tipo_gasto", "TEXT"),
+        ("objeto", "TEXT"),
+        ("nivel", "TEXT"),
+        ("municipio", "TEXT"),
+        ("gasto_motivo", "TEXT"),
+        ("is_duplicate_gasto", "INTEGER NOT NULL DEFAULT 0"),
     ],
 }
 
@@ -114,20 +124,33 @@ def _ensure_columns(cur) -> None:
 
 
 def _classify_pending(cur, rows: list[dict], dry_run: bool = False) -> int:
-    """Classify rows lacking P.7.1 flags, mutating them in place.
+    """Classify rows lacking P.7.1 (and M8) flags, mutating them in place.
 
     Writes the classification back to `analisis` so it is computed once, and
     recovers `numero_acto` when the LLM left it null — without it the dedup key
     collapses to (organismo, monto) and republished tenders stay uncollapsed.
+
+    `is_duplicate_gasto` is the republication flag for the M8 listing (the
+    listing sums `analisis`, which has no dedup of its own) and is computed over
+    the whole slice at once: it is a corpus-wide fact, so a per-row loop cannot
+    see it.
     """
+    dup = duplicados_de_filas(rows)
     pending = 0
     for row in rows:
-        if row.get("is_gasto_publico") is None or not row.get("etapa_gasto"):
+        if (
+            row.get("is_gasto_publico") is None
+            or not row.get("etapa_gasto")
+            or not row.get("tipo_gasto")
+        ):
             classification = classify_gasto(row, section=row.get("boletin_section"))
+            # Every axis the classifier owns, so a new one cannot be added to
+            # the dataclass and forgotten in this write-back.
+            for field, value in classification.as_analisis_fields().items():
+                row[field] = value
             row["is_gasto_publico"] = 1 if classification.is_gasto_publico else 0
-            row["etapa_gasto"] = classification.etapa_gasto
-            row["jurisdiccion_gasto"] = classification.jurisdiccion
             pending += 1
+        row["is_duplicate_gasto"] = dup.get(row["analisis_id"], 0)
         row["numero_acto"] = resolve_numero_acto(
             row.get("numero_acto"), row.get("descripcion"), row.get("fragmento")
         )
@@ -135,11 +158,18 @@ def _classify_pending(cur, rows: list[dict], dry_run: bool = False) -> int:
         if not dry_run:
             cur.execute(
                 "UPDATE analisis SET is_gasto_publico=?, etapa_gasto=?, "
-                "jurisdiccion_gasto=?, numero_acto=? WHERE id=?",
+                "jurisdiccion_gasto=?, tipo_gasto=?, objeto=?, nivel=?, municipio=?, "
+                "gasto_motivo=?, is_duplicate_gasto=?, numero_acto=? WHERE id=?",
                 (
                     row["is_gasto_publico"],
                     row["etapa_gasto"],
                     row["jurisdiccion_gasto"],
+                    row.get("tipo_gasto"),
+                    row.get("objeto"),
+                    row.get("nivel"),
+                    row.get("municipio"),
+                    row.get("gasto_motivo"),
+                    row["is_duplicate_gasto"],
                     row["numero_acto"],
                     row["analisis_id"],
                 ),
@@ -179,6 +209,11 @@ def run_etl(dry_run: bool = False) -> None:
             a.is_gasto_publico,
             a.etapa_gasto,
             a.jurisdiccion_gasto,
+            a.tipo_gasto,
+            a.objeto,
+            a.nivel,
+            a.municipio,
+            a.gasto_motivo,
             b.date          AS boletin_date,
             b.section       AS boletin_section
         FROM analisis a
@@ -284,10 +319,11 @@ def run_etl(dry_run: bool = False) -> None:
                 partida_presupuestaria, programa,
                 categoria_watcher, riesgo_watcher,
                 etapa_gasto, jurisdiccion,
+                tipo_gasto, objeto, nivel,
                 monto_acumulado_mes, monto_acumulado_trimestre, monto_acumulado_anual,
                 es_modificacion_presupuestaria, requiere_revision, observaciones,
                 is_duplicate, created_at
-            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """, (
             row["boletin_id"],
             pb_id,
@@ -304,6 +340,9 @@ def run_etl(dry_run: bool = False) -> None:
             riesgo or None,
             row["etapa_gasto"],
             row["jurisdiccion_gasto"],
+            row.get("tipo_gasto"),
+            row.get("objeto"),
+            row.get("nivel"),
             monthly_acc[(org_norm, year, month)],
             quarterly_acc[(org_norm, year, quarter)],
             annual_acc[(org_norm, year)],

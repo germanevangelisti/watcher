@@ -13,8 +13,9 @@ import json
 import re
 import unicodedata
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from datetime import date, datetime
+from typing import Any
 
 # ── Normalización ──────────────────────────────────────────────────────────────
 
@@ -427,6 +428,41 @@ def dedup_keys(
     if obra_code is not None:
         keys.append(_obra_key(obra_code, monto))
     return keys
+
+
+def duplicados_de_filas(filas: Iterable[Mapping[str, Any]]) -> dict[int, int]:
+    """Flag republications across an ordered slice of the corpus.
+
+    The M8 listing sums `analisis.monto_numerico`, which is *not* deduplicated:
+    the boletín republishes a tender the next day and both rows carry the monto.
+    Summing them counts the same money twice — EPEC's Licitación Pública 5576
+    alone was $237,29B counted twice, which is what V.6 fixed in the ledger.
+
+    `filas` must be in publication order (`date`, `id`) and carry `organismo`,
+    `monto_numerico`, `numero_acto`, `descripcion` and `fragmento`.  The row id
+    is read from `id` or, as the batch ETL aliases it, `analisis_id`.  Returns
+    ``{id: 0|1}``.  Keys come from `dedup_keys`, so batch and live tiers agree by
+    construction.  A row with no stable identity is never flagged.
+    """
+    seen: set[tuple] = set()
+    out: dict[int, int] = {}
+    for row in filas:
+        row_id = row.get("id", row.get("analisis_id"))
+        if row_id is None:
+            continue
+        keys = dedup_keys(
+            _normalize(str(row.get("organismo") or "")),
+            float(row.get("monto_numerico") or 0),
+            _normalize_acto(row.get("numero_acto")),
+            row.get("descripcion"),
+            row.get("fragmento"),
+        )
+        if keys and any(k in seen for k in keys):
+            out[row_id] = 1
+        else:
+            seen.update(keys)
+            out[row_id] = 0
+    return out
 
 
 # ── numero_acto extraction ─────────────────────────────────────────────────────

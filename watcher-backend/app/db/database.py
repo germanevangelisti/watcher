@@ -128,12 +128,21 @@ _SQLITE_ADDED_COLUMNS: dict[str, list[tuple[str, str]]] = {
         ("is_gasto_publico", "INTEGER"),
         ("etapa_gasto", "TEXT"),
         ("jurisdiccion_gasto", "TEXT"),
+        ("tipo_gasto", "TEXT"),
+        ("objeto", "TEXT"),
+        ("nivel", "TEXT"),
+        ("municipio", "TEXT"),
+        ("gasto_motivo", "TEXT"),
+        ("is_duplicate_gasto", "INTEGER NOT NULL DEFAULT 0"),
     ],
     "ejecucion_presupuestaria": [
         ("is_duplicate", "INTEGER NOT NULL DEFAULT 0"),
         ("analisis_id", "INTEGER"),
         ("etapa_gasto", "TEXT"),
         ("jurisdiccion", "TEXT"),
+        ("tipo_gasto", "TEXT"),
+        ("objeto", "TEXT"),
+        ("nivel", "TEXT"),
     ],
 }
 

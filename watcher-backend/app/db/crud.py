@@ -289,6 +289,12 @@ async def create_analisis(
         is_gasto_publico=analisis_data.get("is_gasto_publico"),
         etapa_gasto=analisis_data.get("etapa_gasto"),
         jurisdiccion_gasto=analisis_data.get("jurisdiccion_gasto"),
+        # M8 — figura/objeto del gasto y nivel de gobierno (mismo clasificador)
+        tipo_gasto=analisis_data.get("tipo_gasto"),
+        objeto=analisis_data.get("objeto"),
+        nivel=analisis_data.get("nivel"),
+        municipio=analisis_data.get("municipio"),
+        gasto_motivo=analisis_data.get("gasto_motivo"),
     )
     db.add(db_analisis)
     return db_analisis
