@@ -1,67 +1,60 @@
 """
 Tests for IndexingService - Triple indexing orchestration
+
+Uses async SQLAlchemy sessions matching the production IndexingService interface.
 """
 
-# Import the service
-import sys
-from pathlib import Path
-
 import pytest
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
-
-project_root = Path(__file__).parent.parent / "watcher-monolith" / "backend"
-sys.path.insert(0, str(project_root))
-
 from app.db.models import Base, ChunkRecord
 from app.services.chunking_service import ChunkResult
 from app.services.embedding_service import EMBEDDING_DIM, EMBEDDING_MODEL
 from app.services.indexing_service import IndexingService, get_indexing_service
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
 
 
 @pytest.fixture
-def test_db():
-    """Create an in-memory test database with all tables."""
-    engine = create_engine("sqlite:///:memory:")
-    Session = sessionmaker(bind=engine)
-    session = Session()
+async def test_db():
+    """Create an async in-memory test database with all tables."""
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
 
-    # Create tables
-    Base.metadata.create_all(engine)
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
-    # Create FTS5 table and triggers
-    session.execute(text("""
-        CREATE VIRTUAL TABLE chunk_records_fts USING fts5(
-            text,
-            document_id UNINDEXED,
-            chunk_index UNINDEXED,
-            section_type UNINDEXED,
-            content=chunk_records,
-            content_rowid=id
-        )
-    """))
+        await conn.execute(text("""
+            CREATE VIRTUAL TABLE IF NOT EXISTS chunk_records_fts USING fts5(
+                text,
+                document_id UNINDEXED,
+                chunk_index UNINDEXED,
+                section_type UNINDEXED,
+                content=chunk_records,
+                content_rowid=id
+            )
+        """))
 
-    session.execute(text("""
-        CREATE TRIGGER chunk_records_fts_insert AFTER INSERT ON chunk_records
-        BEGIN
-            INSERT INTO chunk_records_fts(rowid, text, document_id, chunk_index, section_type)
-            VALUES (new.id, new.text, new.document_id, new.chunk_index, new.section_type);
-        END
-    """))
+        await conn.execute(text("""
+            CREATE TRIGGER IF NOT EXISTS chunk_records_fts_insert AFTER INSERT ON chunk_records
+            BEGIN
+                INSERT INTO chunk_records_fts(rowid, text, document_id, chunk_index, section_type)
+                VALUES (new.id, new.text, new.document_id, new.chunk_index, new.section_type);
+            END
+        """))
 
-    session.execute(text("""
-        CREATE TRIGGER chunk_records_fts_delete AFTER DELETE ON chunk_records
-        BEGIN
-            INSERT INTO chunk_records_fts(chunk_records_fts, rowid, text, document_id, chunk_index, section_type)
-            VALUES ('delete', old.id, old.text, old.document_id, old.chunk_index, old.section_type);
-        END
-    """))
+        await conn.execute(text("""
+            CREATE TRIGGER IF NOT EXISTS chunk_records_fts_delete AFTER DELETE ON chunk_records
+            BEGIN
+                INSERT INTO chunk_records_fts(chunk_records_fts, rowid, text, document_id, chunk_index, section_type)
+                VALUES ('delete', old.id, old.text, old.document_id, old.chunk_index, old.section_type);
+            END
+        """))
 
-    session.commit()
+    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
-    yield session
+    async with async_session() as session:
+        yield session
 
-    session.close()
+    await engine.dispose()
 
 
 @pytest.fixture
@@ -74,7 +67,6 @@ def mock_embedding_service():
             self.google_model = EMBEDDING_MODEL
 
         async def generate_embedding(self, text):
-            # Return a fake embedding
             return [0.1] * EMBEDDING_DIM
 
     class MockCollection:
@@ -92,7 +84,8 @@ def mock_embedding_service():
         def get(self, where=None):
             if where and "document_id" in where:
                 doc_id = where["document_id"]
-                matching = [k for k in self.data if self.data[k]["metadata"].get("document_id") == doc_id]
+                matching = [k for k in self.data
+                            if self.data[k]["metadata"].get("document_id") == doc_id]
                 return {"ids": matching}
             return {"ids": list(self.data.keys())}
 
@@ -104,7 +97,8 @@ def mock_embedding_service():
     return MockEmbeddingService()
 
 
-def test_indexing_service_initialization(test_db, mock_embedding_service):
+@pytest.mark.asyncio
+async def test_indexing_service_initialization(test_db, mock_embedding_service):
     """Test IndexingService can be initialized."""
     service = IndexingService(test_db, mock_embedding_service)
     assert service is not None
@@ -139,12 +133,18 @@ async def test_index_single_chunk(test_db, mock_embedding_service):
     assert chunk_record.indexed_at is not None
 
     # Verify in SQLite
-    db_chunk = test_db.query(ChunkRecord).filter(ChunkRecord.document_id == "test_doc_1").first()
+    from sqlalchemy import select as sa_select
+    result = await test_db.execute(
+        sa_select(ChunkRecord).where(ChunkRecord.document_id == "test_doc_1")
+    )
+    db_chunk = result.scalars().first()
     assert db_chunk is not None
     assert db_chunk.text == chunk.text
 
     # Verify in FTS5
-    fts_result = test_db.execute(text("SELECT COUNT(*) FROM chunk_records_fts WHERE document_id = 'test_doc_1'"))
+    fts_result = await test_db.execute(
+        text("SELECT COUNT(*) FROM chunk_records_fts WHERE document_id = 'test_doc_1'")
+    )
     fts_count = fts_result.scalar()
     assert fts_count == 1
 
@@ -159,7 +159,8 @@ async def test_index_multiple_chunks(test_db, mock_embedding_service):
     service = IndexingService(test_db, mock_embedding_service)
 
     chunks = [
-        ChunkResult(text=f"Chunk {i} con texto de prueba.", chunk_index=i, start_char=i*50, end_char=(i+1)*50, num_chars=50)
+        ChunkResult(text=f"Chunk {i} con texto de prueba.", chunk_index=i,
+                     start_char=i*50, end_char=(i+1)*50, num_chars=50)
         for i in range(3)
     ]
 
@@ -174,11 +175,17 @@ async def test_index_multiple_chunks(test_db, mock_embedding_service):
     assert result.error is None
 
     # Verify all in SQLite
-    db_chunks = test_db.query(ChunkRecord).filter(ChunkRecord.document_id == "test_doc_multi").all()
+    from sqlalchemy import select as sa_select
+    db_result = await test_db.execute(
+        sa_select(ChunkRecord).where(ChunkRecord.document_id == "test_doc_multi")
+    )
+    db_chunks = db_result.scalars().all()
     assert len(db_chunks) == 3
 
     # Verify all in FTS5
-    fts_result = test_db.execute(text("SELECT COUNT(*) FROM chunk_records_fts WHERE document_id = 'test_doc_multi'"))
+    fts_result = await test_db.execute(
+        text("SELECT COUNT(*) FROM chunk_records_fts WHERE document_id = 'test_doc_multi'")
+    )
     fts_count = fts_result.scalar()
     assert fts_count == 3
 
@@ -191,14 +198,12 @@ async def test_index_multiple_chunks(test_db, mock_embedding_service):
 async def test_rollback_on_failure(test_db, mock_embedding_service):
     """Test that rollback happens when indexing fails."""
 
-    # Create a failing embedding service
     class FailingEmbeddingService:
         def __init__(self):
             self.collection = mock_embedding_service.collection
             self.google_model = EMBEDDING_MODEL
 
         async def generate_embedding(self, text):
-            # Fail on second chunk
             if "Chunk 1" in text:
                 raise Exception("Simulated embedding failure")
             return [0.1] * EMBEDDING_DIM
@@ -207,7 +212,8 @@ async def test_rollback_on_failure(test_db, mock_embedding_service):
     service = IndexingService(test_db, failing_service)
 
     chunks = [
-        ChunkResult(text=f"Chunk {i} texto.", chunk_index=i, start_char=0, end_char=20, num_chars=20)
+        ChunkResult(text=f"Chunk {i} texto.", chunk_index=i, start_char=0,
+                     end_char=20, num_chars=20)
         for i in range(3)
     ]
 
@@ -221,11 +227,17 @@ async def test_rollback_on_failure(test_db, mock_embedding_service):
     assert result.rollback_applied is True
 
     # Verify nothing in SQLite (rollback successful)
-    db_chunks = test_db.query(ChunkRecord).filter(ChunkRecord.document_id == "test_doc_fail").all()
+    from sqlalchemy import select as sa_select
+    db_result = await test_db.execute(
+        sa_select(ChunkRecord).where(ChunkRecord.document_id == "test_doc_fail")
+    )
+    db_chunks = db_result.scalars().all()
     assert len(db_chunks) == 0
 
     # Verify nothing in FTS5
-    fts_result = test_db.execute(text("SELECT COUNT(*) FROM chunk_records_fts WHERE document_id = 'test_doc_fail'"))
+    fts_result = await test_db.execute(
+        text("SELECT COUNT(*) FROM chunk_records_fts WHERE document_id = 'test_doc_fail'")
+    )
     fts_count = fts_result.scalar()
     assert fts_count == 0
 
@@ -235,18 +247,13 @@ async def test_verify_triple_index(test_db, mock_embedding_service):
     """Test verification of triple index consistency."""
     service = IndexingService(test_db, mock_embedding_service)
 
-    # Index a document
     chunks = [
         ChunkResult(text=f"Chunk {i}", chunk_index=i, start_char=0, end_char=10, num_chars=10)
         for i in range(2)
     ]
 
-    await service.index_document(
-        document_id="test_doc_verify",
-        chunks=chunks
-    )
+    await service.index_document(document_id="test_doc_verify", chunks=chunks)
 
-    # Verify it's consistent
     verification = await service.verify_triple_index("test_doc_verify")
 
     assert verification["consistent"] is True
@@ -260,26 +267,20 @@ async def test_verify_triple_index_inconsistent(test_db, mock_embedding_service)
     """Test verification detects inconsistencies."""
     service = IndexingService(test_db, mock_embedding_service)
 
-    # Index a document
     chunks = [
         ChunkResult(text=f"Chunk {i}", chunk_index=i, start_char=0, end_char=10, num_chars=10)
         for i in range(2)
     ]
 
-    await service.index_document(
-        document_id="test_doc_inconsistent",
-        chunks=chunks
-    )
+    await service.index_document(document_id="test_doc_inconsistent", chunks=chunks)
 
-    # Manually delete from ChromaDB to create inconsistency
     mock_embedding_service.collection.delete(["test_doc_inconsistent_chunk_0"])
 
-    # Verify detects inconsistency
     verification = await service.verify_triple_index("test_doc_inconsistent")
 
     assert verification["consistent"] is False
     assert verification["sql_chunks"] == 2
-    assert verification["chromadb_chunks"] == 1  # One deleted
+    assert verification["chromadb_chunks"] == 1
 
 
 @pytest.mark.asyncio
@@ -287,44 +288,32 @@ async def test_repair_index(test_db, mock_embedding_service):
     """Test repairing inconsistent indices."""
     service = IndexingService(test_db, mock_embedding_service)
 
-    # Index a document
     chunks = [
         ChunkResult(text=f"Chunk {i}", chunk_index=i, start_char=0, end_char=10, num_chars=10)
         for i in range(3)
     ]
 
-    await service.index_document(
-        document_id="test_doc_repair",
-        chunks=chunks
-    )
+    await service.index_document(document_id="test_doc_repair", chunks=chunks)
 
-    # Create inconsistency by deleting from ChromaDB
     mock_embedding_service.collection.data.clear()
 
-    # Verify inconsistency
     verification_before = await service.verify_triple_index("test_doc_repair")
     assert verification_before["consistent"] is False
 
-    # Repair
     repair_result = await service.repair_index("test_doc_repair")
 
     assert repair_result["success"] is True
     assert repair_result["chunks_repaired"] == 3
 
-    # Verify consistency after repair
     verification_after = await service.verify_triple_index("test_doc_repair")
     assert verification_after["consistent"] is True
 
 
-def test_get_indexing_service_factory(test_db):
+@pytest.mark.asyncio
+async def test_get_indexing_service_factory(test_db):
     """Test the get_indexing_service factory function."""
     service = get_indexing_service(test_db)
 
     assert service is not None
     assert isinstance(service, IndexingService)
     assert service.db == test_db
-
-
-if __name__ == "__main__":
-    # Run tests
-    pytest.main([__file__, "-v", "-s"])
