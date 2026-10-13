@@ -92,3 +92,70 @@ class TestMaskValue:
         data = {"level1": {"level2": {"cuit": "27-87654321-3"}}}
         result = mask_value(data)
         assert CUIT_MASK in result["level1"]["level2"]["cuit"]
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# El middleware sobre un cuerpo real
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# Faltaba: los tests de arriba cubren las funciones puras, así que nada probaba
+# el camino que corre en producción. Lo que se rompió fue justamente ése — el
+# middleware regexeaba el texto serializado, así que un `monto` de 11 dígitos en
+# pesos matcheaba el patrón de CUIT y se reemplazaba por la máscara sin comillas,
+# dejando la respuesta sin parsear para cualquier cliente.
+
+import json  # noqa: E402
+
+import httpx  # noqa: E402
+import pytest  # noqa: E402
+
+
+def _app_con_middleware(payload: dict):
+    from app.middleware.masking import CUITMaskingMiddleware
+    from fastapi import FastAPI
+
+    app = FastAPI()
+    app.add_middleware(CUITMaskingMiddleware)
+
+    @app.get("/datos")
+    async def datos():
+        return payload
+
+    return app
+
+
+class TestMiddlewareEnElCuerpo:
+    @pytest.mark.asyncio
+    async def test_monto_de_11_digitos_no_se_enmascara_y_el_json_sigue_valido(self):
+        # 10000000000.5 tiene 11 dígitos enteros: exactamente lo que el patrón
+        # de CUIT matchea, y es un monto en pesos perfectamente normal.
+        app = _app_con_middleware({"monto": 10000000000.5, "organismo": "ACIF"})
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
+            r = await c.get("/datos")
+
+        body = json.loads(r.text)  # revienta si el cuerpo quedó inválido
+        assert body["monto"] == 10000000000.5
+        assert body["organismo"] == "ACIF"
+        assert "*" not in r.text
+
+    @pytest.mark.asyncio
+    async def test_el_cuit_en_un_string_si_se_enmascara(self):
+        app = _app_con_middleware(
+            {"beneficiario": "Papelera Cumbre S.A. CUIT 20-12345678-9", "monto": 150150000.0}
+        )
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
+            r = await c.get("/datos")
+
+        body = json.loads(r.text)
+        assert "20-12345678-9" not in body["beneficiario"]
+        assert CUIT_MASK in body["beneficiario"]
+        assert body["monto"] == 150150000.0
+
+    @pytest.mark.asyncio
+    async def test_un_cuit_sin_guiones_tambien_se_enmascara(self):
+        app = _app_con_middleware({"detalle": "id=20123456789"})
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
+            r = await c.get("/datos")
+
+        assert "20123456789" not in r.text
+        assert CUIT_MASK in json.loads(r.text)["detalle"]
