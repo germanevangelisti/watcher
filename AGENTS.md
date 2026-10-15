@@ -204,3 +204,17 @@ See [Makefile](Makefile) for unified development commands:
 **Document Version**: 1.0.0  
 **Last Updated**: Sprint 0  
 **Maintained By**: Opus 4.5 (Planning Agent)
+
+<!-- agent-session-rules:start -->
+## Reglas de sesión de agente (Germán / Cooperledge)
+
+- **Proyecto**: `watcher` · **Kanban**: `vault/wiki/board-watcher.kanban.md` · **Flujo**: PR a main (rama tipo/<proyecto-o-epica>-<id>)
+- **Canónico** (leer si podés seguir links): `C:\Users\germa\cooperledge\vault\wiki\standards\agent-session-rules.md`
+
+Reglas clave (valen aunque no abras el link):
+1. **Leé el vault primero**: la historia (`vault/wiki/board/stories/<id>.md`), su épica, el kanban y `vault/wiki/status/watcher-status.md`. No re-especifiques lo documentado; si la doc no coincide con el código, manda el código y corregís la doc.
+2. **Docs vivas**: actualizá la historia (checklist, Last updated, tests corridos) y el status (rama y SHA reales de `git log`) durante la sesión.
+3. **Kanban**: solo movés `todo → wip → testing`. **Nunca `done`**: Done lo marca solo Germán tras su prueba manual. Máximo 1 historia en WIP. No tildes "Prueba manual de Germán OK". `kanban:` del frontmatter = columna del board.
+4. **Ramas**: `tipo/<proyecto-o-epica>-<id>` (ej. `feat/cm2-receptor`); código a `main` por PR (salvo que el Flujo de arriba diga directo a main). `cursor/*` solo cloud agents. **Nunca force-push**, no mergees PRs sin OK de Germán, no borres ramas ni stashes ajenos ni toques archivos sin commitear de otra sesión.
+5. **Cierre de sesión (DoD)**: tests corridos y anotados, historia/kanban actualizados, **commit + push del vault** (`cooperledge`, `main`, solo tus archivos) y del código en su rama. Nada queda solo en la PC.
+<!-- agent-session-rules:end -->
