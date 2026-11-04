@@ -40,3 +40,13 @@ export const NIVEL_LABEL: Record<Nivel, string> = {
   nacional: "Nación",
   desconocido: "Sin nivel",
 }
+
+/** Etapa del ciclo de gasto (`analisis.etapa_gasto`), en el vocabulario de P.7. */
+export const ETAPA_LABEL: Record<string, string> = {
+  llamado: "Llamado",
+  adjudicacion: "Adjudicación",
+  contrato: "Contrato",
+  pago: "Pago",
+  modificacion: "Modificación",
+  no_aplica: "—",
+}

@@ -41,6 +41,11 @@ export interface GastoDetectado {
   analisis_id: number
   /** Presente sólo si el acto está en el ledger; sin él no hay análisis de precio. */
   ejecucion_id: number | null
+  /**
+   * De dónde salió el acto (`boletines.fuente`). Cambia cómo se lee el link y
+   * por qué no se puede analizar: el portal de compras no publica renglones.
+   */
+  fuente: string | null
   fecha: string | null
   boletin_id: number | null
   boletin_url: string | null

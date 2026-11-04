@@ -60,6 +60,24 @@ def test_parse_compra_keeps_what_the_portal_publishes():
     assert c.acta and c.acta["id_cdd"] == "98a1b1ee-14c0-4945-b1a7-7df29b36a7e9"
 
 
+def test_parse_compra_guarda_el_llamado_y_las_condiciones_del_proceso():
+    """El nombre descriptivo y las fechas del llamado, que el listado sí publica."""
+    from app.scrapers.muni_compras import parse_compras
+
+    c = parse_compras(_payload("compras_page1.json"))[0]
+    # `tipo` sólo trae el código ("CONCURSO"); el nombre legible está en nombre_compra.
+    assert (c.nombre_compra_codigo, c.nombre_compra) == ("CONCURSO", "CONCURSO DE PRECIOS")
+    assert c.tipo_nombre == "CONCURSO DE PRECIOS"
+    assert c.ultimo_llamado["instancia"] == "LLAMADO"
+    assert c.ultimo_llamado["fecha_desde"] == "2026-11-02"
+    assert c.vinculacion_llamado["descripcion"].startswith("La recepción de las ofertas")
+    assert (c.ampliacion, c.prorroga, c.redeterminacion) == (20, True, 1)
+
+    # Una compra sin esos bloques no inventa valores.
+    otra = parse_compras(_payload("compras_page1.json"))[1]
+    assert (otra.ultimo_llamado, otra.vinculacion_llamado, otra.ampliacion) == (None, None, None)
+
+
 def test_monto_cero_o_ausente_no_es_monto():
     from app.scrapers.muni_compras import parse_compra
 
@@ -149,6 +167,15 @@ async def test_ingest_persiste_con_fuente_nivel_y_municipio(session, tmp_path):
     assert row.datos_extra["expediente"] == "102-025180/2026"
     assert row.datos_extra["adjudicacion_publica"] is False
     assert "token" in row.datos_extra["adjudicacion_nota"]
+    # Lo que el listado publica del proceso: nombre legible, fechas del llamado y
+    # las condiciones (ampliación, prórroga, redeterminación).
+    assert row.datos_extra["nombre_compra"] == {"codigo": "CONCURSO", "nombre": "CONCURSO DE PRECIOS"}
+    assert row.datos_extra["ultimo_llamado"]["instancia"] == "LLAMADO"
+    assert row.datos_extra["ultimo_llamado"]["fecha_desde"] == "2026-11-02"
+    assert row.datos_extra["vinculacion_llamado"]["fecha_desde"] == "2026-10-30"
+    assert row.datos_extra["vinculacion_llamado"]["descripcion"].startswith("La recepción")
+    assert (row.datos_extra["ampliacion"], row.datos_extra["prorroga"],
+            row.datos_extra["redeterminacion"]) == (20, True, 1)
 
     boletin = (await session.execute(select(Boletin).where(Boletin.id == row.boletin_id))).scalar_one()
     assert (boletin.fuente, boletin.section, boletin.date) == ("municipal_compras", "portal_compras", "20261027")
@@ -360,6 +387,11 @@ async def test_cobertura_suma_el_portal_y_su_detalle(session, tmp_path):
     assert listado["total"] == 3
     assert {i["tipo_gasto"] for i in listado["items"]} == {"concurso_precios", "licitacion", "subasta_electronica"}
     assert all(i["organismo"].startswith("Municipalidad de Córdoba") for i in listado["items"])
+    # La fila dice de qué fuente salió y que NO está en el ledger: está clasificada
+    # como gasto, pero el ETL del ledger corre sobre los boletines provinciales.
+    assert {i["fuente"] for i in listado["items"]} == {"municipal_compras"}
+    assert all(i["en_ledger"] is False and i["ejecucion_id"] is None for i in listado["items"])
+    assert all(i["etapa_gasto"] == "llamado" for i in listado["items"])
 
 
 def test_claves_de_expediente_normalizan_las_dos_grafias():
