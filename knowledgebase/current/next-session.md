@@ -1,5 +1,16 @@
 # Próxima sesión — Watcher Agent
 
+> **Actualización 2026-11-04 (noche) — `muni-portal-compras` (WMU1) implementada; la próxima es
+> `mapa-gasto-jurisdiccion` (WMA1, 6 pts).**
+> El conector de MuniCompras está en **testing** (rama `feat/epic-watcher-precio-mercado-wmu1`,
+> **PR #11** abierto y sin mergear, CI verde) y la ingesta 2026 corrió: **153 compras, 86 días,
+> 152 de gasto único · $49.521,59 M**, 1 deduplicada contra el Boletín Municipal. Falta el gate
+> manual de Germán. Después del gate: **`mapa-gasto-jurisdiccion`**, que necesita justamente este
+> gasto municipal real para pintar el mapa. Los dos hallazgos que deja WMU1 y no se tocaron acá:
+> el eje `objeto` manda 93 de 153 compras a `otro` (reglas compartidas; arreglarlo obliga a
+> re-clasificar el corpus provincial) y el adjudicatario/monto adjudicado del portal **no es
+> público** sin token.
+>
 > **Actualización 2026-11-04 (tarde) — la próxima sesión es `muni-portal-compras` (P1, 5 pts).**
 > `pm-municipal-cobertura` (M9) quedó **Done** el 2026-11-04 tras la prueba manual de Germán: conector real
 > `pds_muni.py` del Boletín Municipal de Córdoba capital, ingesta de todo 2026 (81 ediciones, 509 actos, 2 de
