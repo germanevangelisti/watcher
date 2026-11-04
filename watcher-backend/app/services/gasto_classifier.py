@@ -551,6 +551,17 @@ def _classify_objeto(tipo_gasto: str, text: str) -> str:
     return OBJETO_OTRO
 
 
+def classify_objeto(tipo_gasto: str, text: str) -> str:
+    """Qué se compra o se hace, dado el tipo de gasto ya decidido por la fuente.
+
+    Público porque hay fuentes que **conocen** la figura (el portal de compras
+    municipal publica el tipo de proceso) y sólo necesitan el otro eje.  Así el
+    `objeto` sigue saliendo de las mismas reglas que el resto del corpus en vez
+    de una copia que se desincroniza.
+    """
+    return _classify_objeto(tipo_gasto, text)
+
+
 def _classify_nivel(section: int | None, organismo: Any, text: str, jurisdiccion: str) -> str:
     """Nivel de gobierno de **quien emite** el acto.
 

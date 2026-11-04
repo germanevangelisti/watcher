@@ -55,11 +55,19 @@ const DETECTADO: GastoDetectadoResponse = {
 const COBERTURA = {
   fuentes: [
     { fuente: "provincial", nombre: "Boletín Oficial de la Provincia de Córdoba", nivel: "provincial",
-      municipio: null, portal: null, ediciones: 150, desde: "2026-01-02", hasta: "2026-10-30",
+      municipio: null, portal: null, tipo: "boletin" as const, detalle: null,
+      ediciones: 150, desde: "2026-01-02", hasta: "2026-10-30",
       actos: 4000, actos_gasto: 900, monto_gasto: 1 },
     { fuente: "municipal_capital", nombre: "Boletín Municipal de la Ciudad de Córdoba", nivel: "municipal",
-      municipio: "Córdoba", portal: null, ediciones: 80, desde: "2026-01-02", hasta: "2026-11-03",
+      municipio: "Córdoba", portal: null, tipo: "boletin" as const, detalle: null,
+      ediciones: 80, desde: "2026-01-02", hasta: "2026-11-03",
       actos: 504, actos_gasto: 12, monto_gasto: 1 },
+    { fuente: "municipal_compras", nombre: "Portal de Compras de la Ciudad de Córdoba (MuniCompras)",
+      nivel: "municipal", municipio: "Córdoba", portal: "https://compras.cordoba.gob.ar",
+      tipo: "portal" as const,
+      detalle: "El monto es el presupuesto oficial del llamado: el adjudicatario y el monto adjudicado no son públicos.",
+      ediciones: 97, desde: "2026-01-07", hasta: "2026-11-04",
+      actos: 153, actos_gasto: 151, monto_gasto: 49600000000 },
   ],
   municipios_cubiertos: ["Córdoba"],
   nota: "Los demás municipios y comunas sólo aparecen cuando publican en la sección 5 del boletín provincial; su gasto propio no está cubierto.",
@@ -264,5 +272,14 @@ describe("PrecioMercadoPage - cobertura", () => {
     expect(within(banner).getByText("Boletín Municipal de la Ciudad de Córdoba")).toBeTruthy()
     expect(banner.textContent).toContain("80 ediciones")
     expect(banner.textContent).toContain("sección 5")
+  })
+
+  it("suma el portal de compras con su unidad y lo que no publica", () => {
+    render(<PrecioMercadoPage />)
+    const banner = screen.getByTestId("cobertura-banner")
+    expect(within(banner).getByText("Portal de Compras de la Ciudad de Córdoba (MuniCompras)")).toBeTruthy()
+    // Un portal no tiene "ediciones": tiene días de publicación y compras.
+    expect(banner.textContent).toContain("97 días con publicaciones · 153 compras · 151 con monto")
+    expect(banner.textContent).toContain("no son públicos")
   })
 })

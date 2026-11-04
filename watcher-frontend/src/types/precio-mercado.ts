@@ -79,6 +79,14 @@ export interface CoberturaFuente {
   nivel: string | null
   municipio: string | null
   portal: string | null
+  /**
+   * `boletin`: una fila por edición, actos de todo tipo. `portal`: una fila por
+   * día de publicación y una por trámite, cuyo monto es el presupuesto oficial
+   * del llamado. Cambia cómo se lee cada número en el banner.
+   */
+  tipo: "boletin" | "portal"
+  /** Qué no cubre la fuente, cuando hace falta decirlo (portal de compras). */
+  detalle: string | null
   ediciones: number
   desde: string | null
   hasta: string | null

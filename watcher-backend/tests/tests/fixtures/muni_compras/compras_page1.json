@@ -1,0 +1,44 @@
+{
+  "success": true,
+  "cantidad_paginas": 2,
+  "compras": [
+    {
+      "id": 397,
+      "nombre_compra": {"nombre_compra": "CONCURSO", "nombre": "CONCURSO DE PRECIOS", "descripcion": null},
+      "titulo": "2026/099",
+      "objeto": "SERVICIO DE REPARACION EDILICIA DEL JARDIN MUNICIPAL GARABATOS",
+      "fecha_creacion": "2026-10-27 13:30:21",
+      "fecha_publicacion": "2026-10-27 16:43:54",
+      "estado": {"estado_compra": "FINALIZADA", "nombre": "Finalizada"},
+      "expediente": "102-025180/2026  ",
+      "subentidad": {"id": 10056, "nombre": "SECRETARÍA DE EDUCACIÓN"},
+      "requirente": {"id": 1192, "nombre": "SUBDIRECCIÓN DE INFRAESTRUCTURA"},
+      "presupuesto": 42706162.88,
+      "tipo": {"tipo_compra": "CONCURSO", "nombre": "CONCURSO DE PRECIOS"},
+      "entidad": {"id": "71", "nombre": "PODER EJECUTIVO MUNICIPAL"},
+      "acta": {
+        "id_cdd": "98a1b1ee-14c0-4945-b1a7-7df29b36a7e9",
+        "nombre": "informe_de_presentacion_de_ofertas_397_llamado_1.pdf",
+        "fecha_creacion": "2026-11-02T13:10:32.363743"
+      },
+      "numero_llamados": 1
+    },
+    {
+      "id": 398,
+      "nombre_compra": {"nombre_compra": "LICITACION", "nombre": "LICITACIÓN PÚBLICA", "descripcion": null},
+      "titulo": "2026/001",
+      "objeto": "SERVICIO DE LIMPIEZA INTEGRAL DEL EDIFICIO DEL TRIBUNAL DE CUENTAS",
+      "fecha_creacion": "2026-03-16 10:12:04",
+      "fecha_publicacion": "2026-03-20 09:00:00",
+      "estado": {"estado_compra": "ADJUDICADA", "nombre": "Adjudicada"},
+      "expediente": "102-025522/2026",
+      "subentidad": {"id": 10001, "nombre": "TRIBUNAL DE CUENTAS"},
+      "requirente": {"id": 1192, "nombre": "SUBDIRECCIÓN DE INFRAESTRUCTURA"},
+      "presupuesto": 184800000.0,
+      "tipo": {"tipo_compra": "LICITACION", "nombre": "LICITACIÓN PÚBLICA"},
+      "entidad": {"id": "71", "nombre": "PODER EJECUTIVO MUNICIPAL"},
+      "acta": null,
+      "numero_llamados": 1
+    }
+  ]
+}

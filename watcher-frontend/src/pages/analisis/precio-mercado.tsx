@@ -224,7 +224,10 @@ function CoberturaBanner() {
           <li key={f.fuente}>
             <span className="text-foreground">{f.nombre}</span>
             {f.desde && f.hasta ? ` · ${f.desde} a ${f.hasta}` : ""}
-            {` · ${f.ediciones} ediciones · ${f.actos} actos · ${f.actos_gasto} con gasto`}
+            {f.tipo === "portal"
+              ? ` · ${f.ediciones} días con publicaciones · ${f.actos} compras · ${f.actos_gasto} con monto`
+              : ` · ${f.ediciones} ediciones · ${f.actos} actos · ${f.actos_gasto} con gasto`}
+            {f.detalle ? <span className="block text-xs">{f.detalle}</span> : null}
           </li>
         ))}
       </ul>
