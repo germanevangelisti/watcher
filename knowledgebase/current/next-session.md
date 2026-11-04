@@ -1,5 +1,16 @@
 # Próxima sesión — Watcher Agent
 
+> **Actualización 2026-11-04 — la próxima sesión es `pm-municipal-cobertura` (M9).** Germán la priorizó
+> el 2026-11-04. Los pasos 1 y 2 del bloque del 2026-10-12 de abajo **ya están hechos**: la pila de ramas se
+> mergeó (PRs #4, #5, #7, #8; `main` = `bd7cbf5`) y M8 está en Done (2026-10-13). M10 funciona en `main` con
+> 2 bugs P1 abiertos (`pm-bug-masking-expediente`, `pm-bug-agregado-unidades`).
+>
+> **Antes de codear (gate de Germán, abierto):** Córdoba capital como primer municipio; corte feb–sep 2026;
+> costo de re-extracción si hace falta más texto. Con el OK: rama + PR según `agent-session-rules`, máx. 1 WIP.
+> Punto de partida: `watcher-backend/app/scrapers/pds_muni.py` (placeholder, `base_url` de ejemplo);
+> fuente `https://boletinmunicipal.cordoba.gob.ar/`.
+>
+
 > **Actualización 2026-10-12 — el MVP se reencuadró: la próxima sesión NO es V.7/V.8.**
 > Germán re-priorizó la salida: *"la nueva prioridad del MVP es leer boletines en búsqueda de gasto
 > público nivel provincial y municipal y desde allí el usuario decidirá si analizar en profundidad"*.
