@@ -3,6 +3,19 @@
 **Última actualización:** 2026-10-12
 **Snapshot del momento.** Se pisa al avanzar. La historia completa está en `docs/changelog.md` y el historial de git.
 
+> **Gasto municipal de Córdoba capital, 2026-11-04** (rama `feat/precio-mercado-pm-municipal-cobertura`):
+> el conector real `pds_muni.py` lee la API pública del Boletín Municipal
+> (`boletinmunicipal.cordoba.gob.ar/apibridge/ciudadano/boletin`). La ingesta de todo 2026 cubre
+> **81 ediciones (N° 4437-4517, 02/01-03/11), 509 actos, todos con texto, 266 con monto, 0 errores**.
+> Cada acto se guarda con `nivel=municipal` y `municipio=Córdoba` y pasa por el clasificador M8.
+> El **gasto real es escaso: 2 actos únicos, $269,2 M** (licitación de limpieza del Tribunal de
+> Cuentas, $184,8 M, publicada 3 veces y contada 1; pliegos de contenedores BioCórdoba, $84,4 M).
+> Se excluyen las Letras del Tesoro (deuda), las tarifas/UEM y los fallos del Tribunal de Cuentas.
+> La ciudad publica casi todas sus compras fuera del boletín (portal de compras), así que la señal
+> es baja por la fuente y no por el conector. No hizo falta Ollama: la API ya trae los actos
+> segmentados. Nuevo `GET /gasto/cobertura` y banner en `/analisis/precio-mercado`.
+> CLI: `scripts/ingest_municipal_cordoba.py --year 2026`.
+
 > **MVP re-priorizado: el producto ahora busca gasto público, no lo contrasta** (2026-10-12).
 > Germán reencuadró la salida: *"la nueva prioridad del MVP es leer boletines en búsqueda de gasto
 > público nivel provincial y municipal y desde allí el usuario decidirá si analizar en profundidad"*.

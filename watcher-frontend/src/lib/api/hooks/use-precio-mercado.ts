@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import apiClient from "../client"
 import type {
   AnalisisPrecio,
+  CoberturaResponse,
   GastoDetectadoResponse,
   GastoFiltros,
   ObservablesResponse,
@@ -40,6 +41,18 @@ export function useGastoDetectado(filtros: GastoFiltros = {}) {
       const { data } = await apiClient.get<GastoDetectadoResponse>(`/gasto/detectado?${query}`)
       return data
     },
+  })
+}
+
+/** Qué fuentes cubre el listado de gasto y qué queda afuera. */
+export function useCoberturaGasto() {
+  return useQuery({
+    queryKey: ["gasto-cobertura"],
+    queryFn: async () => {
+      const { data } = await apiClient.get<CoberturaResponse>("/gasto/cobertura")
+      return data
+    },
+    staleTime: 5 * 60 * 1000,
   })
 }
 

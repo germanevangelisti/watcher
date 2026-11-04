@@ -52,6 +52,19 @@ const DETECTADO: GastoDetectadoResponse = {
   ],
 }
 
+const COBERTURA = {
+  fuentes: [
+    { fuente: "provincial", nombre: "Boletín Oficial de la Provincia de Córdoba", nivel: "provincial",
+      municipio: null, portal: null, ediciones: 150, desde: "2026-01-02", hasta: "2026-10-30",
+      actos: 4000, actos_gasto: 900, monto_gasto: 1 },
+    { fuente: "municipal_capital", nombre: "Boletín Municipal de la Ciudad de Córdoba", nivel: "municipal",
+      municipio: "Córdoba", portal: null, ediciones: 80, desde: "2026-01-02", hasta: "2026-11-03",
+      actos: 504, actos_gasto: 12, monto_gasto: 1 },
+  ],
+  municipios_cubiertos: ["Córdoba"],
+  nota: "Los demás municipios y comunas sólo aparecen cuando publican en la sección 5 del boletín provincial; su gasto propio no está cubierto.",
+}
+
 /** Filtros con los que la pantalla pidió el listado, en orden. */
 const llamadas: GastoFiltros[] = []
 
@@ -61,6 +74,7 @@ vi.mock("@/lib/api", () => ({
     return { data: DETECTADO, isLoading: false, isError: false }
   },
   useAnalizarPrecio: () => analizarState,
+  useCoberturaGasto: () => ({ data: COBERTURA }),
 }))
 
 const RESULTADO: AnalisisPrecio = {
@@ -239,5 +253,16 @@ describe("renglones de ComprasCba", () => {
     expect(rows[0].textContent).toContain("12000 resmas")
     expect(rows[1].textContent).toContain("-14%")
     expect(screen.getByTestId("agregado-renglones").textContent).toContain("60%")
+  })
+})
+
+
+describe("PrecioMercadoPage - cobertura", () => {
+  it("muestra las fuentes cubiertas y lo que queda afuera", () => {
+    render(<PrecioMercadoPage />)
+    const banner = screen.getByTestId("cobertura-banner")
+    expect(within(banner).getByText("Boletín Municipal de la Ciudad de Córdoba")).toBeTruthy()
+    expect(banner.textContent).toContain("80 ediciones")
+    expect(banner.textContent).toContain("sección 5")
   })
 })

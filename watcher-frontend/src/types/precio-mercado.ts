@@ -72,6 +72,28 @@ export interface GastoDetectadoResponse {
   items: GastoDetectado[]
 }
 
+/** Una fuente del listado y cuánto aporta (GET /gasto/cobertura). */
+export interface CoberturaFuente {
+  fuente: string
+  nombre: string
+  nivel: string | null
+  municipio: string | null
+  portal: string | null
+  ediciones: number
+  desde: string | null
+  hasta: string | null
+  actos: number
+  actos_gasto: number
+  monto_gasto: number
+}
+
+export interface CoberturaResponse {
+  fuentes: CoberturaFuente[]
+  municipios_cubiertos: string[]
+  /** Qué queda afuera: se muestra siempre junto al total. */
+  nota: string
+}
+
 export interface GastoFiltros {
   tipo?: string
   objeto?: string
