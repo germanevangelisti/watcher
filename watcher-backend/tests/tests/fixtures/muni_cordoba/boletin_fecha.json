@@ -1,0 +1,114 @@
+{
+ "Object": [
+  {
+   "Numero": 4506,
+   "Fecha": "2026-10-14T16:34:48",
+   "EsUltimoBoletin": false,
+   "RutaDocBoletin": "https://static01.cordoba.gob.ar/boe/boletines/boletin_2026_00001062.pdf",
+   "TiposPublicacion": [
+    {
+     "Orden": 1,
+     "Nombre": "Legislación - Normativa",
+     "TiposNormas": [
+      {
+       "Orden": 3,
+       "Nombre": "Resolución",
+       "Publicaciones": [
+        {
+         "Id": 5247,
+         "EstadoId": 5,
+         "TipoId": 3,
+         "ReparticionId": 8,
+         "NormaTipoId": 5,
+         "NormaNumero": "166",
+         "Letra": "",
+         "ExpedienteNumero": "",
+         "Urgente": false,
+         "FechaSancion": "2026-08-14T00:00:00",
+         "FechaPublicacion": "2026-10-14T00:00:00",
+         "Asunto": "FALLOS ABSOLUTORIOS DEL TRIBUNAL DE CUENTAS MUNICIPAL. ",
+         "CuilUsuarioEditor": null,
+         "CuilUsuarioRevisor": null,
+         "UsuarioEditorId": 128,
+         "UsuarioRevisorId": 161,
+         "Contenido": null,
+         "RutaDocumentoFirmado": null,
+         "Estado": "Publicado",
+         "TipoNorma": "Resolución",
+         "Reparticion": "Asesoría Letrada",
+         "TipoPublicacion": "Legislación - Normativa",
+         "DocumentosAdjuntos": null,
+         "DocumentoFirmado": null,
+         "NombreFormateado": "Resolución N° 166 : FALLOS ABSOLUTORIOS DEL TRIBUNAL DE CUENTAS MUNICIPAL. ",
+         "RutaDocFinal": "https://static01.cordoba.gob.ar/boe/publicaciones/publicacion_2026_00005247/pub_2026_00005247_vistaprevia.pdf",
+         "EsDesdeBorrador": false
+        },
+        {
+         "Id": 5248,
+         "EstadoId": 5,
+         "TipoId": 3,
+         "ReparticionId": 8,
+         "NormaTipoId": 5,
+         "NormaNumero": "167",
+         "Letra": "",
+         "ExpedienteNumero": "",
+         "Urgente": false,
+         "FechaSancion": "2026-08-14T00:00:00",
+         "FechaPublicacion": "2026-10-14T00:00:00",
+         "Asunto": "FALLOS ABSOLUTORIOS DEL TRIBUNAL DE CUENTAS MUNICIPAL. ",
+         "CuilUsuarioEditor": null,
+         "CuilUsuarioRevisor": null,
+         "UsuarioEditorId": 128,
+         "UsuarioRevisorId": 161,
+         "Contenido": null,
+         "RutaDocumentoFirmado": null,
+         "Estado": "Publicado",
+         "TipoNorma": "Resolución",
+         "Reparticion": "Asesoría Letrada",
+         "TipoPublicacion": "Legislación - Normativa",
+         "DocumentosAdjuntos": null,
+         "DocumentoFirmado": null,
+         "NombreFormateado": "Resolución N° 167 : FALLOS ABSOLUTORIOS DEL TRIBUNAL DE CUENTAS MUNICIPAL. ",
+         "RutaDocFinal": "https://static01.cordoba.gob.ar/boe/publicaciones/publicacion_2026_00005248/pub_2026_00005248_vistaprevia.pdf",
+         "EsDesdeBorrador": false
+        },
+        {
+         "Id": 5288,
+         "EstadoId": 5,
+         "TipoId": 3,
+         "ReparticionId": 8,
+         "NormaTipoId": 5,
+         "NormaNumero": "67",
+         "Letra": "",
+         "ExpedienteNumero": "",
+         "Urgente": false,
+         "FechaSancion": "2026-10-13T00:00:00",
+         "FechaPublicacion": "2026-10-14T00:00:00",
+         "Asunto": "LLAMA A LICITACIÓN PÚBLICA N° 01/26, PARA LA CONTRATACIÓN DEL \"SERVICIO DE LIMPIEZA INTEGRAL DEL EDIFICIO DEL TRIBUNAL DE CUENTAS\", POR EL TÉRMINO DE 24 MESES. ",
+         "CuilUsuarioEditor": null,
+         "CuilUsuarioRevisor": null,
+         "UsuarioEditorId": 128,
+         "UsuarioRevisorId": 161,
+         "Contenido": null,
+         "RutaDocumentoFirmado": null,
+         "Estado": "Publicado",
+         "TipoNorma": "Resolución",
+         "Reparticion": "Asesoría Letrada",
+         "TipoPublicacion": "Legislación - Normativa",
+         "DocumentosAdjuntos": null,
+         "DocumentoFirmado": null,
+         "NombreFormateado": "Resolución N° 67 : LLAMA A LICITACIÓN PÚBLICA N° 01/26, PARA LA CONTRATACIÓN DEL \"SERVICIO DE LIMPIEZA INTEGRAL DEL EDIFICIO DEL TRIBUNAL DE CUENTAS\", POR EL TÉRMINO DE 24 MESES. ",
+         "RutaDocFinal": "https://static01.cordoba.gob.ar/boe/publicaciones/publicacion_2026_00005288/pub_2026_00005288_vistaprevia.pdf",
+         "EsDesdeBorrador": false
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "Ok": true,
+ "Errors": [],
+ "ErrorsText": ""
+}

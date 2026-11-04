@@ -4,26 +4,40 @@
 **Snapshot del momento.** Se pisa al avanzar. La historia completa está en `docs/changelog.md` y el historial de git.
 
 > **Actualización 2026-11-04 — estado real (esta sección pisa a los bloques de abajo donde se contradigan).**
-> - **`main` = `bd7cbf5`** (merge del PR #8, 2026-10-15). PRs **#4** (chat-insights pack 2), **#5**
+> - **`main` = `0c6d42a`** (merge del PR #9, sync de docs, 2026-11-04; antes `bd7cbf5`, PR #8). PRs **#4** (chat-insights pack 2), **#5**
 >   (precio-mercado + M8), **#7** (fix de tests + score de verificación) y **#8** (reglas de sesión de agente)
 >   están **mergeados**; **#3 cerrado** (superseded por #7). La "pila de ramas que no llega a `main`" de los
 >   bloques del 2026-10-12 **ya no existe**.
 > - **MVP (M8–M10)**: **M8 hecho** (`pm-gasto-deteccion-ampliada` en Done el 2026-10-13); **M10 funcional en
 >   `main`** (`/analisis/precio-mercado` + `POST /precio-mercado/analizar/{id}`; `pm-pantalla`,
 >   `pm-analisis-item` y `pm-referencias-externas` en Done el 2026-10-19) con **2 bugs P1 abiertos**
->   (`pm-bug-masking-expediente`, `pm-bug-agregado-unidades`); **M9 pendiente**: `app/scrapers/pds_muni.py`
->   sigue siendo placeholder y la Municipalidad de Córdoba (capital) tiene **0 actos**.
-> - **Kanban** (`board-watcher.kanban.md` del vault): To do 12 · WIP 0 · Testing 0 · Done 30. Épica
->   `epic:precio-mercado`: 36 pts, 6 hechos / 30 pendientes.
+>   (`pm-bug-masking-expediente`, `pm-bug-agregado-unidades`); **M9 hecho para Córdoba capital** en la rama
+>   `feat/precio-mercado-pm-municipal-cobertura` (**PR #10, pendiente de merge**; `pm-municipal-cobertura` en Done
+>   el 2026-11-04 tras la prueba manual de Germán): conector real `pds_muni.py` (ver bloque siguiente).
+> - **Kanban** (`board-watcher.kanban.md` del vault): To do 13 · WIP 0 · Testing 0 · Done 31. Épica
+>   `epic:precio-mercado`: 47 pts, 12 hechos / 35 pendientes. Próxima: `muni-portal-compras` (P1, 5 pts,
+>   MuniCompras), después `mapa-gasto-jurisdiccion`.
 > - **Portfolio**: el Must *precio de mercado y gasto público* está en **backlog desde el 2026-10-26**, pero
->   **Germán (2026-11-04) prioriza la cobertura municipal (`pm-municipal-cobertura`, M9) como próximo
->   trabajo**. Gate abierto antes de pasarla a WIP: Córdoba capital como primer municipio, corte feb–sep 2026
->   y costo de re-extracción.
+>   **Germán (2026-11-04) priorizó la cobertura municipal**: Córdoba capital, todo 2026, Ollama local si hiciera
+>   falta re-extraer (no hizo falta).
 > - **Muestra de M8**: el kanban registra el cierre con la muestra etiquetada **parcial (13/150)** por decisión
 >   de Germán; el bloque de abajo del 2026-10-13 registra **100 filas etiquetadas por el asistente** (nivel
 >   99,0%, tipo 93,0%). Las dos cosas constan; la revisión de esas 100 etiquetas por el PO sigue sin registro.
 > - Pendientes fuera del MVP: deploy SSH a GCE roto (push-deploy desactivado); hallazgos de GitGuardian en la
 >   rama del PR #3 (revisión de Germán); `test_pds_scrapers` rojo según el PR #7 (sin re-medir).
+>
+> **Gasto municipal de Córdoba capital, 2026-11-04** (rama `feat/precio-mercado-pm-municipal-cobertura`):
+> el conector real `pds_muni.py` lee la API pública del Boletín Municipal
+> (`boletinmunicipal.cordoba.gob.ar/apibridge/ciudadano/boletin`). La ingesta de todo 2026 cubre
+> **81 ediciones (N° 4437-4517, 02/01-03/11), 509 actos, todos con texto, 266 con monto, 0 errores**.
+> Cada acto se guarda con `nivel=municipal` y `municipio=Córdoba` y pasa por el clasificador M8.
+> El **gasto real es escaso: 2 actos únicos, $269,2 M** (licitación de limpieza del Tribunal de
+> Cuentas, $184,8 M, publicada 3 veces y contada 1; pliegos de contenedores BioCórdoba, $84,4 M).
+> Se excluyen las Letras del Tesoro (deuda), las tarifas/UEM y los fallos del Tribunal de Cuentas.
+> La ciudad publica casi todas sus compras fuera del boletín (portal de compras), así que la señal
+> es baja por la fuente y no por el conector. No hizo falta Ollama: la API ya trae los actos
+> segmentados. Nuevo `GET /gasto/cobertura` y banner en `/analisis/precio-mercado`.
+> CLI: `scripts/ingest_municipal_cordoba.py --year 2026`.
 
 > **MVP re-priorizado: el producto ahora busca gasto público, no lo contrasta** (2026-10-12).
 > Germán reencuadró la salida: *"la nueva prioridad del MVP es leer boletines en búsqueda de gasto

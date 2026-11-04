@@ -1,6 +1,7 @@
 """Gasto público detectado en los boletines (M8, epic:precio-mercado).
 
 - ``GET /gasto/detectado`` — listado con filtros, total y suma.
+- ``GET /gasto/cobertura`` — qué fuentes cubre el listado y qué queda afuera.
 
 Lee `analisis` (no el ledger): M8 pide clasificar **todo acto con monto**, y
 `ejecucion_presupuestaria` sólo contiene los actos que P.7 marcó como gasto
@@ -21,6 +22,7 @@ from datetime import date
 
 from app.db.models import Analisis, Boletin, EjecucionPresupuestaria, PrecioMercadoAnalisis
 from app.db.session import get_db
+from app.services.cobertura import cobertura
 from app.services.presupuesto_matching import parse_date
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import case, func, select
@@ -181,3 +183,11 @@ async def get_gasto_detectado(
         "republicaciones_excluidas": suma_excluida,
         "items": items,
     }
+
+
+@router.get("/cobertura")
+async def get_gasto_cobertura(db: AsyncSession = Depends(get_db)):
+    """Fuentes del listado (ediciones, rango de fechas, actos y gasto por fuente)
+    y la nota de lo que no está cubierto, para que la UI no presente el total
+    como si fuera todo el gasto de la provincia."""
+    return await cobertura(db)

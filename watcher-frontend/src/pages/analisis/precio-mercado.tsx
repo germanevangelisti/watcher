@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useAnalizarPrecio, useGastoDetectado } from "@/lib/api"
+import { useAnalizarPrecio, useCoberturaGasto, useGastoDetectado } from "@/lib/api"
 import type {
   AgregadoRenglones,
   AnalisisPrecio,
@@ -209,6 +209,30 @@ const NIVELES: Nivel[] = ["provincial", "municipal", "comunal", "nacional"]
 const SELECT_CLASS =
   "mt-1 w-full rounded border border-border bg-background px-2 py-1 text-sm"
 
+/**
+ * Qué cubre el listado: sin esto, el total se lee como "todo el gasto de la
+ * provincia", y los municipios sin fuente propia no están.
+ */
+function CoberturaBanner() {
+  const { data } = useCoberturaGasto()
+  if (!data) return null
+  return (
+    <div data-testid="cobertura-banner" className="rounded-md border border-border bg-muted/40 p-3 text-sm">
+      <p className="font-medium">Cobertura del listado</p>
+      <ul className="mt-1 space-y-0.5 text-muted-foreground">
+        {data.fuentes.map((f) => (
+          <li key={f.fuente}>
+            <span className="text-foreground">{f.nombre}</span>
+            {f.desde && f.hasta ? ` · ${f.desde} a ${f.hasta}` : ""}
+            {` · ${f.ediciones} ediciones · ${f.actos} actos · ${f.actos_gasto} con gasto`}
+          </li>
+        ))}
+      </ul>
+      <p className="mt-1 text-muted-foreground">{data.nota}</p>
+    </div>
+  )
+}
+
 export function PrecioMercadoPage() {
   const [filtros, setFiltros] = useState<GastoFiltros>({ solo_gasto: true })
   const [selected, setSelected] = useState<number | null>(null)
@@ -233,6 +257,8 @@ export function PrecioMercadoPage() {
           precios contra referencias con fuente y fecha, y no emite dictamen.
         </p>
       </div>
+
+      <CoberturaBanner />
 
       <div className="grid gap-3 md:grid-cols-3 lg:grid-cols-4">
         <label className="text-sm">

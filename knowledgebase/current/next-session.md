@@ -1,14 +1,16 @@
 # Próxima sesión — Watcher Agent
 
-> **Actualización 2026-11-04 — la próxima sesión es `pm-municipal-cobertura` (M9).** Germán la priorizó
-> el 2026-11-04. Los pasos 1 y 2 del bloque del 2026-10-12 de abajo **ya están hechos**: la pila de ramas se
-> mergeó (PRs #4, #5, #7, #8; `main` = `bd7cbf5`) y M8 está en Done (2026-10-13). M10 funciona en `main` con
+> **Actualización 2026-11-04 (tarde) — la próxima sesión es `muni-portal-compras` (P1, 5 pts).**
+> `pm-municipal-cobertura` (M9) quedó **Done** el 2026-11-04 tras la prueba manual de Germán: conector real
+> `pds_muni.py` del Boletín Municipal de Córdoba capital, ingesta de todo 2026 (81 ediciones, 509 actos, 2 de
+> gasto), `GET /gasto/cobertura` y banner. Va a `main` con el **PR #10**. Los pasos 1 y 2 del bloque del
+> 2026-10-12 de abajo **ya están hechos** (PRs #4, #5, #7, #8 y #9 mergeados). M10 funciona en `main` con
 > 2 bugs P1 abiertos (`pm-bug-masking-expediente`, `pm-bug-agregado-unidades`).
 >
-> **Antes de codear (gate de Germán, abierto):** Córdoba capital como primer municipio; corte feb–sep 2026;
-> costo de re-extracción si hace falta más texto. Con el OK: rama + PR según `agent-session-rules`, máx. 1 WIP.
-> Punto de partida: `watcher-backend/app/scrapers/pds_muni.py` (placeholder, `base_url` de ejemplo);
-> fuente `https://boletinmunicipal.cordoba.gob.ar/`.
+> **Próximo:** `muni-portal-compras`: conector de MuniCompras (`compras.cordoba.gob.ar`, API JSON pública),
+> donde la Muni publica casi todas sus compras (el boletín municipal es casi todo normativa). Después,
+> `mapa-gasto-jurisdiccion` (MapLibre). Rama + PR según `agent-session-rules`, máx. 1 WIP; la sesión se
+> lanza con el launcher de cooperledge (brazo Claude + DeepSeek cloud, registro `repo-workflows.yaml`).
 >
 
 > **Actualización 2026-10-12 — el MVP se reencuadró: la próxima sesión NO es V.7/V.8.**
