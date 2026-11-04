@@ -1,6 +1,6 @@
 # MVP — Watcher Agent
 
-**Fecha:** 2026-10-12 (re-priorización del PO; versión anterior 2026-09-24)  
+**Fecha:** 2026-10-12 (re-priorización del PO; versión anterior 2026-09-24) · **estado actualizado 2026-11-04**  
 **Definición de salida (vigente desde 2026-10-12):** Un usuario puede, en ≤ 10 pasos documentados, abrir **un listado de todo el gasto público publicado en los boletines provinciales y municipales** del corte declarado (licitaciones, compras directas, contrataciones, adjudicaciones, obras y servicios), filtrarlo por tipo, nivel (provincial / municipal), organismo, fecha y monto, con la **cobertura municipal declarada** (qué municipios y meses están y cuáles no), y **elegir un acto para analizarlo en profundidad** (precio por renglón, referencias con fuente y fecha, sin dictamen).
 
 > **Re-priorización (Germán, 2026-10-12):** *"la nueva prioridad del MVP es leer boletines en búsqueda de gasto público nivel provincial y municipal y desde allí el usuario decidirá si analizar en profundidad"*. Los Must **M1–M7 + MB** (contraste fiscal vs Ley 11.088) quedan como **línea base alcanzada** (evidencia abajo, sin cambios). Los Must nuevos **M8–M10** definen la salida ahora. Plan, historias y gate: épica `epic:precio-mercado` en el vault (`board/epics/epic-watcher-precio-mercado.md`).
@@ -9,9 +9,9 @@
 
 | ID | Capacidad | Criterio de aceptación | Estado | Evidencia |
 |----|-----------|------------------------|--------|-----------|
-| **M8** | **Detección de gasto público (todos los tipos)** | Todo acto con monto del corpus queda clasificado por `tipo_gasto` (licitación, compra directa, contratación, concurso, adjudicación, obra, servicio, subsidio/transferencia, otro) con organismo y monto; los no clasificables quedan como `otro` con motivo; precisión medida sobre ≥ 100 actos etiquetados (≥ 90% nivel, ≥ 80% tipo). | pendiente | Hoy: heurística de bienes estandarizables, 83 *observables* de 1.220 actos (rama `feat/precio-mercado`). Historia `pm-gasto-deteccion-ampliada` |
-| **M9** | **Nivel provincial y municipal con cobertura declarada** | Cada acto tiene `nivel` (provincial / municipal / comunal) y municipio; Boletín Municipal de la Ciudad de Córdoba ingerido en el corte declarado; banner de cobertura municipal (municipios presentes / ausentes, meses). | pendiente | Medido 2026-10-12: 803 boletines 100% BO provincial; 228 actos municipales/comunales (77 organismos) llegan como edictos del interior; **Municipalidad de Córdoba: 0**. Historia `pm-municipal-cobertura` |
-| **M10** | **Listado para elegir + análisis en profundidad a pedido** | Pantalla con filtros tipo / nivel / organismo / fecha / monto, totales visibles y acción *analizar en profundidad* por acto; el análisis (precio unitario o por renglón, referencias con fuente y fecha, clasificación sin dictamen) corre sólo cuando el usuario lo pide. | en curso | `/analisis/precio-mercado` + `POST /precio-mercado/analizar/{id}` con análisis por renglón (PR #5 draft) |
+| **M8** | **Detección de gasto público (todos los tipos)** | Todo acto con monto del corpus queda clasificado por `tipo_gasto` (licitación, compra directa, contratación, concurso, adjudicación, obra, servicio, subsidio/transferencia, otro) con organismo y monto; los no clasificables quedan como `otro` con motivo; precisión medida sobre ≥ 100 actos etiquetados (≥ 90% nivel, ≥ 80% tipo). | **hecho (2026-10-13)** | Historia `pm-gasto-deteccion-ampliada` en Done (vault), código en `main` vía PR #5. Listado `GET /gasto/detectado`: 1.243 actos · $1.751,60 B. **Muestra**: el kanban registra el cierre con muestra etiquetada **parcial (13/150)** por decisión de Germán; `current/status.md` (2026-10-13) registra **100 filas etiquetadas por el asistente** con nivel 99,0% y tipo 93,0%. Ambas fuentes constan; la revisión del PO de esas 100 etiquetas no está registrada |
+| **M9** | **Nivel provincial y municipal con cobertura declarada** | Cada acto tiene `nivel` (provincial / municipal / comunal) y municipio; Boletín Municipal de la Ciudad de Córdoba ingerido en el corte declarado; banner de cobertura municipal (municipios presentes / ausentes, meses). | hecho (Córdoba capital) | Medido 2026-10-12: 803 boletines 100% BO provincial; **Municipalidad de Córdoba: 0**. Historia `pm-municipal-cobertura` **Done 2026-11-04** (prueba manual de Germán; PR #10): conector `pds_muni.py` del Boletín Municipal, ingesta de todo 2026 (81 ediciones, 509 actos, 2 de gasto por $269,2 M), `GET /gasto/cobertura` y banner. El gasto municipal real está en MuniCompras: historia `muni-portal-compras` |
+| **M10** | **Listado para elegir + análisis en profundidad a pedido** | Pantalla con filtros tipo / nivel / organismo / fecha / monto, totales visibles y acción *analizar en profundidad* por acto; el análisis (precio unitario o por renglón, referencias con fuente y fecha, clasificación sin dictamen) corre sólo cuando el usuario lo pide. | **funcional en `main`** (2026-10-19) | `/analisis/precio-mercado` + `POST /precio-mercado/analizar/{id}` con análisis por renglón (PR #5 mergeado); `pm-pantalla`, `pm-analisis-item`, `pm-referencias-externas` en Done. **Abiertos 2 bugs P1**: `pm-bug-masking-expediente`, `pm-bug-agregado-unidades` |
 
 ### Should (fase 2 de la épica)
 
@@ -41,7 +41,7 @@
 - Fragmentos cortos (~290 caracteres) pueden no alcanzar para clasificar: re-extracción = **decisión de costo de Germán**.
 - Formato del Boletín Municipal de Córdoba distinto al provincial (parser nuevo).
 - Portal ComprasCba sin API (postbacks ASP.NET) para la fase 2.
-- Decisiones humanas: aceptar este reencuadre; Córdoba capital como primer municipio; OCR/LLM sobre documentos; Mercado Libre sí/no.
+- Decisiones humanas: ~~aceptar este reencuadre~~ (aceptado: este `mvp.md` está en `main` desde el PR #5); Córdoba capital como primer municipio; OCR/LLM sobre documentos; Mercado Libre sí/no.
 
 ---
 

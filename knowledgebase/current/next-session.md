@@ -1,5 +1,18 @@
 # Próxima sesión — Watcher Agent
 
+> **Actualización 2026-11-04 (tarde) — la próxima sesión es `muni-portal-compras` (P1, 5 pts).**
+> `pm-municipal-cobertura` (M9) quedó **Done** el 2026-11-04 tras la prueba manual de Germán: conector real
+> `pds_muni.py` del Boletín Municipal de Córdoba capital, ingesta de todo 2026 (81 ediciones, 509 actos, 2 de
+> gasto), `GET /gasto/cobertura` y banner. Va a `main` con el **PR #10**. Los pasos 1 y 2 del bloque del
+> 2026-10-12 de abajo **ya están hechos** (PRs #4, #5, #7, #8 y #9 mergeados). M10 funciona en `main` con
+> 2 bugs P1 abiertos (`pm-bug-masking-expediente`, `pm-bug-agregado-unidades`).
+>
+> **Próximo:** `muni-portal-compras`: conector de MuniCompras (`compras.cordoba.gob.ar`, API JSON pública),
+> donde la Muni publica casi todas sus compras (el boletín municipal es casi todo normativa). Después,
+> `mapa-gasto-jurisdiccion` (MapLibre). Rama + PR según `agent-session-rules`, máx. 1 WIP; la sesión se
+> lanza con el launcher de cooperledge (brazo Claude + DeepSeek cloud, registro `repo-workflows.yaml`).
+>
+
 > **Actualización 2026-10-12 — el MVP se reencuadró: la próxima sesión NO es V.7/V.8.**
 > Germán re-priorizó la salida: *"la nueva prioridad del MVP es leer boletines en búsqueda de gasto
 > público nivel provincial y municipal y desde allí el usuario decidirá si analizar en profundidad"*.

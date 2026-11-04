@@ -1,8 +1,31 @@
 # Estado Actual — Watcher Agent
 
-**Última actualización:** 2026-10-12
+**Última actualización:** 2026-11-04
 **Snapshot del momento.** Se pisa al avanzar. La historia completa está en `docs/changelog.md` y el historial de git.
 
+> **Actualización 2026-11-04 — estado real (esta sección pisa a los bloques de abajo donde se contradigan).**
+> - **`main` = `0c6d42a`** (merge del PR #9, sync de docs, 2026-11-04; antes `bd7cbf5`, PR #8). PRs **#4** (chat-insights pack 2), **#5**
+>   (precio-mercado + M8), **#7** (fix de tests + score de verificación) y **#8** (reglas de sesión de agente)
+>   están **mergeados**; **#3 cerrado** (superseded por #7). La "pila de ramas que no llega a `main`" de los
+>   bloques del 2026-10-12 **ya no existe**.
+> - **MVP (M8–M10)**: **M8 hecho** (`pm-gasto-deteccion-ampliada` en Done el 2026-10-13); **M10 funcional en
+>   `main`** (`/analisis/precio-mercado` + `POST /precio-mercado/analizar/{id}`; `pm-pantalla`,
+>   `pm-analisis-item` y `pm-referencias-externas` en Done el 2026-10-19) con **2 bugs P1 abiertos**
+>   (`pm-bug-masking-expediente`, `pm-bug-agregado-unidades`); **M9 hecho para Córdoba capital** en la rama
+>   `feat/precio-mercado-pm-municipal-cobertura` (**PR #10, pendiente de merge**; `pm-municipal-cobertura` en Done
+>   el 2026-11-04 tras la prueba manual de Germán): conector real `pds_muni.py` (ver bloque siguiente).
+> - **Kanban** (`board-watcher.kanban.md` del vault): To do 13 · WIP 0 · Testing 0 · Done 31. Épica
+>   `epic:precio-mercado`: 47 pts, 12 hechos / 35 pendientes. Próxima: `muni-portal-compras` (P1, 5 pts,
+>   MuniCompras), después `mapa-gasto-jurisdiccion`.
+> - **Portfolio**: el Must *precio de mercado y gasto público* está en **backlog desde el 2026-10-26**, pero
+>   **Germán (2026-11-04) priorizó la cobertura municipal**: Córdoba capital, todo 2026, Ollama local si hiciera
+>   falta re-extraer (no hizo falta).
+> - **Muestra de M8**: el kanban registra el cierre con la muestra etiquetada **parcial (13/150)** por decisión
+>   de Germán; el bloque de abajo del 2026-10-13 registra **100 filas etiquetadas por el asistente** (nivel
+>   99,0%, tipo 93,0%). Las dos cosas constan; la revisión de esas 100 etiquetas por el PO sigue sin registro.
+> - Pendientes fuera del MVP: deploy SSH a GCE roto (push-deploy desactivado); hallazgos de GitGuardian en la
+>   rama del PR #3 (revisión de Germán); `test_pds_scrapers` rojo según el PR #7 (sin re-medir).
+>
 > **Gasto municipal de Córdoba capital, 2026-11-04** (rama `feat/precio-mercado-pm-municipal-cobertura`):
 > el conector real `pds_muni.py` lee la API pública del Boletín Municipal
 > (`boletinmunicipal.cordoba.gob.ar/apibridge/ciudadano/boletin`). La ingesta de todo 2026 cubre
@@ -595,9 +618,9 @@
 | Campo | Valor |
 |---|---|
 | Release | v2.0.0 + H.1 + P.7 + V.1 … V.6 + V.5 + MB API + **MB UI (techo + disclaimer + proxy BO)** + **M6 evidencia** + **pack fix-ui + chat-insights (2026-09-29)** + **selector de proveedor del chat (2026-10-01)** + **MVP reencuadrado (2026-10-12)** |
-| Estado | **MVP reencuadrado (2026-10-12)**: la salida vigente es detectar **gasto público provincial y municipal**, listarlo para elegir y analizar en profundidad a pedido (M8–M10, `vision/mvp.md` + épica `epic:precio-mercado`). **La pila de PRs no llega a `main`**: PR #5 (draft) tiene base `feat/chat-insights-pack-2`, sin mergear y sin PR propio. Línea base alcanzada: V.1–V.6 + V.5 (8 de 12 meses) + MB; **3** alertas >100% con causa medida |
+| Estado | **MVP reencuadrado (2026-10-12)**, `main` `bd7cbf5` con PRs #4/#5/#7/#8 mergeados: M8 hecho, M10 funcional (2 bugs P1 abiertos), M9 pendiente (0 actos de Córdoba capital). Línea base alcanzada: V.1–V.6 + V.5 (8 de 12 meses) + MB; **3** alertas >100% con causa medida |
 | Stack LLM | **`LLM_PROVIDER=ollama`** (verificado 2026-10-12): el chat resuelve a **local** por defecto. El SDK `google-generativeai` sigue instalado, pero ya no es el default. Local: Ollama `qwen2.5:7b` y `qwen2.5:14b`. Claude: sin key, no se puede usar |
-| Pendiente inmediato | **Fase 1 (P0) del MVP reencuadrado**: `pm-gasto-deteccion-ampliada` (M8) y después `pm-municipal-cobertura` (M9, depende de la anterior). **Antes**: mergear `feat/chat-insights-pack-2` (gate manual de sus 7 historias) y recién ahí retargetear PR #5 a `main`. **Decisiones del gate**: Córdoba capital como 1er municipio y corte · costo de re-extracción si la clasificación necesita más texto · OCR local vs externo · ML como referencia secundaria o apagada. **Depriorizado por el reencuadre**: V.7/V.8 (obligan a re-extraer), V.9/V.10, DT-8, **2026-01** sin ingesta |
+| Pendiente inmediato | **`pm-municipal-cobertura` (M9)**, priorizada por Germán el 2026-11-04 — tras su gate (Córdoba capital como 1er municipio, corte feb–sep 2026, costo de re-extracción). Después: bugs P1 `pm-bug-masking-expediente` y `pm-bug-agregado-unidades`, y `pm-matching-procesos`. **Depriorizado**: V.7/V.8, V.9/V.10, DT-8, **2026-01** sin ingesta |
 
 ---
 
@@ -806,7 +829,7 @@ Ninguno de producto. Notion MCP no disponible — el tablero quedó sin actualiz
 
 ## Próximos pasos
 
-0. **Fase 1 (P0) del MVP reencuadrado (2026-10-12) — esto es lo que hay que hacer ahora.**
+0. ~~Fase 1 (P0) del MVP reencuadrado (2026-10-12)~~ **Superado (2026-11-04)**: M8 hecho y la pila de ramas mergeada; lo próximo es `pm-municipal-cobertura` (ver el bloque del 2026-11-04 arriba). Texto original:
    `pm-gasto-deteccion-ampliada` (M8: todos los tipos de gasto, precisión medida ≥ 90% nivel /
    ≥ 80% tipo sobre ≥ 100 actos etiquetados) y después `pm-municipal-cobertura` (M9, depende de la
    anterior). **Antes, desbloquear la pila de ramas**: gate manual de `feat/chat-insights-pack-2`
