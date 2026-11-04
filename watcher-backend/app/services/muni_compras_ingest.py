@@ -157,6 +157,19 @@ def build_analisis_fields(compra: CompraPublica) -> dict:
             "fecha_creacion": compra.fecha_creacion.isoformat() if compra.fecha_creacion else None,
             "numero_llamados": compra.numero_llamados,
             "acta": compra.acta,
+            # El nombre descriptivo del proceso ("SUBASTA ELECTRONICA INVERSA")
+            # es el que el ciudadano reconoce; `tipo_compra` sólo trae el código.
+            "nombre_compra": {
+                "codigo": compra.nombre_compra_codigo,
+                "nombre": compra.nombre_compra or compra.tipo_nombre,
+            },
+            # Cuándo se llama y hasta cuándo se reciben ofertas: lo único que el
+            # portal dice sobre los plazos, y lo que hace legible una subasta.
+            "ultimo_llamado": compra.ultimo_llamado,
+            "vinculacion_llamado": compra.vinculacion_llamado,
+            "ampliacion": compra.ampliacion,
+            "prorroga": compra.prorroga,
+            "redeterminacion": compra.redeterminacion,
             "portal_url": portal_url(),
             "adjudicacion_publica": False,
             "adjudicacion_nota": ADJUDICACION_NOTA,

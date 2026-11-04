@@ -79,6 +79,17 @@ class CompraPublica:
     fecha_creacion: date | None
     numero_llamados: int = 0
     acta: dict[str, Any] | None = None
+    # What the listing says about the process itself.  `nombre_compra` is the
+    # descriptive name ("SUBASTA ELECTRONICA INVERSA") where `tipo` only carries
+    # the short code ("SUBASTA"); the rest dates the call and says whether the
+    # process admits extensions, extensions of term and price redetermination.
+    nombre_compra: str | None = None
+    nombre_compra_codigo: str | None = None
+    ultimo_llamado: dict[str, Any] | None = None
+    vinculacion_llamado: dict[str, Any] | None = None
+    ampliacion: int | None = None
+    prorroga: bool | None = None
+    redeterminacion: int | None = None
 
     @property
     def fecha(self) -> date | None:
@@ -124,6 +135,29 @@ def _parse_monto(value: Any) -> float | None:
     return monto if monto > 0 else None
 
 
+def _parse_int(value: Any) -> int | None:
+    if value is None or value == "":
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _parse_instancia(raw: Any, descripcion_key: str = "nombre") -> dict[str, Any] | None:
+    """Trimmed copy of a ``ultimo_llamado`` / ``vinculacion_llamado`` block."""
+    if not isinstance(raw, dict):
+        return None
+    return {
+        "instancia": _clean(raw.get("instancia")),
+        "descripcion": _clean(raw.get(descripcion_key)),
+        "fecha_desde": _clean(raw.get("fecha_desde")),
+        "fecha_hasta": _clean(raw.get("fecha_hasta")),
+        "hora_desde": _clean(raw.get("hora_desde")),
+        "hora_hasta": _clean(raw.get("hora_hasta")),
+    }
+
+
 def parse_compra(raw: dict[str, Any]) -> CompraPublica | None:
     if raw.get("id") is None:
         return None
@@ -139,7 +173,9 @@ def parse_compra(raw: dict[str, Any]) -> CompraPublica | None:
         titulo=_clean(raw.get("titulo")) or "",
         objeto=_clean(raw.get("objeto")) or "",
         tipo_codigo=_clean(tipo.get("tipo_compra") or nombre_compra.get("nombre_compra")),
-        tipo_nombre=_clean(tipo.get("nombre") or nombre_compra.get("nombre")),
+        # The descriptive name beats the short code: "SUBASTA ELECTRONICA
+        # INVERSA" tells the citizen what the procedure is, "SUBASTA" does not.
+        tipo_nombre=_clean(nombre_compra.get("nombre") or tipo.get("nombre")),
         estado_codigo=_clean(estado.get("estado_compra")),
         estado_nombre=_clean(estado.get("nombre")),
         entidad=_clean(entidad.get("nombre")),
@@ -151,6 +187,13 @@ def parse_compra(raw: dict[str, Any]) -> CompraPublica | None:
         fecha_creacion=_parse_fecha(raw.get("fecha_creacion")),
         numero_llamados=int(raw.get("numero_llamados") or 0),
         acta=acta if isinstance(acta, dict) else None,
+        nombre_compra=_clean(nombre_compra.get("nombre")),
+        nombre_compra_codigo=_clean(nombre_compra.get("nombre_compra")),
+        ultimo_llamado=_parse_instancia(raw.get("ultimo_llamado")),
+        vinculacion_llamado=_parse_instancia(raw.get("vinculacion_llamado")),
+        ampliacion=_parse_int(raw.get("ampliacion")),
+        prorroga=bool(raw["prorroga"]) if raw.get("prorroga") is not None else None,
+        redeterminacion=_parse_int(raw.get("redeterminacion")),
     )
 
 

@@ -21,7 +21,34 @@
         "nombre": "informe_de_presentacion_de_ofertas_397_llamado_1.pdf",
         "fecha_creacion": "2026-11-02T13:10:32.363743"
       },
-      "numero_llamados": 1
+      "numero_llamados": 1,
+      "ultimo_llamado": {
+        "id": 1598,
+        "nombre": "llamado",
+        "instancia": "LLAMADO",
+        "fecha_desde": "2026-11-02",
+        "fecha_hasta": "2026-11-02",
+        "hora_desde": "10:00:00",
+        "hora_hasta": "10:00:00",
+        "activo": true,
+        "fecha_creacion": "2026-10-27T13:34:18.551945",
+        "instancia_nombre": null
+      },
+      "vinculacion_llamado": {
+        "id": 1620,
+        "nombre": "\nLa recepción de las ofertas se realizará exclusivamente de forma digital por la presente Plataforma.",
+        "instancia": "PRESENTACION_OFERTA",
+        "fecha_desde": "2026-10-30",
+        "fecha_hasta": "2026-11-02",
+        "hora_desde": "10:30:00",
+        "hora_hasta": "10:00:00",
+        "activo": true,
+        "fecha_creacion": "2026-10-27T15:39:55.437799",
+        "instancia_nombre": null
+      },
+      "ampliacion": 20,
+      "prorroga": true,
+      "redeterminacion": 1
     },
     {
       "id": 398,
