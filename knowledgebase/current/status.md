@@ -3,7 +3,33 @@
 **Última actualización:** 2026-11-06
 **Snapshot del momento.** Se pisa al avanzar. La historia completa está en `docs/changelog.md` y el historial de git.
 
-> **Actualización 2026-11-06 — WMA1 Done (gate Germán).**
+> **Actualización 2026-11-06 — WCL1: el objeto de la compra, sin `otro`.**
+> Historia `story-watcher-pm-clasificacion-objeto` (WCL1) **en testing** (PR #13, sin mergear).
+> El eje `objeto` dejaba **93 de las 153** compras 2026 de MuniCompras en `otro`, incluida la
+> 12387 (*servicio de racionamiento en cocido*). Se ampliaron las reglas del clasificador y se
+> reclasificó el corpus con un CLI idempotente.
+> - **Reglas nuevas**: comida servida (racionamiento, raciones, viandas, refrigerio, catering,
+>   «en cocido», servicio de alimentación); obra sin decir «obra» (refuncionalización, puesta en
+>   valor, reacondicionamiento, refacción, rehabilitación de calzada, reparación edilicia, vereda,
+>   calzada, demarcación vial, drenaje, alumbrado); «servicio de X» **sólo sobre el título** (sobre
+>   el texto completo, una mención del VISTO convertía en servicio una compra de transformadores);
+>   bienes por especie (insumos, medicamentos, reactivos, indumentaria, vehículos, equipamiento,
+>   bombas, repuestos, luminarias, materiales).
+> - **Medido** (corpus con las 153 compras del portal): MuniCompras `otro` **93 → 5**;
+>   provincial `otro` **270 → 106** (obra 367 → 455, servicio 52 → 132); `municipal_capital` sin
+>   cambios. 12387, 8178 y 8196 quedan en `servicio`.
+> - **CLI**: `scripts/reclasificar_objeto.py` (dry-run por defecto; `--apply` escribe). Rehace
+>   **sólo** `objeto`, es idempotente (2ª corrida: 0 cambios) e informa antes/después por fuente.
+>   `scripts/backfill_tipo_gasto.py` (M8) ya no pisa las columnas que dicta el portal (figura,
+>   nivel, municipio, dedupe).
+> - **Tests**: pytest dirigidos **264 passed** (25 casos nuevos en
+>   `test_gasto_classifier_tipos.py`; `test_muni_compras.py` pasa de `otro` a `obra`), `ruff` limpio.
+> - **Brecha de datos detectada**: el corpus que sirve la app (checkout principal y worktree WMA1)
+>   **no tiene** las 153 filas de MuniCompras — la ingesta de WMU1 quedó en el `sqlite.db` de su
+>   worktree. Para la prueba manual: `python scripts/ingest_muni_compras_cordoba.py --year 2026` y
+>   después `python scripts/reclasificar_objeto.py --apply` en `watcher-backend/`.
+
+> **Actualización 2026-11-06 — WMA1 Done (gate Germán).** *(histórico)*
 > Historia `story-watcher-mapa-gasto-jurisdiccion` (mapa de gasto por jurisdicción) pasó **testing → done**.
 > **[PR #12](https://github.com/germanevangelisti/watcher/pull/12)** mergeado a `main`
 > (`c08e13a`, merge commit). Head de feature: `b827b54` (tooltip MapLibre legible en tema oscuro).
