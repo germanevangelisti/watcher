@@ -1,5 +1,19 @@
 # Próxima sesión — Watcher Agent
 
+> **Actualización 2026-11-06 — `mapa-gasto-jurisdiccion` (WMA1) implementada; la próxima es
+> `pm-clasificacion-objeto` (WCL1, 3 pts).**
+> El mapa está en **testing** (rama `feat/epic-watcher-precio-mercado-wma1`, **PR #12** abierto y sin
+> mergear) y espera el gate manual de Germán. Deja tres cosas para leer antes de tocar nada:
+> 1. **El gris es el mensaje**: 39 de 427 jurisdicciones tienen datos. El mapa no puede sugerir
+>    "gasto cero" donde no hay fuente; cualquier cambio de UI debe conservar esa distinción.
+> 2. **La clave es el código, no el nombre**: `analisis.municipio` trae erratas y grafías
+>    ("Carrillobo", "La Ciudad De Río Ceballos"). Toda agregación nueva tiene que pasar por
+>    `app/services/jurisdicciones.resolver` o por `municipio_codigo`.
+> 3. **Los límites son de OSM, no del IGN**: el archivo está versionado y el script lo regenera;
+>    si aparece el GeoJSON oficial, se reemplaza sin cambiar el contrato del endpoint.
+> Después del gate: **`WCL1`** (clasificación de objeto ampliada: racionamiento/alimentos y objetos
+> del portal municipal), que hoy manda 93 de 153 compras del portal a `otro`.
+>
 > **Actualización 2026-11-04 (noche) — `muni-portal-compras` (WMU1) implementada; la próxima es
 > `mapa-gasto-jurisdiccion` (WMA1, 6 pts).**
 > El conector de MuniCompras está en **testing** (rama `feat/epic-watcher-precio-mercado-wmu1`,

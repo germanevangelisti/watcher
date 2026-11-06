@@ -1,8 +1,33 @@
 # Estado Actual — Watcher Agent
 
-**Última actualización:** 2026-11-04
+**Última actualización:** 2026-11-06
 **Snapshot del momento.** Se pisa al avanzar. La historia completa está en `docs/changelog.md` y el historial de git.
 
+> **Actualización 2026-11-06 — WMA1: el gasto por jurisdicción en un mapa.**
+> `GET /gasto/por-jurisdiccion` agrega el mismo universo que `/gasto/detectado` por `nivel` + `municipio`
+> sobre el catálogo completo de Córdoba: **427 gobiernos locales** (260 municipios + 167 comunas) con
+> población del **Censo 2022** (ReFeGLo, Ministerio del Interior). Devuelve **también** las jurisdicciones
+> sin actos (`cobertura: false`): el mapa las pinta en gris y un hueco no se lee como gasto cero.
+> `gasto_per_capita` es `null` sin actos. El gasto provincial/nacional va en `por_nivel` (no se reparte
+> entre municipios) y `sin_jurisdiccion` declara los actos municipales/comunales que no nombran su
+> gobierno local (18 actos · $5.617,3 M en el corpus del 2026-11-04).
+> - **Normalización**: "Rio Ceballos", "Río Ceballos" y "La Ciudad De Río Ceballos" son una sola
+>   jurisdicción; "Carrillobo" → Carrilobo; un nombre ambiguo ("Los Chañaritos", que existe dos veces)
+>   **no** se asigna. `/gasto/detectado` ganó `municipio_codigo`, que une las grafías.
+> - **Límites**: GeoJSON estático de **OpenStreetMap** (`admin_level=7` dentro de `rel(3592494)`),
+>   simplificado a 294 KB y versionado en `watcher-frontend/public/geo/`. IGN e IDECOR no respondieron
+>   desde el entorno y georef sólo da centroides: la sustitución está documentada, con fecha de
+>   extracción (2026-11-06) y script de regeneración, en `app/data/FUENTES-municipios.md`.
+> - **Pantalla** `/analisis/mapa-gasto`: MapLibre sobre fondo plano (sin tiles ni claves), métrica
+>   seleccionable (gasto / per cápita / actos), gris explícito para sin datos, leyenda con histograma,
+>   filtro por tamaño y click-through a `/analisis/precio-mercado?municipio_codigo=…`.
+> - **Cobertura medida**: **39 de 427** jurisdicciones con datos en el corpus actual. Es el número que
+>   el mapa hace visible en vez de esconder.
+> - **Tests**: pytest `test_gasto_por_jurisdiccion_api.py` **6** + `test_gasto_detectado_api.py` **5** +
+>   relacionados **31**; vitest **144/144**; `ruff`, `tsc -b`, `eslint` y `npm run build` limpios.
+> - **Kanban**: `mapa-gasto-jurisdiccion` en **testing** (rama `feat/epic-watcher-precio-mercado-wma1`,
+>   **PR #12**, sin mergear). Falta el gate manual de Germán. Próxima: `pm-clasificacion-objeto` (WCL1).
+>
 > **Actualización 2026-11-04 (tarde) — WMU1: el gasto de la ciudad, desde el Portal de Compras.**
 > El boletín municipal era casi todo normativa (2 actos de gasto sobre 509 en 2026); el gasto real de la
 > Ciudad de Córdoba está en **MuniCompras** (`compras.cordoba.gob.ar`, API JSON pública, sin token).
