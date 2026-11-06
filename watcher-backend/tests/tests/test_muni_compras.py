@@ -157,10 +157,10 @@ async def test_ingest_persiste_con_fuente_nivel_y_municipio(session, tmp_path):
         select(Analisis).where(Analisis.numero_acto == "2026/099")
     )).scalar_one()
     assert (row.nivel, row.municipio, row.jurisdiccion_gasto) == ("municipal", "Córdoba", "municipal")
-    # `objeto` sale de las mismas reglas que el resto del corpus: "servicio de
-    # reparación edilicia" no está en la lista de servicios reconocidos, así que
-    # queda en `otro` (brecha del clasificador, no del conector).
-    assert (row.tipo_gasto, row.objeto, row.etapa_gasto) == ("concurso_precios", "otro", "llamado")
+    # `objeto` sale de las mismas reglas que el resto del corpus.  WCL1 sumó
+    # "reparación edilicia" como obra: el acto compra trabajo sobre un edificio,
+    # y la figura del contrato ya la dice `tipo_gasto`.
+    assert (row.tipo_gasto, row.objeto, row.etapa_gasto) == ("concurso_precios", "obra", "llamado")
     assert row.is_gasto_publico is True
     assert row.datos_extra["fuente"] == "municipal_compras"
     assert row.datos_extra["compra_id"] == 397
