@@ -7,6 +7,7 @@ import type {
   AgregadoRenglones,
   AnalisisPrecio,
   Clasificacion,
+  GastoDetectado,
   GastoFiltros,
   Nivel,
   Objeto,
@@ -15,11 +16,26 @@ import type {
 } from "@/types/precio-mercado"
 import {
   CLASIFICACION_LABEL,
+  ETAPA_LABEL,
   NIVEL_LABEL,
   OBJETO_LABEL,
   TIPO_GASTO_LABEL,
   formatArs,
 } from "@/lib/precio-mercado-format"
+
+/** La fuente del portal de compras municipal: link y análisis se leen distinto. */
+const esPortalCompras = (o: GastoDetectado) => o.fuente === "municipal_compras"
+
+/**
+ * Por qué un acto no se puede analizar todavía. Un acto fuera del ledger por
+ * falta de evidencia de etapa es una cosa; una compra del portal es otra: ahí
+ * los renglones y las cantidades no se publican, así que no hay precio unitario
+ * que comparar aunque el acto esté perfectamente documentado.
+ */
+const motivoSinAnalisis = (o: GastoDetectado): string =>
+  esPortalCompras(o)
+    ? "El portal de compras publica el presupuesto oficial del llamado y el pliego, pero no los renglones ni las cantidades: sin cantidad no hay precio unitario que comparar."
+    : "Este acto no está en el ledger de ejecución: el análisis de precio todavía no está disponible para él."
 
 const CLASIFICACION_STYLE: Record<Clasificacion, string> = {
   dentro_de_rango: "bg-green-500/10 text-green-400",
@@ -224,7 +240,10 @@ function CoberturaBanner() {
           <li key={f.fuente}>
             <span className="text-foreground">{f.nombre}</span>
             {f.desde && f.hasta ? ` · ${f.desde} a ${f.hasta}` : ""}
-            {` · ${f.ediciones} ediciones · ${f.actos} actos · ${f.actos_gasto} con gasto`}
+            {f.tipo === "portal"
+              ? ` · ${f.ediciones} días con publicaciones · ${f.actos} compras · ${f.actos_gasto} con monto`
+              : ` · ${f.ediciones} ediciones · ${f.actos} actos · ${f.actos_gasto} con gasto`}
+            {f.detalle ? <span className="block text-xs">{f.detalle}</span> : null}
           </li>
         ))}
       </ul>
@@ -416,7 +435,7 @@ export function PrecioMercadoPage() {
               <thead className="text-muted-foreground">
                 <tr>
                   <th>Fecha</th><th>Organismo</th><th>Nivel</th><th>Tipo · objeto</th>
-                  <th>Concepto</th><th>Monto</th><th>Último análisis</th><th></th>
+                  <th>Concepto</th><th>Etapa</th><th>Monto</th><th>Último análisis</th><th></th>
                 </tr>
               </thead>
               <tbody>
@@ -440,9 +459,17 @@ export function PrecioMercadoPage() {
                       {o.boletin_url && (
                         <div className="text-xs">
                           <a className="underline" href={o.boletin_url} target="_blank" rel="noreferrer">
-                            Boletín oficial
+                            {esPortalCompras(o) ? "Portal de compras" : "Boletín oficial"}
                           </a>
                         </div>
+                      )}
+                    </td>
+                    <td className="pr-2" data-testid="etapa-gasto">
+                      {o.etapa_gasto ? (ETAPA_LABEL[o.etapa_gasto] ?? o.etapa_gasto) : "-"}
+                      {/* El portal publica el presupuesto del llamado, no lo adjudicado:
+                          la etapa lo dice para que el monto no se lea como un pago. */}
+                      {esPortalCompras(o) && o.etapa_gasto === "llamado" && (
+                        <div className="text-xs text-muted-foreground">presupuesto oficial</div>
                       )}
                     </td>
                     <td className="whitespace-nowrap pr-2">
@@ -453,7 +480,9 @@ export function PrecioMercadoPage() {
                         </div>
                       )}
                       {!o.en_ledger && (
-                        <div className="text-xs text-muted-foreground">fuera del ledger</div>
+                        <div data-testid="fuera-del-ledger" className="text-xs text-muted-foreground">
+                          fuera del ledger
+                        </div>
                       )}
                     </td>
                     <td className="pr-2">
@@ -466,11 +495,7 @@ export function PrecioMercadoPage() {
                         size="sm"
                         variant="outline"
                         disabled={!o.ejecucion_id || analizar.isPending}
-                        title={
-                          o.ejecucion_id
-                            ? undefined
-                            : "Este acto no está en el ledger de ejecución: el análisis de precio todavía no está disponible para él."
-                        }
+                        title={o.ejecucion_id ? undefined : motivoSinAnalisis(o)}
                         onClick={() => o.ejecucion_id && onAnalizar(o.ejecucion_id)}
                       >
                         Analizar en profundidad

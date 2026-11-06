@@ -28,12 +28,12 @@ const OBSERVABLES = {
 
 /** Dos filas que cubren los dos universos: una en el ledger y otra no. */
 const DETECTADO: GastoDetectadoResponse = {
-  total: 2,
+  total: 3,
   suma: 186031508,
   republicaciones_excluidas: 2000,
   items: [
     {
-      analisis_id: 415, ejecucion_id: 292, fecha: "2026-04-30", boletin_id: 1,
+      analisis_id: 415, ejecucion_id: 292, fuente: "provincial", fecha: "2026-04-30", boletin_id: 1,
       boletin_url: "https://boletin.example/1", organismo: "MINISTERIO DE DESARROLLO SOCIAL",
       municipio: null, nivel: "provincial", tipo_gasto: "licitacion", objeto: "bien",
       etapa_gasto: "llamado",
@@ -42,12 +42,25 @@ const DETECTADO: GastoDetectadoResponse = {
       en_ledger: true, is_duplicate_gasto: false, ultima_clasificacion: null,
     },
     {
-      analisis_id: 500, ejecucion_id: null, fecha: "2026-05-31", boletin_id: 2,
+      analisis_id: 500, ejecucion_id: null, fuente: "municipal_capital", fecha: "2026-05-31", boletin_id: 2,
       boletin_url: null, organismo: "MUNICIPALIDAD DE CARRILOBO", municipio: "Carrilobo",
       nivel: "municipal", tipo_gasto: "licitacion", objeto: "obra", etapa_gasto: null,
       concepto: "Llamado a licitación para la obra de cordón cuneta",
       gasto_motivo: "keyword licitacion", monto: 500, es_gasto_publico: true,
       en_ledger: false, is_duplicate_gasto: true, ultima_clasificacion: null,
+    },
+    {
+      // La compra del portal que probó Germán (WMU1): gasto clasificado, sin fila
+      // de ledger y con el presupuesto oficial del llamado como monto.
+      analisis_id: 12387, ejecucion_id: null, fuente: "municipal_compras", fecha: "2026-10-21",
+      boletin_id: 900, boletin_url: "https://compras.cordoba.gob.ar/#/compras-publicas/listadocompras/TODOS",
+      organismo: "Municipalidad de Córdoba - SECRETARÍA DE POLÍTICAS SOCIALES Y DESARROLLO HUMANO",
+      municipio: "Córdoba", nivel: "municipal", tipo_gasto: "subasta_electronica", objeto: "otro",
+      etapa_gasto: "llamado",
+      concepto: "SERVICIO DE RACIONAMIENTO EN COCIDO",
+      gasto_motivo: "portal de compras: SUBASTA ELECTRONICA INVERSA",
+      monto: 2398134234.22, es_gasto_publico: true, en_ledger: false,
+      is_duplicate_gasto: false, ultima_clasificacion: null,
     },
   ],
 }
@@ -55,11 +68,19 @@ const DETECTADO: GastoDetectadoResponse = {
 const COBERTURA = {
   fuentes: [
     { fuente: "provincial", nombre: "Boletín Oficial de la Provincia de Córdoba", nivel: "provincial",
-      municipio: null, portal: null, ediciones: 150, desde: "2026-01-02", hasta: "2026-10-30",
+      municipio: null, portal: null, tipo: "boletin" as const, detalle: null,
+      ediciones: 150, desde: "2026-01-02", hasta: "2026-10-30",
       actos: 4000, actos_gasto: 900, monto_gasto: 1 },
     { fuente: "municipal_capital", nombre: "Boletín Municipal de la Ciudad de Córdoba", nivel: "municipal",
-      municipio: "Córdoba", portal: null, ediciones: 80, desde: "2026-01-02", hasta: "2026-11-03",
+      municipio: "Córdoba", portal: null, tipo: "boletin" as const, detalle: null,
+      ediciones: 80, desde: "2026-01-02", hasta: "2026-11-03",
       actos: 504, actos_gasto: 12, monto_gasto: 1 },
+    { fuente: "municipal_compras", nombre: "Portal de Compras de la Ciudad de Córdoba (MuniCompras)",
+      nivel: "municipal", municipio: "Córdoba", portal: "https://compras.cordoba.gob.ar",
+      tipo: "portal" as const,
+      detalle: "El monto es el presupuesto oficial del llamado: el adjudicatario y el monto adjudicado no son públicos.",
+      ediciones: 97, desde: "2026-01-07", hasta: "2026-11-04",
+      actos: 153, actos_gasto: 151, monto_gasto: 49600000000 },
   ],
   municipios_cubiertos: ["Córdoba"],
   nota: "Los demás municipios y comunas sólo aparecen cuando publican en la sección 5 del boletín provincial; su gasto propio no está cubierto.",
@@ -110,8 +131,38 @@ describe("pantalla gasto detectado", () => {
     expect(within(tabla).getByText("Carrilobo")).toBeTruthy()
     // Lo que el ciudadano lee para elegir es el acto, no el motivo de la clasificación.
     expect(within(tabla).getByText(/provisión de cemento portland/)).toBeTruthy()
-    expect(screen.getByTestId("totales").textContent).toContain("2 actos")
+    expect(screen.getByTestId("totales").textContent).toContain("3 actos")
     expect(screen.getByTestId("totales").textContent).toContain(formatArs(DETECTADO.suma))
+  })
+
+  it("la etapa del gasto se ve: el monto del portal es el presupuesto del llamado", () => {
+    render(<PrecioMercadoPage />)
+    const etapas = screen.getAllByTestId("etapa-gasto")
+    expect(etapas[0].textContent).toBe("Llamado")
+    expect(etapas[1].textContent).toBe("-") // sin etapa declarada
+    expect(etapas[2].textContent).toContain("Llamado")
+    expect(etapas[2].textContent).toContain("presupuesto oficial")
+  })
+
+  it("el link dice de dónde salió el acto: portal de compras, no boletín oficial", () => {
+    render(<PrecioMercadoPage />)
+    const tabla = screen.getByTestId("gasto-detectado")
+    expect(within(tabla).getAllByText("Portal de compras").length).toBe(1)
+    expect(within(tabla).getAllByText("Boletín oficial").length).toBe(1)
+    const link = within(tabla).getByText("Portal de compras")
+    expect(link.getAttribute("href")).toContain("compras.cordoba.gob.ar")
+  })
+
+  it("una compra del portal se declara fuera del ledger y explica por qué no se analiza", () => {
+    render(<PrecioMercadoPage />)
+    // Dos filas sin fila de ledger: la del municipio y la del portal.
+    expect(screen.getAllByTestId("fuera-del-ledger").length).toBe(2)
+    const botones = screen.getAllByRole("button", { name: "Analizar en profundidad" })
+    expect(botones[2]).toHaveProperty("disabled", true)
+    expect(botones[2].getAttribute("title")).toContain("renglones")
+    expect(botones[2].getAttribute("title")).toContain("cantidades")
+    fireEvent.click(botones[2])
+    expect(mutate).not.toHaveBeenCalled()
   })
 
   it("sin descripción cae al motivo, para no dejar la celda vacía", () => {
@@ -264,5 +315,14 @@ describe("PrecioMercadoPage - cobertura", () => {
     expect(within(banner).getByText("Boletín Municipal de la Ciudad de Córdoba")).toBeTruthy()
     expect(banner.textContent).toContain("80 ediciones")
     expect(banner.textContent).toContain("sección 5")
+  })
+
+  it("suma el portal de compras con su unidad y lo que no publica", () => {
+    render(<PrecioMercadoPage />)
+    const banner = screen.getByTestId("cobertura-banner")
+    expect(within(banner).getByText("Portal de Compras de la Ciudad de Córdoba (MuniCompras)")).toBeTruthy()
+    // Un portal no tiene "ediciones": tiene días de publicación y compras.
+    expect(banner.textContent).toContain("97 días con publicaciones · 153 compras · 151 con monto")
+    expect(banner.textContent).toContain("no son públicos")
   })
 })

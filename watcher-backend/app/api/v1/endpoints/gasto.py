@@ -9,8 +9,13 @@ público.  Los dos universos son distintos a propósito y la respuesta declara
 cuál es cuál:
 
 - `tipo_gasto != no_es_gasto` es "esto parece gasto" (figura reconocida).
-- `en_ledger` es "este acto está en el ledger de ejecución" (`is_gasto_publico`),
-  que es la afirmación más fuerte y la que alimenta el contraste vs la Ley.
+- `en_ledger` es "este acto está en el ledger de ejecución", y se lee de la
+  tabla (`ejecucion_presupuestaria`), no del flag de clasificación: un acto
+  municipal del portal de compras está clasificado como gasto
+  (`is_gasto_publico`) y aun así no tiene fila de ledger, porque ese ETL corre
+  sobre los boletines provinciales. Decir lo contrario dejaba la fila sin el
+  aviso "fuera del ledger" y con el botón de análisis apagado: dos verdades
+  contradictorias en la misma celda.
 
 Un acto puede estar en el listado y no en el ledger: "Contrátase el servicio de
 limpieza" es un servicio que el ciudadano tiene que ver, pero no trae evidencia
@@ -159,6 +164,7 @@ async def get_gasto_detectado(
         items.append({
             "analisis_id": analisis.id,
             "ejecucion_id": ejecucion_id,
+            "fuente": boletin.fuente,
             "fecha": fecha.isoformat() if fecha else None,
             "boletin_id": boletin.id,
             "boletin_url": boletin.source_url,
@@ -172,7 +178,7 @@ async def get_gasto_detectado(
             "gasto_motivo": analisis.gasto_motivo,
             "monto": analisis.monto_numerico,
             "es_gasto_publico": analisis.tipo_gasto != _SIN_CLASIFICAR,
-            "en_ledger": bool(analisis.is_gasto_publico),
+            "en_ledger": ejecucion_id is not None,
             "is_duplicate_gasto": bool(analisis.is_duplicate_gasto),
             "ultima_clasificacion": analyzed.get(ejecucion_id) if ejecucion_id else None,
         })

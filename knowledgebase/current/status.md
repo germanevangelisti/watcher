@@ -3,6 +3,39 @@
 **Última actualización:** 2026-11-04
 **Snapshot del momento.** Se pisa al avanzar. La historia completa está en `docs/changelog.md` y el historial de git.
 
+> **Actualización 2026-11-04 (tarde) — WMU1: el gasto de la ciudad, desde el Portal de Compras.**
+> El boletín municipal era casi todo normativa (2 actos de gasto sobre 509 en 2026); el gasto real de la
+> Ciudad de Córdoba está en **MuniCompras** (`compras.cordoba.gob.ar`, API JSON pública, sin token).
+> Nuevo conector `app/scrapers/muni_compras.py` + ingesta `scripts/ingest_muni_compras_cordoba.py`
+> (idempotente por `id` de compra, 1,2 s entre requests, UA `WatcherBot`, caché de páginas). Rama
+> `feat/precio-mercado-wmu1`; historia `muni-portal-compras` en **testing** (PR abierto, sin mergear).
+> - **Ingesta 2026** (`--year 2026`, rango 01/01–04/11): **153 compras** en 86 días de publicación,
+>   **153 con monto, 0 errores**, con **2 requests** a la API (paginado de 100) y **0** en la segunda
+>   corrida (caché), que dio **0 compras nuevas**. **152 son gasto único · $49.521,59 M**.
+> - **Tipos**: 80 subasta electrónica inversa · 71 concurso de precios · 1 licitación pública ·
+>   1 compra directa (subasta directa). **Estados**: 120 finalizadas, 22 adjudicadas, 6 desiertas,
+>   4 sin efecto, 1 creada. **Organismos**: Educación 45, BioCórdoba 35, Salud 20, ESyOP 17,
+>   Desarrollo Urbano 14.
+> - **Dedupe contra el Boletín Municipal**: 1 coincidencia, por expediente (`18605/26`): los
+>   contenedores de BioCórdoba ($84,42 M, acto 12096 del boletín) que el portal publica como la
+>   compra `0001/2026`. Se cuenta una sola vez; el portal queda marcado `is_duplicate_gasto`.
+>   La licitación del Tribunal de Cuentas ($184,8 M) **no está** en el listado público del portal.
+> - **Lo que no es público** (documentado en el conector y en `datos_extra`): el **adjudicatario y el
+>   monto adjudicado**. `/compra/compra/{id}` responde 400 "No se ha proporcionado un token" y
+>   `/tramite/ganador/ganadores_concurso` responde 500. El único documento del listado es el acta de
+>   presentación de ofertas. Por eso `etapa_gasto='llamado'` y el monto es el **presupuesto oficial**.
+> - **Cobertura**: `GET /gasto/cobertura` pasa a **3 fuentes** (`provincial`, `municipal_capital`,
+>   `municipal_compras`) y el banner las muestra con su unidad propia (días/compras, no "ediciones")
+>   más la nota de lo que el portal no publica. El gasto municipal medido pasa de **$269,2 M** a
+>   **$49.790,81 M** (+$49.521,59 M del portal).
+> - **Brecha medida, no arreglada**: el eje `objeto` sale de las reglas compartidas del clasificador y
+>   **93 de 153** compras del portal caen en `otro` ("servicio de reparación edilicia" no está en la
+>   lista de servicios reconocidos). Tocarlo obliga a re-clasificar el corpus provincial: es una
+>   historia aparte, no un cambio de esta.
+> - **Tests**: pytest dirigido `-k "muni or cobertura or gasto or classif"` → **200 passed, 3 skipped**;
+>   vitest **130/130**; `tsc --noEmit` y `ruff check .` limpios.
+> - **Kanban**: To do 12 · WIP 0 · **Testing 1** (WMU1) · Done 31. Próxima: `mapa-gasto-jurisdiccion`.
+
 > **Actualización 2026-11-04 — estado real (esta sección pisa a los bloques de abajo donde se contradigan).**
 > - **`main` = `0c6d42a`** (merge del PR #9, sync de docs, 2026-11-04; antes `bd7cbf5`, PR #8). PRs **#4** (chat-insights pack 2), **#5**
 >   (precio-mercado + M8), **#7** (fix de tests + score de verificación) y **#8** (reglas de sesión de agente)

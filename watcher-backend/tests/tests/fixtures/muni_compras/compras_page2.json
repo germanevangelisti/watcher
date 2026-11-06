@@ -1,0 +1,40 @@
+{
+  "success": true,
+  "cantidad_paginas": 2,
+  "compras": [
+    {
+      "id": 399,
+      "nombre_compra": {"nombre_compra": "SUBASTA", "nombre": "SUBASTA ELECTRÓNICA INVERSA", "descripcion": null},
+      "titulo": "2026/115",
+      "objeto": "SERVICIO DE REPARACION EDILICIA DEL JARDIN MUNICIPAL COLORIN COLORADO",
+      "fecha_creacion": "2026-10-27 14:24:45",
+      "fecha_publicacion": "2026-10-27 16:43:57",
+      "estado": {"estado_compra": "FINALIZADA", "nombre": "Finalizada"},
+      "expediente": "102-026755/2026",
+      "subentidad": {"id": 10056, "nombre": "SECRETARÍA DE EDUCACIÓN"},
+      "requirente": {"id": 1192, "nombre": "SUBDIRECCIÓN DE INFRAESTRUCTURA"},
+      "presupuesto": 24319905.66,
+      "tipo": {"tipo_compra": "SUBASTA", "nombre": "SUBASTA ELECTRÓNICA INVERSA"},
+      "entidad": {"id": "71", "nombre": "PODER EJECUTIVO MUNICIPAL"},
+      "acta": null,
+      "numero_llamados": 1
+    },
+    {
+      "id": 397,
+      "nombre_compra": {"nombre_compra": "CONCURSO", "nombre": "CONCURSO DE PRECIOS", "descripcion": null},
+      "titulo": "2026/099",
+      "objeto": "SERVICIO DE REPARACION EDILICIA DEL JARDIN MUNICIPAL GARABATOS",
+      "fecha_creacion": "2026-10-27 13:30:21",
+      "fecha_publicacion": "2026-10-27 16:43:54",
+      "estado": {"estado_compra": "FINALIZADA", "nombre": "Finalizada"},
+      "expediente": "102-025180/2026  ",
+      "subentidad": {"id": 10056, "nombre": "SECRETARÍA DE EDUCACIÓN"},
+      "requirente": {"id": 1192, "nombre": "SUBDIRECCIÓN DE INFRAESTRUCTURA"},
+      "presupuesto": 42706162.88,
+      "tipo": {"tipo_compra": "CONCURSO", "nombre": "CONCURSO DE PRECIOS"},
+      "entidad": {"id": "71", "nombre": "PODER EJECUTIVO MUNICIPAL"},
+      "acta": null,
+      "numero_llamados": 1
+    }
+  ]
+}
