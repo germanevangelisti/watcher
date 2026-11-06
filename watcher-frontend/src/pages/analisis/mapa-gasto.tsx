@@ -9,6 +9,7 @@ import {
   construirClases,
   etiquetaClase,
   jurisdiccionesVisibles,
+  urlListado,
   valorMetrica,
 } from "@/lib/mapa-gasto"
 import { formatArs } from "@/lib/precio-mercado-format"
@@ -28,7 +29,7 @@ function LeyendaMetrica({
   clases: ReturnType<typeof construirClases>
   sinDatos: number
 }) {
-  const maximo = Math.max(1, ...clases.map((c) => c.count))
+  const maximo = Math.max(1, sinDatos, ...clases.map((c) => c.count))
   return (
     <div data-testid="leyenda" className="rounded-md border border-border bg-muted/30 p-3 text-sm">
       <h3 className="font-medium">{METRICA_LABEL[metrica]}</h3>
@@ -109,7 +110,7 @@ function TablaDatos({ jurisdicciones, metrica }: { jurisdicciones: JurisdiccionG
             {ordenadas.map((j) => (
               <tr key={j.codigo} className="border-t border-border">
                 <td className="p-2">
-                  <a className="underline" href={`/analisis/precio-mercado?municipio_codigo=${j.codigo}`}>
+                  <a className="underline" href={urlListado(j)}>
                     {j.nombre}
                   </a>
                 </td>

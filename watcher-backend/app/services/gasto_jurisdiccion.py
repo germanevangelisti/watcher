@@ -18,7 +18,7 @@ jurisdicción se gastó), así que va en `por_nivel` y no en `jurisdicciones`.
 
 from __future__ import annotations
 
-from app.db.models import Analisis
+from app.db.models import Analisis, Boletin
 from app.services.gasto_classifier import TIPO_NO_ES_GASTO
 from app.services.jurisdicciones import catalogo, nivel_de, resolver
 from sqlalchemy import case, func, select
@@ -60,6 +60,9 @@ async def por_jurisdiccion(db: AsyncSession) -> dict:
                     func.sum(case((canonico, Analisis.monto_numerico), else_=0.0)), 0.0
                 ).label("gasto"),
             )
+            # Mismo join que el listado: un acto sin boletín no está en
+            # `/gasto/detectado` y tampoco puede estar en el mapa.
+            .join(Boletin, Boletin.id == Analisis.boletin_id)
             .where(*universo)
             .group_by(Analisis.nivel, Analisis.municipio)
         )
