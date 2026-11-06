@@ -13,6 +13,11 @@ mientras que M8 pide clasificar **todo acto con monto** — 4.639 filas en
 No re-extrae nada: clasifica con reglas sobre lo que ya está persistido
 (`tipo_acto`, `descripcion`, `fragmento`, `organismo`, `boletines.section`).
 
+Las filas del portal municipal (`fuente='municipal_compras'`) son la excepción:
+su `tipo_gasto`, `nivel`, `municipio` y `is_duplicate_gasto` los dicta la fuente,
+así que de ellas sólo se recalcula `objeto` (WCL1).  Pisarlas con la lectura del
+texto borraría el dedupe por expediente contra el boletín.
+
 Idempotente: recalcula todo el universo en cada corrida.  Tiene que ser así,
 porque `is_duplicate_gasto` es un hecho **del corpus** (una republicación se
 detecta comparando una fila contra las anteriores en orden de publicación), no
@@ -34,10 +39,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from app.scrapers.muni_compras import COMPRAS_FUENTE
 from app.services.gasto_classifier import (
     TIPO_NO_ES_GASTO,
     TIPO_OTRO,
     classify_gasto,
+    classify_objeto,
+    texto_de_acto,
 )
 from app.services.presupuesto_matching import duplicados_de_filas
 
@@ -65,7 +73,9 @@ _SELECT = """
         a.descripcion,
         a.fragmento,
         a.monto_numerico,
-        b.section       AS boletin_section
+        a.tipo_gasto,
+        b.section       AS boletin_section,
+        b.fuente        AS boletin_fuente
     FROM analisis a
     JOIN boletines b ON a.boletin_id = b.id
     WHERE a.monto_numerico > 0
@@ -105,8 +115,27 @@ def run(apply: bool, limit: int | None) -> None:
     sin_motivo = 0
     sin_clasificar = 0
     actualizados = 0
+    portal_saltadas = 0
 
     for row in rows:
+        # El portal municipal **conoce** la figura (la declara como tipo de
+        # proceso), el nivel y el municipio, y su dedupe contra el boletín se
+        # resuelve por expediente.  Recalcular esas columnas con las reglas de
+        # texto las pisaría con una adivinanza y borraría el dedupe.  De esas
+        # filas sólo se rehace `objeto`, que es lo único que el clasificador
+        # puede mejorar sin contradecir a la fuente.
+        if row.get("boletin_fuente") == COMPRAS_FUENTE:
+            portal_saltadas += 1
+            if not row.get("tipo_gasto"):
+                continue
+            objeto = classify_objeto(row["tipo_gasto"], texto_de_acto(row))
+            por_tipo[row["tipo_gasto"]] += 1
+            por_objeto[objeto] += 1
+            if apply:
+                cur.execute("UPDATE analisis SET objeto=? WHERE id=?", (objeto, row["id"]))
+                actualizados += 1
+            continue
+
         c = classify_gasto(row, section=row.get("boletin_section"))
         fields = c.as_analisis_fields()
         is_dup = dup.get(row["id"], 0)
@@ -148,6 +177,7 @@ def run(apply: bool, limit: int | None) -> None:
     print(f"  republicaciones      {sum(1 for v in dup.values() if v)}")
     print(f"  sin tipo/nivel       {sin_clasificar}  (debe ser 0)")
     print(f"  otro/no_es_gasto sin motivo  {sin_motivo}  (debe ser 0)")
+    print(f"  filas del portal (sólo objeto) {portal_saltadas}")
     print("\n  por tipo_gasto:")
     for tipo, n in por_tipo.most_common():
         print(f"    {tipo:24s} {n}")

@@ -307,7 +307,24 @@ _RE_OBRA = re.compile(
     r"|paviment|repaviment|asfalt|bacheo|cordon\s+cuneta"
     r"|red\s+cloacal|\bcloaca|agua\s+potable|desague|pluvial"
     r"|construccion|edificio\s+escolar|viviend"
-    r"|ampliacion\s+de\s+obra",
+    r"|ampliacion\s+de\s+obra"
+    # WCL1: así nombran una obra el portal municipal y el boletín cuando no dicen
+    # "obra": refuncionalizar, poner en valor, reacondicionar, refaccionar y
+    # rehabilitar infraestructura.  De los 270 actos provinciales con monto que
+    # caían en `otro`, 81 son obras nombradas así (17 de ellos "reparación,
+    # refuncionalización y puesta en valor de la infraestructura existente").
+    r"|refuncionalizaci|reacondicionamiento|puesta\s+en\s+valor|refaccion"
+    r"|rehabilitaci[oó]n\s+de\s+(?:calzada|ruta|camino|autopista|red|infraestructura)"
+    # "reparación" sola no dice nada (un vehículo también se repara): pide el
+    # objeto reparado.  "Servicio de reparación edilicia" de una escuela es
+    # trabajo sobre un edificio — la figura del contrato ya la dice `tipo_gasto`.
+    r"|reparaci[oó]n(?:es)?\s+(?:(?:de|del)\s+)?(?:la\s+|el\s+)?(?:edilici\w+|generales"
+    r"|cubierta|techos?|fachada|edificio|escuela|jard[ií]n|hospital|calzada|vereda)"
+    r"|\bveredas?\b|\bcalzada\b|cord[oó]n\s+vereda|rampas?\s+de\s+accesibilidad"
+    r"|demarcaci[oó]n\s+vial|\bdrenajes?\b|sistematizaci[oó]n"
+    r"|mejoramiento\s+del\s+(?:sistema\s+de\s+)?alumbrado|instalaci[oó]n\s+de\s+luminarias"
+    r"|cerramiento|estabilizaci[oó]n\s+estructural|\brotonda\b"
+    r"|espacio\s+p[uú]blico|supermanzana",
     re.IGNORECASE,
 )
 
@@ -327,6 +344,63 @@ _RE_SERVICIO = re.compile(
     # su preposición.
     r"|limpieza\s+(?:de|integral|diaria|general)"
     r"|\bvigilancia\b|seguridad\s+privada",
+    re.IGNORECASE,
+)
+
+# WCL1: servicios y comidas que el portal municipal y el boletín nombran de mil
+# maneras y que la lista blanca de arriba no cubría.  Todo lo de acá es una
+# **frase específica**, no un sustantivo suelto:
+#
+# - **Comida servida**: "servicio de racionamiento en cocido" (Subasta
+#   2026/000084, acto 12387) y los dos llamados de la Fuerza Policial
+#   Antinarcotráfico (8178, 8196) caían en `otro`.  `alimentación` pelada **no**
+#   entra: "bolsas de alimentación parenteral" es un medicamento, no un servicio
+#   de comida.
+# - **Servicios recurrentes** del portal: poda de alta tensión, control de plagas,
+#   monitoreo.
+_RE_SERVICIO_AMPLIADO = re.compile(
+    r"\bservicios?\s+de\s+(?:racionamiento|alimentaci[oó]n|comedor|catering"
+    r"|viandas?|refrigerios?|coffee\s*break|comidas?)"
+    r"|\bracionamiento\b|\braci(?:on|ones)\b|\bviandas?\b|\brefrigerios?\b|\bcatering\b"
+    r"|\ben\s+cocido\b|\bmen[uú]\s+(?:escolar|nutricional|semanal)"
+    r"|\bpodas?\s+(?:alta|de\s+[aá]rboles|en\s+)"
+    r"|\bfumigaci[oó]n\b|control\s+de\s+plagas|\bmonitoreo\b"
+    r"|\bconsultor[ií]as?\b|\bauditor[ií]as?\b|\bcapacitaci[oó]n\b",
+    re.IGNORECASE,
+)
+
+# "Servicio de X" es una señal fuerte y lexical de contrato de servicio, pero
+# **sólo en el título del acto**.  Medido: corrida sobre los 4.000 caracteres del
+# haystack, "servicio de" de un acto vecino o del VISTO convertía en servicio una
+# compra de transformadores, de gas o de colchones.  Por eso se evalúa sobre la
+# primera línea (la descripción), no sobre el texto completo.
+#
+# Se excluyen los casos donde la misma fórmula nombra otra cosa: "servicio de la
+# deuda" (deuda, no compra), "servicio administrativo financiero" (no lleva "de",
+# no matchea) y "servicio de provisión/suministro de bienes", que es una compra
+# de bienes disfrazada de servicio (los reactivos del laboratorio municipal).
+_RE_SERVICIO_GENERICO = re.compile(
+    r"\bservicios?\s+(?:de|integral(?:es)?\s+de|profesional(?:es)?|t[eé]cnicos?|soporte)\s+"
+    r"(?!(?:la\s+)?deuda\b|provisi[oó]n\b|suministro\b|adquisici[oó]n\b|compra\b|venta\b)[a-z]",
+    re.IGNORECASE,
+)
+
+# WCL1: bienes que el portal nombra por su especie y que ninguna regla leía, así
+# que la compra quedaba en `otro` (medicamentos, insumos, indumentaria, equipos).
+# Va **después** de obra y servicio: "servicio de cobertura de seguro para los
+# vehículos" es un servicio aunque diga "vehículos".
+_RE_BIEN = re.compile(
+    r"\binsumos?\b|\bmedicamentos?\b|\breactivos?\b|\bcalibradores?\b|\bdescartables?\b"
+    r"|\bodontol[oó]gic\w*|\bantis[eé]ptic\w*|\bantibi[oó]tic\w*|\bhemoderivad\w*"
+    r"|\banest[eé]sic\w*|\bparenteral\w*"
+    r"|\bindumentaria\b|\bcalzado\b|\bvestimenta\b"
+    r"|\bveh[ií]culos?\b|\bautomotor\w*|\butilitari[oa]\b|\bcamioneta\b|\bcami[oó]n\b"
+    r"|\bequipamiento\b|\bequipos?\b|\binstrumental\b|\bmobiliario\b"
+    r"|\bpinturas?\b|\bbombas?\b|electrobomba|\bm[aá]quinas?\b|\bherramientas?\b"
+    r"|\brepuestos?\b|\bneum[aá]tic\w*|\bfiltros?\b|\bjuntas\b|\brel[eé]\b"
+    r"|\bluminarias?\b|\bgazebos?\b|\bkits?\b|\bcombustibles?\b"
+    r"|\bmaterial(?:es)?\b|\belementos\b|\bvidrios?\b"
+    r"|\bsoftware\b|\blicencias?\b",
     re.IGNORECASE,
 )
 
@@ -468,6 +542,16 @@ def _haystack(acto: Mapping[str, Any]) -> str:
     return _strip_accents(joined[:4000])
 
 
+def texto_de_acto(acto: Mapping[str, Any]) -> str:
+    """El texto que comen las reglas, para reclasificar sin re-extraer.
+
+    Público por la misma razón que `classify_objeto`: un CLI que sólo rehace el
+    eje `objeto` tiene que armar el texto **igual** que el pipeline, o clasifica
+    otra cosa.
+    """
+    return _haystack(acto)
+
+
 def _classify_jurisdiccion(section: int | None, text: str) -> str:
     if section in _SECCIONES_NO_GASTO:
         return JURISDICCION_FUERA
@@ -531,6 +615,16 @@ def _classify_tipo_gasto(tipo_acto: str, text: str) -> tuple[str, str]:
     return TIPO_OTRO, "gasto con monto y sin figura reconocible en el texto"
 
 
+def _titulo(text: str) -> str:
+    """Primera línea del haystack: la descripción del acto.
+
+    Las reglas genéricas ("servicio de X") sólo se evalúan acá.  Corridas sobre
+    los 4.000 caracteres del haystack convierten una compra en servicio por una
+    mención del VISTO o de un acto vecino (medido: transformadores, gas, colchones).
+    """
+    return text.split("\n", 1)[0]
+
+
 def _classify_objeto(tipo_gasto: str, text: str) -> str:
     """Qué se compra o se hace, ya sabiendo por qué figura se mueve el dinero.
 
@@ -544,9 +638,11 @@ def _classify_objeto(tipo_gasto: str, text: str) -> str:
         return OBJETO_TRANSFERENCIA
     if _RE_OBRA.search(text):
         return OBJETO_OBRA
-    if _RE_SERVICIO.search(text):
+    if _RE_SERVICIO.search(text) or _RE_SERVICIO_AMPLIADO.search(text):
         return OBJETO_SERVICIO
-    if _RE_COMPRA_VERBO.search(text):
+    if _RE_SERVICIO_GENERICO.search(_titulo(text)):
+        return OBJETO_SERVICIO
+    if _RE_BIEN.search(text) or _RE_COMPRA_VERBO.search(text):
         return OBJETO_BIEN
     return OBJETO_OTRO
 

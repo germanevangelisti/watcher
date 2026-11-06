@@ -41,7 +41,9 @@ from app.services.gasto_classifier import (
     TIPO_SUBSIDIO_TRANSFERENCIA,
     TIPOS_GASTO,
     classify_gasto,
+    classify_objeto,
     municipio_de_organismo,
+    texto_de_acto,
 )
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -210,6 +212,179 @@ class TestObjeto:
             result = classify_gasto(acto, section=section)
             assert result.tipo_gasto_motivo
             assert result.as_analisis_fields()["gasto_motivo"]
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# objeto — WCL1: racionamiento/alimentos y objetos recurrentes del portal
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# El clasificador de objeto dejaba 93 de las 153 compras 2026 de MuniCompras en
+# `otro`, y la compra 12387 ("servicio de racionamiento en cocido") entre ellas.
+# Estos casos salen de filas **reales** del corpus, no de ejemplos inventados.
+
+CASOS_OBJETO_WCL1 = [
+    # ── Comida servida (12387, 8178, 8196) ─────────────────────────────────────
+    (
+        {"tipo_acto": "licitacion", "descripcion": "SERVICIO DE RACIONAMIENTO EN COCIDO"},
+        OBJETO_SERVICIO,
+    ),
+    (
+        {
+            "tipo_acto": "licitacion",
+            "descripcion": (
+                "CONTRATACION DE SERVICIO DE RACIONAMIENTO EN COCIDO PARA AGENTES QUE "
+                "PRESTAN SERVICIOS EN DEPARTAMENTO CAPITAL Y ASPIRANTES"
+            ),
+        },
+        OBJETO_SERVICIO,
+    ),
+    ({"tipo_acto": "licitacion", "descripcion": "Servicio de viandas para el personal"}, OBJETO_SERVICIO),
+    ({"tipo_acto": "licitacion", "descripcion": "Provisión de refrigerio para la jornada"}, OBJETO_SERVICIO),
+    ({"tipo_acto": "licitacion", "descripcion": "Servicio de alimentación para escuelas"}, OBJETO_SERVICIO),
+    ({"tipo_acto": "licitacion", "descripcion": "Servicio de coffee break"}, OBJETO_SERVICIO),
+    # El alimento puede ser un medicamento: "parenteral" no es comida servida.
+    (
+        {"tipo_acto": "licitacion", "descripcion": "BOLSAS DE ALIMENTACION PARENTERAL MAGISTRAL"},
+        OBJETO_BIEN,
+    ),
+    # ── Obra sin decir "obra" ──────────────────────────────────────────────────
+    (
+        {
+            "tipo_acto": "licitacion",
+            "descripcion": "SERVICIO DE REPARACIÓN EDILICIA - ESCUELA MUNICIPAL SAUL TABORDA",
+        },
+        OBJETO_OBRA,
+    ),
+    (
+        {"tipo_acto": "licitacion", "descripcion": "REACONDICIONAMIENTO EDILICIO EN DISTRITO CRUZ DEL EJE"},
+        OBJETO_OBRA,
+    ),
+    (
+        {
+            "tipo_acto": "licitacion",
+            "descripcion": (
+                "REPARACIÓN, REFUNCIONALIZACIÓN Y PUESTA EN VALOR DE LA INFRAESTRUCTURA EXISTENTE"
+            ),
+        },
+        OBJETO_OBRA,
+    ),
+    (
+        {
+            "tipo_acto": "licitacion",
+            "descripcion": (
+                "MEJORAMIENTO DEL SISTEMA DE ALUMBRADO PÚBLICO E INSTALACION DE LUMINARIAS LED"
+            ),
+        },
+        OBJETO_OBRA,
+    ),
+    (
+        {"tipo_acto": "licitacion", "descripcion": "VEREDA PERIMETRAL ESCUELA MUNICIPAL"},
+        OBJETO_OBRA,
+    ),
+    (
+        {"tipo_acto": "licitacion", "descripcion": "DEMARCACIÓN VIAL HORIZONTAL EN LA CIUDAD"},
+        OBJETO_OBRA,
+    ),
+    # ── Bienes que el portal nombra por su especie ─────────────────────────────
+    ({"tipo_acto": "licitacion", "descripcion": "INDUMENTARIA Y CALZADO DE TRABAJO"}, OBJETO_BIEN),
+    ({"tipo_acto": "licitacion", "descripcion": "INSUMOS ODONTOLÓGICOS"}, OBJETO_BIEN),
+    (
+        {"tipo_acto": "licitacion", "descripcion": "MEDICAMENTOS Y RELACIONADOS - ANTIBIÓTICOS"},
+        OBJETO_BIEN,
+    ),
+    ({"tipo_acto": "licitacion", "descripcion": "BOMBAS SUMERGIBLES Y ELECTROBOMBA"}, OBJETO_BIEN),
+    ({"tipo_acto": "licitacion", "descripcion": "UN (1) VEHICULO UTILITARIO"}, OBJETO_BIEN),
+    # ── Servicios que el título nombra con la fórmula "servicio de X" ─────────
+    (
+        {
+            "tipo_acto": "licitacion",
+            "descripcion": "SERVICIO DE DISTRIBUCIÓN DOMICILIARIA DE CORRESPONDENCIA",
+        },
+        OBJETO_SERVICIO,
+    ),
+    (
+        {"tipo_acto": "licitacion", "descripcion": "SERVICIO INTEGRAL DE CONTROL DE PLAGAS"},
+        OBJETO_SERVICIO,
+    ),
+    # El servicio gana sobre el bien que menciona: es una póliza, no un vehículo.
+    (
+        {
+            "tipo_acto": "licitacion",
+            "descripcion": (
+                "SERVICIO DE COBERTURA DE SEGURO PARA LOS VEHICULOS OFICIALES DEL ENTE"
+            ),
+        },
+        OBJETO_SERVICIO,
+    ),
+    (
+        {
+            "tipo_acto": "licitacion",
+            "descripcion": (
+                "CONTRATACION DEL SERVICIO DE MANO DE OBRA PARA ALBAÑILERIA, PINTURERIA Y HERRERIA"
+            ),
+        },
+        OBJETO_SERVICIO,
+    ),
+    # ── Negativos: la fórmula no siempre nombra un servicio ───────────────────
+    # La deuda no se compra.
+    (
+        {"tipo_acto": "licitacion", "descripcion": "Servicio de la deuda pública 2026"},
+        OBJETO_OTRO,
+    ),
+    # "Servicio de provisión de bienes" es una compra de bienes.
+    (
+        {
+            "tipo_acto": "licitacion",
+            "descripcion": "SERVICIO DE PROVISION DE REACTIVOS, CONTROLES Y CALIBRADORES",
+        },
+        OBJETO_BIEN,
+    ),
+]
+
+
+class TestObjetoAmpliado:
+    @pytest.mark.parametrize("acto,esperado", CASOS_OBJETO_WCL1)
+    def test_objeto(self, acto, esperado):
+        assert classify_gasto(acto, section="4").objeto == esperado
+
+    @pytest.mark.parametrize("acto,esperado", CASOS_OBJETO_WCL1)
+    def test_objeto_en_el_enum(self, acto, esperado):
+        assert esperado in OBJETOS
+
+    def test_servicio_generico_solo_mira_el_titulo(self):
+        """Una mención en el cuerpo no convierte una compra en servicio.
+
+        Medido: el fragmento de la compra 6541 trae el objeto de un acto vecino
+        ("SERVICIO DE PREPARACIÓN DE COMIDAS") y convertía en servicio una
+        adquisición de transformadores.
+        """
+        result = classify_gasto(
+            {
+                "tipo_acto": "licitacion",
+                "descripcion": "ADQUISICION TRANSFORMADOR DE POTENCIA 13,2/34,65KV",
+                "fragmento": "OBJETO: SERVICIO DE PREPARACION DE COMIDAS Y COMEDOR PARA EL PERSONAL",
+            },
+            section="4",
+        )
+        assert result.objeto == OBJETO_BIEN
+
+    def test_mano_de_obra_no_es_obra(self):
+        """Sigue sin ser obra aunque el texto traiga "reparación" cerca."""
+        result = classify_gasto(
+            {"tipo_acto": "licitacion", "descripcion": "el precio incluye mano de obra"},
+            section="4",
+        )
+        assert result.objeto == OBJETO_OTRO
+
+    def test_clasifica_el_texto_del_portal_sin_tipo_de_acto(self):
+        """El portal conoce la figura y sólo pide el otro eje."""
+        assert classify_objeto("subasta_electronica", "SERVICIO DE RACIONAMIENTO EN COCIDO") == (
+            OBJETO_SERVICIO
+        )
+        assert classify_objeto("concurso_precios", "INSUMOS ODONTOLOGICOS") == OBJETO_BIEN
+
+    def test_texto_de_acto_arma_el_mismo_haystack(self):
+        assert "pavimento" in texto_de_acto({"fragmento": "Obra de pavimento"}).lower()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
