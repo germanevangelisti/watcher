@@ -25,7 +25,7 @@
 > - **Tests**: pytest dirigidos **264 passed** (52 pruebas nuevas en
 >   `test_gasto_classifier_tipos.py`: 24 casos parametrizados × 2 + 4 de contrato;
 >   `test_muni_compras.py` pasa de `otro` a `obra`), `ruff` limpio.  CI del PR #13
->   verde sobre el head (`run 42281509644`).
+>   verde (Lint Python, Lint Frontend, Test Backend, Build Frontend, GitGuardian).
 > - **Brecha de datos detectada**: el corpus que sirve la app (checkout principal y worktree WMA1)
 >   **no tiene** las 153 filas de MuniCompras — la ingesta de WMU1 quedó en el `sqlite.db` de su
 >   worktree. Para la prueba manual: `python scripts/ingest_muni_compras_cordoba.py --year 2026` y
