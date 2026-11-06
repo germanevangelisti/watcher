@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { render, screen, fireEvent, within } from "@testing-library/react"
 import { PrecioMercadoPage } from "@/pages/analisis/precio-mercado"
 import { formatArs } from "@/lib/precio-mercado-format"
@@ -324,5 +324,33 @@ describe("PrecioMercadoPage - cobertura", () => {
     // Un portal no tiene "ediciones": tiene días de publicación y compras.
     expect(banner.textContent).toContain("97 días con publicaciones · 153 compras · 151 con monto")
     expect(banner.textContent).toContain("no son públicos")
+  })
+})
+
+describe("PrecioMercadoPage - llega desde el mapa (WMA1)", () => {
+  afterEach(() => {
+    window.history.replaceState({}, "", "/")
+  })
+
+  it("filtra por el código de la jurisdicción y no por el nombre", () => {
+    window.history.pushState(
+      {},
+      "",
+      "/analisis/precio-mercado?municipio=R%C3%ADo+Ceballos&municipio_codigo=140147",
+    )
+    render(<PrecioMercadoPage />)
+
+    const ultimo = llamadas[llamadas.length - 1]
+    // El código une "Rio Ceballos" y "Río Ceballos": mandar los dos filtros
+    // dejaría afuera las grafías sin acento.
+    expect(ultimo).toEqual(expect.objectContaining({ municipio_codigo: "140147" }))
+    expect(ultimo).not.toHaveProperty("municipio")
+
+    const chip = screen.getByTestId("filtro-jurisdiccion")
+    expect(chip.textContent).toContain("Río Ceballos")
+
+    fireEvent.click(within(chip).getByRole("button", { name: "Ver toda la provincia" }))
+    expect(llamadas[llamadas.length - 1]).not.toHaveProperty("municipio_codigo")
+    expect(screen.queryByTestId("filtro-jurisdiccion")).toBeNull()
   })
 })

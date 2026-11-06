@@ -113,6 +113,8 @@ export interface GastoFiltros {
   nivel?: string
   organismo?: string
   municipio?: string
+  /** Código del catálogo: une las grafías del mismo gobierno local (WMA1). */
+  municipio_codigo?: string
   q?: string
   fecha_desde?: string
   fecha_hasta?: string

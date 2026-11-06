@@ -33,6 +33,8 @@ export default defineConfig({
         manualChunks: {
           tanstack: ['@tanstack/react-query', '@tanstack/react-router'],
           ui: ['lucide-react', 'class-variance-authority', 'clsx', 'tailwind-merge'],
+          // MapLibre supera por sí solo el límite de aviso: en su propio chunk.
+          maplibre: ['maplibre-gl'],
         },
       },
     },

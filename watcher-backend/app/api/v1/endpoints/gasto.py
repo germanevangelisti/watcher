@@ -28,6 +28,8 @@ from datetime import date
 from app.db.models import Analisis, Boletin, EjecucionPresupuestaria, PrecioMercadoAnalisis
 from app.db.session import get_db
 from app.services.cobertura import cobertura
+from app.services.gasto_jurisdiccion import por_jurisdiccion
+from app.services.jurisdicciones import resolver
 from app.services.presupuesto_matching import parse_date
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import case, func, select
@@ -45,6 +47,7 @@ def _filtros(
     nivel: list[str] | None,
     organismo: str | None,
     municipio: str | None,
+    municipios: list[str] | None,
     q: str | None,
     fecha_desde: date | None,
     fecha_hasta: date | None,
@@ -71,6 +74,11 @@ def _filtros(
         where.append(Analisis.organismo.ilike(f"%{organismo}%"))
     if municipio:
         where.append(Analisis.municipio.ilike(f"%{municipio}%"))
+    # `municipios` viene de un código del catálogo: el mismo gobierno local se
+    # publica con varias grafías ("Rio Ceballos", "Río Ceballos", "La Ciudad De
+    # Río Ceballos"), así que el filtro por nombre no alcanza.
+    if municipios is not None:
+        where.append(Analisis.municipio.in_(municipios))
     if q:
         like = f"%{q}%"
         where.append(
@@ -89,6 +97,24 @@ def _filtros(
     return where
 
 
+async def _municipios_por_codigo(db: AsyncSession, codigo: str) -> list[str]:
+    """Todas las grafías de `analisis.municipio` que resuelven al mismo código.
+
+    Se resuelve en Python porque la normalización (acentos, prefijos, erratas)
+    no existe en SQL y el catálogo tiene 427 entradas, no millones de filas.
+    """
+    valores = (
+        await db.execute(
+            select(Analisis.municipio).where(Analisis.municipio.is_not(None)).distinct()
+        )
+    ).scalars().all()
+    return [
+        valor
+        for valor in valores
+        if (entrada := resolver(valor)) is not None and entrada["codigo"] == codigo
+    ]
+
+
 @router.get("/detectado")
 async def get_gasto_detectado(
     tipo: list[str] | None = Query(None, description="tipo_gasto: figura/procedimiento (repetible)"),
@@ -96,6 +122,10 @@ async def get_gasto_detectado(
     nivel: list[str] | None = Query(None, description="provincial | municipal | comunal (repetible)"),
     organismo: str | None = None,
     municipio: str | None = None,
+    municipio_codigo: str | None = Query(
+        None,
+        description="Código del catálogo (ReFeGLo). Agrupa las grafías del mismo gobierno local.",
+    ),
     q: str | None = Query(None, description="Texto en descripción u organismo"),
     fecha_desde: date | None = None,
     fecha_hasta: date | None = None,
@@ -112,8 +142,9 @@ async def get_gasto_detectado(
         .outerjoin(EjecucionPresupuestaria, EjecucionPresupuestaria.analisis_id == Analisis.id)
     )
     where = _filtros(
-        tipo, objeto, nivel, organismo, municipio, q,
-        fecha_desde, fecha_hasta, monto_min, monto_max, solo_gasto,
+        tipo, objeto, nivel, organismo, municipio,
+        (await _municipios_por_codigo(db, municipio_codigo)) if municipio_codigo else None,
+        q, fecha_desde, fecha_hasta, monto_min, monto_max, solo_gasto,
     )
 
     rows = (
@@ -197,3 +228,15 @@ async def get_gasto_cobertura(db: AsyncSession = Depends(get_db)):
     y la nota de lo que no está cubierto, para que la UI no presente el total
     como si fuera todo el gasto de la provincia."""
     return await cobertura(db)
+
+
+@router.get("/por-jurisdiccion")
+async def get_gasto_por_jurisdiccion(db: AsyncSession = Depends(get_db)):
+    """Gasto detectado por municipio y comuna, para el mapa (WMA1).
+
+    Devuelve **todas** las jurisdicciones del catálogo, también las que no
+    tienen actos (`cobertura: false`): el mapa las pinta en gris y un hueco no
+    se puede confundir con gasto cero. El gasto provincial y nacional no se
+    reparte entre municipios: va en `por_nivel`.
+    """
+    return await por_jurisdiccion(db)

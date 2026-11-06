@@ -7,6 +7,7 @@ import type {
   GastoFiltros,
   ObservablesResponse,
 } from "@/types/precio-mercado"
+import type { GastoPorJurisdiccionResponse } from "@/types/mapa-gasto"
 
 /** Gastos observables detectados sobre los actos existentes (epic:precio-mercado). */
 export function useObservables(params: { q?: string; limit?: number; offset?: number } = {}) {
@@ -50,6 +51,21 @@ export function useCoberturaGasto() {
     queryKey: ["gasto-cobertura"],
     queryFn: async () => {
       const { data } = await apiClient.get<CoberturaResponse>("/gasto/cobertura")
+      return data
+    },
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+/**
+ * WMA1 — gasto por jurisdicción para el mapa: las 427 jurisdicciones (también
+ * las que no tienen actos, para pintarlas en gris), con población y per cápita.
+ */
+export function useGastoPorJurisdiccion() {
+  return useQuery({
+    queryKey: ["gasto-por-jurisdiccion"],
+    queryFn: async () => {
+      const { data } = await apiClient.get<GastoPorJurisdiccionResponse>("/gasto/por-jurisdiccion")
       return data
     },
     staleTime: 5 * 60 * 1000,

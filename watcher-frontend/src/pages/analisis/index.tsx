@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router"
-import { Bot, AlertTriangle, Workflow, Activity, Tag } from "lucide-react"
+import { Bot, AlertTriangle, Workflow, Activity, Tag, Map as MapIcon } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
@@ -60,6 +60,30 @@ export function AnalisisHub() {
             </p>
             <Button variant="outline" size="sm" className="w-full">
               Ver gastos observables &rarr;
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Mapa de gasto por jurisdicción */}
+        <Card className="hover:bg-surface-elevated transition-colors cursor-pointer"
+              onClick={() => navigate({ to: "/analisis/mapa-gasto" })}>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-emerald-500/10">
+                <MapIcon className="h-6 w-6 text-emerald-400" />
+              </div>
+              <CardTitle>Mapa de gasto</CardTitle>
+            </div>
+            <CardDescription>
+              Municipios y comunas de Córdoba
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Gasto detectado por jurisdicción, con las áreas sin datos en gris
+            </p>
+            <Button variant="outline" size="sm" className="w-full">
+              Ver el mapa &rarr;
             </Button>
           </CardContent>
         </Card>
