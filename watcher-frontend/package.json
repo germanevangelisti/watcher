@@ -28,6 +28,7 @@
     "clsx": "^2.1.1",
     "dayjs": "^1.11.19",
     "lucide-react": "^0.563.0",
+    "maplibre-gl": "^5.24.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-force-graph-2d": "^1.29.1",

@@ -1,0 +1,3845 @@
+[
+ {
+  "codigo": "140007",
+  "departamento": "Calamuchita",
+  "lat": -32.2067469,
+  "lon": -64.4006426,
+  "nombre": "Embalse",
+  "poblacion_2022": 9681,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140014",
+  "departamento": "Calamuchita",
+  "lat": -32.3031135,
+  "lon": -64.4830414,
+  "nombre": "La Cruz",
+  "poblacion_2022": 1834,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140021",
+  "departamento": "Calamuchita",
+  "lat": -32.3211259,
+  "lon": -64.2807422,
+  "nombre": "Los Cóndores",
+  "poblacion_2022": 3390,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140028",
+  "departamento": "Calamuchita",
+  "lat": -32.5286421,
+  "lon": -64.5886875,
+  "nombre": "Río de los Sauces",
+  "poblacion_2022": 1262,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140035",
+  "departamento": "Calamuchita",
+  "lat": -32.064378,
+  "lon": -64.5395619,
+  "nombre": "Santa Rosa de Calamuchita",
+  "poblacion_2022": 19125,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140042",
+  "departamento": "Calamuchita",
+  "lat": -32.1763512,
+  "lon": -64.4569384,
+  "nombre": "Villa del Dique",
+  "poblacion_2022": 5162,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140049",
+  "departamento": "Calamuchita",
+  "lat": -31.9764928,
+  "lon": -64.5590536,
+  "nombre": "Villa General Belgrano",
+  "poblacion_2022": 11775,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140056",
+  "departamento": "Calamuchita",
+  "lat": -31.9776223,
+  "lon": -64.3755856,
+  "nombre": "San Agustín",
+  "poblacion_2022": 3911,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140063",
+  "departamento": "Calamuchita",
+  "lat": -32.1910905,
+  "lon": -64.4742299,
+  "nombre": "Villa Rumipal",
+  "poblacion_2022": 4015,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140070",
+  "departamento": "Calamuchita",
+  "lat": -32.0992361,
+  "lon": -64.7535847,
+  "nombre": "Villa Yacanto",
+  "poblacion_2022": 3362,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140077",
+  "departamento": "Capital",
+  "lat": -31.4168044,
+  "lon": -64.1836065,
+  "nombre": "Córdoba",
+  "poblacion_2022": 1505250,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140084",
+  "departamento": "Colón",
+  "lat": -31.0622288,
+  "lon": -64.3006405,
+  "nombre": "Agua de Oro",
+  "poblacion_2022": 3242,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140091",
+  "departamento": "Colón",
+  "lat": -31.0220555,
+  "lon": -64.0617128,
+  "nombre": "Colonia Caroya",
+  "poblacion_2022": 25261,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140098",
+  "departamento": "Colón",
+  "lat": -31.2372761,
+  "lon": -64.0662957,
+  "nombre": "Colonia Tirolesa",
+  "poblacion_2022": 8154,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140102",
+  "departamento": "Colón",
+  "lat": -31.1344806,
+  "lon": -64.1401506,
+  "nombre": "Estación General Paz",
+  "poblacion_2022": 2750,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140105",
+  "departamento": "Colón",
+  "lat": -31.2757298,
+  "lon": -64.1646158,
+  "nombre": "Estación Juárez Celman",
+  "poblacion_2022": 13890,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140112",
+  "departamento": "Colón",
+  "lat": -30.9759726,
+  "lon": -64.0952182,
+  "nombre": "Jesús María",
+  "poblacion_2022": 36582,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140119",
+  "departamento": "Colón",
+  "lat": -31.3457926,
+  "lon": -64.3384873,
+  "nombre": "La Calera",
+  "poblacion_2022": 45689,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140126",
+  "departamento": "Colón",
+  "lat": -31.0086241,
+  "lon": -64.2678934,
+  "nombre": "La Granja",
+  "poblacion_2022": 4818,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140133",
+  "departamento": "Colón",
+  "lat": -31.3742535,
+  "lon": -64.0536917,
+  "nombre": "Malvinas Argentinas",
+  "poblacion_2022": 16122,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140140",
+  "departamento": "Colón",
+  "lat": -31.2640443,
+  "lon": -64.3091277,
+  "nombre": "Mendiolaza",
+  "poblacion_2022": 14718,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140143",
+  "departamento": "Colón",
+  "lat": -31.35535,
+  "lon": -64.0031894,
+  "nombre": "Mi Granja",
+  "poblacion_2022": 2794,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140147",
+  "departamento": "Colón",
+  "lat": -31.1697501,
+  "lon": -64.3175041,
+  "nombre": "Río Ceballos",
+  "poblacion_2022": 27136,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140154",
+  "departamento": "Colón",
+  "lat": -31.3153062,
+  "lon": -64.3035286,
+  "nombre": "Saldán",
+  "poblacion_2022": 12891,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140161",
+  "departamento": "Colón",
+  "lat": -31.1378808,
+  "lon": -64.2927724,
+  "nombre": "Salsipuedes",
+  "poblacion_2022": 15997,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140168",
+  "departamento": "Colón",
+  "lat": -31.2371523,
+  "lon": -64.3117636,
+  "nombre": "Unquillo",
+  "poblacion_2022": 25240,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140175",
+  "departamento": "Colón",
+  "lat": -31.2936496,
+  "lon": -64.2977013,
+  "nombre": "Villa Allende",
+  "poblacion_2022": 36982,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140182",
+  "departamento": "Cruz del Eje",
+  "lat": -30.7439287,
+  "lon": -64.7907762,
+  "nombre": "Cruz del Eje",
+  "poblacion_2022": 37001,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140185",
+  "departamento": "Cruz del Eje",
+  "lat": -30.6726348,
+  "lon": -64.8718984,
+  "nombre": "El Brete",
+  "poblacion_2022": 2416,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140189",
+  "departamento": "Cruz del Eje",
+  "lat": -30.7830128,
+  "lon": -64.6361895,
+  "nombre": "San Marcos Sierras",
+  "poblacion_2022": 3494,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140196",
+  "departamento": "Cruz del Eje",
+  "lat": -30.6387724,
+  "lon": -65.3887411,
+  "nombre": "Serrezuela",
+  "poblacion_2022": 3006,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140203",
+  "departamento": "Cruz del Eje",
+  "lat": -30.8552312,
+  "lon": -64.9848914,
+  "nombre": "Villa de Soto",
+  "poblacion_2022": 10577,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140210",
+  "departamento": "General Roca",
+  "lat": -34.7238744,
+  "lon": -63.5072646,
+  "nombre": "Buchardo",
+  "poblacion_2022": 1960,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140217",
+  "departamento": "General Roca",
+  "lat": -34.3788549,
+  "lon": -64.4971277,
+  "nombre": "Del Campillo",
+  "poblacion_2022": 3721,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140224",
+  "departamento": "General Roca",
+  "lat": -34.8413182,
+  "lon": -64.3746742,
+  "nombre": "Huinca Renancó",
+  "poblacion_2022": 9715,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140231",
+  "departamento": "General Roca",
+  "lat": -34.7908061,
+  "lon": -63.7803573,
+  "nombre": "Italó",
+  "poblacion_2022": 1157,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140238",
+  "departamento": "General Roca",
+  "lat": -34.5188146,
+  "lon": -63.9440394,
+  "nombre": "Jovita",
+  "poblacion_2022": 5103,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140245",
+  "departamento": "General Roca",
+  "lat": -34.4812565,
+  "lon": -64.1706963,
+  "nombre": "Mattaldi",
+  "poblacion_2022": 1832,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140252",
+  "departamento": "General Roca",
+  "lat": -34.8405206,
+  "lon": -64.5871,
+  "nombre": "Villa Huidobro",
+  "poblacion_2022": 6345,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140259",
+  "departamento": "General Roca",
+  "lat": -34.3414458,
+  "lon": -64.9208144,
+  "nombre": "Villa Valeria",
+  "poblacion_2022": 3489,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140266",
+  "departamento": "General San Martín",
+  "lat": -32.201187,
+  "lon": -63.1651247,
+  "nombre": "Arroyo Algodón",
+  "poblacion_2022": 970,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140273",
+  "departamento": "General San Martín",
+  "lat": -32.4894934,
+  "lon": -63.4023757,
+  "nombre": "Arroyo Cabral",
+  "poblacion_2022": 3264,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140280",
+  "departamento": "General San Martín",
+  "lat": -32.661795,
+  "lon": -63.2431129,
+  "nombre": "Ausonia",
+  "poblacion_2022": 1044,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140287",
+  "departamento": "General San Martín",
+  "lat": -33.0778686,
+  "lon": -63.2750688,
+  "nombre": "Chazón",
+  "poblacion_2022": 1215,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140294",
+  "departamento": "General San Martín",
+  "lat": -32.9392316,
+  "lon": -63.245008,
+  "nombre": "Etruria",
+  "poblacion_2022": 4609,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140301",
+  "departamento": "General San Martín",
+  "lat": -32.8025264,
+  "lon": -63.2470933,
+  "nombre": "La Laguna",
+  "poblacion_2022": 1628,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140308",
+  "departamento": "General San Martín",
+  "lat": -32.6164345,
+  "lon": -63.4093992,
+  "nombre": "La Palestina",
+  "poblacion_2022": 627,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140315",
+  "departamento": "General San Martín",
+  "lat": -32.0970015,
+  "lon": -63.0343508,
+  "nombre": "La Playosa",
+  "poblacion_2022": 3123,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140322",
+  "departamento": "General San Martín",
+  "lat": -32.5405056,
+  "lon": -63.4768932,
+  "nombre": "Luca",
+  "poblacion_2022": 649,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140329",
+  "departamento": "General San Martín",
+  "lat": -32.746218,
+  "lon": -63.3417357,
+  "nombre": "Pasco",
+  "poblacion_2022": 1605,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140336",
+  "departamento": "General San Martín",
+  "lat": -32.2496252,
+  "lon": -62.9308811,
+  "nombre": "Silvio Pellico",
+  "poblacion_2022": 522,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140343",
+  "departamento": "General San Martín",
+  "lat": -32.6931268,
+  "lon": -63.4371065,
+  "nombre": "Ticino",
+  "poblacion_2022": 2615,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140350",
+  "departamento": "General San Martín",
+  "lat": -32.2870733,
+  "lon": -63.3536812,
+  "nombre": "Tío Pujio",
+  "poblacion_2022": 3659,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140357",
+  "departamento": "General San Martín",
+  "lat": -32.4130125,
+  "lon": -63.2482707,
+  "nombre": "Villa María",
+  "poblacion_2022": 97815,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140364",
+  "departamento": "General San Martín",
+  "lat": -32.4354764,
+  "lon": -63.2478575,
+  "nombre": "Villa Nueva",
+  "poblacion_2022": 26359,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140371",
+  "departamento": "Ischilín",
+  "lat": -30.4249771,
+  "lon": -64.3527393,
+  "nombre": "Deán Funes",
+  "poblacion_2022": 25360,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140378",
+  "departamento": "Ischilín",
+  "lat": -30.2141741,
+  "lon": -64.4993682,
+  "nombre": "Quilino",
+  "poblacion_2022": 6575,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140385",
+  "departamento": "Juárez Celman",
+  "lat": -33.3535611,
+  "lon": -63.7177345,
+  "nombre": "Alejandro Roca",
+  "poblacion_2022": 6108,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140392",
+  "departamento": "Juárez Celman",
+  "lat": -33.0247715,
+  "lon": -63.6698958,
+  "nombre": "Bengolea",
+  "poblacion_2022": 1004,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140399",
+  "departamento": "Juárez Celman",
+  "lat": -32.9131482,
+  "lon": -64.0225799,
+  "nombre": "Carnerillo",
+  "poblacion_2022": 2698,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140406",
+  "departamento": "Juárez Celman",
+  "lat": -33.0253791,
+  "lon": -64.0468745,
+  "nombre": "Charras",
+  "poblacion_2022": 1270,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140413",
+  "departamento": "Juárez Celman",
+  "lat": -32.8145729,
+  "lon": -63.8749572,
+  "nombre": "General Cabrera",
+  "poblacion_2022": 14473,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140420",
+  "departamento": "Juárez Celman",
+  "lat": -32.7563272,
+  "lon": -63.7891325,
+  "nombre": "General Deheza",
+  "poblacion_2022": 12711,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140427",
+  "departamento": "Juárez Celman",
+  "lat": -33.6684902,
+  "lon": -63.6362592,
+  "nombre": "Huanchilla",
+  "poblacion_2022": 1147,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140434",
+  "departamento": "Juárez Celman",
+  "lat": -33.4179776,
+  "lon": -63.2936289,
+  "nombre": "La Carlota",
+  "poblacion_2022": 14571,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140441",
+  "departamento": "Juárez Celman",
+  "lat": -33.4003583,
+  "lon": -63.4723888,
+  "nombre": "Los Cisnes",
+  "poblacion_2022": 711,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140448",
+  "departamento": "Juárez Celman",
+  "lat": -33.0447614,
+  "lon": -63.9060666,
+  "nombre": "Olaeta",
+  "poblacion_2022": 670,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140455",
+  "departamento": "Juárez Celman",
+  "lat": -33.2031138,
+  "lon": -63.8626455,
+  "nombre": "Reducción",
+  "poblacion_2022": 1900,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140462",
+  "departamento": "Juárez Celman",
+  "lat": -33.1764791,
+  "lon": -63.2866076,
+  "nombre": "Santa Eufemia",
+  "poblacion_2022": 2685,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140469",
+  "departamento": "Juárez Celman",
+  "lat": -33.03144,
+  "lon": -63.5061198,
+  "nombre": "Ucacha",
+  "poblacion_2022": 5941,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140476",
+  "departamento": "Marcos Juárez",
+  "lat": -33.605392,
+  "lon": -62.6258809,
+  "nombre": "Alejo Ledesma",
+  "poblacion_2022": 3624,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140483",
+  "departamento": "Marcos Juárez",
+  "lat": -33.6420729,
+  "lon": -62.4041194,
+  "nombre": "Arias",
+  "poblacion_2022": 7580,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140490",
+  "departamento": "Marcos Juárez",
+  "lat": -33.1275862,
+  "lon": -62.0948408,
+  "nombre": "Camilo Aldao",
+  "poblacion_2022": 4923,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140497",
+  "departamento": "Marcos Juárez",
+  "lat": -33.2482565,
+  "lon": -62.2688345,
+  "nombre": "Capitán General Bernardo O´Higgins",
+  "poblacion_2022": 563,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140504",
+  "departamento": "Marcos Juárez",
+  "lat": -33.4737649,
+  "lon": -62.338907,
+  "nombre": "Cavanagh",
+  "poblacion_2022": 1286,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140511",
+  "departamento": "Marcos Juárez",
+  "lat": -33.3117017,
+  "lon": -62.1764627,
+  "nombre": "Colonia Italiana",
+  "poblacion_2022": 732,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140518",
+  "departamento": "Marcos Juárez",
+  "lat": -33.2830928,
+  "lon": -62.1865429,
+  "nombre": "Corral de Bustos - Ifflinger",
+  "poblacion_2022": 11062,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140525",
+  "departamento": "Marcos Juárez",
+  "lat": -33.0083997,
+  "lon": -61.8057792,
+  "nombre": "Cruz Alta",
+  "poblacion_2022": 7387,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140532",
+  "departamento": "Marcos Juárez",
+  "lat": -33.1220805,
+  "lon": -62.3028841,
+  "nombre": "General Baldissera",
+  "poblacion_2022": 2307,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140539",
+  "departamento": "Marcos Juárez",
+  "lat": -32.7308774,
+  "lon": -61.9158266,
+  "nombre": "General Roca",
+  "poblacion_2022": 2885,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140546",
+  "departamento": "Marcos Juárez",
+  "lat": -33.4642879,
+  "lon": -62.4382553,
+  "nombre": "Guatimozín",
+  "poblacion_2022": 2520,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140553",
+  "departamento": "Marcos Juárez",
+  "lat": -32.9456474,
+  "lon": -62.2307908,
+  "nombre": "Inriville",
+  "poblacion_2022": 3793,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140560",
+  "departamento": "Marcos Juárez",
+  "lat": -33.2396975,
+  "lon": -62.4015958,
+  "nombre": "Isla Verde",
+  "poblacion_2022": 4378,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140567",
+  "departamento": "Marcos Juárez",
+  "lat": -32.6593552,
+  "lon": -62.2972675,
+  "nombre": "Leones",
+  "poblacion_2022": 11433,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140574",
+  "departamento": "Marcos Juárez",
+  "lat": -32.8876809,
+  "lon": -61.9517449,
+  "nombre": "Los Surgentes",
+  "poblacion_2022": 2924,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140581",
+  "departamento": "Marcos Juárez",
+  "lat": -32.6906362,
+  "lon": -62.1011265,
+  "nombre": "Marcos Juárez",
+  "poblacion_2022": 28706,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140588",
+  "departamento": "Marcos Juárez",
+  "lat": -32.9156374,
+  "lon": -62.4549009,
+  "nombre": "Monte Buey",
+  "poblacion_2022": 7187,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140595",
+  "departamento": "Marcos Juárez",
+  "lat": -32.4097129,
+  "lon": -62.1023489,
+  "nombre": "Saira",
+  "poblacion_2022": 917,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140602",
+  "departamento": "Minas",
+  "lat": -31.1765584,
+  "lon": -65.1018201,
+  "nombre": "San Carlos Minas",
+  "poblacion_2022": 2181,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140609",
+  "departamento": "Pocho",
+  "lat": -31.3178575,
+  "lon": -65.0895253,
+  "nombre": "Salsacate",
+  "poblacion_2022": 2126,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140616",
+  "departamento": "Presidente Roque Sáenz Peña",
+  "lat": -34.0070747,
+  "lon": -63.9234765,
+  "nombre": "General Levalle",
+  "poblacion_2022": 5815,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140623",
+  "departamento": "Presidente Roque Sáenz Peña",
+  "lat": -33.953648,
+  "lon": -62.9773029,
+  "nombre": "La Cesira",
+  "poblacion_2022": 1348,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140630",
+  "departamento": "Presidente Roque Sáenz Peña",
+  "lat": -34.1286322,
+  "lon": -63.3907017,
+  "nombre": "Laboulaye",
+  "poblacion_2022": 22609,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140637",
+  "departamento": "Presidente Roque Sáenz Peña",
+  "lat": -34.3486754,
+  "lon": -63.4451505,
+  "nombre": "Melo",
+  "poblacion_2022": 1172,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140644",
+  "departamento": "Presidente Roque Sáenz Peña",
+  "lat": -34.1717759,
+  "lon": -63.1540264,
+  "nombre": "Rosales",
+  "poblacion_2022": 486,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140651",
+  "departamento": "Presidente Roque Sáenz Peña",
+  "lat": -34.4706743,
+  "lon": -63.540286,
+  "nombre": "Serrano",
+  "poblacion_2022": 3464,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140658",
+  "departamento": "Presidente Roque Sáenz Peña",
+  "lat": -34.2979365,
+  "lon": -63.2685389,
+  "nombre": "Villa Rossi",
+  "poblacion_2022": 526,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140665",
+  "departamento": "Punilla",
+  "lat": -31.3139053,
+  "lon": -64.464035,
+  "nombre": "Bialet Massé",
+  "poblacion_2022": 9910,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140672",
+  "departamento": "Punilla",
+  "lat": -30.8568691,
+  "lon": -64.5263505,
+  "nombre": "Capilla del Monte",
+  "poblacion_2022": 13031,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140679",
+  "departamento": "Punilla",
+  "lat": -31.2436682,
+  "lon": -64.4653485,
+  "nombre": "Cosquín",
+  "poblacion_2022": 25461,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140686",
+  "departamento": "Punilla",
+  "lat": -31.0752894,
+  "lon": -64.490828,
+  "nombre": "Huerta Grande",
+  "poblacion_2022": 7986,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140693",
+  "departamento": "Punilla",
+  "lat": -30.9821337,
+  "lon": -64.4941975,
+  "nombre": "La Cumbre",
+  "poblacion_2022": 7279,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140700",
+  "departamento": "Punilla",
+  "lat": -31.0944265,
+  "lon": -64.4829476,
+  "nombre": "La Falda",
+  "poblacion_2022": 16937,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140707",
+  "departamento": "Punilla",
+  "lat": -30.9264646,
+  "lon": -64.5003923,
+  "nombre": "Los Cocos",
+  "poblacion_2022": 1414,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140710",
+  "departamento": "Punilla",
+  "lat": -31.4827918,
+  "lon": -64.5278104,
+  "nombre": "San Antonio de Arredondo",
+  "poblacion_2022": 6129,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140714",
+  "departamento": "Punilla",
+  "lat": -30.9211407,
+  "lon": -64.5363714,
+  "nombre": "San Esteban",
+  "poblacion_2022": 1215,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140721",
+  "departamento": "Punilla",
+  "lat": -31.2756382,
+  "lon": -64.4636272,
+  "nombre": "Santa María de Punilla",
+  "poblacion_2022": 12108,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140728",
+  "departamento": "Punilla",
+  "lat": -31.3547963,
+  "lon": -64.5923472,
+  "nombre": "Tanti",
+  "poblacion_2022": 11035,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140735",
+  "departamento": "Punilla",
+  "lat": -31.1139612,
+  "lon": -64.4851589,
+  "nombre": "Valle Hermoso",
+  "poblacion_2022": 7369,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140742",
+  "departamento": "Punilla",
+  "lat": -31.4179169,
+  "lon": -64.4940291,
+  "nombre": "Villa Carlos Paz",
+  "poblacion_2022": 71719,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140749",
+  "departamento": "Punilla",
+  "lat": -31.0502719,
+  "lon": -64.4967853,
+  "nombre": "Villa Giardino",
+  "poblacion_2022": 7386,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140752",
+  "departamento": "Punilla",
+  "lat": -31.482675,
+  "lon": -64.5647262,
+  "nombre": "Villa Río Icho Cruz",
+  "poblacion_2022": 2857,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140754",
+  "departamento": "Punilla",
+  "lat": -31.3663813,
+  "lon": -64.5219985,
+  "nombre": "Villa Santa Cruz del Lago",
+  "poblacion_2022": 3672,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140756",
+  "departamento": "Río Cuarto",
+  "lat": -33.1744471,
+  "lon": -64.9920618,
+  "nombre": "Achiras",
+  "poblacion_2022": 2870,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140763",
+  "departamento": "Río Cuarto",
+  "lat": -33.6320303,
+  "lon": -64.021678,
+  "nombre": "Adelia María",
+  "poblacion_2022": 7975,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140770",
+  "departamento": "Río Cuarto",
+  "lat": -32.7588292,
+  "lon": -64.3340334,
+  "nombre": "Alcira Gigena",
+  "poblacion_2022": 6627,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140777",
+  "departamento": "Río Cuarto",
+  "lat": -32.6921124,
+  "lon": -64.7235966,
+  "nombre": "Alpa Corral",
+  "poblacion_2022": 1276,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140784",
+  "departamento": "Río Cuarto",
+  "lat": -32.4528417,
+  "lon": -64.3879391,
+  "nombre": "Berrotarán",
+  "poblacion_2022": 7432,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140791",
+  "departamento": "Río Cuarto",
+  "lat": -33.5059261,
+  "lon": -64.6782186,
+  "nombre": "Bulnes",
+  "poblacion_2022": 1090,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140798",
+  "departamento": "Río Cuarto",
+  "lat": -33.5556299,
+  "lon": -65.0026547,
+  "nombre": "Chaján",
+  "poblacion_2022": 618,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140805",
+  "departamento": "Río Cuarto",
+  "lat": -32.8474045,
+  "lon": -64.361077,
+  "nombre": "Coronel Baigorria",
+  "poblacion_2022": 1845,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140812",
+  "departamento": "Río Cuarto",
+  "lat": -33.6227285,
+  "lon": -64.5970481,
+  "nombre": "Coronel Moldes",
+  "poblacion_2022": 9608,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140819",
+  "departamento": "Río Cuarto",
+  "lat": -32.5703939,
+  "lon": -64.3939049,
+  "nombre": "Elena",
+  "poblacion_2022": 3399,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140826",
+  "departamento": "Río Cuarto",
+  "lat": -33.9796449,
+  "lon": -64.0834562,
+  "nombre": "La Cautiva",
+  "poblacion_2022": 898,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140833",
+  "departamento": "Río Cuarto",
+  "lat": -33.2802823,
+  "lon": -63.9753761,
+  "nombre": "Las Acequias",
+  "poblacion_2022": 2537,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140840",
+  "departamento": "Río Cuarto",
+  "lat": -33.0898038,
+  "lon": -64.2853623,
+  "nombre": "Las Higueras",
+  "poblacion_2022": 10343,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140847",
+  "departamento": "Río Cuarto",
+  "lat": -33.2834447,
+  "lon": -64.5777124,
+  "nombre": "Las Vertientes",
+  "poblacion_2022": 985,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140854",
+  "departamento": "Río Cuarto",
+  "lat": -33.6390864,
+  "lon": -63.8896728,
+  "nombre": "Monte de los Gauchos",
+  "poblacion_2022": 864,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140861",
+  "departamento": "Río Cuarto",
+  "lat": -33.1238369,
+  "lon": -64.3490032,
+  "nombre": "Río Cuarto",
+  "poblacion_2022": 182038,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140868",
+  "departamento": "Río Cuarto",
+  "lat": -33.3840227,
+  "lon": -64.7228782,
+  "nombre": "Sampacho",
+  "poblacion_2022": 8554,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140875",
+  "departamento": "Río Cuarto",
+  "lat": -33.4985484,
+  "lon": -64.3147319,
+  "nombre": "San Basilio",
+  "poblacion_2022": 4007,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140882",
+  "departamento": "Río Cuarto",
+  "lat": -33.2051899,
+  "lon": -64.4378286,
+  "nombre": "Santa Catalina - Holmberg",
+  "poblacion_2022": 5057,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140889",
+  "departamento": "Río Cuarto",
+  "lat": -33.8196836,
+  "lon": -64.45767,
+  "nombre": "Tosquita",
+  "poblacion_2022": 603,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140896",
+  "departamento": "Río Cuarto",
+  "lat": -33.9156416,
+  "lon": -64.3898545,
+  "nombre": "Vicuña Mackenna",
+  "poblacion_2022": 11712,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140903",
+  "departamento": "Río Primero",
+  "lat": -30.8941305,
+  "lon": -63.0013963,
+  "nombre": "La Para",
+  "poblacion_2022": 4333,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140910",
+  "departamento": "Río Primero",
+  "lat": -30.8933429,
+  "lon": -63.2548254,
+  "nombre": "La Puerta",
+  "poblacion_2022": 2788,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140917",
+  "departamento": "Río Primero",
+  "lat": -31.341986,
+  "lon": -63.9472252,
+  "nombre": "Monte Cristo",
+  "poblacion_2022": 14938,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140924",
+  "departamento": "Río Primero",
+  "lat": -30.7812923,
+  "lon": -63.4103657,
+  "nombre": "Obispo Trejo",
+  "poblacion_2022": 2889,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140931",
+  "departamento": "Río Primero",
+  "lat": -31.3005997,
+  "lon": -63.757673,
+  "nombre": "Piquillín",
+  "poblacion_2022": 1617,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140938",
+  "departamento": "Río Primero",
+  "lat": -31.3338717,
+  "lon": -63.6185723,
+  "nombre": "Río Primero",
+  "poblacion_2022": 11726,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140945",
+  "departamento": "Río Primero",
+  "lat": -31.1535276,
+  "lon": -63.3994126,
+  "nombre": "Villa Santa Rosa De Río Primero",
+  "poblacion_2022": 9327,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140952",
+  "departamento": "Río Primero",
+  "lat": -30.8937076,
+  "lon": -63.1171529,
+  "nombre": "Villa Fontana",
+  "poblacion_2022": 1093,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140959",
+  "departamento": "Río Seco",
+  "lat": -30.1604055,
+  "lon": -63.5924899,
+  "nombre": "Sebastián Elcano",
+  "poblacion_2022": 3193,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140966",
+  "departamento": "Río Seco",
+  "lat": -29.9065231,
+  "lon": -63.7225619,
+  "nombre": "Villa de María",
+  "poblacion_2022": 6184,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140973",
+  "departamento": "Río Segundo",
+  "lat": -31.6688571,
+  "lon": -63.199043,
+  "nombre": "Calchín",
+  "poblacion_2022": 2940,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140980",
+  "departamento": "Río Segundo",
+  "lat": -31.8625489,
+  "lon": -63.2777859,
+  "nombre": "Calchín Oeste",
+  "poblacion_2022": 841,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140987",
+  "departamento": "Río Segundo",
+  "lat": -31.5076796,
+  "lon": -63.343145,
+  "nombre": "Capilla del Carmen",
+  "poblacion_2022": 507,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "140994",
+  "departamento": "Río Segundo",
+  "lat": -31.8737148,
+  "lon": -63.1173981,
+  "nombre": "Carrilobo",
+  "poblacion_2022": 1561,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141001",
+  "departamento": "Río Segundo",
+  "lat": -31.9645614,
+  "lon": -63.3826783,
+  "nombre": "Colazo",
+  "poblacion_2022": 1548,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141008",
+  "departamento": "Río Segundo",
+  "lat": -31.6453192,
+  "lon": -63.7588686,
+  "nombre": "Costa Sacate",
+  "poblacion_2022": 1480,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141015",
+  "departamento": "Río Segundo",
+  "lat": -31.7756994,
+  "lon": -63.8003265,
+  "nombre": "Laguna Larga",
+  "poblacion_2022": 7966,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141022",
+  "departamento": "Río Segundo",
+  "lat": -31.8313962,
+  "lon": -63.4506365,
+  "nombre": "Las Junturas",
+  "poblacion_2022": 1946,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141029",
+  "departamento": "Río Segundo",
+  "lat": -31.6477262,
+  "lon": -63.3450817,
+  "nombre": "Luque",
+  "poblacion_2022": 7082,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141036",
+  "departamento": "Río Segundo",
+  "lat": -31.8457573,
+  "lon": -63.747558,
+  "nombre": "Manfredi",
+  "poblacion_2022": 1139,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141043",
+  "departamento": "Río Segundo",
+  "lat": -31.7147105,
+  "lon": -63.5107183,
+  "nombre": "Matorrales",
+  "poblacion_2022": 1017,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141050",
+  "departamento": "Río Segundo",
+  "lat": -31.9134321,
+  "lon": -63.6820214,
+  "nombre": "Oncativo",
+  "poblacion_2022": 14702,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141057",
+  "departamento": "Río Segundo",
+  "lat": -31.6812652,
+  "lon": -63.8823958,
+  "nombre": "Pilar",
+  "poblacion_2022": 18674,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141064",
+  "departamento": "Río Segundo",
+  "lat": -32.0213365,
+  "lon": -62.9193087,
+  "nombre": "Pozo del Molle",
+  "poblacion_2022": 5302,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141071",
+  "departamento": "Río Segundo",
+  "lat": -31.6501527,
+  "lon": -63.9118628,
+  "nombre": "Río Segundo",
+  "poblacion_2022": 22258,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141078",
+  "departamento": "Río Segundo",
+  "lat": -31.3859854,
+  "lon": -63.4196375,
+  "nombre": "Santiago Temple",
+  "poblacion_2022": 3298,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141085",
+  "departamento": "Río Segundo",
+  "lat": -31.5541005,
+  "lon": -63.5356973,
+  "nombre": "Villa del Rosario",
+  "poblacion_2022": 17680,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141092",
+  "departamento": "San Alberto",
+  "lat": -31.7294276,
+  "lon": -65.0050003,
+  "nombre": "Mina Clavero",
+  "poblacion_2022": 11955,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141099",
+  "departamento": "San Alberto",
+  "lat": -31.7972046,
+  "lon": -65.0024987,
+  "nombre": "Nono",
+  "poblacion_2022": 2169,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141106",
+  "departamento": "San Alberto",
+  "lat": -31.9364739,
+  "lon": -65.2188678,
+  "nombre": "San Pedro",
+  "poblacion_2022": 4469,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141113",
+  "departamento": "San Alberto",
+  "lat": -31.7064607,
+  "lon": -65.0186063,
+  "nombre": "Villa Cura Brochero",
+  "poblacion_2022": 8426,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141120",
+  "departamento": "San Alberto",
+  "lat": -31.9362411,
+  "lon": -65.1930983,
+  "nombre": "Villa Sarmiento (San Alberto - CB)",
+  "poblacion_2022": 4736,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141127",
+  "departamento": "San Javier",
+  "lat": -32.2175253,
+  "lon": -65.0482645,
+  "nombre": "La Paz",
+  "poblacion_2022": 5956,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141130",
+  "departamento": "San Javier",
+  "lat": -31.9530536,
+  "lon": -65.0979661,
+  "nombre": "Las Tapias",
+  "poblacion_2022": 2862,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141132",
+  "departamento": "San Javier",
+  "lat": -31.9726991,
+  "lon": -65.4446382,
+  "nombre": "Los Cerrillos",
+  "poblacion_2022": 2599,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141134",
+  "departamento": "San Javier",
+  "lat": -32.0264696,
+  "lon": -65.0302683,
+  "nombre": "San Javier y Yacanto",
+  "poblacion_2022": 2942,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141141",
+  "departamento": "San Javier",
+  "lat": -31.9565012,
+  "lon": -65.3118043,
+  "nombre": "San José",
+  "poblacion_2022": 2803,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141148",
+  "departamento": "San Javier",
+  "lat": -31.9470865,
+  "lon": -65.0521153,
+  "nombre": "Villa de las Rosas",
+  "poblacion_2022": 6008,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141155",
+  "departamento": "San Javier",
+  "lat": -31.9449767,
+  "lon": -65.1902396,
+  "nombre": "Villa Dolores",
+  "poblacion_2022": 34005,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141162",
+  "departamento": "San Justo",
+  "lat": -31.9388472,
+  "lon": -62.4642457,
+  "nombre": "Alicia",
+  "poblacion_2022": 3529,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141169",
+  "departamento": "San Justo",
+  "lat": -30.9571805,
+  "lon": -62.3383686,
+  "nombre": "Altos de Chipión",
+  "poblacion_2022": 2051,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141176",
+  "departamento": "San Justo",
+  "lat": -31.4192297,
+  "lon": -63.0507025,
+  "nombre": "Arroyito",
+  "poblacion_2022": 28161,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141183",
+  "departamento": "San Justo",
+  "lat": -31.0128513,
+  "lon": -62.665374,
+  "nombre": "Balnearia",
+  "poblacion_2022": 6840,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141190",
+  "departamento": "San Justo",
+  "lat": -30.8664795,
+  "lon": -62.0431067,
+  "nombre": "Brinkmann",
+  "poblacion_2022": 11419,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141197",
+  "departamento": "San Justo",
+  "lat": -31.24876,
+  "lon": -62.3639059,
+  "nombre": "Colonia Marina",
+  "poblacion_2022": 1273,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141204",
+  "departamento": "San Justo",
+  "lat": -31.6287043,
+  "lon": -62.3653398,
+  "nombre": "Colonia Prosperidad",
+  "poblacion_2022": 372,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141211",
+  "departamento": "San Justo",
+  "lat": -31.5279083,
+  "lon": -62.723704,
+  "nombre": "Colonia San Bartolomé",
+  "poblacion_2022": 1472,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141218",
+  "departamento": "San Justo",
+  "lat": -30.8414191,
+  "lon": -61.9566136,
+  "nombre": "Colonia Vignaud",
+  "poblacion_2022": 737,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141225",
+  "departamento": "San Justo",
+  "lat": -31.4017821,
+  "lon": -62.3062226,
+  "nombre": "Devoto",
+  "poblacion_2022": 7098,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141232",
+  "departamento": "San Justo",
+  "lat": -31.7430345,
+  "lon": -62.8896267,
+  "nombre": "El Arañado",
+  "poblacion_2022": 1496,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141239",
+  "departamento": "San Justo",
+  "lat": -31.9669202,
+  "lon": -62.3001762,
+  "nombre": "El Fortín",
+  "poblacion_2022": 1699,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141246",
+  "departamento": "San Justo",
+  "lat": -31.3854205,
+  "lon": -62.8281977,
+  "nombre": "El Tío",
+  "poblacion_2022": 2397,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141253",
+  "departamento": "San Justo",
+  "lat": -31.1645722,
+  "lon": -62.0963188,
+  "nombre": "Freyre",
+  "poblacion_2022": 7703,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141260",
+  "departamento": "San Justo",
+  "lat": -31.4062958,
+  "lon": -62.6332175,
+  "nombre": "La Francia",
+  "poblacion_2022": 4162,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141267",
+  "departamento": "San Justo",
+  "lat": -30.9092897,
+  "lon": -62.2161123,
+  "nombre": "La Paquita",
+  "poblacion_2022": 1128,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141274",
+  "departamento": "San Justo",
+  "lat": -31.2365377,
+  "lon": -63.0610805,
+  "nombre": "La Tordilla",
+  "poblacion_2022": 1507,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141281",
+  "departamento": "San Justo",
+  "lat": -31.8024376,
+  "lon": -62.6165974,
+  "nombre": "Las Varas",
+  "poblacion_2022": 1426,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141288",
+  "departamento": "San Justo",
+  "lat": -31.8703847,
+  "lon": -62.7196647,
+  "nombre": "Las Varillas",
+  "poblacion_2022": 18849,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141295",
+  "departamento": "San Justo",
+  "lat": -30.9938649,
+  "lon": -62.8253384,
+  "nombre": "Marull",
+  "poblacion_2022": 2039,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141302",
+  "departamento": "San Justo",
+  "lat": -30.9151531,
+  "lon": -62.6750095,
+  "nombre": "Miramar",
+  "poblacion_2022": 2799,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141309",
+  "departamento": "San Justo",
+  "lat": -30.7106677,
+  "lon": -62.0072364,
+  "nombre": "Morteros",
+  "poblacion_2022": 20729,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141316",
+  "departamento": "San Justo",
+  "lat": -31.0140493,
+  "lon": -62.0620445,
+  "nombre": "Porteña",
+  "poblacion_2022": 6253,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141323",
+  "departamento": "San Justo",
+  "lat": -31.5490137,
+  "lon": -62.2249566,
+  "nombre": "Quebracho Herrado",
+  "poblacion_2022": 432,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141330",
+  "departamento": "San Justo",
+  "lat": -31.6633982,
+  "lon": -63.0479613,
+  "nombre": "Sacanta",
+  "poblacion_2022": 3401,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141337",
+  "departamento": "San Justo",
+  "lat": -31.4249389,
+  "lon": -62.0838767,
+  "nombre": "San Francisco",
+  "poblacion_2022": 69391,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141344",
+  "departamento": "San Justo",
+  "lat": -31.7034816,
+  "lon": -62.4834622,
+  "nombre": "Saturnino María Laspiur",
+  "poblacion_2022": 2829,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141351",
+  "departamento": "San Justo",
+  "lat": -30.9257254,
+  "lon": -61.9741593,
+  "nombre": "Seeber",
+  "poblacion_2022": 780,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141358",
+  "departamento": "San Justo",
+  "lat": -31.4243426,
+  "lon": -63.1935604,
+  "nombre": "Tránsito",
+  "poblacion_2022": 3847,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141365",
+  "departamento": "San Justo",
+  "lat": -31.3221001,
+  "lon": -62.813998,
+  "nombre": "Villa Concepción del Tío",
+  "poblacion_2022": 2441,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141372",
+  "departamento": "Santa María",
+  "lat": -31.6497921,
+  "lon": -64.4298719,
+  "nombre": "Alta Gracia",
+  "poblacion_2022": 60695,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141375",
+  "departamento": "Santa María",
+  "lat": -31.7255025,
+  "lon": -64.4140689,
+  "nombre": "Anisacate",
+  "poblacion_2022": 8582,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141377",
+  "departamento": "Santa María",
+  "lat": -31.5581326,
+  "lon": -64.1906902,
+  "nombre": "Bouwer",
+  "poblacion_2022": 1729,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141379",
+  "departamento": "Santa María",
+  "lat": -31.8142805,
+  "lon": -64.294775,
+  "nombre": "Despeñaderos",
+  "poblacion_2022": 7812,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141386",
+  "departamento": "Santa María",
+  "lat": -31.6496781,
+  "lon": -64.0897044,
+  "nombre": "Lozada",
+  "poblacion_2022": 1189,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141393",
+  "departamento": "Santa María",
+  "lat": -31.4673992,
+  "lon": -64.3590212,
+  "nombre": "Malagueño",
+  "poblacion_2022": 25918,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141400",
+  "departamento": "Santa María",
+  "lat": -31.9107227,
+  "lon": -64.2399422,
+  "nombre": "Monte Ralo",
+  "poblacion_2022": 592,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141407",
+  "departamento": "Santa María",
+  "lat": -31.5537838,
+  "lon": -64.0073709,
+  "nombre": "Toledo",
+  "poblacion_2022": 6367,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141410",
+  "departamento": "Santa María",
+  "lat": -31.5926239,
+  "lon": -64.3470825,
+  "nombre": "Villa Parque Santa Ana",
+  "poblacion_2022": 5543,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141414",
+  "departamento": "Sobremonte",
+  "lat": -29.7863529,
+  "lon": -63.9416977,
+  "nombre": "San Francisco del Chañar",
+  "poblacion_2022": 3196,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141421",
+  "departamento": "Tercero Arriba",
+  "lat": -32.1923904,
+  "lon": -64.2557452,
+  "nombre": "Almafuerte",
+  "poblacion_2022": 13235,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141428",
+  "departamento": "Tercero Arriba",
+  "lat": -32.0350246,
+  "lon": -63.8647845,
+  "nombre": "Colonia Almada",
+  "poblacion_2022": 516,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141435",
+  "departamento": "Tercero Arriba",
+  "lat": -32.0237232,
+  "lon": -64.1919905,
+  "nombre": "Corralito",
+  "poblacion_2022": 1913,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141442",
+  "departamento": "Tercero Arriba",
+  "lat": -32.6086003,
+  "lon": -63.583491,
+  "nombre": "Dalmacio Vélez Sarsfield",
+  "poblacion_2022": 1880,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141449",
+  "departamento": "Tercero Arriba",
+  "lat": -32.4278813,
+  "lon": -63.7334711,
+  "nombre": "Hernando",
+  "poblacion_2022": 11897,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141456",
+  "departamento": "Tercero Arriba",
+  "lat": -32.1614313,
+  "lon": -63.4679698,
+  "nombre": "James Craik",
+  "poblacion_2022": 6020,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141463",
+  "departamento": "Tercero Arriba",
+  "lat": -32.6989558,
+  "lon": -63.7046742,
+  "nombre": "Las Perdices",
+  "poblacion_2022": 5376,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141470",
+  "departamento": "Tercero Arriba",
+  "lat": -32.0449728,
+  "lon": -63.2022402,
+  "nombre": "Los Zorros",
+  "poblacion_2022": 514,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141477",
+  "departamento": "Tercero Arriba",
+  "lat": -32.0382586,
+  "lon": -63.5706764,
+  "nombre": "Oliva",
+  "poblacion_2022": 13179,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141484",
+  "departamento": "Tercero Arriba",
+  "lat": -32.250502,
+  "lon": -63.6516762,
+  "nombre": "Pampayasta Sud",
+  "poblacion_2022": 1376,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141491",
+  "departamento": "Tercero Arriba",
+  "lat": -32.1767393,
+  "lon": -64.1129628,
+  "nombre": "Río Tercero",
+  "poblacion_2022": 53416,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141498",
+  "departamento": "Tercero Arriba",
+  "lat": -32.2375848,
+  "lon": -63.9798657,
+  "nombre": "Tancacha",
+  "poblacion_2022": 5677,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141505",
+  "departamento": "Tercero Arriba",
+  "lat": -32.1627385,
+  "lon": -63.8924224,
+  "nombre": "Villa Ascasubi",
+  "poblacion_2022": 2764,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141512",
+  "departamento": "Totoral",
+  "lat": -30.7352375,
+  "lon": -63.723971,
+  "nombre": "Cañada de Luque",
+  "poblacion_2022": 1372,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141519",
+  "departamento": "Totoral",
+  "lat": -30.5639628,
+  "lon": -64.0002665,
+  "nombre": "Las Peñas",
+  "poblacion_2022": 2077,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141526",
+  "departamento": "Totoral",
+  "lat": -30.7744711,
+  "lon": -64.1095029,
+  "nombre": "Sarmiento",
+  "poblacion_2022": 1394,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141533",
+  "departamento": "Totoral",
+  "lat": -30.9429292,
+  "lon": -64.0940329,
+  "nombre": "Sinsacate",
+  "poblacion_2022": 2636,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141540",
+  "departamento": "Totoral",
+  "lat": -30.7046218,
+  "lon": -64.0681414,
+  "nombre": "Villa del Totoral",
+  "poblacion_2022": 10928,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141547",
+  "departamento": "Tulumba",
+  "lat": -30.3817457,
+  "lon": -63.5969003,
+  "nombre": "Las Arrias",
+  "poblacion_2022": 1502,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141554",
+  "departamento": "Tulumba",
+  "lat": -29.8039889,
+  "lon": -64.7081043,
+  "nombre": "Lucio Victorio Mansilla",
+  "poblacion_2022": 1005,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141561",
+  "departamento": "Tulumba",
+  "lat": -30.3562694,
+  "lon": -63.9502928,
+  "nombre": "San José de la Dormida",
+  "poblacion_2022": 5828,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141568",
+  "departamento": "Tulumba",
+  "lat": -30.0069521,
+  "lon": -64.6239392,
+  "nombre": "San José de las Salinas",
+  "poblacion_2022": 912,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141575",
+  "departamento": "Tulumba",
+  "lat": -30.0910815,
+  "lon": -64.1549271,
+  "nombre": "San Pedro Norte",
+  "poblacion_2022": 638,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141582",
+  "departamento": "Tulumba",
+  "lat": -30.3953542,
+  "lon": -64.1223089,
+  "nombre": "Villa Tulumba",
+  "poblacion_2022": 1610,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141589",
+  "departamento": "Unión",
+  "lat": -32.3446887,
+  "lon": -62.8849135,
+  "nombre": "Alto Alegre",
+  "poblacion_2022": 1057,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141596",
+  "departamento": "Unión",
+  "lat": -32.541697,
+  "lon": -62.9808108,
+  "nombre": "Ballesteros",
+  "poblacion_2022": 4782,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141603",
+  "departamento": "Unión",
+  "lat": -32.589478,
+  "lon": -63.0302182,
+  "nombre": "Ballesteros Sud",
+  "poblacion_2022": 699,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141610",
+  "departamento": "Unión",
+  "lat": -32.6303142,
+  "lon": -62.6887933,
+  "nombre": "Bell Ville",
+  "poblacion_2022": 37995,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141617",
+  "departamento": "Unión",
+  "lat": -33.5874649,
+  "lon": -62.7281348,
+  "nombre": "Benjamín Gould",
+  "poblacion_2022": 849,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141624",
+  "departamento": "Unión",
+  "lat": -33.5621726,
+  "lon": -62.8850856,
+  "nombre": "Canals",
+  "poblacion_2022": 8390,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141631",
+  "departamento": "Unión",
+  "lat": -32.332692,
+  "lon": -62.5107956,
+  "nombre": "Chilibroste",
+  "poblacion_2022": 893,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141638",
+  "departamento": "Unión",
+  "lat": -32.3063318,
+  "lon": -62.651606,
+  "nombre": "Cintra",
+  "poblacion_2022": 1722,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141645",
+  "departamento": "Unión",
+  "lat": -33.301237,
+  "lon": -62.7126467,
+  "nombre": "Colonia Bismarck",
+  "poblacion_2022": 443,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141652",
+  "departamento": "Unión",
+  "lat": -32.812536,
+  "lon": -63.0323971,
+  "nombre": "Idiazábal",
+  "poblacion_2022": 1737,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141659",
+  "departamento": "Unión",
+  "lat": -32.8834497,
+  "lon": -62.6796136,
+  "nombre": "Justiniano Posse",
+  "poblacion_2022": 9591,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141666",
+  "departamento": "Unión",
+  "lat": -33.1548398,
+  "lon": -62.8574761,
+  "nombre": "Laborde",
+  "poblacion_2022": 6609,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141673",
+  "departamento": "Unión",
+  "lat": -32.6112829,
+  "lon": -62.5897452,
+  "nombre": "Monte Leña",
+  "poblacion_2022": 571,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141680",
+  "departamento": "Unión",
+  "lat": -33.2042451,
+  "lon": -62.600483,
+  "nombre": "Monte Maíz",
+  "poblacion_2022": 8460,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141687",
+  "departamento": "Unión",
+  "lat": -32.5928653,
+  "lon": -62.8333406,
+  "nombre": "Morrison",
+  "poblacion_2022": 4019,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141694",
+  "departamento": "Unión",
+  "lat": -32.3660224,
+  "lon": -62.3071748,
+  "nombre": "Noetinger",
+  "poblacion_2022": 5762,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141701",
+  "departamento": "Unión",
+  "lat": -32.8410073,
+  "lon": -62.8659855,
+  "nombre": "Ordóñez",
+  "poblacion_2022": 2949,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141708",
+  "departamento": "Unión",
+  "lat": -33.1247004,
+  "lon": -63.0401247,
+  "nombre": "Pascanas",
+  "poblacion_2022": 2761,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141715",
+  "departamento": "Unión",
+  "lat": -33.8824106,
+  "lon": -62.8405016,
+  "nombre": "Pueblo Italiano",
+  "poblacion_2022": 1838,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141722",
+  "departamento": "Unión",
+  "lat": -32.2135807,
+  "lon": -62.6313288,
+  "nombre": "San Antonio de Litín",
+  "poblacion_2022": 1796,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141729",
+  "departamento": "Unión",
+  "lat": -32.6302358,
+  "lon": -62.484248,
+  "nombre": "San Marcos Sud",
+  "poblacion_2022": 3487,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141736",
+  "departamento": "Unión",
+  "lat": -33.7460517,
+  "lon": -63.0972816,
+  "nombre": "Viamonte",
+  "poblacion_2022": 1789,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "141743",
+  "departamento": "Unión",
+  "lat": -33.171677,
+  "lon": -62.7694161,
+  "nombre": "Wenceslao Escalante",
+  "poblacion_2022": 1507,
+  "tipo": "municipio"
+ },
+ {
+  "codigo": "142007",
+  "departamento": "Calamuchita",
+  "lat": -32.1745792,
+  "lon": -64.5732436,
+  "nombre": "Amboy",
+  "poblacion_2022": 353,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142014",
+  "departamento": "Calamuchita",
+  "lat": -32.0254698,
+  "lon": -64.464679,
+  "nombre": "Parque Calmayo",
+  "poblacion_2022": 160,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142021",
+  "departamento": "Calamuchita",
+  "lat": -32.36796,
+  "lon": -64.6454261,
+  "nombre": "Cañada del Sauce",
+  "poblacion_2022": 149,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142028",
+  "departamento": "Calamuchita",
+  "lat": -32.1015865,
+  "lon": -64.3321849,
+  "nombre": "Las Bajadas",
+  "poblacion_2022": 231,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142035",
+  "departamento": "Calamuchita",
+  "lat": -32.390222,
+  "lon": -64.5226376,
+  "nombre": "Las Caleras",
+  "poblacion_2022": 301,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142042",
+  "departamento": "Calamuchita",
+  "lat": -31.8627443,
+  "lon": -64.3746184,
+  "nombre": "Los Molinos",
+  "poblacion_2022": 460,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142049",
+  "departamento": "Calamuchita",
+  "lat": -31.9187184,
+  "lon": -64.575003,
+  "nombre": "Los Reartes",
+  "poblacion_2022": 3111,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142056",
+  "departamento": "Calamuchita",
+  "lat": -32.3184982,
+  "lon": -64.7469859,
+  "nombre": "Lutti",
+  "poblacion_2022": 94,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142063",
+  "departamento": "Calamuchita",
+  "lat": -32.1659052,
+  "lon": -64.5179097,
+  "nombre": "San Ignacio",
+  "poblacion_2022": 171,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142070",
+  "departamento": "Calamuchita",
+  "lat": -32.1650007,
+  "lon": -64.3791841,
+  "nombre": "Segunda Usina",
+  "poblacion_2022": 196,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142077",
+  "departamento": "Calamuchita",
+  "lat": -32.186184,
+  "lon": -64.5673892,
+  "nombre": "Villa Amancay",
+  "poblacion_2022": 854,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142084",
+  "departamento": "Calamuchita",
+  "lat": -31.8282753,
+  "lon": -64.5213024,
+  "nombre": "Villa Ciudad Parque Los Reartes",
+  "poblacion_2022": 2740,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142091",
+  "departamento": "Calamuchita",
+  "lat": -32.2348072,
+  "lon": -64.5146026,
+  "nombre": "Villa Quillinzo",
+  "poblacion_2022": 490,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142098",
+  "departamento": "Colón",
+  "lat": -31.0285216,
+  "lon": -64.0186827,
+  "nombre": "Colonia Vicente Agüero",
+  "poblacion_2022": 412,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142105",
+  "departamento": "Colón",
+  "lat": -31.0842308,
+  "lon": -64.2986976,
+  "nombre": "El Manzano",
+  "poblacion_2022": 1827,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142126",
+  "departamento": "Colón",
+  "lat": -31.0706651,
+  "lon": -64.3162353,
+  "nombre": "Villa Cerro Azul",
+  "poblacion_2022": 509,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142133",
+  "departamento": "Cruz del Eje",
+  "lat": -30.5388225,
+  "lon": -65.0414825,
+  "nombre": "Alto de los Quebrachos",
+  "poblacion_2022": 155,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142140",
+  "departamento": "Cruz del Eje",
+  "lat": -30.8088239,
+  "lon": -65.0433244,
+  "nombre": "Bañado de Soto",
+  "poblacion_2022": 735,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142147",
+  "departamento": "Cruz del Eje",
+  "lat": -31.0664088,
+  "lon": -64.9421123,
+  "nombre": "Cruz de Caña",
+  "poblacion_2022": 327,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142161",
+  "departamento": "Cruz del Eje",
+  "lat": -30.4786437,
+  "lon": -65.0615999,
+  "nombre": "Guanaco Muerto",
+  "poblacion_2022": 425,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142168",
+  "departamento": "Cruz del Eje",
+  "lat": -30.3722741,
+  "lon": -65.3081506,
+  "nombre": "La Batea",
+  "poblacion_2022": 176,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142175",
+  "departamento": "Cruz del Eje",
+  "lat": -31.0132902,
+  "lon": -65.1028961,
+  "nombre": "La Higuera",
+  "poblacion_2022": 629,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142182",
+  "departamento": "Cruz del Eje",
+  "lat": -30.914993,
+  "lon": -64.7347253,
+  "nombre": "Las Cañadas",
+  "poblacion_2022": 295,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142189",
+  "departamento": "Cruz del Eje",
+  "lat": -30.6882724,
+  "lon": -64.8492582,
+  "nombre": "Las Playas",
+  "poblacion_2022": 1104,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142196",
+  "departamento": "Cruz del Eje",
+  "lat": -30.5576768,
+  "lon": -64.9537465,
+  "nombre": "Los Chañaritos (Cruz del Eje-Ischilin)",
+  "poblacion_2022": 603,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142203",
+  "departamento": "Cruz del Eje",
+  "lat": -30.6440766,
+  "lon": -64.9282561,
+  "nombre": "Media Naranja",
+  "poblacion_2022": 1197,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142210",
+  "departamento": "Cruz del Eje",
+  "lat": -30.7674384,
+  "lon": -65.190431,
+  "nombre": "Paso Viejo",
+  "poblacion_2022": 1135,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142217",
+  "departamento": "Cruz del Eje",
+  "lat": -30.7465914,
+  "lon": -65.2356212,
+  "nombre": "Tuclame",
+  "poblacion_2022": 971,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142224",
+  "departamento": "General Roca",
+  "lat": -34.4404202,
+  "lon": -64.3416413,
+  "nombre": "Nicolás Bruzzone",
+  "poblacion_2022": 368,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142231",
+  "departamento": "General Roca",
+  "lat": -34.7726306,
+  "lon": -63.6721545,
+  "nombre": "Onagoity",
+  "poblacion_2022": 51,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142238",
+  "departamento": "General Roca",
+  "lat": -34.8381836,
+  "lon": -63.916563,
+  "nombre": "Pincen",
+  "poblacion_2022": 218,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142245",
+  "departamento": "General Roca",
+  "lat": -34.8426586,
+  "lon": -64.1003171,
+  "nombre": "Ranqueles",
+  "poblacion_2022": 60,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142252",
+  "departamento": "General Roca",
+  "lat": -34.1228538,
+  "lon": -64.7251793,
+  "nombre": "Villa Sarmiento (General Roca - CB)",
+  "poblacion_2022": 421,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142259",
+  "departamento": "Ischilín",
+  "lat": -30.5942904,
+  "lon": -64.2056869,
+  "nombre": "Avellaneda",
+  "poblacion_2022": 467,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142266",
+  "departamento": "Ischilín",
+  "lat": -30.7757911,
+  "lon": -64.2186509,
+  "nombre": "Cañada de Río Pinto",
+  "poblacion_2022": 323,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142273",
+  "departamento": "Ischilín",
+  "lat": -30.4670741,
+  "lon": -64.6702311,
+  "nombre": "Chuña",
+  "poblacion_2022": 697,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142280",
+  "departamento": "Ischilín",
+  "lat": -30.642902,
+  "lon": -64.4995043,
+  "nombre": "Copacabana",
+  "poblacion_2022": 180,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142287",
+  "departamento": "Ischilín",
+  "lat": -30.5191804,
+  "lon": -64.2522892,
+  "nombre": "Los Pozos",
+  "poblacion_2022": 62,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142294",
+  "departamento": "Ischilín",
+  "lat": -30.6012264,
+  "lon": -64.8556055,
+  "nombre": "Olivares de San Nicolás",
+  "poblacion_2022": 553,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142301",
+  "departamento": "Ischilín",
+  "lat": -30.6792055,
+  "lon": -64.160154,
+  "nombre": "Villa Gutiérrez",
+  "poblacion_2022": 344,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142308",
+  "departamento": "Juárez Celman",
+  "lat": -33.6341653,
+  "lon": -63.225622,
+  "nombre": "Assunta",
+  "poblacion_2022": 75,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142315",
+  "departamento": "Juárez Celman",
+  "lat": -33.6661834,
+  "lon": -63.5393329,
+  "nombre": "El Rastreador",
+  "poblacion_2022": 131,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142322",
+  "departamento": "Juárez Celman",
+  "lat": -33.758446,
+  "lon": -63.4903023,
+  "nombre": "Pacheco de Melo",
+  "poblacion_2022": 138,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142329",
+  "departamento": "Juárez Celman",
+  "lat": -33.1707368,
+  "lon": -64.047763,
+  "nombre": "Paso del Durazno",
+  "poblacion_2022": 38,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142336",
+  "departamento": "Marcos Juárez",
+  "lat": -33.2582393,
+  "lon": -62.6075243,
+  "nombre": "Colonia Barge",
+  "poblacion_2022": 412,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142343",
+  "departamento": "Marcos Juárez",
+  "lat": -32.9338712,
+  "lon": -62.3437118,
+  "nombre": "Saladillo",
+  "poblacion_2022": 231,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142350",
+  "departamento": "Marcos Juárez",
+  "lat": -32.8347578,
+  "lon": -62.2952589,
+  "nombre": "Villa Elisa",
+  "poblacion_2022": 42,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142357",
+  "departamento": "Minas",
+  "lat": -31.0424218,
+  "lon": -65.283525,
+  "nombre": "Ciénaga del Coro",
+  "poblacion_2022": 571,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142364",
+  "departamento": "Minas",
+  "lat": -30.8003826,
+  "lon": -65.6564042,
+  "nombre": "El Chacho",
+  "poblacion_2022": 165,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142371",
+  "departamento": "Minas",
+  "lat": -31.1300757,
+  "lon": -65.2159754,
+  "nombre": "Estancia de Guadalupe",
+  "poblacion_2022": 562,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142378",
+  "departamento": "Minas",
+  "lat": -31.1015929,
+  "lon": -65.3292093,
+  "nombre": "Guasapampa",
+  "poblacion_2022": 221,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142385",
+  "departamento": "Minas",
+  "lat": -31.0096689,
+  "lon": -65.3612672,
+  "nombre": "La Playa",
+  "poblacion_2022": 369,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142392",
+  "departamento": "Minas",
+  "lat": -31.2498502,
+  "lon": -65.169287,
+  "nombre": "Talaini",
+  "poblacion_2022": 110,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142399",
+  "departamento": "Minas",
+  "lat": -30.9598738,
+  "lon": -65.3103972,
+  "nombre": "Tosno",
+  "poblacion_2022": 98,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142406",
+  "departamento": "Pocho",
+  "lat": -31.4159636,
+  "lon": -65.4512532,
+  "nombre": "Chancaní",
+  "poblacion_2022": 572,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142413",
+  "departamento": "Pocho",
+  "lat": -31.3777759,
+  "lon": -65.2898362,
+  "nombre": "Las Palmas",
+  "poblacion_2022": 319,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142420",
+  "departamento": "Pocho",
+  "lat": -31.4071472,
+  "lon": -65.0470184,
+  "nombre": "Los Talares",
+  "poblacion_2022": 100,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142427",
+  "departamento": "Pocho",
+  "lat": -31.3441844,
+  "lon": -64.9190482,
+  "nombre": "San Gerónimo",
+  "poblacion_2022": 184,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142434",
+  "departamento": "Pocho",
+  "lat": -31.3544884,
+  "lon": -64.9759061,
+  "nombre": "Tala Cañada",
+  "poblacion_2022": 359,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142441",
+  "departamento": "Pocho",
+  "lat": -31.4901575,
+  "lon": -65.2809505,
+  "nombre": "Villa de Pocho",
+  "poblacion_2022": 301,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142448",
+  "departamento": "Presidente Roque Sáenz Peña",
+  "lat": -34.2041801,
+  "lon": -62.9758471,
+  "nombre": "Leguizamón",
+  "poblacion_2022": 35,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142455",
+  "departamento": "Presidente Roque Sáenz Peña",
+  "lat": -34.051372,
+  "lon": -63.7330655,
+  "nombre": "Río Bamba",
+  "poblacion_2022": 103,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142462",
+  "departamento": "Presidente Roque Sáenz Peña",
+  "lat": -34.5117297,
+  "lon": -63.7088418,
+  "nombre": "San Joaquín",
+  "poblacion_2022": 180,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142469",
+  "departamento": "Punilla",
+  "lat": -31.3905569,
+  "lon": -64.5603055,
+  "nombre": "Cabalango",
+  "poblacion_2022": 615,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142476",
+  "departamento": "Punilla",
+  "lat": -31.1528415,
+  "lon": -64.4734545,
+  "nombre": "Casa Grande",
+  "poblacion_2022": 1406,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142483",
+  "departamento": "Punilla",
+  "lat": -30.774979,
+  "lon": -64.5441693,
+  "nombre": "Charbonier",
+  "poblacion_2022": 820,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142490",
+  "departamento": "Punilla",
+  "lat": -31.4803348,
+  "lon": -64.5786921,
+  "nombre": "Cuesta Blanca",
+  "poblacion_2022": 669,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142497",
+  "departamento": "Punilla",
+  "lat": -31.3820274,
+  "lon": -64.5314218,
+  "nombre": "Estancia Vieja",
+  "poblacion_2022": 2357,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142504",
+  "departamento": "Punilla",
+  "lat": -31.4722715,
+  "lon": -64.5414696,
+  "nombre": "Mayu Sumaj",
+  "poblacion_2022": 2876,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142518",
+  "departamento": "Punilla",
+  "lat": -31.3452988,
+  "lon": -64.4511033,
+  "nombre": "San Roque",
+  "poblacion_2022": 2476,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142525",
+  "departamento": "Punilla",
+  "lat": -31.4733148,
+  "lon": -64.566943,
+  "nombre": "Tala Huasi",
+  "poblacion_2022": 200,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142532",
+  "departamento": "Punilla",
+  "lat": -31.3464555,
+  "lon": -64.4824487,
+  "nombre": "Villa Parque Siquiman",
+  "poblacion_2022": 3561,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142553",
+  "departamento": "Río Cuarto",
+  "lat": -33.0093371,
+  "lon": -64.1699747,
+  "nombre": "Chucul",
+  "poblacion_2022": 585,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142560",
+  "departamento": "Río Cuarto",
+  "lat": -33.1868443,
+  "lon": -64.7251128,
+  "nombre": "La Carolina \"El Potosi\"",
+  "poblacion_2022": 193,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142567",
+  "departamento": "Río Cuarto",
+  "lat": -32.8884091,
+  "lon": -64.8448424,
+  "nombre": "Las Albahacas",
+  "poblacion_2022": 382,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142574",
+  "departamento": "Río Cuarto",
+  "lat": -32.5347057,
+  "lon": -64.1045725,
+  "nombre": "Las Peñas Sud",
+  "poblacion_2022": 178,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142581",
+  "departamento": "Río Cuarto",
+  "lat": -33.4904055,
+  "lon": -64.4308786,
+  "nombre": "Malena",
+  "poblacion_2022": 369,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142588",
+  "departamento": "Río Cuarto",
+  "lat": -33.4399921,
+  "lon": -64.8308822,
+  "nombre": "Suco",
+  "poblacion_2022": 374,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142595",
+  "departamento": "Río Cuarto",
+  "lat": -32.8925554,
+  "lon": -64.8679552,
+  "nombre": "Villa El Chacay",
+  "poblacion_2022": 83,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142602",
+  "departamento": "Río Cuarto",
+  "lat": -33.8737376,
+  "lon": -64.689594,
+  "nombre": "Washington",
+  "poblacion_2022": 550,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142609",
+  "departamento": "Río Primero",
+  "lat": -30.9029674,
+  "lon": -63.7063294,
+  "nombre": "Atahona",
+  "poblacion_2022": 157,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142616",
+  "departamento": "Río Primero",
+  "lat": -31.4297203,
+  "lon": -63.5877259,
+  "nombre": "Cañada de Machado",
+  "poblacion_2022": 160,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142623",
+  "departamento": "Río Primero",
+  "lat": -31.4305558,
+  "lon": -63.8324252,
+  "nombre": "Capilla de los Remedios",
+  "poblacion_2022": 1197,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142630",
+  "departamento": "Río Primero",
+  "lat": -30.7603966,
+  "lon": -63.5612423,
+  "nombre": "Chalacea",
+  "poblacion_2022": 171,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142637",
+  "departamento": "Río Primero",
+  "lat": -31.208548,
+  "lon": -63.2229686,
+  "nombre": "Colonia Las Cuatro Esquinas",
+  "poblacion_2022": 93,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142644",
+  "departamento": "Río Primero",
+  "lat": -31.1714887,
+  "lon": -63.6053259,
+  "nombre": "Comechingones",
+  "poblacion_2022": 316,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142651",
+  "departamento": "Río Primero",
+  "lat": -31.0285411,
+  "lon": -63.3383849,
+  "nombre": "Diego de Rojas",
+  "poblacion_2022": 542,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142658",
+  "departamento": "Río Primero",
+  "lat": -31.0176067,
+  "lon": -63.6053511,
+  "nombre": "El Crispín",
+  "poblacion_2022": 230,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142665",
+  "departamento": "Río Primero",
+  "lat": -31.0779121,
+  "lon": -63.7936405,
+  "nombre": "Esquina",
+  "poblacion_2022": 286,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142672",
+  "departamento": "Río Primero",
+  "lat": -31.3688486,
+  "lon": -63.5306284,
+  "nombre": "Pedro E. Vivas - Kilómetro 658",
+  "poblacion_2022": 475,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142679",
+  "departamento": "Río Primero",
+  "lat": -30.5655747,
+  "lon": -63.516964,
+  "nombre": "La Posta",
+  "poblacion_2022": 320,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142686",
+  "departamento": "Río Primero",
+  "lat": -31.0619019,
+  "lon": -63.1513266,
+  "nombre": "La Quinta",
+  "poblacion_2022": 190,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142693",
+  "departamento": "Río Primero",
+  "lat": -31.1317938,
+  "lon": -63.2278847,
+  "nombre": "Las Gramillas",
+  "poblacion_2022": 121,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142700",
+  "departamento": "Río Primero",
+  "lat": -30.7596008,
+  "lon": -63.2042758,
+  "nombre": "Las Saladas",
+  "poblacion_2022": 175,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142707",
+  "departamento": "Río Primero",
+  "lat": -30.9086017,
+  "lon": -63.5316076,
+  "nombre": "Maquinista Gallini",
+  "poblacion_2022": 100,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142714",
+  "departamento": "Río Primero",
+  "lat": -30.9783551,
+  "lon": -63.2606882,
+  "nombre": "Plaza de Mercedes",
+  "poblacion_2022": 56,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142721",
+  "departamento": "Río Primero",
+  "lat": -31.2893272,
+  "lon": -63.4454333,
+  "nombre": "Sagrada Familia",
+  "poblacion_2022": 72,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142728",
+  "departamento": "Colón",
+  "lat": -31.1245074,
+  "lon": -63.8917952,
+  "nombre": "Tinoco",
+  "poblacion_2022": 472,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142735",
+  "departamento": "Río Seco",
+  "lat": -30.0955838,
+  "lon": -63.9321618,
+  "nombre": "Cerro Colorado",
+  "poblacion_2022": 307,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142742",
+  "departamento": "Río Seco",
+  "lat": -29.9984049,
+  "lon": -63.8527342,
+  "nombre": "Chañar Viejo",
+  "poblacion_2022": 187,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142749",
+  "departamento": "Río Seco",
+  "lat": -29.9247382,
+  "lon": -63.5908148,
+  "nombre": "Eufrasio Loza",
+  "poblacion_2022": 169,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142756",
+  "departamento": "Río Seco",
+  "lat": -29.7208999,
+  "lon": -63.5151526,
+  "nombre": "Gutemberg",
+  "poblacion_2022": 818,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142763",
+  "departamento": "Río Seco",
+  "lat": -30.184004,
+  "lon": -62.9456689,
+  "nombre": "La Rinconada",
+  "poblacion_2022": 273,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142770",
+  "departamento": "Río Seco",
+  "lat": -29.8024626,
+  "lon": -63.6282467,
+  "nombre": "Los Hoyos",
+  "poblacion_2022": 448,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142777",
+  "departamento": "Río Seco",
+  "lat": -30.2696958,
+  "lon": -63.4260918,
+  "nombre": "Puesto de Castro",
+  "poblacion_2022": 293,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142784",
+  "departamento": "Río Seco",
+  "lat": -30.0729914,
+  "lon": -63.8236025,
+  "nombre": "Rayo Cortado",
+  "poblacion_2022": 849,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142791",
+  "departamento": "Río Seco",
+  "lat": -30.1157068,
+  "lon": -63.8429027,
+  "nombre": "Santa Elena",
+  "poblacion_2022": 367,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142798",
+  "departamento": "Río Seco",
+  "lat": -29.8129102,
+  "lon": -63.3551261,
+  "nombre": "Villa Candelaria Norte",
+  "poblacion_2022": 428,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142805",
+  "departamento": "Río Segundo",
+  "lat": -31.9172769,
+  "lon": -63.503508,
+  "nombre": "Colonia Videla",
+  "poblacion_2022": 97,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142812",
+  "departamento": "Río Segundo",
+  "lat": -31.7984738,
+  "lon": -63.6500834,
+  "nombre": "Impira",
+  "poblacion_2022": 175,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142819",
+  "departamento": "Río Segundo",
+  "lat": -31.4025299,
+  "lon": -63.3305013,
+  "nombre": "Los Chañaritos (Río Segundo)",
+  "poblacion_2022": 264,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142826",
+  "departamento": "Río Segundo",
+  "lat": -31.5958596,
+  "lon": -63.6170204,
+  "nombre": "Rincón",
+  "poblacion_2022": 634,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142833",
+  "departamento": "San Alberto",
+  "lat": -31.4905409,
+  "lon": -65.0539521,
+  "nombre": "Ambul",
+  "poblacion_2022": 1307,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142840",
+  "departamento": "San Alberto",
+  "lat": -31.762599,
+  "lon": -65.0043489,
+  "nombre": "Arroyo de los Patos",
+  "poblacion_2022": 1413,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142847",
+  "departamento": "San Alberto",
+  "lat": -31.8240438,
+  "lon": -64.971425,
+  "nombre": "Las Calles",
+  "poblacion_2022": 735,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142854",
+  "departamento": "San Alberto",
+  "lat": -31.8535617,
+  "lon": -64.9798804,
+  "nombre": "Las Rabonas",
+  "poblacion_2022": 974,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142861",
+  "departamento": "San Alberto",
+  "lat": -31.6329535,
+  "lon": -65.0549532,
+  "nombre": "Panaholma",
+  "poblacion_2022": 243,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142868",
+  "departamento": "San Alberto",
+  "lat": -31.6709196,
+  "lon": -65.0177209,
+  "nombre": "San Lorenzo",
+  "poblacion_2022": 2200,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142875",
+  "departamento": "San Alberto",
+  "lat": -31.8505569,
+  "lon": -65.4294743,
+  "nombre": "San Vicente",
+  "poblacion_2022": 1709,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142882",
+  "departamento": "San Alberto",
+  "lat": -31.9126732,
+  "lon": -65.1669344,
+  "nombre": "Sauce Arriba",
+  "poblacion_2022": 685,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142889",
+  "departamento": "San Javier",
+  "lat": -32.0773534,
+  "lon": -65.2294604,
+  "nombre": "Conlara",
+  "poblacion_2022": 341,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142896",
+  "departamento": "San Javier",
+  "lat": -32.0662526,
+  "lon": -65.0296172,
+  "nombre": "La Población",
+  "poblacion_2022": 783,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142917",
+  "departamento": "San Javier",
+  "lat": -31.9033424,
+  "lon": -64.9897549,
+  "nombre": "Los Hornillos",
+  "poblacion_2022": 1901,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142924",
+  "departamento": "San Javier",
+  "lat": -32.1497211,
+  "lon": -65.0584825,
+  "nombre": "Luyaba",
+  "poblacion_2022": 2142,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142931",
+  "departamento": "San Justo",
+  "lat": -31.1199281,
+  "lon": -62.2343229,
+  "nombre": "Colonia Anita",
+  "poblacion_2022": 9,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142938",
+  "departamento": "San Justo",
+  "lat": -31.2078362,
+  "lon": -62.1103101,
+  "nombre": "Colonia Iturraspe",
+  "poblacion_2022": 19,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142945",
+  "departamento": "San Justo",
+  "lat": -31.245622,
+  "lon": -62.925319,
+  "nombre": "Colonia Las Pichanas",
+  "poblacion_2022": 256,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142952",
+  "departamento": "San Justo",
+  "lat": -30.7830908,
+  "lon": -61.9179292,
+  "nombre": "Colonia San Pedro",
+  "poblacion_2022": 124,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142959",
+  "departamento": "San Justo",
+  "lat": -31.0536627,
+  "lon": -62.234464,
+  "nombre": "Colonia Valtelina",
+  "poblacion_2022": 249,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142966",
+  "departamento": "San Justo",
+  "lat": -31.3051847,
+  "lon": -62.1337539,
+  "nombre": "Plaza Luxardo",
+  "poblacion_2022": 225,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142973",
+  "departamento": "San Justo",
+  "lat": -31.1089049,
+  "lon": -62.9870276,
+  "nombre": "Toro Pujio",
+  "poblacion_2022": 210,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "142980",
+  "departamento": "San Justo",
+  "lat": -31.6337754,
+  "lon": -62.8970662,
+  "nombre": "Villa San Esteban",
+  "poblacion_2022": 85,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143001",
+  "departamento": "Santa María",
+  "lat": -31.7458491,
+  "lon": -64.3658108,
+  "nombre": "Dique Chico",
+  "poblacion_2022": 488,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143008",
+  "departamento": "Santa María",
+  "lat": -31.5853576,
+  "lon": -64.4546481,
+  "nombre": "Falda del Carmen",
+  "poblacion_2022": 2066,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143015",
+  "departamento": "Calamuchita",
+  "lat": -31.8997878,
+  "lon": -64.7731668,
+  "nombre": "La Cumbrecita",
+  "poblacion_2022": 748,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143022",
+  "departamento": "Santa María",
+  "lat": -31.7209398,
+  "lon": -64.4819274,
+  "nombre": "La Paisanita",
+  "poblacion_2022": 287,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143029",
+  "departamento": "Santa María",
+  "lat": -31.7548292,
+  "lon": -64.459039,
+  "nombre": "La Rancherita",
+  "poblacion_2022": 230,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143036",
+  "departamento": "Santa María",
+  "lat": -31.7356662,
+  "lon": -64.4556101,
+  "nombre": "La Serranita",
+  "poblacion_2022": 598,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143043",
+  "departamento": "Santa María",
+  "lat": -31.5261443,
+  "lon": -64.2845244,
+  "nombre": "Los Cedros",
+  "poblacion_2022": 1595,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143050",
+  "departamento": "Santa María",
+  "lat": -31.7800958,
+  "lon": -64.5453776,
+  "nombre": "Potrero de Garay",
+  "poblacion_2022": 2268,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143057",
+  "departamento": "Santa María",
+  "lat": -31.6451,
+  "lon": -64.2593986,
+  "nombre": "Rafael García",
+  "poblacion_2022": 636,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143064",
+  "departamento": "Santa María",
+  "lat": -31.7145149,
+  "lon": -64.6282801,
+  "nombre": "San Clemente",
+  "poblacion_2022": 211,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143071",
+  "departamento": "Santa María",
+  "lat": -31.7299564,
+  "lon": -64.4202137,
+  "nombre": "Valle de Anisacate",
+  "poblacion_2022": 1829,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143078",
+  "departamento": "Santa María",
+  "lat": -31.7918797,
+  "lon": -64.5086547,
+  "nombre": "Villa Ciudad de América",
+  "poblacion_2022": 1145,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143085",
+  "departamento": "Santa María",
+  "lat": -31.6212863,
+  "lon": -64.394138,
+  "nombre": "Villa del Prado",
+  "poblacion_2022": 4051,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143092",
+  "departamento": "Santa María",
+  "lat": -31.7296592,
+  "lon": -64.4294514,
+  "nombre": "Villa La Bolsa",
+  "poblacion_2022": 1456,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143099",
+  "departamento": "Santa María",
+  "lat": -31.7344879,
+  "lon": -64.4390689,
+  "nombre": "Villa Los Aromos",
+  "poblacion_2022": 1554,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143113",
+  "departamento": "Santa María",
+  "lat": -31.8259254,
+  "lon": -64.3835544,
+  "nombre": "Villa San Isidro",
+  "poblacion_2022": 607,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143120",
+  "departamento": "Sobremonte",
+  "lat": -30.0674801,
+  "lon": -64.0507018,
+  "nombre": "Caminiaga",
+  "poblacion_2022": 332,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143127",
+  "departamento": "Sobremonte",
+  "lat": -29.9337075,
+  "lon": -64.1125603,
+  "nombre": "Chuña Huasi",
+  "poblacion_2022": 84,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143134",
+  "departamento": "Sobremonte",
+  "lat": -29.5787363,
+  "lon": -64.1014944,
+  "nombre": "Pozo Nuevo",
+  "poblacion_2022": 348,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143141",
+  "departamento": "Tercero Arriba",
+  "lat": -32.3224142,
+  "lon": -63.8684716,
+  "nombre": "General Fotheringham",
+  "poblacion_2022": 337,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143148",
+  "departamento": "Tercero Arriba",
+  "lat": -32.509219,
+  "lon": -63.928956,
+  "nombre": "Las Isletillas",
+  "poblacion_2022": 262,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143155",
+  "departamento": "Tercero Arriba",
+  "lat": -32.2409972,
+  "lon": -63.6429755,
+  "nombre": "Pampayasta Norte",
+  "poblacion_2022": 264,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143162",
+  "departamento": "Tercero Arriba",
+  "lat": -32.5758057,
+  "lon": -63.8102095,
+  "nombre": "Punta del Agua",
+  "poblacion_2022": 237,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143169",
+  "departamento": "Totoral",
+  "lat": -30.8389674,
+  "lon": -63.801268,
+  "nombre": "Candelaria Sud",
+  "poblacion_2022": 112,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143176",
+  "departamento": "Totoral",
+  "lat": -30.5736867,
+  "lon": -63.6537124,
+  "nombre": "Capilla de Sitón",
+  "poblacion_2022": 555,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143183",
+  "departamento": "Totoral",
+  "lat": -30.9422303,
+  "lon": -64.2769351,
+  "nombre": "La Pampa",
+  "poblacion_2022": 882,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143190",
+  "departamento": "Totoral",
+  "lat": -30.6266872,
+  "lon": -63.8861172,
+  "nombre": "Los Mistoles",
+  "poblacion_2022": 125,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143197",
+  "departamento": "Totoral",
+  "lat": -30.4744127,
+  "lon": -63.984714,
+  "nombre": "Simbolar",
+  "poblacion_2022": 443,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143204",
+  "departamento": "Tulumba",
+  "lat": -30.1737408,
+  "lon": -63.9268908,
+  "nombre": "Churqui Cañada",
+  "poblacion_2022": 93,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143211",
+  "departamento": "Tulumba",
+  "lat": -30.1752381,
+  "lon": -63.8641311,
+  "nombre": "El Rodeo",
+  "poblacion_2022": 206,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143218",
+  "departamento": "Tulumba",
+  "lat": -30.4314282,
+  "lon": -63.4739413,
+  "nombre": "Rosario del Saladillo",
+  "poblacion_2022": 219,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143225",
+  "departamento": "Unión",
+  "lat": -33.6992194,
+  "lon": -62.9146578,
+  "nombre": "Aldea Santa María",
+  "poblacion_2022": 157,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143232",
+  "departamento": "Unión",
+  "lat": -32.3909528,
+  "lon": -63.0572324,
+  "nombre": "Ana Zumarán",
+  "poblacion_2022": 215,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143239",
+  "departamento": "Unión",
+  "lat": -33.4642548,
+  "lon": -62.7311771,
+  "nombre": "Colonia Bremen",
+  "poblacion_2022": 290,
+  "tipo": "comuna"
+ },
+ {
+  "codigo": "143246",
+  "departamento": "Unión",
+  "lat": -32.7668376,
+  "lon": -62.7271351,
+  "nombre": "Villa Los Patos",
+  "poblacion_2022": 25,
+  "tipo": "comuna"
+ }
+]

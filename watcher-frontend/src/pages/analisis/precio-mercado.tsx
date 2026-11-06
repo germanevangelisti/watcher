@@ -252,14 +252,45 @@ function CoberturaBanner() {
   )
 }
 
+/**
+ * El mapa de gasto por jurisdicción enlaza acá con el municipio en la URL
+ * (`?municipio=…&municipio_codigo=…`).  Se lee una sola vez, al montar: después
+ * manda el estado de los filtros de la pantalla.
+ *
+ * Cuando viene el código se filtra **sólo** por código: el mismo gobierno local
+ * se publica con varias grafías ("Rio Ceballos", "Río Ceballos") y un ILIKE por
+ * nombre dejaría actos afuera.  El nombre se conserva para mostrarlo en el chip.
+ */
+function jurisdiccionDesdeUrl(): { filtros: GastoFiltros; nombre: string | null } {
+  if (typeof window === "undefined") return { filtros: { solo_gasto: true }, nombre: null }
+  const params = new URLSearchParams(window.location.search)
+  const codigo = params.get("municipio_codigo")
+  const municipio = params.get("municipio")
+  if (codigo) return { filtros: { solo_gasto: true, municipio_codigo: codigo }, nombre: municipio }
+  if (municipio) return { filtros: { solo_gasto: true, municipio }, nombre: municipio }
+  return { filtros: { solo_gasto: true }, nombre: null }
+}
+
 export function PrecioMercadoPage() {
-  const [filtros, setFiltros] = useState<GastoFiltros>({ solo_gasto: true })
+  const [inicial] = useState(jurisdiccionDesdeUrl)
+  const [filtros, setFiltros] = useState<GastoFiltros>(inicial.filtros)
+  const [nombreJurisdiccion, setNombreJurisdiccion] = useState<string | null>(inicial.nombre)
   const [selected, setSelected] = useState<number | null>(null)
   const { data, isLoading, isError } = useGastoDetectado(filtros)
   const analizar = useAnalizarPrecio()
 
   const set = (clave: keyof GastoFiltros, valor: string) =>
     setFiltros((f) => ({ ...f, [clave]: valor }))
+
+  const limpiarJurisdiccion = () => {
+    setFiltros((f) => {
+      const copia = { ...f }
+      delete copia.municipio
+      delete copia.municipio_codigo
+      return copia
+    })
+    setNombreJurisdiccion(null)
+  }
 
   const onAnalizar = (ejecucionId: number) => {
     setSelected(ejecucionId)
@@ -275,7 +306,26 @@ export function PrecioMercadoPage() {
           gobierno. Elegí un acto para analizarlo en profundidad: el análisis se corre a pedido, compara
           precios contra referencias con fuente y fecha, y no emite dictamen.
         </p>
+        <p className="mt-1 text-sm">
+          <a className="underline" href="/analisis/mapa-gasto">
+            Ver el gasto por jurisdicción en el mapa &rarr;
+          </a>
+        </p>
       </div>
+
+      {(filtros.municipio || filtros.municipio_codigo) && (
+        <div
+          data-testid="filtro-jurisdiccion"
+          className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-muted/40 p-3 text-sm"
+        >
+          <span>
+            Mostrando el gasto de <strong>{nombreJurisdiccion ?? "la jurisdicción elegida"}</strong>.
+          </span>
+          <Button size="sm" variant="outline" onClick={limpiarJurisdiccion}>
+            Ver toda la provincia
+          </Button>
+        </div>
+      )}
 
       <CoberturaBanner />
 

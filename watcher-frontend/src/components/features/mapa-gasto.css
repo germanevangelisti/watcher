@@ -1,0 +1,115 @@
+/*
+ * WMA1 — popup del mapa legible en el tema oscuro.
+ *
+ * MapLibre trae `.maplibregl-popup-content` con fondo blanco y texto oscuro;
+ * como el resto del contenido del popup hereda el `foreground` claro del tema,
+ * la caja quedaba blanca con texto casi invisible.  Se pinta con los tokens del
+ * tema para que siga al dark mode y no dependa de un color fijo.
+ *
+ * Se importa después de `maplibre-gl.css` (ver `mapa-gasto.tsx`), y además los
+ * selectores llevan el prefijo `.maplibregl-popup` extra para ganar por
+ * especificidad aunque cambie el orden del bundle.
+ */
+
+.maplibregl-popup .maplibregl-popup-content {
+  background: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.45);
+  /* Aire a la derecha para que el botón de cierre no pise el contenido. */
+  padding: 10px 28px 12px 12px;
+}
+
+/* La punta se dibuja según el ancla: hay que pintar las ocho variantes. */
+.maplibregl-popup.maplibregl-popup-anchor-top .maplibregl-popup-tip,
+.maplibregl-popup.maplibregl-popup-anchor-top-left .maplibregl-popup-tip,
+.maplibregl-popup.maplibregl-popup-anchor-top-right .maplibregl-popup-tip {
+  border-bottom-color: hsl(var(--popover));
+}
+
+.maplibregl-popup.maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
+.maplibregl-popup.maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,
+.maplibregl-popup.maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip {
+  border-top-color: hsl(var(--popover));
+}
+
+.maplibregl-popup.maplibregl-popup-anchor-left .maplibregl-popup-tip {
+  border-right-color: hsl(var(--popover));
+}
+
+.maplibregl-popup.maplibregl-popup-anchor-right .maplibregl-popup-tip {
+  border-left-color: hsl(var(--popover));
+}
+
+.maplibregl-popup .maplibregl-popup-close-button {
+  top: 2px;
+  right: 2px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius);
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+  font-size: 18px;
+  line-height: 1;
+}
+
+.maplibregl-popup .maplibregl-popup-close-button:hover,
+.maplibregl-popup .maplibregl-popup-close-button:focus-visible {
+  background: hsl(var(--accent));
+  color: hsl(var(--foreground));
+}
+
+/* Contenido generado en `popupHtml()` (src/lib/mapa-gasto.ts). */
+.mapa-popup-contenido {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.mapa-popup-contenido strong {
+  color: hsl(var(--popover-foreground));
+  font-size: 13px;
+}
+
+.mapa-popup-meta {
+  color: hsl(var(--muted-foreground));
+  font-size: 11px;
+}
+
+.mapa-popup-datos {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 12px;
+  margin: 4px 0;
+}
+
+.mapa-popup-datos dt {
+  color: hsl(var(--muted-foreground));
+}
+
+.mapa-popup-datos dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.mapa-popup-sin-datos {
+  margin: 2px 0;
+  color: hsl(var(--muted-foreground));
+  font-style: italic;
+}
+
+.mapa-popup-link {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.mapa-popup-link:hover {
+  text-decoration-thickness: 2px;
+}
