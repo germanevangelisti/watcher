@@ -7,7 +7,9 @@ sqlite.db-wal
 sqlite.db-shm
 *.db.backup*
 chroma_data/
-data/
+# Anclado a la raíz: `data/` a secas también excluía `app/data/`, donde viven el
+# catálogo de jurisdicciones y su nota de fuentes (WMA1).
+/data/
 .pytest_cache/
 htmlcov/
 .coverage
