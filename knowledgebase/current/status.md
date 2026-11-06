@@ -22,8 +22,10 @@
 >   **sólo** `objeto`, es idempotente (2ª corrida: 0 cambios) e informa antes/después por fuente.
 >   `scripts/backfill_tipo_gasto.py` (M8) ya no pisa las columnas que dicta el portal (figura,
 >   nivel, municipio, dedupe).
-> - **Tests**: pytest dirigidos **264 passed** (25 casos nuevos en
->   `test_gasto_classifier_tipos.py`; `test_muni_compras.py` pasa de `otro` a `obra`), `ruff` limpio.
+> - **Tests**: pytest dirigidos **264 passed** (52 pruebas nuevas en
+>   `test_gasto_classifier_tipos.py`: 24 casos parametrizados × 2 + 4 de contrato;
+>   `test_muni_compras.py` pasa de `otro` a `obra`), `ruff` limpio.  CI del PR #13
+>   verde sobre el head (`run 42281509644`).
 > - **Brecha de datos detectada**: el corpus que sirve la app (checkout principal y worktree WMA1)
 >   **no tiene** las 153 filas de MuniCompras — la ingesta de WMU1 quedó en el `sqlite.db` de su
 >   worktree. Para la prueba manual: `python scripts/ingest_muni_compras_cordoba.py --year 2026` y
