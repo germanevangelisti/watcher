@@ -3,6 +3,18 @@
 **Última actualización:** 2026-11-06
 **Snapshot del momento.** Se pisa al avanzar. La historia completa está en `docs/changelog.md` y el historial de git.
 
+> **Actualización 2026-11-06 — WMA1 Done (gate Germán).**
+> Historia `story-watcher-mapa-gasto-jurisdiccion` (mapa de gasto por jurisdicción) pasó **testing → done**.
+> **[PR #12](https://github.com/germanevangelisti/watcher/pull/12)** mergeado a `main`
+> (`c08e13a`, merge commit). Head de feature: `b827b54` (tooltip MapLibre legible en tema oscuro).
+> - `GET /gasto/por-jurisdiccion` + pantalla `/analisis/mapa-gasto` (MapLibre, 427 jurisdicciones,
+>   gris explícito sin cobertura) ya en `main`.
+> - Kanban vault (`98eb400`): To do 12 · WIP 0 · Testing 0 · **Done 33**.
+> - Prioridad Germán 2026-11-06: siguiente = **WCL1** (clasificación de objeto ampliada).
+> - Gate chat: «aprobado.» tras probar el tooltip del mapa.
+
+> **Actualización 2026-11-06 — WMA1: el gasto por jurisdicción en un mapa.** *(histórico; Done el 2026-11-06)*
+
 > **Actualización 2026-11-06 — WMA1: el gasto por jurisdicción en un mapa.**
 > `GET /gasto/por-jurisdiccion` agrega el mismo universo que `/gasto/detectado` por `nivel` + `municipio`
 > sobre el catálogo completo de Córdoba: **427 gobiernos locales** (260 municipios + 167 comunas) con
@@ -25,8 +37,7 @@
 >   el mapa hace visible en vez de esconder.
 > - **Tests**: pytest `test_gasto_por_jurisdiccion_api.py` **6** + `test_gasto_detectado_api.py` **5** +
 >   relacionados **31**; vitest **144/144**; `ruff`, `tsc -b`, `eslint` y `npm run build` limpios.
-> - **Kanban**: `mapa-gasto-jurisdiccion` en **testing** (rama `feat/epic-watcher-precio-mercado-wma1`,
->   **PR #12**, sin mergear). Falta el gate manual de Germán. Próxima: `pm-clasificacion-objeto` (WCL1).
+> - **Kanban**: `mapa-gasto-jurisdiccion` estaba en **testing** (PR #12; **Done y mergeado** el 2026-11-06 @ `c08e13a`). Próxima: `pm-clasificacion-objeto` (WCL1).
 >
 > **Actualización 2026-11-06 — WMU1 Done (gate Germán).**
 > Historia `story-watcher-muni-portal-compras` (MuniCompras) pasó **testing → done**.
