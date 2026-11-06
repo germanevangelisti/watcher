@@ -214,6 +214,18 @@ describe("helpers del mapa", () => {
     expect(html).not.toContain("Per cápita")
   })
 
+  it("el popup usa las clases que pinta el CSS del tema oscuro", () => {
+    const conDatos = popupHtml(JURISDICCIONES[0])
+    const sinDatos = popupHtml(JURISDICCIONES[2])
+    for (const clase of ["mapa-popup-contenido", "mapa-popup-meta", "mapa-popup-link"]) {
+      expect(conDatos).toContain(clase)
+    }
+    expect(conDatos).toContain("mapa-popup-datos")
+    expect(sinDatos).toContain("mapa-popup-sin-datos")
+    // Sin datos no muestra la grilla de números, sólo la aclaración.
+    expect(sinDatos).not.toContain("mapa-popup-datos")
+  })
+
   it("la colección une el GeoJSON con la respuesta y marca los filtrados", () => {
     const fc = construirFeatureCollection(GEOJSON, JURISDICCIONES, "gasto", "grande")
     const porCodigo = Object.fromEntries(fc.features.map((f) => [f.properties.codigo, f.properties]))

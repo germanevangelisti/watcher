@@ -5,6 +5,8 @@ import maplibregl, {
   type StyleSpecification,
 } from "maplibre-gl"
 import "maplibre-gl/dist/maplibre-gl.css"
+// Después del CSS de MapLibre: el popup sigue el tema oscuro (WMA1).
+import "./mapa-gasto.css"
 import {
   BORDE_SIN_COBERTURA,
   MAPA_BORDE,
