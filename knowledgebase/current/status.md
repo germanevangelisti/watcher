@@ -28,12 +28,24 @@
 > - **Kanban**: `mapa-gasto-jurisdiccion` en **testing** (rama `feat/epic-watcher-precio-mercado-wma1`,
 >   **PR #12**, sin mergear). Falta el gate manual de Germán. Próxima: `pm-clasificacion-objeto` (WCL1).
 >
+> **Actualización 2026-11-06 — WMU1 Done (gate Germán).**
+> Historia `story-watcher-muni-portal-compras` (MuniCompras) pasó **testing → done**.
+> **[PR #11](https://github.com/germanevangelisti/watcher/pull/11)** mergeado a `main` por Germán
+> (`bc5f27d`, merge commit). Head de feature: `1a977bd`.
+> - Conector + ingesta del Portal de Compras de Córdoba ya en `main`.
+> - Kanban vault (`1c6b642`): To do 12 · **WIP 1** (WMA1 mapa) · Testing 0 · Done 32.
+> - Prioridad Germán 2026-11-06: siguiente = **WMA1** (mapa), luego **WCL1** (clasificación de objeto).
+> - Brecha conocida (fuera de alcance de WMU1): 93/153 compras del portal caen en `objeto=otro` → WCL1.
+
+> **Actualización 2026-11-04 (tarde) — WMU1: el gasto de la ciudad, desde el Portal de Compras.** *(histórico; Done el 2026-11-06)*
+
+
 > **Actualización 2026-11-04 (tarde) — WMU1: el gasto de la ciudad, desde el Portal de Compras.**
 > El boletín municipal era casi todo normativa (2 actos de gasto sobre 509 en 2026); el gasto real de la
 > Ciudad de Córdoba está en **MuniCompras** (`compras.cordoba.gob.ar`, API JSON pública, sin token).
 > Nuevo conector `app/scrapers/muni_compras.py` + ingesta `scripts/ingest_muni_compras_cordoba.py`
 > (idempotente por `id` de compra, 1,2 s entre requests, UA `WatcherBot`, caché de páginas). Rama
-> `feat/precio-mercado-wmu1`; historia `muni-portal-compras` en **testing** (PR abierto, sin mergear).
+> `feat/precio-mercado-wmu1`; historia `muni-portal-compras` estaba en **testing** (PR #11; Done y mergeado el 2026-11-06).
 > - **Ingesta 2026** (`--year 2026`, rango 01/01–04/11): **153 compras** en 86 días de publicación,
 >   **153 con monto, 0 errores**, con **2 requests** a la API (paginado de 100) y **0** en la segunda
 >   corrida (caché), que dio **0 compras nuevas**. **152 son gasto único · $49.521,59 M**.
